@@ -8,7 +8,7 @@ export const envs = {
   // G
   // H
   // I
-  is_dev: process.env.IS_DEV! === "true",
+  is_dev: process.env.IS_DEV! === 'true',
 
   // J
   // K

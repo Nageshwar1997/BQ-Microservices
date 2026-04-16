@@ -1,4 +1,4 @@
-import { envs } from "@/envs";
+import { envs } from '@/envs';
 
 export const ORIGINS = [
   envs.url.frontend.prod.client,

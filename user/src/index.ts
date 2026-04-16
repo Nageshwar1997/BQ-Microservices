@@ -1,23 +1,18 @@
-import "dotenv/config";
-import path from "path";
-import express, { Request, Response } from "express";
-import { parse } from "qs";
-import { envs } from "./envs";
-import { router } from "./router";
-import { connectToDB } from "@beautinique/be-configs";
-import {
-  databaseConfigs,
-  errorLog,
-  isDbConnected,
-  requestLog,
-} from "./configs";
+import 'dotenv/config';
+import path from 'path';
+import express, { Request, Response } from 'express';
+import { parse } from 'qs';
+import { envs } from './envs';
+import { router } from './router';
+import { connectToDB } from '@beautinique/be-configs';
+import { databaseConfigs, errorLog, isDbConnected, requestLog } from './configs';
 import {
   CorsMiddleware,
   DatabaseMiddleware,
   RequestMiddleware,
   ResponseMiddleware,
-} from "@beautinique/be-middlewares";
-import { ORIGINS } from "./constants";
+} from '@beautinique/be-middlewares';
+import { ORIGINS } from './constants';
 
 const app = express();
 
@@ -29,8 +24,8 @@ app.use(RequestMiddleware.requestId);
 // 2. Body parsers & static files
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.resolve("public")));
-app.set("query parser", (str: string) => parse(str));
+app.use(express.static(path.resolve('public')));
+app.set('query parser', (str: string) => parse(str));
 
 // 3. Logger (logs all requests)
 app.use(requestLog);
@@ -42,16 +37,11 @@ app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 
 // ----------------- ROUTES -----------------
 // Home Route
-app.get("/", (_: Request, res: Response) =>
-  res.success(200, "Welcome to the User Service API"),
-);
-
-app.get("/health", (_: Request, res: Response) =>
-  res.success(200, "User Service is healthy"),
-);
+app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the User Service API'));
+app.get('/health', (_: Request, res: Response) => res.success(200, 'User Service is healthy'));
 
 // API Routes
-app.use("/api", router);
+app.use('/api', router);
 
 // ----------------- ERROR HANDLING -----------------
 app.use(ResponseMiddleware.notFound);
@@ -67,7 +57,7 @@ app.use(ResponseMiddleware.error);
       console.log(`Server running on port: ${envs.port}`);
     });
   } catch (err) {
-    console.error("❌ Failed to start server:", err);
+    console.error('❌ Failed to start server:', err);
     process.exit(1);
   }
 })();
