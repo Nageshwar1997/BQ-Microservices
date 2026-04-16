@@ -5,8 +5,10 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
+    "start:dev": "npm run build && node dist/index.js",
+    "clean": "rmdir /s /q dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,15 +18,13 @@
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
-    "nodemon": "^3.1.14",
-    "ts-node-dev": "^2.0.0",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@beautinique/be-configs": "^1.0.2",
-    "@beautinique/be-middlewares": "^1.0.2",
+    "@beautinique/be-configs": "^1.0.3",
+    "@beautinique/be-middlewares": "^1.0.7",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "mongoose": "^9.4.1"
+    "express": "^5.2.1"
   }
 }

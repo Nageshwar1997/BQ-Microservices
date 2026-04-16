@@ -17,7 +17,7 @@ export const envs = {
   // N
   // O
   // P
-  port: process.env.PORT!,
+  port: Number(process.env.PORT!),
 
   // Q
   // R

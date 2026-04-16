@@ -46,6 +46,10 @@ app.get("/", (_: Request, res: Response) =>
   res.success(200, "Welcome to the User Service API"),
 );
 
+app.get("/health", (_: Request, res: Response) =>
+  res.success(200, "User Service is healthy"),
+);
+
 // API Routes
 app.use("/api", router);
 
