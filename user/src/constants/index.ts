@@ -13,3 +13,7 @@ export const ORIGINS = [
 
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
+
+export const API_ROUTES_AND_METHODS = {
+  oAuth: { method: '', url: '' },
+};

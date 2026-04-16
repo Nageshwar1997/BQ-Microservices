@@ -17,6 +17,7 @@
   "type": "commonjs",
   "devDependencies": {
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.6.0",
     "prettier": "^3.8.3",
     "tsx": "^4.21.0",
@@ -29,8 +30,12 @@
     "@beautinique/be-middlewares": "^1.0.7",
     "@beautinique/be-utils": "^1.0.3",
     "@beautinique/be-zod": "^1.0.11",
+    "axios": "^1.15.0",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "googleapis": "^171.4.0",
+    "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.4.1",
     "redis": "^5.12.1"
   }

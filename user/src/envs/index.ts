@@ -11,6 +11,8 @@ export const envs = {
   is_dev: process.env.IS_DEV! === 'true',
 
   // J
+  jwt_secret: process.env.JWT_SECRET!,
+
   // K
   // L
   // M
@@ -18,8 +20,27 @@ export const envs = {
     prod: process.env.MONGODB_PROD_URI!,
     dev: process.env.MONGODB_DEV_URI!,
   },
+
   // N
   // O
+  oAuth: {
+    google: {
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      redirect_endpoint: process.env.GOOGLE_REDIRECT_ENDPOINT!,
+    },
+    github: {
+      client_id: process.env.GITHUB_CLIENT_ID!,
+      client_secret: process.env.GITHUB_CLIENT_SECRET!,
+      redirect_endpoint: process.env.GITHUB_REDIRECT_ENDPOINT!,
+    },
+    linkedin: {
+      client_id: process.env.LINKEDIN_CLIENT_ID!,
+      client_secret: process.env.LINKEDIN_CLIENT_SECRET!,
+      redirect_endpoint: process.env.LINKEDIN_REDIRECT_ENDPOINT!,
+    },
+  },
+
   // P
   port: Number(process.env.PORT!),
 
@@ -36,7 +57,7 @@ export const envs = {
   // T
   // U
   url: {
-    backend: {
+    gateway: {
       dev: process.env.BACKEND_DEV_URL!,
       prod: process.env.BACKEND_PROD_URL!,
     },

@@ -4,7 +4,7 @@ import { AppError } from '@beautinique/be-classes';
 
 export const getUserByEmail = async ({
   email,
-  lean,
+  lean = true,
 }: Pick<TUser, 'email'> & {
   lean?: boolean;
 }): Promise<IUser | null> => {
@@ -19,7 +19,7 @@ export const getUserByEmail = async ({
 
 export const getUserByPhoneNumber = async ({
   phoneNumber,
-  lean,
+  lean = true,
 }: Pick<IUser, 'phoneNumber'> & {
   lean?: boolean;
 }): Promise<IUser | null> => {
@@ -35,7 +35,7 @@ export const getUserByPhoneNumber = async ({
 export const getUserByEmailOrPhoneNumber = async ({
   email,
   phoneNumber,
-  lean,
+  lean = true,
 }: Pick<IUser, 'email' | 'phoneNumber'> & {
   lean?: boolean;
 }): Promise<IUser> => {
