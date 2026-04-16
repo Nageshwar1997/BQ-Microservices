@@ -13,6 +13,7 @@ import {
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
+import { redisService } from './services';
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use(ResponseMiddleware.error);
   try {
     await connectToDB(databaseConfigs);
     // await Promise.all([redisService.connect(), mailService.checkConnection()]);
+    await Promise.all([redisService.connect()]);
 
     app.listen(envs.port, () => {
       console.log(`Server running on port: ${envs.port}`);

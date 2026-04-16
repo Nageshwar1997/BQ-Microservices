@@ -23,12 +23,15 @@
     "typescript": "^6.0.2"
   },
   "dependencies": {
+    "@beautinique/be-classes": "^1.0.1",
     "@beautinique/be-configs": "^1.0.5",
     "@beautinique/be-constants": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.7",
+    "@beautinique/be-utils": "^1.0.3",
     "@beautinique/be-zod": "^1.0.11",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.4.1"
+    "mongoose": "^9.4.1",
+    "redis": "^5.12.1"
   }
 }
