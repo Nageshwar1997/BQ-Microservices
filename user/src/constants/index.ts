@@ -10,3 +10,6 @@ export const ORIGINS = [
   envs.url.frontend.dev.public1,
   envs.url.frontend.dev.public2,
 ];
+
+export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
+export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
