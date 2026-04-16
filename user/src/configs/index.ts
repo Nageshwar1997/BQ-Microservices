@@ -1,8 +1,9 @@
+import { envs } from "@/envs";
 import { LoggerMiddleware } from "@beautinique/be-middlewares";
 import { connection } from "mongoose";
 
 export const databaseConfigs = {
-  uri: "mongodb://localhost:27017",
+  uri: envs.is_dev ? envs.mongo_uri.dev : envs.mongo_uri.prod,
   isDev: true,
   dbName: "user",
 };
