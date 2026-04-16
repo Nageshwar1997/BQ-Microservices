@@ -4,22 +4,27 @@
   "description": "User service for Beautinique project",
   "main": "dist/index.js",
   "scripts": {
+    "build": "tsc",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
+    "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "",
+  "author": "Nageshwar Pawar",
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
+    "nodemon": "^3.1.14",
     "ts-node-dev": "^2.0.0",
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@beautinique/be-configs": "^1.0.1",
-    "@beautinique/be-middlewares": "^1.0.1",
+    "@beautinique/be-configs": "^1.0.2",
+    "@beautinique/be-middlewares": "^1.0.2",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mongoose": "^9.4.1"
   }
 }
