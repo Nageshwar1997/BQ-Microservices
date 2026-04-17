@@ -5,8 +5,8 @@ import { API_ROUTES_AND_METHODS } from '@/constants';
 export class ApiRequest {
   private instance: AxiosInstance;
 
-  constructor(url?: string) {
-    this.instance = axios.create({ url });
+  constructor(baseURL?: string) {
+    this.instance = axios.create({ baseURL });
   }
 
   protected routes = API_ROUTES_AND_METHODS;

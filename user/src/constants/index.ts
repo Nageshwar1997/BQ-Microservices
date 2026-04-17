@@ -15,5 +15,25 @@ export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
 export const API_ROUTES_AND_METHODS = {
-  oAuth: { method: '', url: '' },
+  oAuth: {
+    google: {
+      decode: { method: 'GET', baseURL: 'https://www.googleapis.com', url: '/oauth2/v2/userinfo' },
+    },
+    linkedin: {
+      access_token: {
+        method: 'POST',
+        baseURL: 'https://www.linkedin.com',
+        url: '/oauth/v2/accessToken',
+      },
+    },
+    github: {
+      access_token: {
+        method: 'POST',
+        baseURL: 'https://github.com',
+        url: '/login/oauth/access_token',
+      },
+      decode_profile: { method: 'GET', baseURL: 'https://api.github.com', url: '/user' },
+      decode_emails: { method: 'GET', baseURL: 'https://api.github.com', url: '/user/emails' },
+    },
+  },
 };
