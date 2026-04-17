@@ -1,5 +1,5 @@
-import { TRegisterEmail } from '@beautinique/be-zod';
-import { Request, Response } from 'express';
+import type { TRegisterEmail } from '@beautinique/be-zod';
+import type { Request, Response } from 'express';
 
 class RegisterControllers {
   public async sendOtp(req: Request, res: Response) {

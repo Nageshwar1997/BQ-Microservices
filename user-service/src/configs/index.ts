@@ -1,7 +1,7 @@
-import { createClient, RedisClientType } from 'redis';
 import { LoggerMiddleware } from '@beautinique/be-middlewares';
-import { connection, ConnectOptions } from 'mongoose';
 import { envs } from '@/envs';
+import { type ConnectOptions, connection } from 'mongoose';
+import { type RedisClientType, createClient } from 'redis';
 
 export const databaseConfigs = {
   uri: envs.is_dev ? envs.mongo_uri.dev : envs.mongo_uri.prod,
@@ -24,11 +24,11 @@ export const redisClientConfig: RedisClientType = createClient({
     reconnectStrategy: (retries: number): number | false => {
       if (retries >= 5) {
         // Max reconnect attempts
-        console.error('❌ Max Redis reconnection attempts reached');
+        logger.error('❌ Max Redis reconnection attempts reached');
         return false;
       }
       const delay = Math.min(retries * 1000, 10000); //10s
-      console.log(`🔄 Redis reconnecting in ${delay}ms (attempt ${retries + 1})`);
+      logger.info(`🔄 Redis reconnecting in ${delay}ms (attempt ${retries + 1})`);
       return delay;
     },
   },

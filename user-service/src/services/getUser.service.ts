@@ -1,5 +1,5 @@
 import { User } from '@/models';
-import { IUser, TId, TUser } from '@/types';
+import type { IUser, TId, TUser } from '@/types';
 import { AppError } from '@beautinique/be-classes';
 
 export const getUserByEmail = async ({
@@ -8,13 +8,11 @@ export const getUserByEmail = async ({
 }: Pick<TUser, 'email'> & {
   lean?: boolean;
 }): Promise<IUser | null> => {
-  let user: IUser | null = null;
-  if (lean) {
-    user = await User.findOne({ email }).lean();
-  } else {
-    user = await User.findOne({ email });
-  }
-  return user;
+  const baseQuery = User.findOne({ email });
+
+  const finalQuery = lean ? baseQuery.lean() : baseQuery;
+
+  return await finalQuery;
 };
 
 export const getUserByPhoneNumber = async ({
@@ -23,13 +21,11 @@ export const getUserByPhoneNumber = async ({
 }: Pick<IUser, 'phoneNumber'> & {
   lean?: boolean;
 }): Promise<IUser | null> => {
-  let user: IUser | null = null;
-  if (lean) {
-    user = await User.findOne({ phoneNumber }).lean();
-  } else {
-    user = await User.findOne({ phoneNumber });
-  }
-  return user;
+  const baseQuery = User.findOne({ phoneNumber });
+
+  const finalQuery = lean ? baseQuery.lean() : baseQuery;
+
+  return await finalQuery;
 };
 
 export const getUserByEmailOrPhoneNumber = async ({
@@ -39,16 +35,13 @@ export const getUserByEmailOrPhoneNumber = async ({
 }: Pick<IUser, 'email' | 'phoneNumber'> & {
   lean?: boolean;
 }): Promise<IUser> => {
-  let user: IUser | null = null;
-  if (lean) {
-    user = await User.findOne({
-      $or: [{ email }, { phoneNumber }],
-    }).lean();
-  } else {
-    user = await User.findOne({
-      $or: [{ email }, { phoneNumber }],
-    });
-  }
+  const user: IUser | null = lean
+    ? await User.findOne({
+        $or: [{ email }, { phoneNumber }],
+      }).lean()
+    : await User.findOne({
+        $or: [{ email }, { phoneNumber }],
+      });
 
   if (!user) {
     throw new AppError({
@@ -74,12 +67,13 @@ export const getUserById = async ({
   lean?: boolean;
   password?: boolean;
 }): Promise<IUser> => {
-  let query = User.findById(id);
+  const baseQuery = User.findById(id);
 
-  if (lean) query = query.lean() as typeof query;
-  if (password) query = query.select('-password');
+  const query = password ? baseQuery.select('-password') : baseQuery;
 
-  const user: IUser | null = await query;
+  const finalQuery = lean ? query.lean() : query;
+
+  const user = await finalQuery;
 
   if (!user) {
     throw new AppError({

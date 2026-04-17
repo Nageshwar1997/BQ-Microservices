@@ -1,7 +1,7 @@
 import { envs } from '@/envs';
-import { TId } from '@/types';
+import type { TId } from '@/types';
 import { AppError } from '@beautinique/be-classes';
-import { TAuthProvider } from '@beautinique/be-constants';
+import type { TAuthProvider } from '@beautinique/be-constants';
 import axios from 'axios';
 import jwt from 'jsonwebtoken';
 
@@ -14,21 +14,17 @@ export const generateAuthToken = (userId: TId | string): string => {
     });
   }
 
-  try {
-    const token = jwt.sign({ userId }, envs.jwt_secret, { expiresIn: '1d' });
+  const token = jwt.sign({ userId }, envs.jwt_secret, { expiresIn: '1d' });
 
-    if (!token) {
-      throw new AppError({
-        message: 'Failed to generate token',
-        statusCode: 500,
-        code: 'INTERNAL_ERROR',
-      });
-    }
-
-    return token;
-  } catch (error) {
-    throw error;
+  if (!token) {
+    throw new AppError({
+      message: 'Failed to generate token',
+      statusCode: 500,
+      code: 'INTERNAL_ERROR',
+    });
   }
+
+  return token;
 };
 
 export const getImageAsBuffer = async (url: string) => {

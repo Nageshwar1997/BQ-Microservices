@@ -1,4 +1,4 @@
-import { ParsedQs } from 'qs';
+import type { ParsedQs } from 'qs';
 import { ApiRequest } from './ApiRequest';
 import { envs } from '@/envs';
 

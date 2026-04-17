@@ -4,7 +4,7 @@ import { getUserByEmailOrPhoneNumber, redisService } from '@/services';
 import { createOAuthDbPayload, generateAuthToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import bcrypt from 'bcryptjs';
-import { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 
 export const manualLoginController = async (req: Request, res: Response) => {
   const { email, password, phoneNumber } = req.body ?? {};
@@ -43,7 +43,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
   const token = generateAuthToken(user._id);
 
-  const { password: _, ...restUser } = user;
+  const { password: _password, ...restUser } = user;
 
   await redisService.setCachedUser(user);
 

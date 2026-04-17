@@ -1,11 +1,11 @@
 import 'dotenv/config';
 import path from 'path';
-import express, { Request, Response } from 'express';
+import express, { type Request, type Response } from 'express';
 import { parse } from 'qs';
 import { envs } from './envs';
 import { router } from './routes';
 import { connectToDB } from '@beautinique/be-configs';
-import { databaseConfigs, errorLogger, isDbConnected, requestLogger } from './configs';
+import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
 import {
   CorsMiddleware,
   DatabaseMiddleware,
@@ -56,10 +56,10 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
     await Promise.all([redisService.connect()]);
 
     app.listen(envs.port, () => {
-      console.log(`Server running on port: ${envs.port}`);
+      logger.info(`Server running on port: ${envs.port}`);
     });
   } catch (err) {
-    console.error('❌ Failed to start server:', err);
+    logger.error('❌ Failed to start server:', err);
     process.exit(1);
   }
 })();

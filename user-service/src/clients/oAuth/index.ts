@@ -1,9 +1,9 @@
-import { envs } from "@/envs";
-import { oAuthService } from "@/services";
-import { TAuthProvider } from "@beautinique/be-constants";
-import { parseData } from "@beautinique/be-utils";
-import { ParsedQs } from 'qs';
-import { google } from "googleapis";
+import { envs } from '@/envs';
+import { oAuthService } from '@/services';
+import type { TAuthProvider } from '@beautinique/be-constants';
+import { parseData } from '@beautinique/be-utils';
+import type { ParsedQs } from 'qs';
+import { google } from 'googleapis';
 
 const getSocialAuthRedirectURL = (provider: Exclude<TAuthProvider, 'MANUAL'>) => {
   const baseURL = envs.is_dev ? envs.url.gateway.dev : envs.url.gateway.prod;

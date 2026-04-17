@@ -1,35 +1,35 @@
-import { redisClientConfig } from '@/configs';
+import { logger, redisClientConfig } from '@/configs';
 import { getUserById } from '@/services';
-import { IUser, TId } from '@/types';
+import type { IUser, TId } from '@/types';
 import { HOUR } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/be-utils';
-import { RedisClientType } from 'redis';
+import type { RedisClientType } from 'redis';
 
 export class RedisService {
   private client: RedisClientType | null = null;
-  private isReady: boolean = false;
+  private isReady = false;
   private USER_KEY_PREFIX = 'bq:user';
 
   constructor() {
     this.client = redisClientConfig;
 
     this.client.on('error', (err) => {
-      console.error('❌ Redis Error:', err);
+      logger.error('❌ Redis Error:', err);
       this.isReady = false;
     });
 
     this.client.on('connect', () => {
-      console.log('👍 Redis Connected');
+      logger.info('👍 Redis Connected');
       this.isReady = true;
     });
 
     this.client.on('reconnecting', () => {
-      console.warn('⚠️ Redis Reconnecting');
+      logger.warn('⚠️ Redis Reconnecting');
       this.isReady = false;
     });
 
     this.client.on('end', () => {
-      console.warn('👋 Redis Connection Ended');
+      logger.warn('👋 Redis Connection Ended');
       this.isReady = false;
     });
   }
@@ -40,14 +40,14 @@ export class RedisService {
     try {
       await this.client?.connect();
     } catch (err) {
-      console.error('❌ Redis connection failed:', err);
+      logger.error('❌ Redis connection failed:', err);
       this.isReady = false;
     }
   }
 
   private getClient(): RedisClientType | null {
     if (!this.client || !this.isReady) {
-      console.warn('⚠️ Redis unavailable → fallback to DB');
+      logger.warn('⚠️ Redis unavailable → fallback to DB');
       return null;
     }
     return this.client;
@@ -63,7 +63,7 @@ export class RedisService {
     try {
       return await getUserById({ id: userId });
     } catch (err) {
-      console.error('❌ DB fetch failed:', err);
+      logger.error('❌ DB fetch failed:', err);
       return null;
     }
   }
@@ -75,12 +75,12 @@ export class RedisService {
     if (!client || !user) return;
 
     try {
-      const { password: _, ...restUser } =
+      const { password: _password, ...restUser } =
         typeof user.toObject === 'function' ? user.toObject() : user;
 
       await client.setEx(this.getUserKey(user._id), HOUR, stringifyData(restUser));
     } catch (err) {
-      console.error('❌ Redis set failed:', err);
+      logger.error('❌ Redis set failed:', err);
     }
   }
 
@@ -103,7 +103,7 @@ export class RedisService {
         try {
           return parseData(cachedUser);
         } catch (err) {
-          console.warn('⚠️ Corrupted cache detected, repairing...');
+          logger.warn('⚠️ Corrupted cache detected, repairing...', err);
 
           // self-heal
           await client.del(key);
@@ -124,7 +124,7 @@ export class RedisService {
 
       return user;
     } catch (err) {
-      console.error('❌ Redis get failed:', err);
+      logger.error('❌ Redis get failed:', err);
 
       // fallback
       return await this.getDbUser(userId);
@@ -150,7 +150,7 @@ export class RedisService {
     try {
       await client.del(this.getUserKey(userId));
     } catch (err) {
-      console.error('❌ Redis delete failed:', err);
+      logger.error('❌ Redis delete failed:', err);
     }
   }
 }

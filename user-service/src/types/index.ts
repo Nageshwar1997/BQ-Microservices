@@ -1,7 +1,7 @@
-import { SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
-import { TAuthProvider, TRole } from '@beautinique/be-constants';
-import { TRegister, TSellerRequest } from '@beautinique/be-zod';
-import { Document, Types } from 'mongoose';
+import type { SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
+import type { TAuthProvider, TRole } from '@beautinique/be-constants';
+import type { TRegister, TSellerRequest } from '@beautinique/be-zod';
+import type { Document, Types } from 'mongoose';
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
@@ -22,17 +22,15 @@ export type TUser = TRegister & {
 
 export interface IUser extends TUser, IId, ITimestamp, Document {}
 
-export type TSeller = {
+export interface ISeller extends IId, ITimestamp, Document, Pick<TUser, 'status' | 'reason'> {
   user: TId;
   approvalStatus: (typeof SELLER_APPROVAL_STATUS)[number];
   personalDetails: Omit<TSellerRequest['businessDetails'], 'category'>;
   businessDetails: TSellerRequest['businessDetails'];
   requiredDocuments: Record<'gst' | 'itr' | 'addressProof' | 'geoTagging', string>;
   businessAddress: TSellerRequest['businessAddress'];
-};
-export interface ISeller
-  extends TSeller, IId, ITimestamp, Document, Pick<TUser, 'status' | 'reason'> {}
+}
 
-export interface IWishlist extends TSeller, IId, ITimestamp, Document {
+export interface IWishlist extends IId, ITimestamp, Document {
   products: TId[];
 }
