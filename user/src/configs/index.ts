@@ -5,7 +5,6 @@ import { connection, ConnectOptions } from 'mongoose';
 import { ParsedQs } from 'qs';
 import { createClient, RedisClientType } from 'redis';
 import { google } from 'googleapis';
-import axios from 'axios';
 import { parseData } from '@beautinique/be-utils';
 import { oAuthService } from '@/services';
 
@@ -74,11 +73,7 @@ export const googleAuthClient = {
 
     googleAuthConfig.setCredentials(tokens);
 
-    const { data } = await axios.get('https://www.googleapis.com/oauth2/v2/userinfo', {
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
-    });
-
-    return data;
+    return await oAuthService.google_decode(tokens.access_token);
   },
 };
 
