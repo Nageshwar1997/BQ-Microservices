@@ -1,4 +1,4 @@
-import { OAuthService } from '@/api/OAuthService';
+import { OAuthService } from '@/apis/OAuthService';
 import { RedisService } from '@/classes/RedisService';
 
 export * from './getUser.service';
