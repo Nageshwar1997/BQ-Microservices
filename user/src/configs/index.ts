@@ -11,9 +11,10 @@ export const databaseConfigs = {
 
 export const isDbConnected = () => connection.readyState === 1;
 
-export const { requestLog, errorLog, logger } = LoggerMiddleware.createLogger({
+export const { errorLogger, logger, requestLogger } = LoggerMiddleware.createLogger({
+  serviceName: 'User-Service',
   logDir: 'logs',
-  level: 'info',
+  level: envs.is_dev ? 'debug' : 'info',
 });
 
 export const redisClientConfig: RedisClientType = createClient({

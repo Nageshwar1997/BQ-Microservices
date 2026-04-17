@@ -5,7 +5,7 @@ import { parse } from 'qs';
 import { envs } from './envs';
 import { router } from './routes';
 import { connectToDB } from '@beautinique/be-configs';
-import { databaseConfigs, errorLog, isDbConnected, requestLog } from './configs';
+import { databaseConfigs, errorLogger, isDbConnected, requestLogger } from './configs';
 import {
   CorsMiddleware,
   DatabaseMiddleware,
@@ -29,7 +29,7 @@ app.use(express.static(path.resolve('public')));
 app.set('query parser', (str: string) => parse(str));
 
 // 3. Logger (logs all requests)
-app.use(requestLog);
+app.use(requestLogger);
 
 // 4. Custom middlewares
 app.use(ResponseMiddleware.success);
@@ -46,7 +46,7 @@ app.use('/api/v1', router);
 
 // ----------------- ERROR HANDLING -----------------
 app.use(ResponseMiddleware.notFound);
-app.use(errorLog);
+app.use(errorLogger);
 app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
 
 (async () => {
