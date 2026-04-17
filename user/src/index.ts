@@ -47,7 +47,7 @@ app.use('/api/v1', router);
 // ----------------- ERROR HANDLING -----------------
 app.use(ResponseMiddleware.notFound);
 app.use(errorLog);
-app.use(ResponseMiddleware.error);
+app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
 
 (async () => {
   try {
