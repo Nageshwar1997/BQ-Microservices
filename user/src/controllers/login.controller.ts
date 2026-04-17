@@ -1,4 +1,4 @@
-import { googleAuthClient } from '@/configs';
+import { googleAuthClient } from '@/clients';
 import { User } from '@/models';
 import { getUserByEmailOrPhoneNumber, redisService } from '@/services';
 import { createOAuthDbPayload, generateAuthToken } from '@/utils';

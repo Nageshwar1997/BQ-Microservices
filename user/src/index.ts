@@ -3,7 +3,7 @@ import path from 'path';
 import express, { Request, Response } from 'express';
 import { parse } from 'qs';
 import { envs } from './envs';
-import { router } from './router';
+import { router } from './routes';
 import { connectToDB } from '@beautinique/be-configs';
 import { databaseConfigs, errorLog, isDbConnected, requestLog } from './configs';
 import {
