@@ -11,53 +11,22 @@ export const envs = {
   is_dev: (process.env.IS_DEV as string) === 'true',
 
   // J
-  jwt_secret: process.env.JWT_SECRET as string,
-
   // K
   // L
   // M
-  mongo_uri: {
-    prod: process.env.MONGODB_PROD_URI as string,
-    dev: process.env.MONGODB_DEV_URI as string,
-  },
-
   // N
   // O
-  oAuth: {
-    google: {
-      client_id: process.env.GOOGLE_CLIENT_ID as string,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET as string,
-      redirect_endpoint: process.env.GOOGLE_REDIRECT_ENDPOINT as string,
-    },
-    github: {
-      client_id: process.env.GITHUB_CLIENT_ID as string,
-      client_secret: process.env.GITHUB_CLIENT_SECRET as string,
-      redirect_endpoint: process.env.GITHUB_REDIRECT_ENDPOINT as string,
-    },
-    linkedin: {
-      client_id: process.env.LINKEDIN_CLIENT_ID as string,
-      client_secret: process.env.LINKEDIN_CLIENT_SECRET as string,
-      redirect_endpoint: process.env.LINKEDIN_REDIRECT_ENDPOINT as string,
-    },
-  },
-
   // P
   port: Number(process.env.PORT as string),
 
   // Q
   // R
   redis: {
-    caching: {
-      host: process.env.CACHING_REDIS_HOST as string,
-      port: Number(process.env.CACHING_REDIS_PORT),
-      password: process.env.CACHING_REDIS_PASSWORD as string,
-      username: process.env.CACHING_REDIS_USERNAME as string,
-    },
-    queuing: {
-      host: process.env.QUEUING_REDIS_HOST as string,
-      port: Number(process.env.QUEUING_REDIS_PORT),
-      password: process.env.QUEUING_REDIS_PASSWORD as string,
-      username: process.env.QUEUING_REDIS_USERNAME as string,
+    worker: {
+      host: process.env.WORKER_REDIS_HOST as string,
+      port: Number(process.env.WORKER_REDIS_PORT),
+      password: process.env.WORKER_REDIS_PASSWORD as string,
+      username: process.env.WORKER_REDIS_USERNAME as string,
     },
   },
 

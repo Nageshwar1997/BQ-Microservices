@@ -3,17 +3,9 @@ import path from 'path';
 import express, { type Request, type Response } from 'express';
 import { parse } from 'qs';
 import { envs } from './envs';
-import { router } from './routes';
-import { connectToDB } from '@beautinique/be-configs';
-import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
-import {
-  CorsMiddleware,
-  DatabaseMiddleware,
-  RequestMiddleware,
-  ResponseMiddleware,
-} from '@beautinique/be-middlewares';
+import { errorLogger, logger, requestLogger } from './configs';
+import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
-import { cacheService, queueService } from './services';
 
 const app = express();
 
@@ -34,15 +26,11 @@ app.use(requestLogger);
 // 4. Custom middlewares
 app.use(ResponseMiddleware.success);
 app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
-app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 
 // ----------------- ROUTES -----------------
 // Home Route
-app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the User Service API'));
-app.get('/health', (_: Request, res: Response) => res.success(200, 'User Service is healthy'));
-
-// API Routes
-app.use('/api/v1', router);
+app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Email Service API'));
+app.get('/health', (_: Request, res: Response) => res.success(200, 'Email Service is healthy'));
 
 // ----------------- ERROR HANDLING -----------------
 app.use(ResponseMiddleware.notFound);
@@ -51,10 +39,6 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
 
 (async () => {
   try {
-    await connectToDB(databaseConfigs);
-    // await Promise.all([cacheService.connect(), mailService.checkConnection()]);
-    await Promise.all([cacheService.connect(), queueService.connect()]);
-
     app.listen(envs.port, () => {
       logger.info(`Server running on port: ${envs.port}`);
     });
@@ -67,8 +51,6 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
 async function shutdown() {
   try {
     logger.warn('🛑 Shutting down...');
-    await Promise.all([cacheService.close(), queueService.close()]);
-
     logger.info('✅ Cleanup done');
     process.exit(0);
   } catch (err) {
