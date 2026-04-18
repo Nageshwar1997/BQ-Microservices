@@ -1,68 +1,105 @@
-import { type Job, Worker } from 'bullmq';
+import { Worker, Job } from 'bullmq';
 import { WORKER_CONFIGS } from '@/constants';
 import { logger } from '@/configs';
+import type { TWorkerKey } from '@/types';
+
+/* ---------------- SERVICE ---------------- */
 
 export class WorkerService {
-  private worker: Worker | null = null;
+  private workers = new Map<TWorkerKey, Worker>();
 
-  public start() {
-    this.worker = new Worker(
-      'connection-check', // ⚠️ same queue name
+  /* ---------------- START WORKER ---------------- */
+
+  public startWorker(queueName: TWorkerKey) {
+    if (this.workers.has(queueName)) {
+      logger.warn(`⚠️ Worker already running → ${queueName}`);
+      return;
+    }
+
+    const worker = new Worker(
+      queueName,
       async (job: Job) => {
-        logger.info(`📩 Processing job → ${job.name}`);
+        logger.info(`📩 Processing ${queueName} → ${job.name}`);
 
-        switch (job.name) {
-          case 'test-job':
-            await this.handleTestJob(job.data);
+        switch (queueName) {
+          case 'email-queue':
+            await this.handleEmailJobs(job);
             break;
 
           default:
-            throw new Error(`Unknown job: ${job.name}`);
+            throw new Error(`Unknown queue: ${queueName}`);
         }
       },
       {
         connection: WORKER_CONFIGS,
-        concurrency: 5, // 🔥 parallel processing
+        concurrency: 5,
       },
     );
 
-    this.registerEvents();
+    this.registerEvents(worker, queueName);
 
-    logger.info('🚀 Email Worker Started');
+    this.workers.set(queueName, worker);
+
+    logger.info(`🚀 Worker started → ${queueName}`);
   }
 
-  /* ---------------- JOB HANDLERS ---------------- */
+  /* ---------------- START ALL ---------------- */
 
-  private async handleTestJob(data: any) {
-    console.log('📨 Job Data:', data);
+  public startAll() {
+    this.startWorker('email-queue');
 
-    // 👉 yaha actual email send karoge later
+    // Add more workers here
+  }
+
+  /* ---------------- HANDLERS ---------------- */
+
+  private async handleEmailJobs(job: Job) {
+    switch (job.name) {
+      case 'send-otp':
+        console.log('📧 Sending OTP:', job.data);
+        break;
+
+      default:
+        throw new Error(`Unknown email job: ${job.name}`);
+    }
   }
 
   /* ---------------- EVENTS ---------------- */
 
-  private registerEvents() {
-    if (!this.worker) return;
-
-    this.worker.on('completed', (job) => {
-      logger.info(`✅ Job completed: ${job.name}`);
+  private registerEvents(worker: Worker, queueName: TWorkerKey) {
+    worker.on('completed', (job) => {
+      logger.info(`✅ ${queueName} completed: ${job.name}`);
     });
 
-    this.worker.on('failed', (job, err) => {
-      logger.error(`❌ Job failed: ${job?.name}`, err);
+    worker.on('failed', (job, err) => {
+      logger.error(`❌ ${queueName} failed: ${job?.name}`, err);
     });
 
-    this.worker.on('error', (err) => {
-      logger.error('❌ Worker error:', err);
+    worker.on('error', (err) => {
+      logger.error(`❌ ${queueName} worker error:`, err);
     });
   }
 
-  /* ---------------- CLOSE ---------------- */
+  /* ---------------- CLOSE ONE ---------------- */
 
-  public async close() {
-    if (this.worker) {
-      await this.worker.close();
-      logger.warn('🛑 Worker Closed');
+  public async closeWorker(queueName: TWorkerKey) {
+    const worker = this.workers.get(queueName);
+    if (!worker) return;
+
+    await worker.close();
+    this.workers.delete(queueName);
+
+    logger.warn(`🛑 Worker closed → ${queueName}`);
+  }
+
+  /* ---------------- CLOSE ALL ---------------- */
+
+  public async closeAll() {
+    for (const [queueName, worker] of this.workers) {
+      await worker.close();
+      logger.warn(`🛑 Worker closed → ${queueName}`);
     }
+
+    this.workers.clear();
   }
 }
