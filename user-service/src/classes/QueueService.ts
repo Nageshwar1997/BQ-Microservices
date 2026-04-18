@@ -15,9 +15,8 @@ export class QueueService {
   constructor() {
     this.connection = {
       host: envs.redis.queuing.host,
-      port: Number(envs.redis.queuing.port),
+      port: envs.redis.queuing.port,
       password: envs.redis.queuing.password,
-      tls: {},
     };
 
     // 📧 Email Queue
@@ -25,10 +24,7 @@ export class QueueService {
       connection: this.connection,
       defaultJobOptions: {
         attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 2000,
-        },
+        backoff: { type: 'exponential', delay: 2000 },
         removeOnComplete: true,
         removeOnFail: 50,
       },

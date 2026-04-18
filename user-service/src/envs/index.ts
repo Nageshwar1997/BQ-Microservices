@@ -49,13 +49,13 @@ export const envs = {
   redis: {
     caching: {
       host: process.env.CACHING_REDIS_HOST as string,
-      port: process.env.CACHING_REDIS_PORT as string,
+      port: Number(process.env.CACHING_REDIS_PORT),
       password: process.env.CACHING_REDIS_PASSWORD as string,
       username: process.env.CACHING_REDIS_USERNAME as string,
     },
     queuing: {
       host: process.env.QUEUING_REDIS_HOST as string,
-      port: process.env.QUEUING_REDIS_PORT as string,
+      port: Number(process.env.QUEUING_REDIS_PORT),
       password: process.env.QUEUING_REDIS_PASSWORD as string,
       username: process.env.QUEUING_REDIS_USERNAME as string,
     },

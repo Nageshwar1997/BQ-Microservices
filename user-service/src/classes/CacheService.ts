@@ -9,7 +9,7 @@ import { type RedisClientType, createClient } from 'redis';
 const redisClientConfig: RedisClientType = createClient({
   socket: {
     host: envs.redis.caching.host,
-    port: Number(envs.redis.caching.port),
+    port: envs.redis.caching.port,
     reconnectStrategy: (retries: number): number | false => {
       if (retries >= 5) {
         // Max reconnect attempts
@@ -24,7 +24,7 @@ const redisClientConfig: RedisClientType = createClient({
   password: envs.redis.caching.password,
 });
 
-export class CachingRedisService {
+export class CacheService {
   private client: RedisClientType | null = null;
   private isReady = false;
   private USER_KEY_PREFIX = 'bq:user';

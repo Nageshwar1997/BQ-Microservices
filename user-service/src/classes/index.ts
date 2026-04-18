@@ -1,2 +1,2 @@
-export * from './CachingRedisService';
-export * from './QueuingRedisService';
+export * from './CacheService';
+export * from './QueueService';
