@@ -1,4 +1,5 @@
 import { envs } from '@/envs';
+import type { ConnectionOptions } from 'bullmq';
 
 export const ORIGINS = [
   envs.url.frontend.prod.client,
@@ -78,3 +79,9 @@ export const GATEWAY_METHODS_AND_PATHS = {
     base: '/users',
   },
 } as const;
+
+export const QUEUE_CONFIGS: ConnectionOptions = {
+  host: envs.redis.queuing.host,
+  port: envs.redis.queuing.port,
+  password: envs.redis.queuing.password,
+};

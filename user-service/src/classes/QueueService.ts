@@ -1,28 +1,16 @@
-import { type JobsOptions, Queue } from 'bullmq';
-import { envs } from '@/envs';
+import { type ConnectionOptions, type JobsOptions, Queue } from 'bullmq';
 import { logger } from '@/configs';
+import { QUEUE_CONFIGS } from '@/constants';
 
-/* ---------------- TYPES ---------------- */
-
-export interface IQueueJob<T = unknown> {
-  name: string;
-  data: T;
-  options?: JobsOptions;
-}
-
-/* ---------------- SERVICE ---------------- */
+type TQueueKey = 'connection-check';
 
 export class QueueService {
-  private connection;
-  private emailQueue: Queue | null = null;
+  private connection: ConnectionOptions;
+  private queues = new Map<TQueueKey, Queue>();
   private isReady = false;
 
   constructor() {
-    this.connection = {
-      host: envs.redis.queuing.host,
-      port: envs.redis.queuing.port,
-      password: envs.redis.queuing.password,
-    };
+    this.connection = QUEUE_CONFIGS;
   }
 
   /* ---------------- CONNECT ---------------- */
@@ -31,7 +19,32 @@ export class QueueService {
     try {
       if (this.isReady) return;
 
-      this.emailQueue = new Queue('email-queue', {
+      // 🔌 connection test (single)
+      const testQueue = new Queue('connection-check', {
+        connection: this.connection,
+      });
+
+      await testQueue.waitUntilReady();
+      await testQueue.close();
+
+      this.isReady = true;
+      logger.info('📦 Queue Connected');
+    } catch (err) {
+      this.isReady = false;
+      logger.error('❌ Queue connection failed:', err);
+      throw err;
+    }
+  }
+
+  /* ---------------- GET OR CREATE QUEUE ---------------- */
+
+  private getQueue(name: TQueueKey): Queue {
+    if (!this.isReady) {
+      throw new Error('Queue not ready. Call connect() first.');
+    }
+
+    if (!this.queues.has(name)) {
+      const queue = new Queue(name, {
         connection: this.connection,
         defaultJobOptions: {
           attempts: 3,
@@ -41,84 +54,44 @@ export class QueueService {
         },
       });
 
-      await this.emailQueue.waitUntilReady();
-
-      this.registerEvents();
-
-      this.isReady = true;
-      logger.info('📦 Queue Service Connected');
-    } catch (err) {
-      this.isReady = false;
-      logger.error('❌ Queue connection failed:', err);
+      this.queues.set(name, queue);
+      logger.info(`📦 Queue created → ${name}`);
     }
-  }
 
-  /* ---------------- EVENTS ---------------- */
+    const queue = this.queues.get(name);
 
-  private registerEvents() {
-    if (!this.emailQueue) return;
-
-    this.emailQueue.on('error', (err) => {
-      logger.error('❌ Queue Error:', err);
-    });
-
-    this.emailQueue.on('waiting', (jobId) => {
-      logger.info(`⏳ Job waiting: ${jobId}`);
-    });
-  }
-
-  /* ---------------- GET QUEUE ---------------- */
-
-  private getQueue(): Queue {
-    if (!this.emailQueue || !this.isReady) {
-      throw new Error('Queue not initialized. Call connect() first.');
+    if (!queue) {
+      throw new Error(`Queue ${name} not found.`);
     }
-    return this.emailQueue;
+
+    return queue;
   }
 
-  /* ---------------- GENERIC ADD ---------------- */
+  /* ---------------- ADD JOB ---------------- */
 
-  public async addJob<T>(job: IQueueJob<T>) {
-    const queue = this.getQueue();
+  public async addJob<T>(queueName: TQueueKey, jobName: string, data: T, options?: JobsOptions) {
+    const queue = this.getQueue(queueName);
 
     try {
-      const createdJob = await queue.add(job.name, job.data, job.options);
-      logger.info(`✅ Job added → ${job.name} (${createdJob.id})`);
-      return createdJob;
+      const job = await queue.add(jobName, data, options);
+      logger.info(`✅ Job added → ${queueName}:${jobName} (${job.id})`);
+      return job;
     } catch (err) {
       logger.error('❌ Failed to add job:', err);
       throw err;
     }
   }
 
-  /* ---------------- EMAIL JOB (SPECIFIC) ---------------- */
-
-  public async addEmailJob(data: { email: string; otp: string }) {
-    return this.addJob({
-      name: 'send-otp',
-      data,
-    });
-  }
-
-  /* ---------------- HEALTH CHECK ---------------- */
-
-  public async isHealthy(): Promise<boolean> {
-    try {
-      if (!this.emailQueue) return false;
-      await this.emailQueue.waitUntilReady();
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
   /* ---------------- CLOSE ---------------- */
 
   public async close() {
-    if (this.emailQueue) {
-      await this.emailQueue.close();
-      this.isReady = false;
-      logger.warn('🛑 Queue Service Closed');
+    for (const queue of this.queues.values()) {
+      await queue.close();
     }
+
+    this.queues.clear();
+    this.isReady = false;
+
+    logger.warn('🛑 All Queues Closed');
   }
 }
