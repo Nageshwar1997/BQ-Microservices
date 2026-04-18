@@ -1,8 +1,7 @@
-import { type ConnectionOptions, type JobsOptions, Queue } from 'bullmq';
+import { type ConnectionOptions, Queue } from 'bullmq';
 import { logger } from '@/configs';
 import { QUEUE_CONFIGS } from '@/constants';
-
-type TQueueKey = 'connection-check';
+import type { IQueueJob, TQueueKey } from '@/types';
 
 export class QueueService {
   private connection: ConnectionOptions;
@@ -20,7 +19,7 @@ export class QueueService {
       if (this.isReady) return;
 
       // 🔌 connection test (single)
-      const testQueue = new Queue('connection-check', {
+      const testQueue = new Queue('__health_check__', {
         connection: this.connection,
       });
 
@@ -36,28 +35,28 @@ export class QueueService {
     }
   }
 
-  /* ---------------- GET OR CREATE QUEUE ---------------- */
+  /* ---------------- CREATE QUEUE ---------------- */
+
+  private createQueue(name: TQueueKey): Queue {
+    const queue = new Queue(name, {
+      connection: this.connection,
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 2000 },
+        removeOnComplete: true,
+        removeOnFail: 50,
+      },
+    });
+
+    this.queues.set(name, queue);
+    logger.info(`📦 Queue created → ${name}`);
+
+    return queue;
+  }
+
+  /* ---------------- GET QUEUE ---------------- */
 
   private getQueue(name: TQueueKey): Queue {
-    if (!this.isReady) {
-      throw new Error('Queue not ready. Call connect() first.');
-    }
-
-    if (!this.queues.has(name)) {
-      const queue = new Queue(name, {
-        connection: this.connection,
-        defaultJobOptions: {
-          attempts: 3,
-          backoff: { type: 'exponential', delay: 2000 },
-          removeOnComplete: true,
-          removeOnFail: 50,
-        },
-      });
-
-      this.queues.set(name, queue);
-      logger.info(`📦 Queue created → ${name}`);
-    }
-
     const queue = this.queues.get(name);
 
     if (!queue) {
@@ -67,10 +66,24 @@ export class QueueService {
     return queue;
   }
 
+  /* ---------------- GET OR CREATE ---------------- */
+
+  private getOrCreateQueue(name: TQueueKey): Queue {
+    if (!this.isReady) {
+      throw new Error('Queue not ready. Call connect() first.');
+    }
+
+    if (!this.queues.has(name)) {
+      return this.createQueue(name);
+    }
+
+    return this.getQueue(name);
+  }
+
   /* ---------------- ADD JOB ---------------- */
 
-  public async addJob<T>(queueName: TQueueKey, jobName: string, data: T, options?: JobsOptions) {
-    const queue = this.getQueue(queueName);
+  public async addJob({ queueName, jobName, data, options }: IQueueJob) {
+    const queue = this.getOrCreateQueue(queueName);
 
     try {
       const job = await queue.add(jobName, data, options);

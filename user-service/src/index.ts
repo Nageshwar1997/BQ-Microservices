@@ -64,4 +64,20 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
   }
 })();
 
+async function shutdown() {
+  try {
+    logger.warn('🛑 Shutting down...');
+    await Promise.all([cacheService.close(), queueService.close()]);
+
+    logger.info('✅ Cleanup done');
+    process.exit(0);
+  } catch (err) {
+    logger.error('❌ Shutdown error:', err);
+    process.exit(1);
+  }
+}
+
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+
 export { app };

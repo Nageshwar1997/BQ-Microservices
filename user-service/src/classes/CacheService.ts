@@ -172,4 +172,19 @@ export class CacheService {
       logger.error('❌ Redis delete failed:', err);
     }
   }
+
+  /* ---------------- CLOSE ---------------- */
+
+  public async close() {
+    try {
+      if (!this.client) return;
+
+      await this.client.quit();
+      this.isReady = false;
+
+      logger.warn('🛑 Redis Cache Connection Closed');
+    } catch (err) {
+      logger.error('❌ Redis close failed:', err);
+    }
+  }
 }

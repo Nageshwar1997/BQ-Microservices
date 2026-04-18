@@ -1,7 +1,9 @@
 import type { SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
 import type { TAuthProvider, TRole } from '@beautinique/be-constants';
 import type { TRegister, TSellerRequest } from '@beautinique/be-zod';
+import type { JobsOptions } from 'bullmq';
 import type { Document, Types } from 'mongoose';
+
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
@@ -33,4 +35,13 @@ export interface ISeller extends IId, ITimestamp, Document, Pick<TUser, 'status'
 
 export interface IWishlist extends IId, ITimestamp, Document {
   products: TId[];
+}
+
+export type TQueueKey = '';
+
+export interface IQueueJob<T = unknown> {
+  queueName: TQueueKey;
+  jobName: string;
+  data: T;
+  options?: JobsOptions;
 }
