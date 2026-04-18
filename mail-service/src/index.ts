@@ -4,16 +4,9 @@ import express, { type Request, type Response } from 'express';
 import { parse } from 'qs';
 import { envs } from './envs';
 import { router } from './routes';
-import { connectToDB } from '@beautinique/be-configs';
-import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
-import {
-  CorsMiddleware,
-  DatabaseMiddleware,
-  RequestMiddleware,
-  ResponseMiddleware,
-} from '@beautinique/be-middlewares';
+import { errorLogger, logger, requestLogger } from './configs';
+import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
-import { cacheService, queueService } from './services';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -37,15 +30,14 @@ app.use(requestLogger);
 // 4. Custom middlewares
 app.use(ResponseMiddleware.success);
 app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
-app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Worker Service API'));
+app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Mail Service API'));
 
 // Health Route
-app.get('/health', (_: Request, res: Response) => res.success(200, 'Worker Service is healthy'));
+app.get('/health', (_: Request, res: Response) => res.success(200, 'Mail Service is healthy'));
 
 // API Routes
 app.use('/api/v1', router);
@@ -66,8 +58,7 @@ async function start() {
     });
 
     // 🔥 Start workers AFTER server is up
-    queueService.connect();
-    await Promise.all([connectToDB(databaseConfigs), cacheService.connect()]);
+    // If any service is required
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);
@@ -81,14 +72,8 @@ async function shutdown() {
 
   try {
     // 1️⃣ Close workers
-    const results = await Promise.allSettled([cacheService.close(), queueService.close()]);
 
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        logger.error(`❌ Service ${index} failed to close:`, result.reason);
-      }
-    });
-    logger.info('✅ Workers closed');
+    // logger.info('✅ Workers closed');
 
     // 2️⃣ Close server gracefully
     if (server) {
