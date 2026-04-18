@@ -35,11 +35,11 @@
       }
     },
     {
-      "label": "email-service",
+      "label": "worker-service",
       "type": "shell",
       "command": "npm run dev",
       "options": {
-        "cwd": "${workspaceFolder}/email-service",
+        "cwd": "${workspaceFolder}/worker-service",
         "shell": {
           "executable": "C:\\Program Files\\Git\\bin\\bash.exe",
           "args": ["-lc"]
@@ -58,7 +58,7 @@
       "label": "Run all microservices in VS Code terminals",
       "dependsOn": [
         "user-service",
-        "email-service"
+        "worker-service"
       ],
       "dependsOrder": "parallel",
       "problemMatcher": []

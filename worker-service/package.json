@@ -1,7 +1,7 @@
 {
-  "name": "email-service",
+  "name": "worker-service",
   "version": "1.0.0",
-  "description": "Email service for Beautinique project",
+  "description": "Worker service for Beautinique project",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
