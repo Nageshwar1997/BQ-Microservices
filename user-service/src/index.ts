@@ -13,7 +13,7 @@ import {
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
-import { cacheService } from './services';
+import { cacheService, queueService } from './services';
 
 const app = express();
 
@@ -53,7 +53,7 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
   try {
     await connectToDB(databaseConfigs);
     // await Promise.all([cacheService.connect(), mailService.checkConnection()]);
-    await Promise.all([cacheService.connect()]);
+    await Promise.all([cacheService.connect(), queueService.connect()]);
 
     app.listen(envs.port, () => {
       logger.info(`Server running on port: ${envs.port}`);

@@ -2,15 +2,20 @@ import { type JobsOptions, Queue } from 'bullmq';
 import { envs } from '@/envs';
 import { logger } from '@/configs';
 
-interface IQueueJob<T = unknown> {
+/* ---------------- TYPES ---------------- */
+
+export interface IQueueJob<T = unknown> {
   name: string;
   data: T;
   options?: JobsOptions;
 }
 
+/* ---------------- SERVICE ---------------- */
+
 export class QueueService {
   private connection;
-  private emailQueue: Queue;
+  private emailQueue: Queue | null = null;
+  private isReady = false;
 
   constructor() {
     this.connection = {
@@ -18,40 +23,91 @@ export class QueueService {
       port: envs.redis.queuing.port,
       password: envs.redis.queuing.password,
     };
-
-    // 📧 Email Queue
-    this.emailQueue = new Queue('email-queue', {
-      connection: this.connection,
-      defaultJobOptions: {
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 2000 },
-        removeOnComplete: true,
-        removeOnFail: 50,
-      },
-    });
-
-    logger.info('📦 Queue Service Initialized');
   }
 
-  /* ---------------- ADD JOB ---------------- */
+  /* ---------------- CONNECT ---------------- */
 
-  public async addEmailJob<T>(job: IQueueJob<T>) {
+  public async connect() {
     try {
-      await this.emailQueue.add(job.name, job.data, job.options);
-      logger.info(`✅ Job added to email-queue → ${job.name}`);
+      if (this.isReady) return;
+
+      this.emailQueue = new Queue('email-queue', {
+        connection: this.connection,
+        defaultJobOptions: {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: 50,
+        },
+      });
+
+      await this.emailQueue.waitUntilReady();
+
+      this.registerEvents();
+
+      this.isReady = true;
+      logger.info('📦 Queue Service Connected');
     } catch (err) {
-      logger.error('❌ Failed to add email job:', err);
+      this.isReady = false;
+      logger.error('❌ Queue connection failed:', err);
     }
+  }
+
+  /* ---------------- EVENTS ---------------- */
+
+  private registerEvents() {
+    if (!this.emailQueue) return;
+
+    this.emailQueue.on('error', (err) => {
+      logger.error('❌ Queue Error:', err);
+    });
+
+    this.emailQueue.on('waiting', (jobId) => {
+      logger.info(`⏳ Job waiting: ${jobId}`);
+    });
+  }
+
+  /* ---------------- GET QUEUE ---------------- */
+
+  private getQueue(): Queue {
+    if (!this.emailQueue || !this.isReady) {
+      throw new Error('Queue not initialized. Call connect() first.');
+    }
+    return this.emailQueue;
+  }
+
+  /* ---------------- GENERIC ADD ---------------- */
+
+  public async addJob<T>(job: IQueueJob<T>) {
+    const queue = this.getQueue();
+
+    try {
+      const createdJob = await queue.add(job.name, job.data, job.options);
+      logger.info(`✅ Job added → ${job.name} (${createdJob.id})`);
+      return createdJob;
+    } catch (err) {
+      logger.error('❌ Failed to add job:', err);
+      throw err;
+    }
+  }
+
+  /* ---------------- EMAIL JOB (SPECIFIC) ---------------- */
+
+  public async addEmailJob(data: { email: string; otp: string }) {
+    return this.addJob({
+      name: 'send-otp',
+      data,
+    });
   }
 
   /* ---------------- HEALTH CHECK ---------------- */
 
   public async isHealthy(): Promise<boolean> {
     try {
+      if (!this.emailQueue) return false;
       await this.emailQueue.waitUntilReady();
       return true;
-    } catch (err) {
-      logger.error('❌ Queue not ready:', err);
+    } catch {
       return false;
     }
   }
@@ -59,6 +115,10 @@ export class QueueService {
   /* ---------------- CLOSE ---------------- */
 
   public async close() {
-    await this.emailQueue.close();
+    if (this.emailQueue) {
+      await this.emailQueue.close();
+      this.isReady = false;
+      logger.warn('🛑 Queue Service Closed');
+    }
   }
 }
