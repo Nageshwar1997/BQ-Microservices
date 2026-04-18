@@ -1,0 +1,10 @@
+{
+  "name": "bq-microservices",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:all": "node run-all.js",
+    "start:all": "node run-all.js start"
+  },
+  "devDependencies": {}
+}
