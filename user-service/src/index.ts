@@ -53,7 +53,8 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
   try {
     await connectToDB(databaseConfigs);
     // await Promise.all([cacheService.connect(), mailService.checkConnection()]);
-    await Promise.all([cacheService.connect(), queueService.connect()]);
+    queueService.connect();
+    await cacheService.connect();
 
     app.listen(envs.port, () => {
       logger.info(`Server running on port: ${envs.port}`);

@@ -14,25 +14,11 @@ export class QueueService {
 
   /* ---------------- CONNECT ---------------- */
 
-  public async connect() {
-    try {
-      if (this.isReady) return;
+  public connect() {
+    if (this.isReady) return;
 
-      // 🔌 connection test (single)
-      const testQueue = new Queue('__health_check__', {
-        connection: this.connection,
-      });
-
-      await testQueue.waitUntilReady();
-      await testQueue.close();
-
-      this.isReady = true;
-      logger.info('📦 Queue Connected');
-    } catch (err) {
-      this.isReady = false;
-      logger.error('❌ Queue connection failed:', err);
-      throw err;
-    }
+    this.isReady = true;
+    logger.info('📦 Queue Ready');
   }
 
   /* ---------------- CREATE QUEUE ---------------- */
