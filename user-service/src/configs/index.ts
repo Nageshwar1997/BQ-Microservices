@@ -4,7 +4,7 @@ import { type ConnectOptions, connection } from 'mongoose';
 
 export const databaseConfigs = {
   uri: envs.is_dev ? envs.mongo_uri.dev : envs.mongo_uri.prod,
-  isDev: true,
+  isDev: envs.is_dev,
   options: { dbName: 'user-service' } as ConnectOptions,
 };
 
