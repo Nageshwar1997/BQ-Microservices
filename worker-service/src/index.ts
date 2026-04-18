@@ -33,9 +33,9 @@ app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 
 /* ---------------- ROUTES ---------------- */
 
-app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Email Service API'));
+app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Worker Service API'));
 
-app.get('/health', (_: Request, res: Response) => res.success(200, 'Email Service is healthy'));
+app.get('/health', (_: Request, res: Response) => res.success(200, 'Worker Service is healthy'));
 
 /* ---------------- ERROR HANDLING ---------------- */
 
@@ -73,7 +73,7 @@ async function shutdown() {
     // 2️⃣ Close server gracefully
     if (server) {
       await new Promise<void>((resolve) => {
-        server!.close(() => {
+        server?.close(() => {
           logger.info('🌐 Server closed');
           resolve();
         });
