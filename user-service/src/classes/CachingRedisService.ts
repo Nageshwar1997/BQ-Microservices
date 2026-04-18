@@ -1,11 +1,30 @@
-import { logger, redisClientConfig } from '@/configs';
+import { logger } from '@/configs';
+import { envs } from '@/envs';
 import { getUserById } from '@/services';
 import type { IUser, TId } from '@/types';
 import { HOUR } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/be-utils';
-import type { RedisClientType } from 'redis';
+import { type RedisClientType, createClient } from 'redis';
 
-export class RedisService {
+const redisClientConfig: RedisClientType = createClient({
+  socket: {
+    host: envs.redis.caching.host,
+    port: Number(envs.redis.caching.port),
+    reconnectStrategy: (retries: number): number | false => {
+      if (retries >= 5) {
+        // Max reconnect attempts
+        logger.error('❌ Max Redis reconnection attempts reached');
+        return false;
+      }
+      const delay = Math.min(retries * 1000, 10000); //10s
+      logger.info(`🔄 Redis reconnecting in ${delay}ms (attempt ${retries + 1})`);
+      return delay;
+    },
+  },
+  password: envs.redis.caching.password,
+});
+
+export class CachingRedisService {
   private client: RedisClientType | null = null;
   private isReady = false;
   private USER_KEY_PREFIX = 'bq:user';

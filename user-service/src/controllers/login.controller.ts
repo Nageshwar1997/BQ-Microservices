@@ -1,6 +1,6 @@
 import { googleAuthClient } from '@/clients';
 import { User } from '@/models';
-import { getUserByEmailOrPhoneNumber, redisService } from '@/services';
+import { cachingRedisService, getUserByEmailOrPhoneNumber } from '@/services';
 import { createOAuthDbPayload, generateAuthToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import bcrypt from 'bcryptjs';
@@ -45,7 +45,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
   const { password: _password, ...restUser } = user;
 
-  await redisService.setCachedUser(user);
+  await cachingRedisService.setCachedUser(user);
 
   res.success(200, 'User logged in successfully', { token, user: restUser });
 };
@@ -88,7 +88,7 @@ export const googleCallbackController = async (req: Request, res: Response, next
 
     const token = generateAuthToken(user._id);
 
-    await redisService.setCachedUser(user);
+    await cachingRedisService.setCachedUser(user);
     res.success(200, 'User logged in successfully', { token });
   } catch (err) {
     next(err);

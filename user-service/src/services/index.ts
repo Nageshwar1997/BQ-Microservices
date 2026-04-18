@@ -1,7 +1,7 @@
 import { OAuthService } from '@/apis/OAuthService';
-import { RedisService } from '@/classes/RedisService';
+import { CachingRedisService } from '@/classes';
 
 export * from './getUser.service';
 
-export const redisService = new RedisService();
+export const cachingRedisService = new CachingRedisService();
 export const oAuthService = new OAuthService();

@@ -13,7 +13,7 @@ import {
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
-import { redisService } from './services';
+import { cachingRedisService } from './services';
 
 const app = express();
 
@@ -52,8 +52,8 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
 (async () => {
   try {
     await connectToDB(databaseConfigs);
-    // await Promise.all([redisService.connect(), mailService.checkConnection()]);
-    await Promise.all([redisService.connect()]);
+    // await Promise.all([cachingRedisService.connect(), mailService.checkConnection()]);
+    await Promise.all([cachingRedisService.connect()]);
 
     app.listen(envs.port, () => {
       logger.info(`Server running on port: ${envs.port}`);
