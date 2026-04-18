@@ -1,0 +1,78 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install all services",
+      "type": "shell",
+      "command": "npm run install:all",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      }
+    },
+    {
+      "label": "Run user-service in VS Code Bash",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/user-service",
+        "shell": {
+          "executable": "C:\\Program Files\\Git\\bin\\bash.exe",
+          "args": ["-lc"]
+        }
+      },
+      "problemMatcher": [],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "microservices",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
+      "label": "Run email-service in VS Code Bash",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/email-service",
+        "shell": {
+          "executable": "C:\\Program Files\\Git\\bin\\bash.exe",
+          "args": ["-lc"]
+        }
+      },
+      "problemMatcher": [],
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "microservices",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
+      "label": "Run all microservices in VS Code terminals",
+      "dependsOn": [
+        "Run user-service in VS Code Bash",
+        "Run email-service in VS Code Bash"
+      ],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    },
+    {
+      "label": "Install and run all microservices in VS Code",
+      "dependsOn": [
+        "Install all services",
+        "Run all microservices in VS Code terminals"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    }
+  ]
+}

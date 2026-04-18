@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "install:all": "node install-all.js",
     "dev:all": "node run-all.js",
-    "start:all": "node run-all.js start"
+    "start:all": "node run-all.js start",
+    "all": "npm run install:all && npm run dev:all",
+    "bootstrap": "npm run install:all && npm run dev:all"
   },
   "devDependencies": {}
 }
