@@ -26,10 +26,9 @@
         }
       },
       "problemMatcher": [],
-      "isBackground": true,
       "presentation": {
         "reveal": "always",
-        "panel": "new",
+        "panel": "dedicated",
         "group": "microservices",
         "showReuseMessage": false,
         "clear": false
@@ -47,10 +46,9 @@
         }
       },
       "problemMatcher": [],
-      "isBackground": true,
       "presentation": {
         "reveal": "always",
-        "panel": "new",
+        "panel": "dedicated",
         "group": "microservices",
         "showReuseMessage": false,
         "clear": false
