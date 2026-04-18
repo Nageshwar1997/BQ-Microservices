@@ -15,7 +15,7 @@
       }
     },
     {
-      "label": "Run user-service in VS Code Bash",
+      "label": "user-service",
       "type": "shell",
       "command": "npm run dev",
       "options": {
@@ -36,7 +36,7 @@
       }
     },
     {
-      "label": "Run email-service in VS Code Bash",
+      "label": "email-service",
       "type": "shell",
       "command": "npm run dev",
       "options": {
@@ -59,8 +59,8 @@
     {
       "label": "Run all microservices in VS Code terminals",
       "dependsOn": [
-        "Run user-service in VS Code Bash",
-        "Run email-service in VS Code Bash"
+        "user-service",
+        "email-service"
       ],
       "dependsOrder": "parallel",
       "problemMatcher": []
