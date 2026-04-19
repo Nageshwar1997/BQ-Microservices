@@ -52,13 +52,19 @@ export class MailService {
   private async sendMail(options: { to: string; subject: string; htmlOrText: string }) {
     const text = convert(options.htmlOrText, { wordwrap: 130 });
 
-    return this.transporter.sendMail({
-      from: `Beautinique <${envs.mail.from}>`,
-      to: options.to,
-      subject: options.subject,
-      text,
-      html: options.htmlOrText,
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `Beautinique <${envs.mail.from}>`,
+        to: options.to,
+        subject: options.subject,
+        text,
+        html: options.htmlOrText,
+      });
+    } catch (err) {
+      logger.error('❌ Email send failed:', err);
+      throw err;
+    }
+
   }
 
   /* ---------------- OTP email ---------------- */
