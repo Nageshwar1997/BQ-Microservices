@@ -101,7 +101,7 @@ class CacheService {
       const { password: _password, ...restUser } =
         typeof user.toObject === 'function' ? user.toObject() : user;
 
-      await client.setEx(key, HOUR, stringifyData(restUser));
+      await client.setEx(key, HOUR * 24, stringifyData(restUser));
     } catch (err) {
       logger.error('❌ Redis set failed:', err);
     }
