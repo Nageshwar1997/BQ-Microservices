@@ -7,6 +7,7 @@ import { router } from './routes';
 import { errorLogger, logger, requestLogger } from './configs';
 import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
+import { mailService } from './services';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -58,7 +59,7 @@ async function start() {
     });
 
     // 🔥 Start workers AFTER server is up
-    // If any service is required
+    await mailService.connect();
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);
@@ -72,8 +73,8 @@ async function shutdown() {
 
   try {
     // 1️⃣ Close workers
-
-    // logger.info('✅ Workers closed');
+    await mailService.close();
+    logger.info('✅ Workers closed');
 
     // 2️⃣ Close server gracefully
     if (server) {

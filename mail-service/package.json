@@ -21,6 +21,7 @@
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/node": "^25.6.0",
+    "@types/nodemailer": "^8.0.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.2.0",
     "eslint-config-prettier": "^10.1.8",
@@ -35,6 +36,7 @@
     "@beautinique/be-middlewares": "^1.0.8",
     "@beautinique/be-zod": "^1.0.11",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.5"
   }
 }
