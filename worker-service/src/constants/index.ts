@@ -17,3 +17,9 @@ export const WORKER_CONFIGS: ConnectionOptions = {
   port: envs.redis.worker.port,
   password: envs.redis.worker.password,
 };
+
+export const API_ROUTES_AND_METHODS = {
+  mail: {
+    sendOtp: { url: '/send-otp', method: 'POST' },
+  },
+};

@@ -37,7 +37,7 @@ export interface IWishlist extends IId, ITimestamp, Document {
   products: TId[];
 }
 
-export type TQueueKey = '';
+export type TQueueKey = 'email-queue';
 
 export interface IQueueJob<T = unknown> {
   queueName: TQueueKey;

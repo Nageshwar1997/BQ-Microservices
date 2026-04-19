@@ -1,1 +1,1 @@
-export type TWorkerKey = 'email-queue';
+export type TQueueKey = 'email-queue';

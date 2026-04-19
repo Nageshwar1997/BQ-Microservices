@@ -52,6 +52,12 @@ export const envs = {
         master: process.env.FRONTEND_PROD_MASTER_URL as string,
       },
     },
+    service: {
+      mail: {
+        dev: process.env.MAIL_SERVICE_DEV_URL as string,
+        prod: process.env.MAIL_SERVICE_PROD_URL as string,
+      },
+    },
   },
 
   // V

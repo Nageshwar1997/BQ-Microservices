@@ -26,22 +26,23 @@ export class QueueService {
   private createQueue(name: TQueueKey): Queue {
     const queue = new Queue(name, {
       connection: this.connection,
+
       defaultJobOptions: {
-        attempts: 3, // 🔁 Maximum retry attempts if job fails
+        attempts: 3, // 🔁 Max 3 retries
 
         backoff: {
-          type: 'exponential', // ⏳ Delay increases exponentially on each retry
-          delay: 2000, // ⏱️ Initial delay = 2 seconds
+          type: 'exponential', // ⏳ smart retry delay
+          delay: 2000, // ⏱️ 2 sec initial delay
         },
 
         removeOnComplete: {
-          age: 60, // 🧹 Completed jobs will be removed after 60 seconds
-          count: 10, // 📦 Keep only last 10 completed jobs (whichever limit hits first)
+          age: 30, // 🧹 Completed jobs will be removed after 30 seconds
+          count: 5, // 📦 Keep only last 5 completed jobs (whichever limit hits first)
         },
 
         removeOnFail: {
-          age: 3600, // 🧹 Failed jobs will be removed after 1 hour (3600 sec)
-          count: 20, // 📦 Keep only last 20 failed jobs for debugging
+          age: 1800, // 🧹 Failed jobs will be removed after 30 min (1800 sec)
+          count: 10, // 📦 📦 Keep only last 10 failed jobs for debugging
         },
       },
     });
