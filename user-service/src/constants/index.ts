@@ -2,14 +2,11 @@ import { envs } from '@/envs';
 import type { ConnectionOptions } from 'bullmq';
 
 export const ORIGINS = [
-  envs.url.frontend.prod.client,
-  envs.url.frontend.prod.admin,
-  envs.url.frontend.prod.master,
-  envs.url.frontend.dev.client,
-  envs.url.frontend.dev.admin,
-  envs.url.frontend.dev.master,
-  envs.url.frontend.dev.public1,
-  envs.url.frontend.dev.public2,
+  envs.url.frontend.client,
+  envs.url.frontend.admin,
+  envs.url.frontend.master,
+  envs.url.frontend.public1,
+  envs.url.frontend.public2,
 ];
 
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;

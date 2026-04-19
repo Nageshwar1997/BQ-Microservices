@@ -1,3 +1,67 @@
+const {
+  // A
+  // B
+  BACKEND_DEV_URL,
+  BACKEND_PROD_URL,
+  // C
+  CACHING_REDIS_HOST,
+  CACHING_REDIS_PORT,
+  CACHING_REDIS_PASSWORD,
+  CACHING_REDIS_USERNAME,
+  // D
+  // E
+  // F
+  FRONTEND_DEV_ADMIN_URL,
+  FRONTEND_DEV_CLIENT_URL,
+  FRONTEND_DEV_MASTER_URL,
+  FRONTEND_DEV_PUBLIC_URL_1,
+  FRONTEND_DEV_PUBLIC_URL_2,
+  FRONTEND_PROD_ADMIN_URL,
+  FRONTEND_PROD_CLIENT_URL,
+  FRONTEND_PROD_MASTER_URL,
+  // G
+  GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET,
+  GITHUB_REDIRECT_ENDPOINT,
+
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_ENDPOINT,
+  // H
+  // I
+  IS_DEV,
+  // J
+  JWT_SECRET,
+  // K
+  // L
+  LINKEDIN_CLIENT_ID,
+  LINKEDIN_CLIENT_SECRET,
+  LINKEDIN_REDIRECT_ENDPOINT,
+  // M
+  MONGODB_PROD_URI,
+  MONGODB_DEV_URI,
+  // N
+  // O
+  // P
+  PORT,
+  // Q
+  QUEUING_REDIS_HOST,
+  QUEUING_REDIS_PORT,
+  QUEUING_REDIS_PASSWORD,
+  QUEUING_REDIS_USERNAME,
+  // R
+  // S
+  // T
+  // U
+  // V
+  // W
+  // X
+  // Y
+  // Z
+} = process.env as Record<string, string>;
+
+const is_dev = IS_DEV === 'true';
+
 export const envs = {
   // A
   // B
@@ -8,56 +72,52 @@ export const envs = {
   // G
   // H
   // I
-  is_dev: (process.env.IS_DEV as string) === 'true',
-
+  is_dev,
   // J
-  jwt_secret: process.env.JWT_SECRET as string,
+  jwt_secret: JWT_SECRET,
 
   // K
   // L
   // M
-  mongo_uri: {
-    prod: process.env.MONGODB_PROD_URI as string,
-    dev: process.env.MONGODB_DEV_URI as string,
-  },
+  mongo_uri: is_dev ? MONGODB_DEV_URI : MONGODB_PROD_URI,
 
   // N
   // O
   oAuth: {
-    google: {
-      client_id: process.env.GOOGLE_CLIENT_ID as string,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET as string,
-      redirect_endpoint: process.env.GOOGLE_REDIRECT_ENDPOINT as string,
-    },
     github: {
-      client_id: process.env.GITHUB_CLIENT_ID as string,
-      client_secret: process.env.GITHUB_CLIENT_SECRET as string,
-      redirect_endpoint: process.env.GITHUB_REDIRECT_ENDPOINT as string,
+      client_id: GITHUB_CLIENT_ID,
+      client_secret: GITHUB_CLIENT_SECRET,
+      redirect_endpoint: GITHUB_REDIRECT_ENDPOINT,
+    },
+    google: {
+      client_id: GOOGLE_CLIENT_ID,
+      client_secret: GOOGLE_CLIENT_SECRET,
+      redirect_endpoint: GOOGLE_REDIRECT_ENDPOINT,
     },
     linkedin: {
-      client_id: process.env.LINKEDIN_CLIENT_ID as string,
-      client_secret: process.env.LINKEDIN_CLIENT_SECRET as string,
-      redirect_endpoint: process.env.LINKEDIN_REDIRECT_ENDPOINT as string,
+      client_id: LINKEDIN_CLIENT_ID,
+      client_secret: LINKEDIN_CLIENT_SECRET,
+      redirect_endpoint: LINKEDIN_REDIRECT_ENDPOINT,
     },
   },
 
   // P
-  port: Number(process.env.PORT as string),
+  port: Number(PORT),
 
   // Q
   // R
   redis: {
     caching: {
-      host: process.env.CACHING_REDIS_HOST as string,
-      port: Number(process.env.CACHING_REDIS_PORT),
-      password: process.env.CACHING_REDIS_PASSWORD as string,
-      username: process.env.CACHING_REDIS_USERNAME as string,
+      host: CACHING_REDIS_HOST,
+      port: Number(CACHING_REDIS_PORT),
+      password: CACHING_REDIS_PASSWORD,
+      username: CACHING_REDIS_USERNAME,
     },
     queuing: {
-      host: process.env.QUEUING_REDIS_HOST as string,
-      port: Number(process.env.QUEUING_REDIS_PORT),
-      password: process.env.QUEUING_REDIS_PASSWORD as string,
-      username: process.env.QUEUING_REDIS_USERNAME as string,
+      host: QUEUING_REDIS_HOST,
+      port: Number(QUEUING_REDIS_PORT),
+      password: QUEUING_REDIS_PASSWORD,
+      username: QUEUING_REDIS_USERNAME,
     },
   },
 
@@ -65,24 +125,14 @@ export const envs = {
   // T
   // U
   url: {
-    gateway: {
-      dev: process.env.BACKEND_DEV_URL as string,
-      prod: process.env.BACKEND_PROD_URL as string,
-    },
     frontend: {
-      dev: {
-        client: process.env.FRONTEND_DEV_CLIENT_URL as string,
-        admin: process.env.FRONTEND_DEV_ADMIN_URL as string,
-        master: process.env.FRONTEND_DEV_MASTER_URL as string,
-        public1: process.env.FRONTEND_DEV_PUBLIC_URL_1 as string,
-        public2: process.env.FRONTEND_DEV_PUBLIC_URL_2 as string,
-      },
-      prod: {
-        client: process.env.FRONTEND_PROD_CLIENT_URL as string,
-        admin: process.env.FRONTEND_PROD_ADMIN_URL as string,
-        master: process.env.FRONTEND_PROD_MASTER_URL as string,
-      },
+      client: is_dev ? FRONTEND_DEV_CLIENT_URL : FRONTEND_PROD_CLIENT_URL,
+      admin: is_dev ? FRONTEND_DEV_ADMIN_URL : FRONTEND_PROD_ADMIN_URL,
+      master: is_dev ? FRONTEND_DEV_MASTER_URL : FRONTEND_PROD_MASTER_URL,
+      public1: FRONTEND_DEV_PUBLIC_URL_1,
+      public2: FRONTEND_DEV_PUBLIC_URL_2,
     },
+    gateway: is_dev ? BACKEND_DEV_URL : BACKEND_PROD_URL,
   },
 
   // V
@@ -90,4 +140,4 @@ export const envs = {
   // X
   // Y
   // Z
-};
+} as const;

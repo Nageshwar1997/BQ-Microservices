@@ -5,15 +5,13 @@ import { envs } from '@/envs';
 import { parseData } from '@beautinique/be-utils';
 
 function getSocialAuthRedirectURL(provider: Exclude<TAuthProvider, 'MANUAL'>) {
-  const baseURL = envs.is_dev ? envs.url.gateway.dev : envs.url.gateway.prod;
-
   const redirectMap: Partial<Record<Exclude<TAuthProvider, 'MANUAL'>, string>> = {
     GOOGLE: envs.oAuth.google.redirect_endpoint,
     LINKEDIN: envs.oAuth.linkedin.redirect_endpoint,
     GITHUB: envs.oAuth.github.redirect_endpoint,
   };
 
-  return `${baseURL}${redirectMap[provider]}`;
+  return `${envs.url.gateway}${redirectMap[provider]}`;
 }
 
 class GoogleAuth extends ApiRequest {

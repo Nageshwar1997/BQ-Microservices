@@ -3,7 +3,7 @@ import { envs } from '@/envs';
 import { type ConnectOptions, connection } from 'mongoose';
 
 export const databaseConfigs = {
-  uri: envs.is_dev ? envs.mongo_uri.dev : envs.mongo_uri.prod,
+  uri: envs.mongo_uri,
   isDev: envs.is_dev,
   options: { dbName: 'user-service' } as ConnectOptions,
 };
