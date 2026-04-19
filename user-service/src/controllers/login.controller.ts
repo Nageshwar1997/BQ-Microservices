@@ -1,6 +1,5 @@
-import { googleAuthClient } from '@/clients';
 import { User } from '@/models';
-import { cacheService, getUserByEmailOrPhoneNumber } from '@/services';
+import { cacheService, getUserByEmailOrPhoneNumber, socialAuth } from '@/services';
 import { createOAuthDbPayload, generateAuthToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import bcrypt from 'bcryptjs';
@@ -51,7 +50,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 };
 
 export const googleRedirectController = (_req: Request, res: Response) => {
-  const url = googleAuthClient.url;
+  const url = socialAuth.google().url();
   res.success(200, 'User logged in successfully', { url });
 };
 
@@ -66,8 +65,8 @@ export const googleCallbackController = async (req: Request, res: Response, next
       });
 
     // Fetch user info from Google
-    const profile = await googleAuthClient.decode(code);
-    if (!profile) throw new AppError({ message: 'User info not found', statusCode: 400 });
+    const profile = await socialAuth.google().decode(String(code));
+    if (!profile) throw new AppError({ message: 'User info not found', statusCode: 404 });
 
     // Prepare payload
     const payload = await createOAuthDbPayload(profile, 'GOOGLE');

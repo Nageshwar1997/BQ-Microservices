@@ -1,4 +1,3 @@
-import { logger } from '@/configs';
 import { queueService } from '@/services';
 import type { TRegisterEmail } from '@beautinique/be-zod';
 import type { Request, Response } from 'express';
@@ -6,7 +5,6 @@ import type { Request, Response } from 'express';
 class RegisterControllers {
   public async sendOtp(req: Request, res: Response) {
     const { email } = req.body as TRegisterEmail;
-    logger.info('Inside Send Otp');
     const job = await queueService.addJob({
       queueName: 'email-queue',
       jobName: 'send-otp',
