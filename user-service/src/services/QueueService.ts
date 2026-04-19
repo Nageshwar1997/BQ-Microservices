@@ -3,7 +3,7 @@ import { logger } from '@/configs';
 import { QUEUE_CONFIGS } from '@/constants';
 import type { IQueueJob, TQueueKey } from '@/types';
 
-export class QueueService {
+class QueueService {
   private connection: ConnectionOptions;
   private queues = new Map<TQueueKey, Queue>();
   private isReady = false;
@@ -107,3 +107,5 @@ export class QueueService {
     logger.warn('🛑 All Queues Closed');
   }
 }
+
+export const queueService = new QueueService();

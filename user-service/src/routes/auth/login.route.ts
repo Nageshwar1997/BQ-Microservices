@@ -1,4 +1,7 @@
 import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
+import { loginControllers } from '@/controllers';
+import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
+import { loginSchema } from '@beautinique/be-zod';
 import { type Request, type Response, Router } from 'express';
 
 export const loginRouter = Router();
@@ -6,23 +9,22 @@ export const loginRouter = Router();
 const { login } = GATEWAY_METHODS_AND_PATHS.auth;
 
 // Manual
-loginRouter[login.manual.method](login.manual.path, (req: Request, res: Response) => {
-  res.success(200, 'Hello', { data: req.body });
-});
+loginRouter[login.manual.method](
+  login.manual.path,
+  RequestMiddleware.emptyRequest({ body: true }),
+  ZodMiddleware.validateSchema(loginSchema),
+  ResponseMiddleware.tryCatch(loginControllers.manual),
+);
 
 // Google
 loginRouter[login.oauth.google.redirect.method](
   login.oauth.google.redirect.path,
-  (req: Request, res: Response) => {
-    res.success(200, 'Hello', { data: req.body });
-  },
+  ResponseMiddleware.tryCatch(loginControllers.googleRedirect),
 );
 
 loginRouter[login.oauth.google.callback.method](
   login.oauth.google.callback.path,
-  (req: Request, res: Response) => {
-    res.success(200, 'Hello', { data: req.body });
-  },
+  ResponseMiddleware.tryCatch(loginControllers.googleCallback),
 );
 
 // LinkedIn

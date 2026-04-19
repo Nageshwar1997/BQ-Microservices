@@ -85,3 +85,7 @@ export const QUEUE_CONFIGS: ConnectionOptions = {
   port: envs.redis.queuing.port,
   password: envs.redis.queuing.password,
 };
+
+export const QUEUE_AND_JOB_NAMES = {
+  'email-queue': ['send-otp'],
+} as const;

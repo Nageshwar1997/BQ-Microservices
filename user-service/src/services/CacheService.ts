@@ -1,8 +1,9 @@
 import { logger } from '@/configs';
 import { envs } from '@/envs';
-import { getUserById } from '@/services';
+import { getUserService } from '@/services';
 import type { IUser, TId } from '@/types';
-import { HOUR } from '@beautinique/be-constants';
+import { commonUtils } from '@/utils';
+import { HOUR, MINUTE } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
 
@@ -24,10 +25,13 @@ const redisClientConfig: RedisClientType = createClient({
   password: envs.redis.caching.password,
 });
 
-export class CacheService {
+class CacheService {
   private client: RedisClientType | null = null;
   private isReady = false;
-  private USER_KEY_PREFIX = 'bq:user';
+  private KEY_PREFIX = {
+    USER: 'bq:user',
+    OTP_TOKEN: 'bq:otp-token',
+  };
 
   constructor() {
     this.client = redisClientConfig;
@@ -73,34 +77,48 @@ export class CacheService {
   }
 
   private getUserKey(userId: string | TId) {
-    return `${this.USER_KEY_PREFIX}:${userId}`;
+    return `${this.KEY_PREFIX.USER}:${userId}`;
+  }
+
+  private getOtpTokenKey(otpToken: string) {
+    return `${this.KEY_PREFIX.OTP_TOKEN}:${otpToken}`;
   }
 
   /* ---------------- DB HELPER ---------------- */
 
   private async getDbUser(userId: string | TId) {
-    try {
-      return await getUserById({ id: userId });
-    } catch (err) {
-      logger.error('❌ DB fetch failed:', err);
-      return null;
-    }
+    return await getUserService.by_id({ id: userId });
   }
 
   /* ---------------- SET CACHE ---------------- */
 
   public async setCachedUser(user: IUser) {
     const client = this.getClient();
+    const key = this.getUserKey(user._id);
     if (!client || !user) return;
 
     try {
       const { password: _password, ...restUser } =
         typeof user.toObject === 'function' ? user.toObject() : user;
 
-      await client.setEx(this.getUserKey(user._id), HOUR, stringifyData(restUser));
+      await client.setEx(key, HOUR, stringifyData(restUser));
     } catch (err) {
       logger.error('❌ Redis set failed:', err);
     }
+  }
+
+  public async setCacheOtpToken(email: string) {
+    const client = this.getClient();
+    const otpToken = commonUtils.generateTempToken(20);
+    const otp = commonUtils.generateOtp();
+
+    const key = this.getOtpTokenKey(otpToken);
+
+    const sendCount = 1;
+
+    client?.setEx(key, MINUTE * 10, stringifyData({ otp, email, sendCount }));
+
+    return { otpToken, sendCount, otp };
   }
 
   /* ---------------- GET CACHE ---------------- */
@@ -188,3 +206,5 @@ export class CacheService {
     }
   }
 }
+
+export const cacheService = new CacheService();

@@ -1,4 +1,4 @@
-import type { SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
+import type { QUEUE_AND_JOB_NAMES, SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
 import type { TAuthProvider, TRole } from '@beautinique/be-constants';
 import type { TRegister, TSellerRequest } from '@beautinique/be-zod';
 import type { JobsOptions } from 'bullmq';
@@ -14,8 +14,8 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
-export type TUser = TRegister & {
-  profilePic?: string;
+export type TUser = Omit<TRegister, 'confirmPassword' | 'otp'> & {
+  avatar?: string;
   role: TRole;
   providers: TAuthProvider[];
   status: (typeof USER_STATUS)[number];
@@ -37,11 +37,11 @@ export interface IWishlist extends IId, ITimestamp, Document {
   products: TId[];
 }
 
-export type TQueueKey = 'email-queue';
+type TQueue = typeof QUEUE_AND_JOB_NAMES;
+export type TQueueKey = keyof TQueue;
+type TQueueJobName = { [K in TQueueKey]: { queueName: K; jobName: TQueue[K][number] } }[TQueueKey];
 
-export interface IQueueJob<T = unknown> {
-  queueName: TQueueKey;
-  jobName: string;
-  data: T;
+export type IQueueJob<TData = unknown> = TQueueJobName & {
+  data: TData;
   options?: JobsOptions;
-}
+};

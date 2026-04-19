@@ -121,16 +121,6 @@ class GithubAuth extends ApiRequest {
   }
 }
 
-export class SocialAuth {
-  public google() {
-    return new GoogleAuth();
-  }
-
-  public linkedin() {
-    return new LinkedinAuth();
-  }
-
-  public github() {
-    return new GithubAuth();
-  }
-}
+export const googleAuth = new GoogleAuth();
+export const linkedinAuth = new LinkedinAuth();
+export const githubAuth = new GithubAuth();

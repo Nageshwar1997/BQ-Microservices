@@ -1,8 +1,4 @@
-import { CacheService, QueueService, SocialAuth } from '@/classes';
+export * from './CacheService';
+export * from './UserService';
+export * from './QueueService';
 
-export * from './getUser.service';
-
-export const cacheService = new CacheService();
-export const queueService = new QueueService();
-
-export const socialAuth = new SocialAuth();
