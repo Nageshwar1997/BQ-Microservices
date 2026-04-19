@@ -1,5 +1,8 @@
 import { transporterConfig } from '@/configs';
 import { logger } from '@/configs';
+import { envs } from '@/envs';
+import { getOtpHtmlMessage } from '@/utils';
+import { convert } from 'html-to-text';
 
 export class MailService {
   private transporter: typeof transporterConfig;
@@ -42,5 +45,25 @@ export class MailService {
     } catch (err) {
       logger.error('❌ Mail Service close failed:', err);
     }
+  }
+
+  /* ---------------- Generic send email ---------------- */
+
+  private async sendMail(options: { to: string; subject: string; htmlOrText: string }) {
+    const text = convert(options.htmlOrText, { wordwrap: 130 });
+
+    return this.transporter.sendMail({
+      from: `Beautinique <${envs.mail.from}>`,
+      to: options.to,
+      subject: options.subject,
+      text,
+      html: options.htmlOrText,
+    });
+  }
+
+  /* ---------------- OTP email ---------------- */
+  public async sendOtp(to: string, otp: string) {
+    const html = getOtpHtmlMessage('OTP Verification', otp);
+    await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
   }
 }

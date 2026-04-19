@@ -10,7 +10,7 @@ export const transporterConfig = createTransport({
 });
 
 export const { errorLogger, logger, requestLogger } = LoggerMiddleware.createLogger({
-  serviceName: 'User-Service',
+  serviceName: 'Mail-Service',
   logDir: 'logs',
   level: envs.is_dev ? 'debug' : 'info',
 });
