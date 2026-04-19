@@ -1,8 +1,9 @@
 import { type Job, Worker } from 'bullmq';
 import { WORKER_CONFIGS } from '@/constants';
 import { logger } from '@/configs';
-import type { TQueueKey } from '@/types';
+import type { TJobName, TQueueKey } from '@/types';
 import { mailService } from '@/services';
+import type { TSendOtpMail } from '@beautinique/be-zod';
 
 /* ---------------- SERVICE ---------------- */
 
@@ -62,16 +63,18 @@ export class WorkerService {
 
   private async handleEmailJobs(job: Job) {
     const { data } = job;
-    switch (job.name) {
+    const jobName = job.name as TJobName<'email-queue'>;
+    switch (jobName) {
       case 'send-otp': {
-        logger.info(`📩 Forwarding OTP to mail-service for ${data.email}`);
-        await mailService.sendOtp({ email: data.email, otp: data.otp });
-        logger.info(`✅ OTP forwarded to mail-service for ${data.email}`);
+        const { email, otp } = data as TSendOtpMail;
+        logger.info(`📩 Forwarding OTP to mail-service for ${email}`);
+        await mailService.sendOtp({ email, otp });
+        logger.info(`✅ OTP forwarded to mail-service for ${email}`);
         break;
       }
 
       default:
-        throw new Error(`🚫 Unknown email job: ${job.name}`);
+        throw new Error(`🚫 Unknown email job: ${jobName}`);
     }
   }
 

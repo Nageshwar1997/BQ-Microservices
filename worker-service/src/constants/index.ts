@@ -18,6 +18,10 @@ export const WORKER_CONFIGS: ConnectionOptions = {
   password: envs.redis.worker.password,
 };
 
+export const QUEUE_AND_JOB_NAMES = {
+  'email-queue': ['send-otp'],
+} as const;
+
 export const API_ROUTES_AND_METHODS = {
   mail: {
     sendOtp: { url: '/send-otp', method: 'POST' },

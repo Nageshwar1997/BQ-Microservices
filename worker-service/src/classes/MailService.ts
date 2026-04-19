@@ -1,5 +1,6 @@
 import { envs } from '@/envs';
 import { ApiRequest } from './ApiRequest';
+import type { TSendOtpMail } from '@beautinique/be-zod';
 
 export class MailService extends ApiRequest {
   constructor() {
@@ -8,7 +9,7 @@ export class MailService extends ApiRequest {
     );
   }
 
-  public async sendOtp(data: { email: string; otp: string }) {
+  public async sendOtp(data: TSendOtpMail) {
     await this.request({ ...this.routes.mail.sendOtp, data });
   }
 }
