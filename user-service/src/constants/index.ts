@@ -1,13 +1,7 @@
 import { envs } from '@/envs';
 import type { ConnectionOptions } from 'bullmq';
 
-export const ORIGINS = [
-  envs.url.frontend.client,
-  envs.url.frontend.admin,
-  envs.url.frontend.master,
-  envs.url.frontend.public1,
-  envs.url.frontend.public2,
-];
+export const ORIGINS = Object.values(envs.url.frontend);
 
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
@@ -77,11 +71,7 @@ export const GATEWAY_METHODS_AND_PATHS = {
   },
 } as const;
 
-export const QUEUE_CONFIGS: ConnectionOptions = {
-  host: envs.redis.queuing.host,
-  port: envs.redis.queuing.port,
-  password: envs.redis.queuing.password,
-};
+export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
 
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],

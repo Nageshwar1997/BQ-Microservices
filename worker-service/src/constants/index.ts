@@ -1,19 +1,9 @@
 import { envs } from '@/envs';
 import type { ConnectionOptions } from 'bullmq';
 
-export const ORIGINS = [
-  envs.url.frontend.client,
-  envs.url.frontend.admin,
-  envs.url.frontend.master,
-  envs.url.frontend.public1,
-  envs.url.frontend.public2,
-];
+export const ORIGINS = Object.values(envs.url.frontend);
 
-export const WORKER_CONFIGS: ConnectionOptions = {
-  host: envs.redis.worker.host,
-  port: envs.redis.worker.port,
-  password: envs.redis.worker.password,
-};
+export const WORKER_CONFIGS: ConnectionOptions = envs.redis.worker;
 
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],

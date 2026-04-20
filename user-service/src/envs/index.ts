@@ -157,13 +157,13 @@ export const envs = {
   // R
 
   redis: {
-    caching: {
+    cache: {
       host: CACHE_REDIS_HOST,
       port: Number(CACHE_REDIS_PORT),
       password: CACHE_REDIS_PASSWORD,
       username: CACHE_REDIS_USERNAME,
     },
-    queuing: {
+    queue: {
       host: QUEUE_REDIS_HOST,
       port: Number(QUEUE_REDIS_PORT),
       password: QUEUE_REDIS_PASSWORD,

@@ -1,12 +1,6 @@
 import { envs } from '@/envs';
 
-export const ORIGINS = [
-  envs.url.frontend.client,
-  envs.url.frontend.admin,
-  envs.url.frontend.master,
-  envs.url.frontend.public1,
-  envs.url.frontend.public2,
-];
+export const ORIGINS = Object.values(envs.url.frontend);
 
 export const GATEWAY_METHODS_AND_PATHS = {
   auth: {

@@ -9,8 +9,8 @@ import { type RedisClientType, createClient } from 'redis';
 
 const client: RedisClientType = createClient({
   socket: {
-    host: envs.redis.caching.host,
-    port: envs.redis.caching.port,
+    host: envs.redis.cache.host,
+    port: envs.redis.cache.port,
     reconnectStrategy: (retries: number): number | false => {
       if (retries >= 5) {
         // Max reconnect attempts
@@ -22,7 +22,8 @@ const client: RedisClientType = createClient({
       return delay;
     },
   },
-  password: envs.redis.caching.password,
+  username: envs.redis.cache.username,
+  password: envs.redis.cache.password,
 });
 
 class RedisCache {
