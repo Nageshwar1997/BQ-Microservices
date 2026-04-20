@@ -12,6 +12,7 @@ const {
   FRONTEND_DEV_MASTER_URL,
   FRONTEND_DEV_PUBLIC_URL_1,
   FRONTEND_DEV_PUBLIC_URL_2,
+
   FRONTEND_PROD_CLIENT_URL,
   FRONTEND_PROD_ADMIN_URL,
   FRONTEND_PROD_MASTER_URL,
@@ -28,6 +29,9 @@ const {
   MAIL_USER,
   MAIL_PASS,
   MAIL_FROM,
+
+  MAIL_SERVICE_DEV_URL,
+  MAIL_SERVICE_PROD_URL,
   // N
   // O
   // P
@@ -38,8 +42,12 @@ const {
   SERVICE_NAME,
   // T
   // U
+  USER_SERVICE_DEV_URL,
+  USER_SERVICE_PROD_URL,
   // V
   // W
+  WORKER_SERVICE_DEV_URL,
+  WORKER_SERVICE_PROD_URL,
   // X
   // Y
   // Z
@@ -81,6 +89,11 @@ export const envs = {
   // U
   url: {
     gateway: is_dev ? BACKEND_DEV_URL : BACKEND_PROD_URL,
+    service: {
+      mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
+      user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
+      worker: is_dev ? WORKER_SERVICE_DEV_URL : WORKER_SERVICE_PROD_URL,
+    },
     frontend: {
       client: is_dev ? FRONTEND_DEV_CLIENT_URL : FRONTEND_PROD_CLIENT_URL,
       admin: is_dev ? FRONTEND_DEV_ADMIN_URL : FRONTEND_PROD_ADMIN_URL,
