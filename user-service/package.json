@@ -21,6 +21,7 @@
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
     "@types/node": "^25.6.0",
     "concurrently": "^9.2.1",
     "eslint": "^10.2.0",
@@ -37,7 +38,7 @@
     "@beautinique/be-constants": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.8",
     "@beautinique/be-utils": "^1.0.4",
-    "@beautinique/be-zod": "^1.0.13",
+    "@beautinique/be-zod": "^1.0.14",
     "axios": "^1.15.0",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.74.1",
@@ -46,6 +47,7 @@
     "googleapis": "^171.4.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.4.1",
+    "multer": "^2.1.1",
     "redis": "^5.12.1"
   }
 }

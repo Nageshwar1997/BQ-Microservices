@@ -233,6 +233,13 @@ class RedisCache {
     return { ...prevData, sendCount, otp } as Awaited<ReturnType<typeof this.setOtpToken>>;
   }
 
+  /* ---------------- DELETE OTP & TOKEN CACHE ---------------- */
+
+  public async deleteOtpToken(otpToken: string) {
+    const key = this.getOtpTokenKey(otpToken);
+    await this.deleteData(key);
+  }
+
   /* ---------------- CLOSE ---------------- */
 
   public async close() {
