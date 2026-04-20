@@ -6,7 +6,7 @@ import { envs } from './envs';
 import { errorLogger, logger, requestLogger } from './configs';
 import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
-import { workerService } from './services';
+import { bullWorker } from './classes';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -53,7 +53,7 @@ async function start() {
     });
 
     // 🔥 Start workers AFTER server is up
-    workerService.startAll();
+    bullWorker.startAll();
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);
@@ -67,7 +67,7 @@ async function shutdown() {
 
   try {
     // 1️⃣ Close workers
-    await workerService.closeAll();
+    await bullWorker.closeAll();
     logger.info('✅ Workers closed');
 
     // 2️⃣ Close server gracefully

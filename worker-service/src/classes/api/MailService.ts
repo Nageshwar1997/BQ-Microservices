@@ -2,7 +2,7 @@ import { envs } from '@/envs';
 import { ApiRequest } from './ApiRequest';
 import type { TSendOtpMail } from '@beautinique/be-zod';
 
-export class MailService extends ApiRequest {
+class MailService extends ApiRequest {
   constructor() {
     super(`${envs.url.service.mail}/mail-service/api/v1`);
   }
@@ -11,3 +11,5 @@ export class MailService extends ApiRequest {
     await this.request({ ...this.routes.mail.sendOtp, data });
   }
 }
+
+export const mailService = new MailService();

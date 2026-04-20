@@ -2,12 +2,12 @@ import { type Job, Worker } from 'bullmq';
 import { WORKER_CONFIGS } from '@/constants';
 import { logger } from '@/configs';
 import type { TJobName, TQueueKey } from '@/types';
-import { mailService } from '@/services';
 import type { TSendOtpMail } from '@beautinique/be-zod';
+import { mailService } from './api';
 
 /* ---------------- SERVICE ---------------- */
 
-export class WorkerService {
+class BullWorker {
   private workers = new Map<TQueueKey, Worker>();
 
   /* ---------------- START WORKER ---------------- */
@@ -117,3 +117,5 @@ export class WorkerService {
     this.workers.clear();
   }
 }
+
+export const bullWorker = new BullWorker();

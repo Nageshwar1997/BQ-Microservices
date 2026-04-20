@@ -1,3 +1,2 @@
-export * from './ApiRequest';
-export * from './MailService';
-export * from './WorkerService';
+export * from './BullWorker';
+export * from './api';
