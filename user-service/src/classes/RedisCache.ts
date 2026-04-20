@@ -1,13 +1,13 @@
 import { logger } from '@/configs';
 import { envs } from '@/envs';
-import { getUserService } from '@/services';
+import { getUserById } from '@/services';
 import type { IUser, TId } from '@/types';
-import { commonUtils } from '@/utils';
+import { generateOtp, generateTempToken } from '@/utils';
 import { HOUR, MINUTE } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
 
-const redisClientConfig: RedisClientType = createClient({
+const client: RedisClientType = createClient({
   socket: {
     host: envs.redis.caching.host,
     port: envs.redis.caching.port,
@@ -25,16 +25,13 @@ const redisClientConfig: RedisClientType = createClient({
   password: envs.redis.caching.password,
 });
 
-class CacheService {
-  private client: RedisClientType | null = null;
+class RedisCache {
+  private client: RedisClientType;
   private isReady = false;
-  private KEY_PREFIX = {
-    USER: 'bq:user',
-    OTP_TOKEN: 'bq:otp-token',
-  };
+  private KEY_PREFIX = { USER: 'bq:user', OTP_TOKEN: 'bq:otp-token' };
 
   constructor() {
-    this.client = redisClientConfig;
+    this.client = client;
 
     this.client.on('error', (err) => {
       logger.error('❌ Redis Error:', err);
@@ -61,7 +58,7 @@ class CacheService {
 
   public async connect() {
     try {
-      await this.client?.connect();
+      await this.client.connect();
     } catch (err) {
       logger.error('❌ Redis connection failed:', err);
       this.isReady = false;
@@ -69,7 +66,7 @@ class CacheService {
   }
 
   private getClient(): RedisClientType | null {
-    if (!this.client || !this.isReady) {
+    if (!this.isReady) {
       logger.warn('⚠️ Redis unavailable → fallback to DB');
       return null;
     }
@@ -87,12 +84,12 @@ class CacheService {
   /* ---------------- DB HELPER ---------------- */
 
   private async getDbUser(userId: string | TId) {
-    return await getUserService.by_id({ id: userId });
+    return await getUserById({ id: userId });
   }
 
   /* ---------------- SET CACHE ---------------- */
 
-  public async setCachedUser(user: IUser) {
+  public async setUser(user: IUser) {
     const client = this.getClient();
     const key = this.getUserKey(user._id);
     if (!client || !user) return;
@@ -107,10 +104,10 @@ class CacheService {
     }
   }
 
-  public async setCacheOtpToken(email: string) {
+  public async setOtpToken(email: string) {
     const client = this.getClient();
-    const otpToken = commonUtils.generateTempToken(20);
-    const otp = commonUtils.generateOtp();
+    const otpToken = generateTempToken(20);
+    const otp = generateOtp();
 
     const key = this.getOtpTokenKey(otpToken);
 
@@ -123,7 +120,7 @@ class CacheService {
 
   /* ---------------- GET CACHE ---------------- */
 
-  public async getCachedUser(userId: string | TId): Promise<IUser | null> {
+  public async getUser(userId: string | TId): Promise<IUser | null> {
     const client = this.getClient();
 
     // Redis unavailable → DB direct
@@ -146,7 +143,7 @@ class CacheService {
           await client.del(key);
 
           const user = await this.getDbUser(userId);
-          if (user) await this.setCachedUser(user);
+          if (user) await this.setUser(user);
 
           return user;
         }
@@ -156,7 +153,7 @@ class CacheService {
       const user = await this.getDbUser(userId);
 
       if (user) {
-        await this.setCachedUser(user);
+        await this.setUser(user);
       }
 
       return user;
@@ -170,17 +167,17 @@ class CacheService {
 
   /* ---------------- UPDATE CACHE ---------------- */
 
-  public async updateCachedUser(user: IUser) {
+  public async updateUser(user: IUser) {
     const client = this.getClient();
     if (!client || !user) return;
 
     // write-through
-    await this.setCachedUser(user);
+    await this.setUser(user);
   }
 
   /* ---------------- DELETE CACHE ---------------- */
 
-  public async deleteCachedUser(userId: string | TId) {
+  public async deleteUser(userId: string | TId) {
     const client = this.getClient();
     if (!client) return;
 
@@ -207,4 +204,4 @@ class CacheService {
   }
 }
 
-export const cacheService = new CacheService();
+export const redisCache = new RedisCache();

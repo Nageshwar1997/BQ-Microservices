@@ -13,7 +13,7 @@ import {
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
-import { cacheService, queueService } from './services';
+import { bullQueue, redisCache } from './classes';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -66,8 +66,7 @@ async function start() {
     });
 
     // 🔥 Start workers AFTER server is up
-    queueService.connect();
-    await Promise.all([connectToDB(databaseConfigs), cacheService.connect()]);
+    await Promise.all([connectToDB(databaseConfigs), redisCache.connect(), bullQueue.connect()]);
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);
@@ -81,7 +80,7 @@ async function shutdown() {
 
   try {
     // 1️⃣ Close workers
-    const results = await Promise.allSettled([cacheService.close(), queueService.close()]);
+    const results = await Promise.allSettled([redisCache.close(), bullQueue.close()]);
 
     results.forEach((result, index) => {
       if (result.status === 'rejected') {

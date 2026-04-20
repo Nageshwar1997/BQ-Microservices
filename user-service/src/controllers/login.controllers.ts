@@ -1,13 +1,14 @@
 import { googleAuth } from '@/apis';
-import { cacheService, getUserService, setUserService } from '@/services';
-import { authUtils } from '@/utils';
+import { redisCache } from '@/classes';
+import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '@/services';
+import { createOAuthDbPayload, generateJwtToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 export const manualLoginController = async (req: Request, res: Response) => {
   const { email, password, phoneNumber } = req.body ?? {};
-  const user = await getUserService.by_email_or_phone({ email, phoneNumber });
+  const user = await getUserByEmailOrPhone({ email, phoneNumber });
 
   if (!user.providers.includes('MANUAL')) {
     // Check if user has MANUAL login
@@ -32,11 +33,11 @@ export const manualLoginController = async (req: Request, res: Response) => {
     });
   }
 
-  const token = authUtils.generateJwtToken(user._id);
+  const token = generateJwtToken(user._id);
 
   const { password: _password, ...restUser } = user;
 
-  await cacheService.setCachedUser(user);
+  await redisCache.setUser(user);
 
   res.success(200, 'User logged in successfully', { token, user: restUser });
 };
@@ -56,7 +57,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
   if (!profile) throw new AppError({ message: 'User info not found', statusCode: 404 });
 
   // Check if user already exists (email = primary identity)
-  let user = await getUserService.by_email({ email: profile.email, lean: false });
+  let user = await getUserByEmail({ email: profile.email, lean: false });
 
   if (user) {
     // If GOOGLE not linked yet, link it
@@ -66,15 +67,15 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     }
   } else {
     // Prepare payload
-    const payload = await authUtils.createOAuthDbPayload(profile, 'GOOGLE');
+    const payload = await createOAuthDbPayload(profile, 'GOOGLE');
 
     // Create new user
-    user = await setUserService.create(payload);
+    user = await createNewUser(payload);
   }
 
-  await cacheService.setCachedUser(user);
+  await redisCache.setUser(user);
 
-  const token = authUtils.generateJwtToken(user._id);
+  const token = generateJwtToken(user._id);
 
   res.success(200, 'User logged in successfully', { token });
 };

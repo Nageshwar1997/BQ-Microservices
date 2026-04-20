@@ -3,7 +3,7 @@ import { logger } from '@/configs';
 import { QUEUE_CONFIGS } from '@/constants';
 import type { IQueueJob, TQueueKey } from '@/types';
 
-class QueueService {
+class BullQueue {
   private connection: ConnectionOptions;
   private queues = new Map<TQueueKey, Queue>();
   private isReady = false;
@@ -108,4 +108,4 @@ class QueueService {
   }
 }
 
-export const queueService = new QueueService();
+export const bullQueue = new BullQueue();
