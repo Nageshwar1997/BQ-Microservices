@@ -116,18 +116,18 @@ export const envs = {
   // U
 
   url: {
-    gateway: is_dev ? GATEWAY_DEV_URL : GATEWAY_PROD_URL,
-    service: {
-      mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
-      user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
-      worker: is_dev ? WORKER_SERVICE_DEV_URL : WORKER_SERVICE_PROD_URL,
-    },
     frontend: {
       client: is_dev ? CLIENT_DEV_URL : CLIENT_PROD_URL,
       admin: is_dev ? ADMIN_DEV_URL : ADMIN_PROD_URL,
       master: is_dev ? MASTER_DEV_URL : MASTER_PROD_URL,
       public1: PUBLIC_DEV_URL_1,
       public2: PUBLIC_DEV_URL_2,
+    },
+    gateway: is_dev ? GATEWAY_DEV_URL : GATEWAY_PROD_URL,
+    service: {
+      mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
+      user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
+      worker: is_dev ? WORKER_SERVICE_DEV_URL : WORKER_SERVICE_PROD_URL,
     },
   },
 

@@ -1,26 +1,32 @@
 const {
   // A
+
+  ADMIN_DEV_URL,
+  ADMIN_PROD_URL,
+
   // B
-  BACKEND_DEV_URL,
-  BACKEND_PROD_URL,
+
+  GATEWAY_DEV_URL,
+  GATEWAY_PROD_URL,
+
   // C
-  CACHING_REDIS_HOST,
-  CACHING_REDIS_PORT,
-  CACHING_REDIS_PASSWORD,
-  CACHING_REDIS_USERNAME,
+
+  CACHE_REDIS_HOST,
+  CACHE_REDIS_PORT,
+  CACHE_REDIS_PASSWORD,
+  CACHE_REDIS_USERNAME,
+
+  CLIENT_DEV_URL,
+  CLIENT_PROD_URL,
+
   // D
+
   DATABASE_NAME,
+
   // E
   // F
-  FRONTEND_DEV_ADMIN_URL,
-  FRONTEND_DEV_CLIENT_URL,
-  FRONTEND_DEV_MASTER_URL,
-  FRONTEND_DEV_PUBLIC_URL_1,
-  FRONTEND_DEV_PUBLIC_URL_2,
-  FRONTEND_PROD_ADMIN_URL,
-  FRONTEND_PROD_CLIENT_URL,
-  FRONTEND_PROD_MASTER_URL,
   // G
+
   GITHUB_CLIENT_ID,
   GITHUB_CLIENT_SECRET,
   GITHUB_REDIRECT_ENDPOINT,
@@ -28,35 +34,67 @@ const {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_ENDPOINT,
+
   // H
   // I
+
   IS_DEV,
+
   // J
+
   JWT_SECRET,
+
   // K
   // L
+
   LINKEDIN_CLIENT_ID,
   LINKEDIN_CLIENT_SECRET,
   LINKEDIN_REDIRECT_ENDPOINT,
+
   // M
+
+  MAIL_SERVICE_DEV_URL,
+  MAIL_SERVICE_PROD_URL,
+
+  MASTER_DEV_URL,
+  MASTER_PROD_URL,
+
   MONGODB_PROD_URI,
   MONGODB_DEV_URI,
+
   // N
   // O
   // P
+
   PORT,
+
+  PUBLIC_DEV_URL_1,
+  PUBLIC_DEV_URL_2,
+
   // Q
-  QUEUING_REDIS_HOST,
-  QUEUING_REDIS_PORT,
-  QUEUING_REDIS_PASSWORD,
-  QUEUING_REDIS_USERNAME,
+
+  QUEUE_REDIS_HOST,
+  QUEUE_REDIS_PORT,
+  QUEUE_REDIS_PASSWORD,
+  QUEUE_REDIS_USERNAME,
+
   // R
   // S
+
   SERVICE_NAME,
+
   // T
   // U
+
+  USER_SERVICE_DEV_URL,
+  USER_SERVICE_PROD_URL,
+
   // V
   // W
+
+  WORKER_SERVICE_DEV_URL,
+  WORKER_SERVICE_PROD_URL,
+
   // X
   // Y
   // Z
@@ -69,23 +107,30 @@ export const envs = {
   // B
   // C
   // D
+
   database_name: DATABASE_NAME,
+
   // E
   // F
   // G
   // H
   // I
+
   is_dev,
+
   // J
+
   jwt_secret: JWT_SECRET,
 
   // K
   // L
   // M
+
   mongo_uri: is_dev ? MONGODB_DEV_URI : MONGODB_PROD_URI,
 
   // N
   // O
+
   oAuth: {
     github: {
       client_id: GITHUB_CLIENT_ID,
@@ -105,38 +150,48 @@ export const envs = {
   },
 
   // P
+
   port: Number(PORT),
 
   // Q
   // R
+
   redis: {
     caching: {
-      host: CACHING_REDIS_HOST,
-      port: Number(CACHING_REDIS_PORT),
-      password: CACHING_REDIS_PASSWORD,
-      username: CACHING_REDIS_USERNAME,
+      host: CACHE_REDIS_HOST,
+      port: Number(CACHE_REDIS_PORT),
+      password: CACHE_REDIS_PASSWORD,
+      username: CACHE_REDIS_USERNAME,
     },
     queuing: {
-      host: QUEUING_REDIS_HOST,
-      port: Number(QUEUING_REDIS_PORT),
-      password: QUEUING_REDIS_PASSWORD,
-      username: QUEUING_REDIS_USERNAME,
+      host: QUEUE_REDIS_HOST,
+      port: Number(QUEUE_REDIS_PORT),
+      password: QUEUE_REDIS_PASSWORD,
+      username: QUEUE_REDIS_USERNAME,
     },
   },
 
   // S
+
   service_name: SERVICE_NAME,
+
   // T
   // U
+
   url: {
     frontend: {
-      client: is_dev ? FRONTEND_DEV_CLIENT_URL : FRONTEND_PROD_CLIENT_URL,
-      admin: is_dev ? FRONTEND_DEV_ADMIN_URL : FRONTEND_PROD_ADMIN_URL,
-      master: is_dev ? FRONTEND_DEV_MASTER_URL : FRONTEND_PROD_MASTER_URL,
-      public1: FRONTEND_DEV_PUBLIC_URL_1,
-      public2: FRONTEND_DEV_PUBLIC_URL_2,
+      client: is_dev ? CLIENT_DEV_URL : CLIENT_PROD_URL,
+      admin: is_dev ? ADMIN_DEV_URL : ADMIN_PROD_URL,
+      master: is_dev ? MASTER_DEV_URL : MASTER_PROD_URL,
+      public1: PUBLIC_DEV_URL_1,
+      public2: PUBLIC_DEV_URL_2,
     },
-    gateway: is_dev ? BACKEND_DEV_URL : BACKEND_PROD_URL,
+    gateway: is_dev ? GATEWAY_DEV_URL : GATEWAY_PROD_URL,
+    service: {
+      mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
+      user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
+      worker: is_dev ? WORKER_SERVICE_DEV_URL : WORKER_SERVICE_PROD_URL,
+    },
   },
 
   // V
