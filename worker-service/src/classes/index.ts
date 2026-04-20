@@ -1,2 +1,2 @@
 export * from './BullWorker';
-export * from './api';
+export * from './apis';

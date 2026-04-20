@@ -1,5 +1,4 @@
-import { googleAuth } from '@/apis';
-import { redisCache } from '@/classes';
+import { googleAuth, redisCache } from '@/classes';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '@/services';
 import { createOAuthDbPayload, generateJwtToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';

@@ -3,7 +3,7 @@ import { WORKER_CONFIGS } from '@/constants';
 import { logger } from '@/configs';
 import type { TJobName, TQueueKey } from '@/types';
 import type { TSendOtpMail } from '@beautinique/be-zod';
-import { mailService } from './api';
+import { mailService } from './apis';
 
 /* ---------------- SERVICE ---------------- */
 
