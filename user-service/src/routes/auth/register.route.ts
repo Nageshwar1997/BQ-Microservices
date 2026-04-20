@@ -1,5 +1,5 @@
 import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
-import { registerControllers } from '@/controllers';
+import { registerSendOtpController } from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
 import { registerEmailSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
@@ -12,5 +12,5 @@ registerRouter[sendOtp.method](
   sendOtp.path,
   RequestMiddleware.emptyRequest({ body: true }),
   ZodMiddleware.validateSchema(registerEmailSchema),
-  ResponseMiddleware.tryCatch(registerControllers.sendOtp),
+  ResponseMiddleware.tryCatch(registerSendOtpController),
 );

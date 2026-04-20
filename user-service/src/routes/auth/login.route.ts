@@ -1,5 +1,9 @@
 import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
-import { loginControllers } from '@/controllers';
+import {
+  googleCallbackController,
+  googleRedirectController,
+  manualLoginController,
+} from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
 import { loginSchema } from '@beautinique/be-zod';
 import { type Request, type Response, Router } from 'express';
@@ -13,18 +17,18 @@ loginRouter[login.manual.method](
   login.manual.path,
   RequestMiddleware.emptyRequest({ body: true }),
   ZodMiddleware.validateSchema(loginSchema),
-  ResponseMiddleware.tryCatch(loginControllers.manual),
+  ResponseMiddleware.tryCatch(manualLoginController),
 );
 
 // Google
 loginRouter[login.oauth.google.redirect.method](
   login.oauth.google.redirect.path,
-  ResponseMiddleware.tryCatch(loginControllers.googleRedirect),
+  ResponseMiddleware.tryCatch(googleRedirectController),
 );
 
 loginRouter[login.oauth.google.callback.method](
   login.oauth.google.callback.path,
-  ResponseMiddleware.tryCatch(loginControllers.googleCallback),
+  ResponseMiddleware.tryCatch(googleCallbackController),
 );
 
 // LinkedIn
