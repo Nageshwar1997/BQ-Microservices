@@ -1,15 +1,22 @@
-import { transporterConfig } from '@/configs';
 import { logger } from '@/configs';
 import { envs } from '@/envs';
 import { getOtpHtmlMessage } from '@/utils';
 import { convert } from 'html-to-text';
+import { createTransport } from 'nodemailer';
 
-export class MailService {
-  private transporter: typeof transporterConfig;
+const config = createTransport({
+  host: envs.mail.host,
+  port: envs.mail.port,
+  secure: false,
+  auth: { user: envs.mail.user, pass: envs.mail.pass },
+});
+
+class Transporter {
+  private transporter: typeof config;
   private isReady = false;
 
   constructor() {
-    this.transporter = transporterConfig;
+    this.transporter = config;
   }
 
   /* ---------------- CONNECT ---------------- */
@@ -64,12 +71,13 @@ export class MailService {
       logger.error('❌ Email send failed:', err);
       throw err;
     }
-
   }
 
-  /* ---------------- OTP email ---------------- */
+  /* ---------------- Send OTP email ---------------- */
   public async sendOtp(to: string, otp: string) {
     const html = getOtpHtmlMessage('OTP Verification', otp);
     await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
   }
 }
+
+export const transporter = new Transporter();

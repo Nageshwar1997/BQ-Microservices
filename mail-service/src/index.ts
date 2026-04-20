@@ -7,7 +7,7 @@ import { router } from './routes';
 import { errorLogger, logger, requestLogger } from './configs';
 import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { ORIGINS } from './constants';
-import { mailService } from './services';
+import { transporter } from './classes';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -35,10 +35,14 @@ app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/mail-service', (_: Request, res: Response) => res.success(200, 'Welcome to the Mail Service API'));
+app.get('/mail-service', (_: Request, res: Response) =>
+  res.success(200, 'Welcome to the Mail Service API'),
+);
 
 // Health Route
-app.get('/mail-service/health', (_: Request, res: Response) => res.success(200, 'Mail Service is healthy'));
+app.get('/mail-service/health', (_: Request, res: Response) =>
+  res.success(200, 'Mail Service is healthy'),
+);
 
 // API Routes
 app.use('/mail-service/api/v1', router);
@@ -59,7 +63,7 @@ async function start() {
     });
 
     // 🔥 Start workers AFTER server is up
-    await mailService.connect();
+    await transporter.connect();
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);
@@ -73,7 +77,7 @@ async function shutdown() {
 
   try {
     // 1️⃣ Close workers
-    await mailService.close();
+    await transporter.close();
     logger.info('✅ Workers closed');
 
     // 2️⃣ Close server gracefully
