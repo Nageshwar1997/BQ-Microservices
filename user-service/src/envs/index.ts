@@ -9,6 +9,7 @@ const {
   CACHING_REDIS_PASSWORD,
   CACHING_REDIS_USERNAME,
   // D
+  DATABASE_NAME,
   // E
   // F
   FRONTEND_DEV_ADMIN_URL,
@@ -51,6 +52,7 @@ const {
   QUEUING_REDIS_USERNAME,
   // R
   // S
+  SERVICE_NAME,
   // T
   // U
   // V
@@ -67,6 +69,7 @@ export const envs = {
   // B
   // C
   // D
+  database_name: DATABASE_NAME,
   // E
   // F
   // G
@@ -122,6 +125,7 @@ export const envs = {
   },
 
   // S
+  service_name: SERVICE_NAME,
   // T
   // U
   url: {
