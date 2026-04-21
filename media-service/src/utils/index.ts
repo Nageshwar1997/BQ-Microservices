@@ -199,14 +199,14 @@ const multipleMediaRemover = async ({
 export const mediaRemover = async (data: TCloudinaryMediaRemover) => {
   const { accountKey, publicId, publicIds, retryCount } = data;
 
+  const error = new AppError({
+    message: 'Invalid payload: provide publicId or publicIds',
+    statusCode: 400,
+    code: 'VALIDATION_ERROR',
+  });
+
   // 🚫 Rejects invalid payloads where no removable id is provided
-  if (!publicId && !publicIds?.length) {
-    throw new AppError({
-      message: 'Invalid payload: provide publicId or publicIds',
-      statusCode: 400,
-      code: 'VALIDATION_ERROR',
-    });
-  }
+  if (!publicId && !publicIds?.length) throw error;
 
   // 🩺 Validates the Cloudinary connection before any remove action
   await checkCloudinaryStatus(accountKey);
@@ -221,7 +221,7 @@ export const mediaRemover = async (data: TCloudinaryMediaRemover) => {
     return multipleMediaRemover({ accountKey, publicIds, retryCount });
   }
 
-  return null;
+  throw error;
 };
 
 /* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
@@ -311,13 +311,15 @@ export const mediaUploader = async (data: TCloudinaryMediaUploader) => {
   const { file, files, ...rest } = data;
   const { accountKey, resourceType } = rest;
 
+  const error = new AppError({
+    message: 'Invalid payload: provide file or files',
+    statusCode: 400,
+    code: 'VALIDATION_ERROR',
+  });
+
   // 🚫 Rejects invalid payloads where no uploadable file is provided
   if (!file && !files?.length) {
-    throw new AppError({
-      message: 'No media present for upload',
-      statusCode: 400,
-      code: 'VALIDATION_ERROR',
-    });
+    throw error;
   }
 
   // 🩺 Validates the Cloudinary connection before any upload action
@@ -336,5 +338,5 @@ export const mediaUploader = async (data: TCloudinaryMediaUploader) => {
     return singleMediaUploader({ ...uploadPayload, file });
   }
 
-  return null;
+  throw error;
 };
