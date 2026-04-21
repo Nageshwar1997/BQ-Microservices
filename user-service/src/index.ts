@@ -42,11 +42,11 @@ app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Worker Service API'));
+app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the User Service API'));
 
 // Health Route
 app.get('/user-service/api/v1/health', (_: Request, res: Response) =>
-  res.success(200, 'Worker Service is healthy'),
+  res.success(200, 'User Service is healthy'),
 );
 
 // API Routes
