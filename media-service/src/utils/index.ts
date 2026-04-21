@@ -11,6 +11,7 @@ import type {
   TCloudinaryMediaRemover,
   TCloudinaryMediaUploader,
   TId,
+  TResourceType,
 } from '@/types';
 import { AppError } from '@beautinique/be-classes';
 import { FILE_MIME, type TCloudinaryOption } from '@beautinique/be-constants';
@@ -18,16 +19,20 @@ import type { DeleteApiResponse, UploadApiResponse } from 'cloudinary';
 import { randomUUID } from 'crypto';
 import { Types } from 'mongoose';
 
+const DEFAULT_FOLDER_NAME = 'common_folder';
+const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
+const MAX_REMOVE_RETRIES = 5;
+
 /* ========== OBJECT ID CONVERTER FUNCTION ========== */
 export const toObjectId = (id: string): TId => new Types.ObjectId(id);
 
 /* ========== FOLDER NAME GENERATOR FUNCTION ========== */
 export const generateFolderName = (folder?: string) => {
   // 🧹 Converts unsafe folder characters into safe underscores
-  const sanitize = (str: string) => str.replace(/[&|/\\#?%]/g, '_');
+  const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
 
   // 📁 Builds a clean subfolder name with a default fallback
-  const subfolder = sanitize((folder || 'common_folder').split(' ').join('_'));
+  const subfolder = sanitize((folder || DEFAULT_FOLDER_NAME).trim().replace(/\s+/g, '_'));
 
   // 🏷️ Returns the final path with the main Cloudinary folder
   return `${envs.cloudinary.main_folder}/${subfolder}`;
@@ -50,7 +55,7 @@ export const generatePublicId = ({ entityKey, accountKey }: IPublicIdOptions): s
 };
 
 /* ========== CLOUDINARY STATUS CHECKER FUNCTION ========== */
-export const checkCloudinaryStatus = async (accountKey: TCloudinaryOption) => {
+const checkCloudinaryStatus = async (accountKey: TCloudinaryOption) => {
   try {
     // 🔌 Loads the Cloudinary instance for the requested account
     const cloudinary = getCloudinaryInstance(accountKey);
@@ -58,22 +63,80 @@ export const checkCloudinaryStatus = async (accountKey: TCloudinaryOption) => {
     // 🩺 Verifies the Cloudinary connection using ping
     const res = await cloudinary.api.ping();
     logger.info(`Cloudinary ${accountKey} Connected ✅`, res);
-    return {
-      status: 'ok',
-      message: `Cloudinary ${accountKey} Connected ✅`,
-    } as const;
   } catch (err) {
     logger.error(`Cloudinary ${accountKey} Connection Error ❌`, err);
-    return {
-      message: `Cloudinary ${accountKey} Connection Error ❌`,
-    };
+    throw new AppError({
+      message: (err as Error).message || `Cloudinary ${accountKey} Connection Error ❌`,
+      statusCode: 500,
+      code: 'INTERNAL_ERROR',
+    });
   }
 };
 
-/* ========== SINGLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
-const singleMediaRemover = (data: ICloudinarySingleRemover) => {
-  const { publicId, accountKey } = data;
+/* ========== FAILED ID EXTRACTOR FUNCTION ========== */
+const getFailedIds = (results: PromiseSettledResult<unknown>[], ids: string[]) => {
+  // 🚨 Collects only the ids whose operation failed
+  return results.reduce<string[]>((acc, result, index) => {
+    if (result.status === 'rejected') {
+      acc.push(ids[index]);
+    }
 
+    return acc;
+  }, []);
+};
+
+/* ========== ALLOWED FORMAT RESOLVER FUNCTION ========== */
+const getAllowedFormats = (resourceType: TResourceType) => {
+  // 🎞️ Chooses the mime collection based on the requested resource type
+  const baseMimes =
+    resourceType === 'image' ? FILE_MIME.IMAGE : resourceType === 'video' ? FILE_MIME.VIDEO : [];
+
+  // 🧾 Maps mime types into Cloudinary-supported formats
+  const allowedFormats = baseMimes
+    .map((mime) => MIME_TO_FORMAT[resourceType][mime])
+    .filter((format): format is string => Boolean(format));
+
+  if (!allowedFormats.length) {
+    throw new AppError({
+      message: `Unsupported mime: ${baseMimes.join(', ')}`,
+      statusCode: 400,
+      code: 'UPLOAD_ERROR',
+    });
+  }
+
+  return allowedFormats;
+};
+
+/* ========== FAILED REMOVAL QUEUE FUNCTION ========== */
+const queueFailedRemovals = async ({
+  accountKey,
+  failedIds,
+  retryCount,
+}: {
+  accountKey: TCloudinaryOption;
+  failedIds: string[];
+  retryCount?: number;
+}) => {
+  // 🔁 Skips queue work when there is nothing left to retry
+  if (failedIds.length === 0) {
+    return;
+  }
+
+  const data =
+    retryCount === undefined
+      ? { publicIds: failedIds, accountKey }
+      : { publicIds: failedIds, accountKey, retryCount };
+
+  // 🧵 Pushes failed cleanup ids into the queue for background retry
+  await bullQueue.addJob({
+    queueName: 'media-queue',
+    jobName: 'multi-cloudinary-media-remove',
+    data,
+  });
+};
+
+/* ========== SINGLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
+const singleMediaRemover = ({ publicId, accountKey }: ICloudinarySingleRemover) => {
   // ☁️ Loads the Cloudinary instance for the remove action
   const cloudinary = getCloudinaryInstance(accountKey);
 
@@ -85,7 +148,7 @@ const singleMediaRemover = (data: ICloudinarySingleRemover) => {
         return reject(
           new AppError({
             message: error.message || 'Failed to remove image from Cloudinary',
-            statusCode: 500,
+            statusCode: 400,
             code: 'INTERNAL_ERROR',
           }),
         );
@@ -111,26 +174,15 @@ const multipleMediaRemover = async ({
   );
 
   // 🚨 Collects only the ids that failed during removal
-  const failedIds = removeResults.reduce<string[]>((acc, res, index) => {
-    if (res.status === 'rejected') {
-      acc.push(publicIds[index]);
-    }
-    return acc;
-  }, []);
-
-  const MAX_RETRIES = 5;
+  const failedIds = getFailedIds(removeResults, publicIds);
 
   // 🔁 Queues failed deletes again while retry limit is not reached
-  if (failedIds.length > 0 && retryCount < MAX_RETRIES) {
-    await bullQueue.addJob({
-      queueName: 'media-queue',
-      jobName: 'multi-cloudinary-media-remove',
-      data: { publicIds: failedIds, accountKey, retryCount: retryCount + 1 },
-    });
+  if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
+    await queueFailedRemovals({ accountKey, failedIds, retryCount: retryCount + 1 });
   }
 
   // 🚫 Logs the final failed ids when max retries are exhausted
-  if (failedIds.length > 0 && retryCount >= MAX_RETRIES) {
+  if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
     logger.error('Max retries reached for IDs:', failedIds);
   }
 
@@ -147,12 +199,17 @@ const multipleMediaRemover = async ({
 export const mediaRemover = async (data: TCloudinaryMediaRemover) => {
   const { accountKey, publicId, publicIds, retryCount } = data;
 
-  // 🩺 Validates the Cloudinary connection before any remove action
-  const { message, status } = await checkCloudinaryStatus(accountKey);
-
-  if (status !== 'ok') {
-    throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
+  // 🚫 Rejects invalid payloads where no removable id is provided
+  if (!publicId && !publicIds?.length) {
+    throw new AppError({
+      message: 'Invalid payload: provide publicId or publicIds',
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+    });
   }
+
+  // 🩺 Validates the Cloudinary connection before any remove action
+  await checkCloudinaryStatus(accountKey);
 
   if (publicId) {
     // 🎯 Routes single media delete requests to the common remover
@@ -164,12 +221,7 @@ export const mediaRemover = async (data: TCloudinaryMediaRemover) => {
     return multipleMediaRemover({ accountKey, publicIds, retryCount });
   }
 
-  // 🚫 Rejects invalid payloads where no removable id is provided
-  throw new AppError({
-    message: 'Invalid payload: provide publicId or publicIds',
-    statusCode: 400,
-    code: 'VALIDATION_ERROR',
-  });
+  return null;
 };
 
 /* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
@@ -179,28 +231,10 @@ const singleMediaUploader = ({
   file,
   folder,
   resourceType,
+  allowed_formats,
 }: ICloudinarySingleUploader) => {
   // ☁️ Selects the target Cloudinary account for upload
   const cloudinary = getCloudinaryInstance(accountKey);
-
-  // 🎞️ Chooses the allowed mime group based on resource type
-  const baseMimes =
-    resourceType === 'image' ? FILE_MIME.IMAGE : resourceType === 'video' ? FILE_MIME.VIDEO : [];
-
-  // 🧾 Maps mime types into Cloudinary-supported formats
-  const allowed_formats = baseMimes.map((mime) => {
-    const format = MIME_TO_FORMAT[resourceType][mime];
-
-    if (!format) {
-      throw new AppError({
-        message: `Unsupported mime: ${mime}`,
-        statusCode: 400,
-        code: 'UPLOAD_ERROR',
-      });
-    }
-
-    return format;
-  });
 
   return new Promise<UploadApiResponse>((resolve, reject) => {
     // 🚀 Starts the stream-based upload
@@ -241,15 +275,17 @@ const multipleMediaUploader = async (data: ICloudinaryMultiUploader) => {
 
   try {
     // 📤 Uploads all selected files in parallel
-    const uploadPromises = files.map(async (file) => {
-      const res = await singleMediaUploader({ ...rest, file });
+    const uploadResults = await Promise.all(
+      files.map(async (file) => {
+        const res = await singleMediaUploader({ ...rest, file });
 
-      // ✅ Stores successful ids to support rollback
-      uploadedPublicIds.push(res.public_id);
-      return res;
-    });
+        // ✅ Stores successful ids to support rollback
+        uploadedPublicIds.push(res.public_id);
+        return res;
+      }),
+    );
 
-    return Promise.all(uploadPromises);
+    return uploadResults;
   } catch (error) {
     // ♻️ Starts rollback when any upload in the batch fails
 
@@ -261,18 +297,10 @@ const multipleMediaUploader = async (data: ICloudinaryMultiUploader) => {
     );
 
     // 🚨 Keeps only the ids that also failed during rollback
-    const failedIds = deleteResults
-      .map((res, index) => (res.status === 'rejected' ? uploadedPublicIds[index] : null))
-      .filter(Boolean);
+    const failedIds = getFailedIds(deleteResults, uploadedPublicIds);
 
     // 🔁 Queues failed cleanup ids for retry processing
-    if (failedIds.length > 0) {
-      await bullQueue.addJob({
-        queueName: 'media-queue',
-        jobName: 'multi-cloudinary-media-remove',
-        data: { publicIds: failedIds, accountKey: rest.accountKey },
-      });
-    }
+    await queueFailedRemovals({ accountKey: rest.accountKey, failedIds });
 
     throw error;
   }
@@ -280,29 +308,33 @@ const multipleMediaUploader = async (data: ICloudinaryMultiUploader) => {
 
 /* ========== MEDIA UPLOADER ENTRY FUNCTION ========== */
 export const mediaUploader = async (data: TCloudinaryMediaUploader) => {
-  const { accountKey, file, files } = data;
-
-  // 🩺 Validates the Cloudinary connection before any upload action
-  const { message, status } = await checkCloudinaryStatus(accountKey);
-
-  if (status !== 'ok') {
-    throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
-  }
-
-  if (file) {
-    // 🎯 Routes single file upload requests to the common uploader
-    return singleMediaUploader(data);
-  }
-
-  if (files?.length) {
-    // 📚 Routes multi file upload requests to the batch uploader
-    return multipleMediaUploader(data);
-  }
+  const { file, files, ...rest } = data;
+  const { accountKey, resourceType } = rest;
 
   // 🚫 Rejects invalid payloads where no uploadable file is provided
-  throw new AppError({
-    message: 'No media present for upload',
-    statusCode: 400,
-    code: 'VALIDATION_ERROR',
-  });
+  if (!file && !files?.length) {
+    throw new AppError({
+      message: 'No media present for upload',
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+    });
+  }
+
+  // 🩺 Validates the Cloudinary connection before any upload action
+  await checkCloudinaryStatus(accountKey);
+
+  // 🧾 Resolves the allowed upload formats once for this request
+  const allowed_formats = getAllowedFormats(resourceType);
+  const uploadPayload = { ...rest, allowed_formats };
+
+  if (files && files?.length) {
+    // 📚 Routes multi file upload requests to the batch uploader
+    return multipleMediaUploader({ ...uploadPayload, files });
+  }
+  if (file) {
+    // 🎯 Routes single file upload requests to the common uploader
+    return singleMediaUploader({ ...uploadPayload, file });
+  }
+
+  return null;
 };

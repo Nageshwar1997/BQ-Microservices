@@ -32,6 +32,7 @@ export interface IPublicIdOptions {
 interface ICloudinaryBaseUploader extends IPublicIdOptions {
   folder: string;
   resourceType: TResourceType;
+  allowed_formats: string[];
 }
 
 export interface ICloudinarySingleUploader extends ICloudinaryBaseUploader {
@@ -44,7 +45,10 @@ export interface ICloudinaryMultiUploader extends ICloudinaryBaseUploader {
   file?: never;
 }
 
-export type TCloudinaryMediaUploader = ICloudinarySingleUploader | ICloudinaryMultiUploader;
+export type TCloudinaryMediaUploader = Omit<
+  ICloudinarySingleUploader | ICloudinaryMultiUploader,
+  'allowed_formats'
+>;
 
 export interface ICloudinarySingleRemover {
   publicId: string;
