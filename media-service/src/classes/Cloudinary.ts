@@ -17,6 +17,8 @@ const DEFAULT_FOLDER_NAME = 'common_folder';
 const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
 
 export class Cloudinary {
+  private static operationQueue = Promise.resolve();
+
   /* ========== CLOUDINARY INSTANCE GETTER FUNCTION ========== */
   protected getCloudinary(accountKey: TCloudinaryOption) {
     // ☁️ Returns the configured Cloudinary instance for the given account
@@ -25,20 +27,24 @@ export class Cloudinary {
     return v2;
   }
 
-  /* ========== CLOUDINARY STATUS CHECKER FUNCTION ========== */
-  protected async checkCloudinaryStatus(accountKey: TCloudinaryOption, cloudinary: TV2) {
-    try {
-      // 🩺 Verifies the Cloudinary connection using ping
-      const res = await cloudinary.api.ping();
-      logger.info(`Cloudinary ${accountKey} Connected ✅`, res);
-    } catch (err) {
-      logger.error(`Cloudinary ${accountKey} Connection Error ❌`, err);
-      throw new AppError({
-        message: (err as Error).message || `Cloudinary ${accountKey} Connection Error ❌`,
-        statusCode: 500,
-        code: 'INTERNAL_ERROR',
-      });
-    }
+  /* ========== CLOUDINARY OPERATION SERIALIZER FUNCTION ========== */
+  protected async runWithCloudinary<T>(
+    accountKey: TCloudinaryOption,
+    operation: (cloudinary: TV2) => Promise<T>,
+  ): Promise<T> {
+    // 🔒 Serializes Cloudinary work because SDK v2 config is shared globally
+    const task = Cloudinary.operationQueue.then(async () => {
+      const cloudinary = this.getCloudinary(accountKey);
+      return operation(cloudinary);
+    });
+
+    // 🔁 Keeps the queue alive even if one operation fails
+    Cloudinary.operationQueue = task.then(
+      () => undefined,
+      () => undefined,
+    );
+
+    return task;
   }
 
   /* ========== FOLDER NAME GENERATOR FUNCTION ========== */

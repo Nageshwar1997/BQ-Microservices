@@ -8,7 +8,6 @@ import type {
 
 import { Cloudinary } from './Cloudinary';
 import { bullQueue } from './BullQueue';
-import { isNullOrUndefined } from '@/utils';
 
 const MAX_REMOVE_RETRIES = 5;
 
@@ -35,19 +34,17 @@ export class MediaManager extends Cloudinary {
       data: {
         publicIds: failedIds,
         accountKey,
-        ...(!isNullOrUndefined(retryCount) && { retryCount }),
+        ...(retryCount !== undefined ? { retryCount } : {}),
       },
     });
   }
 
   /* ========== SINGLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
   public async singleMediaRemover({ publicId, accountKey }: ICloudinarySingleRemover) {
-    // ☁️ Loads the Cloudinary instance for the remove action
-    const cloudinary = this.getCloudinary(accountKey);
-
-    await this.checkCloudinaryStatus(accountKey, cloudinary);
-
-    return this.remover({ cloudinary, publicId });
+    // 🔒 Runs the remove flow inside the shared Cloudinary operation queue
+    return this.runWithCloudinary(accountKey, async (cloudinary) =>
+      this.remover({ cloudinary, publicId }),
+    );
   }
 
   /* ========== MULTIPLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
@@ -56,47 +53,43 @@ export class MediaManager extends Cloudinary {
     publicIds,
     retryCount = 0, // 🔥 !Important: Don't Remove it
   }: ICloudinaryMultiRemover) {
-    // ☁️ Loads the Cloudinary instance for the remove action
-    const cloudinary = this.getCloudinary(accountKey);
+    // 🔒 Runs the batch remove flow inside the shared Cloudinary operation queue
+    return this.runWithCloudinary(accountKey, async (cloudinary) => {
+      // 🗑️ Builds remove promises for every public id in the batch
+      const removeResults = await Promise.allSettled(
+        publicIds.map((publicId) => this.remover({ publicId, cloudinary })),
+      );
 
-    await this.checkCloudinaryStatus(accountKey, cloudinary);
+      // 🚨 Collects only the ids that failed during removal
+      const failedIds = this.getFailedIds(removeResults, publicIds);
 
-    // 🗑️ Builds remove promises for every public id in the batch
-    const removeResults = await Promise.allSettled(
-      publicIds.map((publicId) => this.remover({ publicId, cloudinary })),
-    );
+      // 🔁 Queues failed deletes again while retry limit is not reached
+      if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
+        await this.queueFailedRemovals({ accountKey, failedIds, retryCount: retryCount + 1 });
+      }
 
-    // 🚨 Collects only the ids that failed during removal
-    const failedIds = this.getFailedIds(removeResults, publicIds);
+      // 🚫 Logs the final failed ids when max retries are exhausted
+      if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
+        logger.error('Max retries reached for IDs:', failedIds);
+      }
 
-    // 🔁 Queues failed deletes again while retry limit is not reached
-    if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
-      await this.queueFailedRemovals({ accountKey, failedIds, retryCount: retryCount + 1 });
-    }
-
-    // 🚫 Logs the final failed ids when max retries are exhausted
-    if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
-      logger.error('Max retries reached for IDs:', failedIds);
-    }
-
-    // 📦 Returns a summary of the batch remove operation
-    return {
-      success: failedIds.length === 0,
-      partialFailure: failedIds.length > 0,
-      failedIds,
-      retryCount,
-    };
+      // 📦 Returns a summary of the batch remove operation
+      return {
+        success: failedIds.length === 0,
+        partialFailure: failedIds.length > 0,
+        failedIds,
+        retryCount,
+      };
+    });
   }
 
   /* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
   public async singleMediaUploader(props: ICloudinarySingleUploader) {
     const { file, ...rest } = props;
-    // ☁️ Selects the target Cloudinary account for upload
-    const cloudinary = this.getCloudinary(rest.accountKey);
-
-    await this.checkCloudinaryStatus(rest.accountKey, cloudinary);
-
-    return this.uploader({ ...rest, buffer: file.buffer, cloudinary });
+    // 🔒 Runs the upload flow inside the shared Cloudinary operation queue
+    return this.runWithCloudinary(rest.accountKey, async (cloudinary) =>
+      this.uploader({ ...rest, buffer: file.buffer, cloudinary }),
+    );
   }
 
   /* ========== MULTIPLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
@@ -105,38 +98,36 @@ export class MediaManager extends Cloudinary {
     const uploadedPublicIds: string[] = [];
     const { files, ...rest } = data;
 
-    // ☁️ Selects the target Cloudinary account for upload
-    const cloudinary = this.getCloudinary(rest.accountKey);
+    // 🔒 Runs the batch upload flow inside the shared Cloudinary operation queue
+    return this.runWithCloudinary(rest.accountKey, async (cloudinary) => {
+      try {
+        // 📤 Uploads all selected files in parallel
+        return await Promise.all(
+          files.map(async ({ buffer }) => {
+            const res = await this.uploader({ ...rest, cloudinary, buffer });
 
-    await this.checkCloudinaryStatus(rest.accountKey, cloudinary);
+            // ✅ Stores successful ids to support rollback
+            uploadedPublicIds.push(res.public_id);
+            return res;
+          }),
+        );
+      } catch (error) {
+        // ♻️ Starts rollback when any upload in the batch fails
 
-    try {
-      // 📤 Uploads all selected files in parallel
-      return await Promise.all(
-        files.map(async ({ buffer }) => {
-          const res = await this.uploader({ ...rest, cloudinary, buffer });
+        // 🧹 Tries to remove media files that were already uploaded
+        const deleteResults = await Promise.allSettled(
+          uploadedPublicIds.map((publicId) => this.remover({ publicId, cloudinary })),
+        );
 
-          // ✅ Stores successful ids to support rollback
-          uploadedPublicIds.push(res.public_id);
-          return res;
-        }),
-      );
-    } catch (error) {
-      // ♻️ Starts rollback when any upload in the batch fails
+        // 🚨 Keeps only the ids that also failed during rollback
+        const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
 
-      // 🧹 Tries to remove media files that were already uploaded
-      const deleteResults = await Promise.allSettled(
-        uploadedPublicIds.map((publicId) => this.remover({ publicId, cloudinary })),
-      );
+        // 🔁 Queues failed cleanup ids for retry processing
+        await this.queueFailedRemovals({ accountKey: rest.accountKey, failedIds });
 
-      // 🚨 Keeps only the ids that also failed during rollback
-      const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
-
-      // 🔁 Queues failed cleanup ids for retry processing
-      await this.queueFailedRemovals({ accountKey: rest.accountKey, failedIds });
-
-      throw error;
-    }
+        throw error;
+      }
+    });
   }
 }
 
