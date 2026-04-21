@@ -14,6 +14,20 @@ const {
   CLIENT_DEV_URL,
   CLIENT_PROD_URL,
 
+  CLOUDINARY_MAIN_FOLDER,
+
+  CLOUDINARY_IMAGE_CLOUD_NAME,
+  CLOUDINARY_IMAGE_API_KEY,
+  CLOUDINARY_IMAGE_API_SECRET,
+
+  CLOUDINARY_VIDEO_CLOUD_NAME,
+  CLOUDINARY_VIDEO_API_KEY,
+  CLOUDINARY_VIDEO_API_SECRET,
+
+  CLOUDINARY_PRODUCT_CLOUD_NAME,
+  CLOUDINARY_PRODUCT_API_KEY,
+  CLOUDINARY_PRODUCT_API_SECRET,
+
   // D
 
   DATABASE_NAME,
@@ -87,6 +101,26 @@ export const envs = {
   // A
   // B
   // C
+
+  cloudinary: {
+    main_folder: CLOUDINARY_MAIN_FOLDER,
+    image: {
+      cloud_name: CLOUDINARY_IMAGE_CLOUD_NAME,
+      api_key: CLOUDINARY_IMAGE_API_KEY,
+      api_secret: CLOUDINARY_IMAGE_API_SECRET,
+    },
+    product: {
+      cloud_name: CLOUDINARY_PRODUCT_CLOUD_NAME,
+      api_key: CLOUDINARY_PRODUCT_API_KEY,
+      api_secret: CLOUDINARY_PRODUCT_API_SECRET,
+    },
+    video: {
+      cloud_name: CLOUDINARY_VIDEO_CLOUD_NAME,
+      api_key: CLOUDINARY_VIDEO_API_KEY,
+      api_secret: CLOUDINARY_VIDEO_API_SECRET,
+    },
+  },
+
   // D
 
   database_name: DATABASE_NAME,
