@@ -28,15 +28,15 @@ export class MediaManager extends Cloudinary {
       return;
     }
 
-    const data = isNullOrUndefined(retryCount)
-      ? { publicIds: failedIds, accountKey }
-      : { publicIds: failedIds, accountKey, retryCount };
-
     // 🧵 Pushes failed cleanup ids into the queue for background retry
     await bullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'multi-cloudinary-media-remove',
-      data,
+      data: {
+        publicIds: failedIds,
+        accountKey,
+        ...(!isNullOrUndefined(retryCount) && { retryCount }),
+      },
     });
   }
 
@@ -58,7 +58,9 @@ export class MediaManager extends Cloudinary {
   }: ICloudinaryMultiRemover) {
     // ☁️ Loads the Cloudinary instance for the remove action
     const cloudinary = this.getCloudinary(accountKey);
+
     await this.checkCloudinaryStatus(accountKey, cloudinary);
+
     // 🗑️ Builds remove promises for every public id in the batch
     const removeResults = await Promise.allSettled(
       publicIds.map((publicId) => this.remover({ publicId, cloudinary })),
@@ -87,10 +89,12 @@ export class MediaManager extends Cloudinary {
   }
 
   /* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
-  public singleMediaUploader(props: ICloudinarySingleUploader) {
+  public async singleMediaUploader(props: ICloudinarySingleUploader) {
     const { file, ...rest } = props;
     // ☁️ Selects the target Cloudinary account for upload
     const cloudinary = this.getCloudinary(rest.accountKey);
+
+    await this.checkCloudinaryStatus(rest.accountKey, cloudinary);
 
     return this.uploader({ ...rest, buffer: file.buffer, cloudinary });
   }
@@ -103,6 +107,8 @@ export class MediaManager extends Cloudinary {
 
     // ☁️ Selects the target Cloudinary account for upload
     const cloudinary = this.getCloudinary(rest.accountKey);
+
+    await this.checkCloudinaryStatus(rest.accountKey, cloudinary);
 
     try {
       // 📤 Uploads all selected files in parallel
