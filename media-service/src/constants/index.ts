@@ -4,11 +4,14 @@ import type { ConnectionOptions } from 'bullmq';
 export const ORIGINS = Object.values(envs.url.frontend);
 
 export const MIME_TO_FORMAT = {
-  'image/jpeg': 'jpg',
-  'image/jpg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-  'image/svg+xml': 'svg',
+  IMAGE: {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/svg+xml': 'svg',
+  },
+  VIDEO: { 'video/mp4': 'mp4', 'video/webm': 'webm' },
 } as const;
 
 export const GATEWAY_METHODS_AND_PATHS = {

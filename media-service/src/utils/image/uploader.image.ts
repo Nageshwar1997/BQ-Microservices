@@ -11,7 +11,7 @@ export const uploadImageToCloudinary = async (
   accountKey: TCloudinaryOption = 'image',
 ): Promise<UploadApiResponse> => {
   const cloudinary = getCloudinaryInstance(accountKey);
-  const allowed_formats = FILE_MIME.IMAGE.map((mime) => MIME_TO_FORMAT[mime]);
+  const allowed_formats = FILE_MIME.IMAGE.map((mime) => MIME_TO_FORMAT.IMAGE[mime]);
 
   return new Promise<UploadApiResponse>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
