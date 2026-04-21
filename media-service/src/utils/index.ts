@@ -6,10 +6,12 @@ import type {
   ICloudinaryMultiRemover,
   ICloudinaryMultiUploader,
   ICloudinaryRemover,
+  ICloudinarySingleRemover,
   ICloudinarySingleUploader,
   ICloudinaryUploader,
   IPublicIdOptions,
-  TCloudinarySingleRemover,
+  TCloudinaryMediaRemover,
+  TCloudinaryMediaUploader,
   TId,
 } from '@/types';
 import { AppError } from '@beautinique/be-classes';
@@ -155,176 +157,8 @@ const removeFromCloudinary = async (data: ICloudinaryRemover): Promise<UploadApi
   });
 };
 
-/* ========== SINGLE IMAGE UPLOADER ========== */
-export const singleImageUploader = async (data: ICloudinarySingleUploader) => {
-  try {
-    // 🩺 Validates the Cloudinary connection before upload
-    const { message, status } = await checkCloudinaryStatus(data.accountKey);
-
-    if (status !== 'ok') {
-      throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
-    }
-
-    // 🖼️ Uploads a single image to Cloudinary
-    const result = await uploadToCloudinary({ ...data, resourceType: 'image' });
-
-    return result;
-  } catch (error) {
-    throw new AppError({
-      message: error instanceof Error ? error.message : 'Unexpected error during image upload',
-      statusCode: 500,
-      code: 'INTERNAL_ERROR',
-    });
-  }
-};
-
-/* ========== MULTI IMAGE UPLOADER ========== */
-export const multiImageUploader = async (data: ICloudinaryMultiUploader) => {
-  // 🧾 Tracks successful upload public ids for rollback
-  const uploadedPublicIds: string[] = [];
-
-  const { files, ...rest } = data;
-  try {
-    // 🩺 Verifies the connection before batch upload
-    const { message, status } = await checkCloudinaryStatus(rest.accountKey);
-
-    if (status !== 'ok') {
-      throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
-    }
-
-    // 📤 Uploads all images in parallel
-    const uploadPromises = files.map(async (file) => {
-      const res = await uploadToCloudinary({ ...rest, file, resourceType: 'image' });
-
-      // ✅ Stores successful ids to support rollback
-      uploadedPublicIds.push(res.public_id);
-      return res;
-    });
-
-    return await Promise.all(uploadPromises);
-  } catch (error) {
-    // 🔥 Rollback (If anyone is failed)
-
-    // ♻️ Tries to clean up files that were already uploaded
-    const deleteResults = await Promise.allSettled(
-      uploadedPublicIds.map((publicId) =>
-        removeFromCloudinary({ publicId, accountKey: rest.accountKey }),
-      ),
-    );
-
-    // 🔥 Keep failed id only from rollback
-    const failedIds = deleteResults
-      .map((res, index) => (res.status === 'rejected' ? uploadedPublicIds[index] : null))
-      .filter(Boolean);
-
-    // 👉 Add Job for failed ids only
-    if (failedIds.length > 0) {
-      // 🧵 Pushes failed rollback cases into the queue for retry
-      if (failedIds.length === 1) {
-        await bullQueue.addJob({
-          queueName: 'media-queue',
-          data: { publicId: failedIds[0], accountKey: rest.accountKey },
-          jobName: 'single-cloudinary-media-remove',
-        });
-      } else {
-        await bullQueue.addJob({
-          queueName: 'media-queue',
-          data: { publicIds: failedIds, accountKey: rest.accountKey },
-          jobName: 'multi-cloudinary-media-remove',
-        });
-      }
-    }
-
-    throw new AppError({
-      message: error instanceof Error ? error.message : 'Unexpected error during images upload',
-      statusCode: 500,
-      code: 'INTERNAL_ERROR',
-    });
-  }
-};
-
-/* ========== SINGLE VIDEO UPLOADER ========== */
-export const singleVideoUploader = async (data: ICloudinarySingleUploader) => {
-  try {
-    // 🩺 Validates the Cloudinary connection before upload
-    const { message, status } = await checkCloudinaryStatus(data.accountKey);
-
-    if (status !== 'ok') {
-      throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
-    }
-
-    // 🎥 Uploads a single video to Cloudinary
-    const result = await uploadToCloudinary({ ...data, resourceType: 'video' });
-
-    return result;
-  } catch (error) {
-    throw new AppError({
-      message: error instanceof Error ? error.message : 'Unexpected error during video upload',
-      statusCode: 500,
-      code: 'INTERNAL_ERROR',
-    });
-  }
-};
-
-/* ========== MULTI VIDEO UPLOADER ========== */
-export const multiVideoUploader = async (data: ICloudinaryMultiUploader) => {
-  // 🧾 Tracks successful upload public ids for rollback
-  const uploadedPublicIds: string[] = [];
-
-  const { files, ...rest } = data;
-  try {
-    // 🩺 Verifies the connection before batch upload
-    const { message, status } = await checkCloudinaryStatus(rest.accountKey);
-
-    if (status !== 'ok') {
-      throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
-    }
-
-    // 📤 Uploads all videos in parallel
-    const uploadPromises = files.map(async (file) => {
-      const res = await uploadToCloudinary({ ...rest, file, resourceType: 'video' });
-
-      // ✅ Stores successful ids to support rollback
-      uploadedPublicIds.push(res.public_id);
-      return res;
-    });
-
-    return await Promise.all(uploadPromises);
-  } catch (error) {
-    // 🔥 Rollback (If anyone is failed)
-
-    // ♻️ Tries to clean up videos that were already uploaded
-    const deleteResults = await Promise.allSettled(
-      uploadedPublicIds.map((publicId) =>
-        removeFromCloudinary({ publicId, accountKey: rest.accountKey }),
-      ),
-    );
-
-    // 🔥 Keep failed id only from rollback
-    const failedIds = deleteResults
-      .map((res, index) => (res.status === 'rejected' ? uploadedPublicIds[index] : null))
-      .filter(Boolean);
-
-    // 👉 Add Job for failed ids only
-    if (failedIds.length > 0) {
-      // 🧵 Sends failed rollback ids to the queue for retry
-      await bullQueue.addJob({
-        queueName: 'media-queue',
-        data: { publicIds: failedIds, accountKey: rest.accountKey },
-        jobName: 'multi-cloudinary-media-remove',
-      });
-    }
-
-    throw new AppError({
-      message: error instanceof Error ? error.message : 'Unexpected error during videos upload',
-      statusCode: 500,
-      code: 'INTERNAL_ERROR',
-    });
-  }
-};
-
-/* ========== SINGLE PUBLIC ID REMOVER ========== */
-export const singlePublicIdRemover = async (data: TCloudinarySingleRemover) => {
+/* ========== SINGLE MEDIA REMOVER ========== */
+const singleMediaRemover = async (data: ICloudinarySingleRemover) => {
   try {
     // 🩺 Validates the Cloudinary connection before remove
     const { message, status } = await checkCloudinaryStatus(data.accountKey);
@@ -345,8 +179,8 @@ export const singlePublicIdRemover = async (data: TCloudinarySingleRemover) => {
   }
 };
 
-/* ========== MULTI PUBLIC ID REMOVER ========== */
-export const multiPublicIdsRemover = async ({
+/* ========== MULTI MEDIA REMOVER ========== */
+const multiMediaRemover = async ({
   accountKey,
   publicIds,
   retryCount = 0, // 🔥 !Important: Don't Remove it
@@ -405,4 +239,94 @@ export const multiPublicIdsRemover = async ({
       code: 'INTERNAL_ERROR',
     });
   }
+};
+
+export const mediaRemover = async (data: TCloudinaryMediaRemover) => {
+  const { accountKey, publicId, publicIds, retryCount } = data;
+
+  if (publicId) {
+    return singleMediaRemover({ publicId, accountKey });
+  } else if (publicIds) {
+    return multiMediaRemover({ accountKey, publicIds, retryCount });
+  }
+
+  throw new AppError({
+    message: 'Invalid payload: provide publicId or publicIds',
+    statusCode: 400,
+    code: 'VALIDATION_ERROR',
+  });
+};
+
+/* ========== SINGLE MEDIA UPLOADER ========== */
+const singleMediaUploader = async (data: ICloudinarySingleUploader) => {
+  // 🎥 Uploads a single video to Cloudinary
+  return await uploadToCloudinary(data);
+};
+
+/* ========== MULTI MEDIA UPLOADER ========== */
+const multiMediaUploader = async (data: ICloudinaryMultiUploader) => {
+  // 🧾 Tracks successful upload public ids for rollback
+  const uploadedPublicIds: string[] = [];
+
+  const { files, ...rest } = data;
+  try {
+    // 📤 Uploads all videos in parallel
+    const uploadPromises = files.map(async (file) => {
+      const res = await uploadToCloudinary({ ...rest, file, resourceType: 'video' });
+
+      // ✅ Stores successful ids to support rollback
+      uploadedPublicIds.push(res.public_id);
+      return res;
+    });
+
+    return await Promise.all(uploadPromises);
+  } catch (error) {
+    // 🔥 Rollback (If anyone is failed)
+
+    // ♻️ Tries to clean up videos that were already uploaded
+    const deleteResults = await Promise.allSettled(
+      uploadedPublicIds.map((publicId) =>
+        removeFromCloudinary({ publicId, accountKey: rest.accountKey }),
+      ),
+    );
+
+    // 🔥 Keep failed id only from rollback
+    const failedIds = deleteResults
+      .map((res, index) => (res.status === 'rejected' ? uploadedPublicIds[index] : null))
+      .filter(Boolean);
+
+    // 👉 Add Job for failed ids only
+    if (failedIds.length > 0) {
+      // 🧵 Sends failed rollback ids to the queue for retry
+      await bullQueue.addJob({
+        queueName: 'media-queue',
+        data: { publicIds: failedIds, accountKey: rest.accountKey },
+        jobName: 'multi-cloudinary-media-remove',
+      });
+    }
+
+    throw error;
+  }
+};
+
+export const mediaUploader = async (data: TCloudinaryMediaUploader) => {
+  const { accountKey, file, files } = data;
+  // 🩺 Validates the Cloudinary connection before upload
+  const { message, status } = await checkCloudinaryStatus(accountKey);
+
+  if (status !== 'ok') {
+    throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
+  }
+
+  if (file) {
+    return singleMediaUploader(data);
+  } else if (files && files.length > 0) {
+    return multiMediaUploader(data);
+  }
+
+  throw new AppError({
+    message: 'No media present for upload',
+    statusCode: 400,
+    code: 'VALIDATION_ERROR',
+  });
 };
