@@ -1,6 +1,7 @@
 import type { QUEUE_AND_JOB_NAMES } from '@/constants';
 import type { TCloudinaryOption } from '@beautinique/be-constants';
 import type { JobsOptions } from 'bullmq';
+import type { v2 } from 'cloudinary';
 import type { Types } from 'mongoose';
 
 export type TId = Types.ObjectId;
@@ -29,39 +30,36 @@ export interface IPublicIdOptions {
   entityKey: TFileEntityKey;
 }
 
-interface ICloudinaryBaseUploader extends IPublicIdOptions {
+export type TV2 = typeof v2;
+
+export interface ICloudinaryUploader extends IPublicIdOptions {
+  cloudinary: TV2;
   folder: string;
   resourceType: TResourceType;
-  allowed_formats: string[];
+  buffer: Buffer<ArrayBufferLike>;
 }
 
-export interface ICloudinarySingleUploader extends ICloudinaryBaseUploader {
-  file: Express.Multer.File;
-  files?: never;
-}
-
-export interface ICloudinaryMultiUploader extends ICloudinaryBaseUploader {
-  files: Express.Multer.File[];
-  file?: never;
-}
-
-export type TCloudinaryMediaUploader = Omit<
-  ICloudinarySingleUploader | ICloudinaryMultiUploader,
-  'allowed_formats'
->;
-
-export interface ICloudinarySingleRemover {
+export interface ICloudinaryRemover {
   publicId: string;
-  accountKey: TCloudinaryOption;
-  publicIds?: never;
-  retryCount?: never;
+  cloudinary: TV2;
 }
 
-export interface ICloudinaryMultiRemover {
-  accountKey: TCloudinaryOption;
+type TCloudinaryBaseUploader = IPublicIdOptions &
+  Pick<ICloudinaryUploader, 'folder' | 'resourceType'>;
+
+export interface ICloudinarySingleUploader extends TCloudinaryBaseUploader {
+  file: Express.Multer.File;
+}
+
+export interface ICloudinaryMultiUploader extends TCloudinaryBaseUploader {
+  files: Express.Multer.File[];
+}
+
+export interface ICloudinarySingleRemover extends Pick<IPublicIdOptions, 'accountKey'> {
+  publicId: string;
+}
+
+export interface ICloudinaryMultiRemover extends Pick<IPublicIdOptions, 'accountKey'> {
   publicIds: string[];
-  publicId?: never;
   retryCount?: number;
 }
-
-export type TCloudinaryMediaRemover = ICloudinarySingleRemover | ICloudinaryMultiRemover;
