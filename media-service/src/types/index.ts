@@ -31,28 +31,33 @@ export interface IPublicIdOptions {
 
 interface ICloudinaryBaseUploader extends IPublicIdOptions {
   folder: string;
-}
-
-export interface ICloudinaryUploader extends ICloudinaryBaseUploader {
-  file: Express.Multer.File;
   resourceType: TResourceType;
 }
 
 export interface ICloudinarySingleUploader extends ICloudinaryBaseUploader {
   file: Express.Multer.File;
+  files?: never;
 }
 
 export interface ICloudinaryMultiUploader extends ICloudinaryBaseUploader {
   files: Express.Multer.File[];
+  file?: never;
 }
 
-export interface ICloudinaryRemover {
+export type TCloudinaryMediaUploader = ICloudinarySingleUploader | ICloudinaryMultiUploader;
+
+export interface ICloudinarySingleRemover {
   publicId: string;
   accountKey: TCloudinaryOption;
+  publicIds?: never;
+  retryCount?: never;
 }
-export type TCloudinarySingleRemover = ICloudinaryRemover;
 
-export interface ICloudinaryMultiRemover extends Omit<ICloudinaryRemover, 'publicId'> {
+export interface ICloudinaryMultiRemover {
+  accountKey: TCloudinaryOption;
   publicIds: string[];
+  publicId?: never;
   retryCount?: number;
 }
+
+export type TCloudinaryMediaRemover = ICloudinarySingleRemover | ICloudinaryMultiRemover;
