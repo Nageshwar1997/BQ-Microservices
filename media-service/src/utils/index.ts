@@ -70,8 +70,110 @@ export const checkCloudinaryStatus = async (accountKey: TCloudinaryOption) => {
   }
 };
 
-/* ========== COMMON CLOUDINARY UPLOADER FUNCTION ========== */
-const uploadToCloudinary = ({
+/* ========== SINGLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
+const singleMediaRemover = (data: ICloudinarySingleRemover) => {
+  const { publicId, accountKey } = data;
+
+  // ☁️ Loads the Cloudinary instance for the remove action
+  const cloudinary = getCloudinaryInstance(accountKey);
+
+  return new Promise<DeleteApiResponse>((resolve, reject) => {
+    // 🗑️ Deletes the given public id from Cloudinary storage
+    cloudinary.uploader.destroy(publicId, { resource_type: 'image' }, (error, result) => {
+      if (error) {
+        logger.error('Failed to remove image from Cloudinary', error);
+        return reject(
+          new AppError({
+            message: error.message || 'Failed to remove image from Cloudinary',
+            statusCode: 500,
+            code: 'INTERNAL_ERROR',
+          }),
+        );
+      }
+
+      logger.info('Image removed from Cloudinary', result);
+
+      // ✅ Resolves the delete response after successful removal
+      resolve(result);
+    });
+  });
+};
+
+/* ========== MULTIPLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
+const multipleMediaRemover = async ({
+  accountKey,
+  publicIds,
+  retryCount = 0, // 🔥 !Important: Don't Remove it
+}: ICloudinaryMultiRemover) => {
+  // 🗑️ Builds remove promises for every public id in the batch
+  const removeResults = await Promise.allSettled(
+    publicIds.map((publicId) => singleMediaRemover({ publicId, accountKey })),
+  );
+
+  // 🚨 Collects only the ids that failed during removal
+  const failedIds = removeResults.reduce<string[]>((acc, res, index) => {
+    if (res.status === 'rejected') {
+      acc.push(publicIds[index]);
+    }
+    return acc;
+  }, []);
+
+  const MAX_RETRIES = 5;
+
+  // 🔁 Queues failed deletes again while retry limit is not reached
+  if (failedIds.length > 0 && retryCount < MAX_RETRIES) {
+    await bullQueue.addJob({
+      queueName: 'media-queue',
+      jobName: 'multi-cloudinary-media-remove',
+      data: { publicIds: failedIds, accountKey, retryCount: retryCount + 1 },
+    });
+  }
+
+  // 🚫 Logs the final failed ids when max retries are exhausted
+  if (failedIds.length > 0 && retryCount >= MAX_RETRIES) {
+    logger.error('Max retries reached for IDs:', failedIds);
+  }
+
+  // 📦 Returns a summary of the batch remove operation
+  return {
+    success: failedIds.length === 0,
+    partialFailure: failedIds.length > 0,
+    failedIds,
+    retryCount,
+  };
+};
+
+/* ========== MEDIA REMOVER ENTRY FUNCTION ========== */
+export const mediaRemover = async (data: TCloudinaryMediaRemover) => {
+  const { accountKey, publicId, publicIds, retryCount } = data;
+
+  // 🩺 Validates the Cloudinary connection before any remove action
+  const { message, status } = await checkCloudinaryStatus(accountKey);
+
+  if (status !== 'ok') {
+    throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
+  }
+
+  if (publicId) {
+    // 🎯 Routes single media delete requests to the common remover
+    return singleMediaRemover(data);
+  }
+
+  if (publicIds) {
+    // 📚 Routes multi media delete requests to the batch remover
+    return multipleMediaRemover({ accountKey, publicIds, retryCount });
+  }
+
+  // 🚫 Rejects invalid payloads where no removable id is provided
+  throw new AppError({
+    message: 'Invalid payload: provide publicId or publicIds',
+    statusCode: 400,
+    code: 'VALIDATION_ERROR',
+  });
+};
+
+/* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
+const singleMediaUploader = ({
   accountKey,
   entityKey,
   file,
@@ -131,109 +233,7 @@ const uploadToCloudinary = ({
   });
 };
 
-/* ========== COMMON MEDIA REMOVER FUNCTION ========== */
-const removeFromCloudinary = (data: ICloudinarySingleRemover) => {
-  const { publicId, accountKey } = data;
-
-  // ☁️ Loads the Cloudinary instance for the remove action
-  const cloudinary = getCloudinaryInstance(accountKey);
-
-  return new Promise<DeleteApiResponse>((resolve, reject) => {
-    // 🗑️ Deletes the given public id from Cloudinary storage
-    cloudinary.uploader.destroy(publicId, { resource_type: 'image' }, (error, result) => {
-      if (error) {
-        logger.error('Failed to remove image from Cloudinary', error);
-        return reject(
-          new AppError({
-            message: error.message || 'Failed to remove image from Cloudinary',
-            statusCode: 500,
-            code: 'INTERNAL_ERROR',
-          }),
-        );
-      }
-
-      logger.info('Image removed from Cloudinary', result);
-
-      // ✅ Resolves the delete response after successful removal
-      resolve(result);
-    });
-  });
-};
-
-/* ========== MULTI MEDIA REMOVER FUNCTION ========== */
-const multipleMediaRemover = async ({
-  accountKey,
-  publicIds,
-  retryCount = 0, // 🔥 !Important: Don't Remove it
-}: ICloudinaryMultiRemover) => {
-  // 🗑️ Builds remove promises for every public id in the batch
-  const removeResults = await Promise.allSettled(
-    publicIds.map((publicId) => removeFromCloudinary({ publicId, accountKey })),
-  );
-
-  // 🚨 Collects only the ids that failed during removal
-  const failedIds = removeResults.reduce<string[]>((acc, res, index) => {
-    if (res.status === 'rejected') {
-      acc.push(publicIds[index]);
-    }
-    return acc;
-  }, []);
-
-  const MAX_RETRIES = 5;
-
-  // 🔁 Queues failed deletes again while retry limit is not reached
-  if (failedIds.length > 0 && retryCount < MAX_RETRIES) {
-    await bullQueue.addJob({
-      queueName: 'media-queue',
-      jobName: 'multi-cloudinary-media-remove',
-      data: { publicIds: failedIds, accountKey, retryCount: retryCount + 1 },
-    });
-  }
-
-  // 🚫 Logs the final failed ids when max retries are exhausted
-  if (failedIds.length > 0 && retryCount >= MAX_RETRIES) {
-    logger.error('Max retries reached for IDs:', failedIds);
-  }
-
-  // 📦 Returns a summary of the batch remove operation
-  return {
-    success: failedIds.length === 0,
-    partialFailure: failedIds.length > 0,
-    failedIds,
-    retryCount,
-  };
-};
-
-/* ========== MEDIA REMOVER ENTRY FUNCTION ========== */
-export const mediaRemover = async (data: TCloudinaryMediaRemover) => {
-  const { accountKey, publicId, publicIds, retryCount } = data;
-
-  // 🩺 Validates the Cloudinary connection before any remove action
-  const { message, status } = await checkCloudinaryStatus(accountKey);
-
-  if (status !== 'ok') {
-    throw new AppError({ message, statusCode: 500, code: 'INTERNAL_ERROR' });
-  }
-
-  if (publicId) {
-    // 🎯 Routes single media delete requests to the common remover
-    return removeFromCloudinary(data);
-  }
-
-  if (publicIds) {
-    // 📚 Routes multi media delete requests to the batch remover
-    return multipleMediaRemover({ accountKey, publicIds, retryCount });
-  }
-
-  // 🚫 Rejects invalid payloads where no removable id is provided
-  throw new AppError({
-    message: 'Invalid payload: provide publicId or publicIds',
-    statusCode: 400,
-    code: 'VALIDATION_ERROR',
-  });
-};
-
-/* ========== MULTI MEDIA UPLOADER FUNCTION ========== */
+/* ========== MULTIPLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
 const multipleMediaUploader = async (data: ICloudinaryMultiUploader) => {
   // 🧾 Tracks successful upload public ids for rollback
   const uploadedPublicIds: string[] = [];
@@ -242,7 +242,7 @@ const multipleMediaUploader = async (data: ICloudinaryMultiUploader) => {
   try {
     // 📤 Uploads all selected files in parallel
     const uploadPromises = files.map(async (file) => {
-      const res = await uploadToCloudinary({ ...rest, file, resourceType: 'video' });
+      const res = await singleMediaUploader({ ...rest, file });
 
       // ✅ Stores successful ids to support rollback
       uploadedPublicIds.push(res.public_id);
@@ -256,7 +256,7 @@ const multipleMediaUploader = async (data: ICloudinaryMultiUploader) => {
     // 🧹 Tries to remove media files that were already uploaded
     const deleteResults = await Promise.allSettled(
       uploadedPublicIds.map((publicId) =>
-        removeFromCloudinary({ publicId, accountKey: rest.accountKey }),
+        singleMediaRemover({ publicId, accountKey: rest.accountKey }),
       ),
     );
 
@@ -291,7 +291,7 @@ export const mediaUploader = async (data: TCloudinaryMediaUploader) => {
 
   if (file) {
     // 🎯 Routes single file upload requests to the common uploader
-    return uploadToCloudinary(data);
+    return singleMediaUploader(data);
   }
 
   if (files?.length) {
