@@ -1,14 +1,16 @@
 import type { UploadApiErrorResponse, UploadApiResponse } from 'cloudinary';
-import { generateFolderName } from '..';
+import { generateFolderName, generatePublicId } from '..';
 import { FILE_MIME, type TCloudinaryOption } from '@beautinique/be-constants';
 import { MIME_TO_FORMAT } from '@/constants';
 import { AppError } from '@beautinique/be-classes';
 import { getCloudinaryInstance } from '@/configs';
+import type { IPublicIdOptions } from '@/types';
 
 export const uploadVideoToCloudinary = async (
   file: Express.Multer.File,
   folder: string,
   accountKey: TCloudinaryOption = 'video',
+  entity: IPublicIdOptions['entity'],
 ): Promise<UploadApiResponse> => {
   const cloudinary = getCloudinaryInstance(accountKey);
 
@@ -18,11 +20,10 @@ export const uploadVideoToCloudinary = async (
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: generateFolderName(folder),
+        public_id: generatePublicId({ entity, accountKey }),
         resource_type: 'video',
         allowed_formats,
-        use_filename: true,
-        unique_filename: true,
-        chunk_size: 6_000_000, // 6MB (approx) chunks (better for large files)
+        chunk_size: 6_000_000,
       },
       (error?: UploadApiErrorResponse, result?: UploadApiResponse) => {
         if (error || !result) {
@@ -35,33 +36,7 @@ export const uploadVideoToCloudinary = async (
           );
         }
 
-        // Optimized delivery URL
-        const optimizedUrl = cloudinary.url(result.public_id, {
-          resource_type: 'video',
-          transformation: [{ width: 'auto' }, { quality: 'auto' }, { fetch_format: 'auto' }],
-        });
-
-        const thumbnail = cloudinary.url(result.public_id, {
-          resource_type: 'video',
-          transformation: [
-            { start_offset: '2' },
-            { width: 400, crop: 'scale' },
-            { quality: 'auto' },
-            { fetch_format: 'auto' },
-          ],
-        });
-
-        const blurThumb = cloudinary.url(result.public_id, {
-          resource_type: 'video',
-          transformation: [
-            { start_offset: '1' },
-            { width: 50, crop: 'scale' },
-            { fetch_format: 'auto' },
-            { quality: 'auto:low' },
-          ],
-        });
-
-        resolve({ ...result, secure_url: optimizedUrl, thumbnail, blurThumb });
+        resolve(result);
       },
     );
 

@@ -1,14 +1,16 @@
 import { type UploadApiErrorResponse, type UploadApiResponse } from 'cloudinary';
-import { generateFolderName } from '..';
+import { generateFolderName, generatePublicId } from '..';
 import { FILE_MIME, type TCloudinaryOption } from '@beautinique/be-constants';
 import { MIME_TO_FORMAT } from '@/constants';
 import { AppError } from '@beautinique/be-classes';
 import { getCloudinaryInstance } from '@/configs';
+import type { IPublicIdOptions } from '@/types';
 
 export const uploadImageToCloudinary = async (
   file: Express.Multer.File,
   folder: string,
   accountKey: TCloudinaryOption = 'image',
+  entity: IPublicIdOptions['entity'],
 ): Promise<UploadApiResponse> => {
   const cloudinary = getCloudinaryInstance(accountKey);
   const allowed_formats = FILE_MIME.IMAGE.map((mime) => MIME_TO_FORMAT.IMAGE[mime]);
@@ -17,10 +19,9 @@ export const uploadImageToCloudinary = async (
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: generateFolderName(folder),
+        public_id: generatePublicId({ entity, accountKey }),
         resource_type: 'image',
         allowed_formats,
-        use_filename: true,
-        unique_filename: true,
       },
       (error?: UploadApiErrorResponse, result?: UploadApiResponse) => {
         if (error || !result) {
