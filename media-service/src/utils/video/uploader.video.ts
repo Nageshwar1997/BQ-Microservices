@@ -14,7 +14,17 @@ export const uploadVideoToCloudinary = async (
 ): Promise<UploadApiResponse> => {
   const cloudinary = getCloudinaryInstance(accountKey);
 
-  const allowed_formats = FILE_MIME.VIDEO.map((mime) => MIME_TO_FORMAT.VIDEO[mime]);
+  const allowed_formats = FILE_MIME.IMAGE.map((mime) => {
+    const format = MIME_TO_FORMAT.IMAGE[mime];
+
+    if (!format)
+      throw new AppError({
+        message: `Unsupported mime: ${mime}`,
+        statusCode: 400,
+        code: 'VALIDATION_ERROR',
+      });
+    return format;
+  });
 
   return new Promise<UploadApiResponse>((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
