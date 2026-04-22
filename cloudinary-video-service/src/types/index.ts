@@ -20,6 +20,3 @@ export type IQueueJob<TData = unknown> = TQueueJobName & {
   data: TData;
   options?: JobsOptions;
 };
-
-export type TFileEntityKey = 'avatar' | 'others';
-export type TResourceType = 'image' | 'video';
