@@ -12,11 +12,10 @@ const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
 class Cloudinary {
   private cloudinary: typeof v2;
 
-  /* ========== CLOUDINARY INSTANCE GETTER FUNCTION ========== */
+  /* ========== INITIALIZE CLOUDINARY INSTANCE ========== */
   private getCloudinary() {
-    // ☁️ Returns the configured Cloudinary instance for the given account
+    // Configure Cloudinary SDK using environment variables
     v2.config({ ...envs.cloudinary, secure: true });
-
     return v2;
   }
 
@@ -24,111 +23,107 @@ class Cloudinary {
     this.cloudinary = this.getCloudinary();
   }
 
-  /* ========== FOLDER NAME GENERATOR FUNCTION ========== */
+  /* ========== GENERATE SAFE FOLDER PATH ========== */
   private generateFolderName(folder?: string) {
-    // 🧹 Converts unsafe folder characters into safe underscores
+    // Replace unsafe characters with underscore
     const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
 
-    // 📁 Builds a clean subfolder name with a default fallback
+    // Normalize folder name (trim + replace spaces)
     const subfolder = sanitize((folder || DEFAULT_FOLDER_NAME).trim().replace(/\s+/g, '_'));
 
-    // 🏷️ Returns the final path with the main Cloudinary folder
+    // Final Cloudinary folder path
     return `Beautinique/Videos/${subfolder}`;
   }
 
-  /* ========== PUBLIC ID GENERATOR FUNCTION ========== */
+  /* ========== GENERATE UNIQUE PUBLIC ID ========== */
   private generatePublicId(): string {
-    // 📅 Gets current date parts to build a structured public id
+    // Extract current date parts
     const { getDate, getFullYear, getMonth } = new Date();
 
     const year = getFullYear();
     const month = String(getMonth() + 1).padStart(2, '0');
     const day = String(getDate()).padStart(2, '0');
 
-    // 🆔 Generates a unique uuid for every upload
+    // Generate unique identifier
     const uuid = randomUUID();
 
-    // 🧱 Creates the final public id using account, entity, date, and uuid
+    // Structured public_id (useful for organization & debugging)
     return `${year}/${month}/${day}/${uuid}`;
   }
 
-  /* ========== FAILED ID EXTRACTOR FUNCTION ========== */
+  /* ========== EXTRACT FAILED IDS FROM RESULTS ========== */
   private getFailedIds(results: PromiseSettledResult<unknown>[], ids: string[]) {
-    // 🚨 Collects only the ids whose operation failed
+    // Return only IDs whose corresponding promise failed
     return results.reduce<string[]>((acc, result, index) => {
       if (result.status === 'rejected') {
         acc.push(ids[index]);
       }
-
       return acc;
     }, []);
   }
 
-  /* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
+  /* ========== INTERNAL UPLOAD HANDLER (STREAM) ========== */
   private uploader(folder: string, buffer: Buffer<ArrayBufferLike>) {
     return new Promise<UploadApiResponse>((resolve, reject) => {
-      // 🚀 Starts the stream-based upload
+      // Upload using stream (efficient for large files like videos)
       const stream = this.cloudinary.uploader.upload_stream(
         {
           folder: this.generateFolderName(folder),
           public_id: this.generatePublicId(),
           resource_type: 'video',
           allowed_formats: Object.values(MIME_TO_FORMAT),
-          chunk_size: 5000000, // 5MB (Approx)
+          chunk_size: 5000000, // Upload in chunks (~5MB)
         },
         (error, result) => {
-          // ❌ Rejects with a standardized app error if upload fails
           if (error || !result) {
             return reject(
               new AppError({
-                message: error?.message || `Failed to upload image`,
+                message: error?.message || `Failed to upload media`,
                 statusCode: 400,
                 code: 'UPLOAD_ERROR',
               }),
             );
           }
 
-          // ✅ Resolves the successful Cloudinary response
+          // Successfully uploaded
           resolve(result);
         },
       );
 
-      // 📦 Pushes the incoming file buffer into the stream
+      // Send buffer to stream
       stream.end(buffer);
     });
   }
 
+  /* ========== INTERNAL DELETE HANDLER ========== */
   private remover(publicId: string) {
     return new Promise<DeleteApiResponse>((resolve, reject) => {
-      // 🗑️ Deletes the given public id from Cloudinary storage
-      this.cloudinary.uploader.destroy(publicId, { resource_type: 'image' }, (error, result) => {
+      // Delete asset from Cloudinary
+      this.cloudinary.uploader.destroy(publicId, { resource_type: 'video' }, (error, result) => {
         if (error) {
-          logger.error('Failed to remove image from Cloudinary', error);
+          logger.error('Cloudinary delete failed', error);
+
           return reject(
             new AppError({
-              message: error.message || 'Failed to remove image from Cloudinary',
+              message: error.message || 'Failed to delete media',
               statusCode: 400,
               code: 'INTERNAL_ERROR',
             }),
           );
         }
 
-        logger.info('Image removed from Cloudinary', result);
-
-        // ✅ Resolves the delete response after successful removal
+        logger.info('Cloudinary delete success', result);
         resolve(result);
       });
     });
   }
 
-  /* ========== FAILED REMOVAL QUEUE FUNCTION ========== */
+  /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
   private async queueFailedRemovals(failedIds: string[], retryCount?: number) {
-    // 🔁 Skips queue work when there is nothing left to retry
-    if (failedIds.length === 0) {
-      return;
-    }
+    // Skip if nothing to retry
+    if (failedIds.length === 0) return;
 
-    // 🧵 Pushes failed cleanup ids into the queue for background retry
+    // Push failed deletions into background job queue
     await bullQueue.addJob({
       queueName: 'cloudinary-video-queue',
       jobName: 'multiple-video-remove',
@@ -136,39 +131,34 @@ class Cloudinary {
     });
   }
 
-  /* ========== SINGLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
+  /* ========== REMOVE SINGLE FILE ========== */
   public async removeSingle(publicId: string) {
-    // 🔒 Runs the remove flow inside the shared Cloudinary operation queue
     return this.remover(publicId);
   }
 
-  /* ========== MULTIPLE MEDIA CLOUDINARY REMOVER FUNCTION ========== */
+  /* ========== REMOVE MULTIPLE FILES WITH RETRY LOGIC ========== */
   public async removeMultiple(
     publicIds: string[],
-    retryCount = 0, // 🔥 !Important: Don't Remove it
+    retryCount = 0, // ⚠️ Required for retry tracking
   ) {
-    // 🔒 Runs the batch remove flow inside the shared Cloudinary operation queue
-    // 🗑️ Builds remove promises for every public id in the batch
-    const removeResults = await Promise.allSettled(
-      publicIds.map((publicId) => this.remover(publicId)),
-    );
+    // Execute all deletions in parallel
+    const removeResults = await Promise.allSettled(publicIds.map((id) => this.remover(id)));
 
-    // 🚨 Collects only the ids that failed during removal
+    // Extract failed IDs
     const failedIds = this.getFailedIds(removeResults, publicIds);
 
     const MAX_REMOVE_RETRIES = 5;
 
-    // 🔁 Queues failed deletes again while retry limit is not reached
+    // Retry failed deletions via queue
     if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
       await this.queueFailedRemovals(failedIds, retryCount + 1);
     }
 
-    // 🚫 Logs the final failed ids when max retries are exhausted
+    // Log if retry limit exceeded
     if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
-      logger.error('Max retries reached for IDs:', failedIds);
+      logger.error('Delete retry limit reached', failedIds);
     }
 
-    // 📦 Returns a summary of the batch remove operation
     return {
       success: failedIds.length === 0,
       partialFailure: failedIds.length > 0,
@@ -177,40 +167,36 @@ class Cloudinary {
     };
   }
 
-  /* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
+  /* ========== UPLOAD SINGLE FILE ========== */
   public async uploadSingle(folder: string, file: Express.Multer.File) {
-    // 🔒 Runs the upload flow inside the shared Cloudinary operation queue
     return this.uploader(folder, file.buffer);
   }
 
-  /* ========== MULTIPLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
+  /* ========== UPLOAD MULTIPLE FILES WITH ROLLBACK ========== */
   public async uploadMultiple(folder: string, files: Express.Multer.File[]) {
-    // 🧾 Tracks successful upload public ids for rollback
     const uploadedPublicIds: string[] = [];
 
     try {
+      // Upload all files in parallel
       return await Promise.all(
         files.map(async ({ buffer }) => {
-          // 📤 Uploads all selected files in parallel
           const res = await this.uploader(folder, buffer);
 
-          // ✅ Stores successful ids to support rollback
+          // Track uploaded files for rollback safety
           uploadedPublicIds.push(res.public_id);
           return res;
         }),
       );
     } catch (error) {
-      // ♻️ Starts rollback when any upload in the batch fails
+      // If any upload fails → rollback previously uploaded files
 
-      // 🧹 Tries to remove media files that were already uploaded
       const deleteResults = await Promise.allSettled(
-        uploadedPublicIds.map((publicId) => this.remover(publicId)),
+        uploadedPublicIds.map((id) => this.remover(id)),
       );
 
-      // 🚨 Keeps only the ids that also failed during rollback
       const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
 
-      // 🔁 Queues failed cleanup ids for retry processing
+      // Retry failed cleanup via queue
       await this.queueFailedRemovals(failedIds);
 
       throw error;
