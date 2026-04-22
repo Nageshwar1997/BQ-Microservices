@@ -33,9 +33,15 @@ export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],
   'cloudinary-image-queue': [
-    'single-image-remover',
-    'multiple-image-remover',
-    'single-image-uploader',
-    'multiple-image-uploader',
+    'single-image-remove',
+    'multiple-image-remove',
+    'single-image-upload',
+    'multiple-image-upload',
+  ],
+  'cloudinary-video-queue': [
+    'single-video-remove',
+    'multiple-video-remove',
+    'single-video-upload',
+    'multiple-video-upload',
   ],
 } as const;

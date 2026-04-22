@@ -130,7 +130,7 @@ class Cloudinary {
     // 🧵 Pushes failed cleanup ids into the queue for background retry
     await bullQueue.addJob({
       queueName: 'cloudinary-image-queue',
-      jobName: 'multiple-image-remover',
+      jobName: 'multiple-image-remove',
       data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
     });
   }
