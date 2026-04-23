@@ -4,6 +4,7 @@ import { logger } from '@/configs';
 import type { TJobName, TQueueKey } from '@/types';
 import type { TSendOtpMail } from '@beautinique/be-zod';
 import { mailService } from './apis';
+import { mediaService } from './apis/MediaService';
 
 /* ---------------- SERVICE ---------------- */
 
@@ -26,6 +27,10 @@ class BullWorker {
         switch (queueName) {
           case 'email-queue':
             await this.handleEmailJobs(job);
+            break;
+
+          case 'media-queue':
+            await this.handleMediaJobs(job);
             break;
 
           default:
@@ -55,6 +60,7 @@ class BullWorker {
 
   public startAll() {
     this.startWorker('email-queue');
+    this.startWorker('media-queue');
 
     // Add more workers here
   }
@@ -70,6 +76,23 @@ class BullWorker {
         logger.info(`📩 Forwarding OTP to mail-service for ${email}`);
         await mailService.sendOtp({ email, otp });
         logger.info(`✅ OTP forwarded to mail-service for ${email}`);
+        break;
+      }
+
+      default:
+        throw new Error(`🚫 Unknown email job: ${jobName}`);
+    }
+  }
+
+  private async handleMediaJobs(job: Job) {
+    const { data } = job;
+    const jobName = job.name as TJobName<'media-queue'>;
+    switch (jobName) {
+      case 'single-image-remove': {
+        const { publicId } = data;
+        logger.info(`📩 Forwarding publicId to media-service for ${publicId}`);
+        await mediaService.singleImageRemove(publicId);
+        logger.info(`✅ publicId forwarded to media-service for ${publicId}`);
         break;
       }
 
