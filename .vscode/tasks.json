@@ -75,8 +75,33 @@
       }
     },
     {
+      "label": "media-service",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/media-service",
+        "shell": {
+          "executable": "C:\\Program Files\\Git\\bin\\bash.exe",
+          "args": ["-lc"]
+        }
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "microservices",
+        "showReuseMessage": false,
+        "clear": false
+      }
+    },
+    {
       "label": "Run all microservices in VS Code terminals",
-      "dependsOn": ["user-service", "worker-service", "mail-service"],
+      "dependsOn": [
+        "user-service",
+        "worker-service",
+        "mail-service",
+        "media-service"
+      ],
       "dependsOrder": "parallel",
       "problemMatcher": []
     },
