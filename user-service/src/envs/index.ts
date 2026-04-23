@@ -59,6 +59,9 @@ const {
   MASTER_DEV_URL,
   MASTER_PROD_URL,
 
+  MEDIA_SERVICE_DEV_URL,
+  MEDIA_SERVICE_PROD_URL,
+
   MONGODB_PROD_URI,
   MONGODB_DEV_URI,
 
@@ -189,6 +192,7 @@ export const envs = {
     gateway: is_dev ? GATEWAY_DEV_URL : GATEWAY_PROD_URL,
     service: {
       mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
+      media: is_dev ? MEDIA_SERVICE_DEV_URL : MEDIA_SERVICE_PROD_URL,
       user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
       worker: is_dev ? WORKER_SERVICE_DEV_URL : WORKER_SERVICE_PROD_URL,
     },
