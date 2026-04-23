@@ -111,7 +111,7 @@ class Cloudinary {
   /* ========== INTERNAL UPLOAD HANDLER (STREAM) ========== */
   private uploader({ buffer, folder, resourceType }: IUploader) {
     return new Promise<UploadApiResponse>((resolve, reject) => {
-      // Upload using stream (efficient for large files like images)
+      // Upload using stream (efficient for large files like images or videos)
       const stream = this.cloudinary.uploader.upload_stream(
         {
           folder: this.generateFolderName({ folder, resourceType }),
