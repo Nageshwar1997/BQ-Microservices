@@ -5,6 +5,17 @@ import { AppError } from '@beautinique/be-classes';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { randomUUID } from 'crypto';
 import { bullQueue } from './BullQueue';
+import type {
+  IMultipleRemover,
+  IMultipleUploader,
+  IRemover,
+  ISingleRemover,
+  ISingleUploader,
+  IUploader,
+  IUploaderBase,
+  TResourceType,
+} from '@/types';
+import { FILE_MIME } from '@beautinique/be-constants';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
 const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
@@ -24,15 +35,15 @@ class Cloudinary {
   }
 
   /* ========== GENERATE SAFE FOLDER PATH ========== */
-  private generateFolderName(folder?: string) {
+  private generateFolderName({ folder, resourceType }: IUploaderBase) {
     // Replace unsafe characters with underscore
     const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
-
+    const type = resourceType === 'image' ? 'Images' : 'Videos';
     // Normalize folder name (trim + replace spaces)
     const subfolder = sanitize((folder || DEFAULT_FOLDER_NAME).trim().replace(/\s+/g, '_'));
 
     // Final Cloudinary folder path
-    return `Beautinique/Images/${subfolder}`;
+    return `Beautinique/${type}/${subfolder}`;
   }
 
   /* ========== GENERATE UNIQUE PUBLIC ID ========== */
@@ -51,6 +62,28 @@ class Cloudinary {
     return `${year}/${month}/${day}/${uuid}`;
   }
 
+  /* ========== ALLOWED FORMAT RESOLVER FUNCTION ========== */
+  private getAllowedFormats(resourceType: TResourceType) {
+    // 🎞️ Chooses the mime collection based on the requested resource type
+    const baseMimes =
+      resourceType === 'image' ? FILE_MIME.IMAGE : resourceType === 'video' ? FILE_MIME.VIDEO : [];
+
+    // 🧾 Maps mime types into Cloudinary-supported formats
+    const allowedFormats = baseMimes
+      .map((mime) => MIME_TO_FORMAT[resourceType][mime])
+      .filter((format): format is string => Boolean(format));
+
+    if (!allowedFormats.length) {
+      throw new AppError({
+        message: `Unsupported mime: ${baseMimes.join(', ')}`,
+        statusCode: 400,
+        code: 'UPLOAD_ERROR',
+      });
+    }
+
+    return allowedFormats;
+  }
+
   /* ========== EXTRACT FAILED IDS FROM RESULTS ========== */
   private getFailedIds(results: PromiseSettledResult<unknown>[], ids: string[]) {
     // Return only IDs whose corresponding promise failed
@@ -62,16 +95,32 @@ class Cloudinary {
     }, []);
   }
 
+  /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
+  private async queueFailedRemovals(failedIds: string[], retryCount?: number) {
+    // Skip if nothing to retry
+    if (failedIds.length === 0) return;
+
+    // Push failed deletions into background job queue
+    await bullQueue.addJob({
+      queueName: 'media-queue',
+      jobName: 'multiple-remove',
+      data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
+    });
+  }
+
   /* ========== INTERNAL UPLOAD HANDLER (STREAM) ========== */
-  private uploader(folder: string, buffer: Buffer<ArrayBufferLike>) {
+  private uploader({ buffer, folder, resourceType }: IUploader) {
     return new Promise<UploadApiResponse>((resolve, reject) => {
       // Upload using stream (efficient for large files like images)
       const stream = this.cloudinary.uploader.upload_stream(
         {
-          folder: this.generateFolderName(folder),
+          folder: this.generateFolderName({ folder, resourceType }),
           public_id: this.generatePublicId(),
-          resource_type: 'image',
-          allowed_formats: Object.values(MIME_TO_FORMAT),
+          resource_type: resourceType,
+          allowed_formats: this.getAllowedFormats(resourceType),
+          ...(resourceType === 'video' && {
+            chunk_size: 5000000, // Upload in chunks (~5MB)
+          }),
         },
         (error, result) => {
           if (error || !result) {
@@ -85,7 +134,8 @@ class Cloudinary {
           }
 
           // Successfully uploaded
-          resolve(result);
+          const secure_url = result.playback_url || result.secure_url;
+          resolve({ ...result, secure_url });
         },
       );
 
@@ -95,53 +145,47 @@ class Cloudinary {
   }
 
   /* ========== INTERNAL DELETE HANDLER ========== */
-  private remover(publicId: string) {
+  private remover({ publicId, resourceType }: IRemover) {
     return new Promise<DeleteApiResponse>((resolve, reject) => {
       // Delete asset from Cloudinary
-      this.cloudinary.uploader.destroy(publicId, { resource_type: 'image' }, (error, result) => {
-        if (error) {
-          logger.error('Cloudinary delete failed', error);
+      this.cloudinary.uploader.destroy(
+        publicId,
+        { resource_type: resourceType },
+        (error, result) => {
+          if (error) {
+            logger.error('Cloudinary delete failed', error);
 
-          return reject(
-            new AppError({
-              message: error.message || 'Failed to delete media',
-              statusCode: 400,
-              code: 'INTERNAL_ERROR',
-            }),
-          );
-        }
+            return reject(
+              new AppError({
+                message: error.message || 'Failed to delete media',
+                statusCode: 400,
+                code: 'INTERNAL_ERROR',
+              }),
+            );
+          }
 
-        logger.info('Cloudinary delete success', result);
-        resolve(result);
-      });
-    });
-  }
-
-  /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
-  private async queueFailedRemovals(failedIds: string[], retryCount?: number) {
-    // Skip if nothing to retry
-    if (failedIds.length === 0) return;
-
-    // Push failed deletions into background job queue
-    await bullQueue.addJob({
-      queueName: 'cloudinary-image-queue',
-      jobName: 'multiple-image-remove',
-      data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
+          logger.info('Cloudinary delete success', result);
+          resolve(result);
+        },
+      );
     });
   }
 
   /* ========== REMOVE SINGLE FILE ========== */
-  public async removeSingle(publicId: string) {
-    return this.remover(publicId);
+  public async removeSingle(data: ISingleRemover) {
+    return this.remover(data);
   }
 
   /* ========== REMOVE MULTIPLE FILES WITH RETRY LOGIC ========== */
-  public async removeMultiple(
-    publicIds: string[],
-    retryCount = 0, // ⚠️ Required for retry tracking
-  ) {
+  public async removeMultiple({
+    publicIds,
+    resourceType,
+    retryCount = 0, // ⚠️ Required for retry tracking}
+  }: IMultipleRemover) {
     // Execute all deletions in parallel
-    const removeResults = await Promise.allSettled(publicIds.map((id) => this.remover(id)));
+    const removeResults = await Promise.allSettled(
+      publicIds.map((publicId) => this.remover({ publicId, resourceType })),
+    );
 
     // Extract failed IDs
     const failedIds = this.getFailedIds(removeResults, publicIds);
@@ -167,19 +211,21 @@ class Cloudinary {
   }
 
   /* ========== UPLOAD SINGLE FILE ========== */
-  public async uploadSingle(folder: string, file: Express.Multer.File) {
-    return this.uploader(folder, file.buffer);
+  public async uploadSingle(data: ISingleUploader) {
+    const { file, ...rest } = data;
+    return this.uploader({ ...rest, buffer: file.buffer });
   }
 
   /* ========== UPLOAD MULTIPLE FILES WITH ROLLBACK ========== */
-  public async uploadMultiple(folder: string, files: Express.Multer.File[]) {
+  public async uploadMultiple(data: IMultipleUploader) {
     const uploadedPublicIds: string[] = [];
+    const { files, folder, resourceType } = data;
 
     try {
       // Upload all files in parallel
       return await Promise.all(
         files.map(async ({ buffer }) => {
-          const res = await this.uploader(folder, buffer);
+          const res = await this.uploader({ folder, resourceType, buffer });
 
           // Track uploaded files for rollback safety
           uploadedPublicIds.push(res.public_id);
@@ -190,7 +236,7 @@ class Cloudinary {
       // If any upload fails → rollback previously uploaded files
 
       const deleteResults = await Promise.allSettled(
-        uploadedPublicIds.map((id) => this.remover(id)),
+        uploadedPublicIds.map((publicId) => this.remover({ publicId, resourceType })),
       );
 
       const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);

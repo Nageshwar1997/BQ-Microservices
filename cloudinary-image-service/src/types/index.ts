@@ -20,3 +20,38 @@ export type IQueueJob<TData = unknown> = TQueueJobName & {
   data: TData;
   options?: JobsOptions;
 };
+
+export type TResourceType = 'image' | 'video';
+
+interface IResource {
+  resourceType: TResourceType;
+}
+
+export interface IUploaderBase extends IResource {
+  folder: string;
+}
+
+export interface IUploader extends IResource, IUploaderBase {
+  buffer: Buffer<ArrayBufferLike>;
+}
+
+export interface ISingleUploader extends IResource, IUploaderBase {
+  file: Express.Multer.File;
+}
+
+export interface IMultipleUploader extends IResource, IUploaderBase {
+  files: Express.Multer.File[];
+}
+
+export interface IRemover extends IResource {
+  publicId: string;
+}
+
+export interface ISingleRemover extends IResource {
+  publicId: string;
+}
+
+export interface IMultipleRemover extends IResource {
+  publicIds: string[];
+  retryCount?: number;
+}
