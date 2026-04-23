@@ -1,7 +1,5 @@
 import type { QUEUE_AND_JOB_NAMES } from '@/constants';
-import type { TCloudinaryOption } from '@beautinique/be-constants';
 import type { JobsOptions } from 'bullmq';
-import type { v2 } from 'cloudinary';
 import type { Types } from 'mongoose';
 
 export type TId = Types.ObjectId;
@@ -23,43 +21,37 @@ export type IQueueJob<TData = unknown> = TQueueJobName & {
   options?: JobsOptions;
 };
 
-type TFileEntityKey = 'avatar' | 'others';
 export type TResourceType = 'image' | 'video';
-export interface IPublicIdOptions {
-  accountKey: TCloudinaryOption;
-  entityKey: TFileEntityKey;
+
+interface IResource {
+  resourceType: TResourceType;
 }
 
-export type TV2 = typeof v2;
-
-export interface ICloudinaryUploader extends IPublicIdOptions {
-  cloudinary: TV2;
+export interface IUploaderBase extends IResource {
   folder: string;
-  resourceType: TResourceType;
+}
+
+export interface IUploader extends IResource, IUploaderBase {
   buffer: Buffer<ArrayBufferLike>;
 }
 
-export interface ICloudinaryRemover {
-  publicId: string;
-  cloudinary: TV2;
-}
-
-type TCloudinaryBaseUploader = IPublicIdOptions &
-  Pick<ICloudinaryUploader, 'folder' | 'resourceType'>;
-
-export interface ICloudinarySingleUploader extends TCloudinaryBaseUploader {
+export interface ISingleUploader extends IResource, IUploaderBase {
   file: Express.Multer.File;
 }
 
-export interface ICloudinaryMultiUploader extends TCloudinaryBaseUploader {
+export interface IMultipleUploader extends IResource, IUploaderBase {
   files: Express.Multer.File[];
 }
 
-export interface ICloudinarySingleRemover extends Pick<IPublicIdOptions, 'accountKey'> {
+export interface IRemover extends IResource {
   publicId: string;
 }
 
-export interface ICloudinaryMultiRemover extends Pick<IPublicIdOptions, 'accountKey'> {
+export interface ISingleRemover extends IResource {
+  publicId: string;
+}
+
+export interface IMultipleRemover extends IResource {
   publicIds: string[];
   retryCount?: number;
 }

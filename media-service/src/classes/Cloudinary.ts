@@ -2,77 +2,64 @@ import { logger } from '@/configs';
 import { MIME_TO_FORMAT } from '@/constants';
 import { envs } from '@/envs';
 import type {
-  ICloudinaryRemover,
-  ICloudinaryUploader,
-  IPublicIdOptions,
+  IMultipleRemover,
+  IMultipleUploader,
+  IRemover,
+  ISingleRemover,
+  ISingleUploader,
+  IUploader,
+  IUploaderBase,
   TResourceType,
-  TV2,
 } from '@/types';
 import { AppError } from '@beautinique/be-classes';
-import { FILE_MIME, type TCloudinaryOption } from '@beautinique/be-constants';
+import { FILE_MIME } from '@beautinique/be-constants';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { randomUUID } from 'crypto';
+import { bullQueue } from './BullQueue';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
 const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
 
-export class Cloudinary {
-  private static operationQueue = Promise.resolve();
+class Cloudinary {
+  private cloudinary: typeof v2;
 
-  /* ========== CLOUDINARY INSTANCE GETTER FUNCTION ========== */
-  protected getCloudinary(accountKey: TCloudinaryOption) {
-    // ☁️ Returns the configured Cloudinary instance for the given account
-    v2.config({ ...envs.cloudinary[accountKey], secure: true });
-
+  /* ========== INITIALIZE CLOUDINARY INSTANCE ========== */
+  private getCloudinary() {
+    // Configure Cloudinary SDK using environment variables
+    v2.config({ ...envs.cloudinary, secure: true });
     return v2;
   }
 
-  /* ========== CLOUDINARY OPERATION SERIALIZER FUNCTION ========== */
-  protected async runWithCloudinary<T>(
-    accountKey: TCloudinaryOption,
-    operation: (cloudinary: TV2) => Promise<T>,
-  ): Promise<T> {
-    // 🔒 Serializes Cloudinary work because SDK v2 config is shared globally
-    const task = Cloudinary.operationQueue.then(async () => {
-      const cloudinary = this.getCloudinary(accountKey);
-      return operation(cloudinary);
-    });
-
-    // 🔁 Keeps the queue alive even if one operation fails
-    Cloudinary.operationQueue = task.then(
-      () => undefined,
-      () => undefined,
-    );
-
-    return task;
+  constructor() {
+    this.cloudinary = this.getCloudinary();
   }
 
-  /* ========== FOLDER NAME GENERATOR FUNCTION ========== */
-  private generateFolderName(folder?: string) {
-    // 🧹 Converts unsafe folder characters into safe underscores
+  /* ========== GENERATE SAFE FOLDER PATH ========== */
+  private generateFolderName({ folder, resourceType }: IUploaderBase) {
+    // Replace unsafe characters with underscore
     const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
-
-    // 📁 Builds a clean subfolder name with a default fallback
+    const type = resourceType === 'image' ? 'Images' : 'Videos';
+    // Normalize folder name (trim + replace spaces)
     const subfolder = sanitize((folder || DEFAULT_FOLDER_NAME).trim().replace(/\s+/g, '_'));
 
-    // 🏷️ Returns the final path with the main Cloudinary folder
-    return `${envs.cloudinary.main_folder}/${subfolder}`;
+    // Final Cloudinary folder path
+    return `Beautinique/${type}/${subfolder}`;
   }
 
-  /* ========== PUBLIC ID GENERATOR FUNCTION ========== */
-  private generatePublicId({ entityKey, accountKey }: IPublicIdOptions): string {
-    // 📅 Gets current date parts to build a structured public id
+  /* ========== GENERATE UNIQUE PUBLIC ID ========== */
+  private generatePublicId(): string {
+    // Extract current date parts
     const { getDate, getFullYear, getMonth } = new Date();
 
     const year = getFullYear();
     const month = String(getMonth() + 1).padStart(2, '0');
     const day = String(getDate()).padStart(2, '0');
 
-    // 🆔 Generates a unique uuid for every upload
+    // Generate unique identifier
     const uuid = randomUUID();
 
-    // 🧱 Creates the final public id using account, entity, date, and uuid
-    return `${accountKey}/${entityKey}/${year}/${month}/${day}/${uuid}`;
+    // Structured public_id (useful for organization & debugging)
+    return `${year}/${month}/${day}/${uuid}`;
   }
 
   /* ========== ALLOWED FORMAT RESOLVER FUNCTION ========== */
@@ -97,74 +84,169 @@ export class Cloudinary {
     return allowedFormats;
   }
 
-  /* ========== FAILED ID EXTRACTOR FUNCTION ========== */
-  protected getFailedIds(results: PromiseSettledResult<unknown>[], ids: string[]) {
-    // 🚨 Collects only the ids whose operation failed
+  /* ========== EXTRACT FAILED IDS FROM RESULTS ========== */
+  private getFailedIds(results: PromiseSettledResult<unknown>[], ids: string[]) {
+    // Return only IDs whose corresponding promise failed
     return results.reduce<string[]>((acc, result, index) => {
       if (result.status === 'rejected') {
         acc.push(ids[index]);
       }
-
       return acc;
     }, []);
   }
 
-  /* ========== SINGLE MEDIA CLOUDINARY UPLOADER FUNCTION ========== */
-  protected uploader(props: ICloudinaryUploader) {
-    // ☁️ Extracts the required Cloudinary properties
-    const { accountKey, buffer, cloudinary, entityKey, folder, resourceType } = props;
+  /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
+  private async queueFailedRemovals(failedIds: string[], retryCount?: number) {
+    // Skip if nothing to retry
+    if (failedIds.length === 0) return;
 
+    // Push failed deletions into background job queue
+    await bullQueue.addJob({
+      queueName: 'media-queue',
+      jobName: 'multiple-remove',
+      data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
+    });
+  }
+
+  /* ========== INTERNAL UPLOAD HANDLER (STREAM) ========== */
+  private uploader({ buffer, folder, resourceType }: IUploader) {
     return new Promise<UploadApiResponse>((resolve, reject) => {
-      // 🚀 Starts the stream-based upload
-      const stream = cloudinary.uploader.upload_stream(
+      // Upload using stream (efficient for large files like images or videos)
+      const stream = this.cloudinary.uploader.upload_stream(
         {
-          folder: this.generateFolderName(folder),
-          public_id: this.generatePublicId({ entityKey, accountKey }),
+          folder: this.generateFolderName({ folder, resourceType }),
+          public_id: this.generatePublicId(),
           resource_type: resourceType,
           allowed_formats: this.getAllowedFormats(resourceType),
+          ...(resourceType === 'video' && {
+            chunk_size: 5000000, // Upload in chunks (~5MB)
+          }),
         },
         (error, result) => {
-          // ❌ Rejects with a standardized app error if upload fails
           if (error || !result) {
             return reject(
               new AppError({
-                message: error?.message || `Failed to upload ${resourceType}`,
+                message: error?.message || `Failed to upload media`,
                 statusCode: 400,
                 code: 'UPLOAD_ERROR',
               }),
             );
           }
 
-          // ✅ Resolves the successful Cloudinary response
-          resolve(result);
+          // Successfully uploaded
+          const secure_url = result.playback_url || result.secure_url;
+          resolve({ ...result, secure_url });
         },
       );
 
-      // 📦 Pushes the incoming file buffer into the stream
+      // Send buffer to stream
       stream.end(buffer);
     });
   }
 
-  protected remover({ publicId, cloudinary }: ICloudinaryRemover) {
+  /* ========== INTERNAL DELETE HANDLER ========== */
+  private remover({ publicId, resourceType }: IRemover) {
     return new Promise<DeleteApiResponse>((resolve, reject) => {
-      // 🗑️ Deletes the given public id from Cloudinary storage
-      cloudinary.uploader.destroy(publicId, { resource_type: 'image' }, (error, result) => {
-        if (error) {
-          logger.error('Failed to remove image from Cloudinary', error);
-          return reject(
-            new AppError({
-              message: error.message || 'Failed to remove image from Cloudinary',
-              statusCode: 400,
-              code: 'INTERNAL_ERROR',
-            }),
-          );
-        }
+      // Delete asset from Cloudinary
+      this.cloudinary.uploader.destroy(
+        publicId,
+        { resource_type: resourceType },
+        (error, result) => {
+          if (error) {
+            logger.error('Cloudinary delete failed', error);
 
-        logger.info('Image removed from Cloudinary', result);
+            return reject(
+              new AppError({
+                message: error.message || 'Failed to delete media',
+                statusCode: 400,
+                code: 'INTERNAL_ERROR',
+              }),
+            );
+          }
 
-        // ✅ Resolves the delete response after successful removal
-        resolve(result);
-      });
+          logger.info('Cloudinary delete success', result);
+          resolve(result);
+        },
+      );
     });
   }
+
+  /* ========== REMOVE SINGLE FILE ========== */
+  public async removeSingle(data: ISingleRemover) {
+    return this.remover(data);
+  }
+
+  /* ========== REMOVE MULTIPLE FILES WITH RETRY LOGIC ========== */
+  public async removeMultiple({
+    publicIds,
+    resourceType,
+    retryCount = 0, // ⚠️ Required for retry tracking}
+  }: IMultipleRemover) {
+    // Execute all deletions in parallel
+    const removeResults = await Promise.allSettled(
+      publicIds.map((publicId) => this.remover({ publicId, resourceType })),
+    );
+
+    // Extract failed IDs
+    const failedIds = this.getFailedIds(removeResults, publicIds);
+
+    const MAX_REMOVE_RETRIES = 5;
+
+    // Retry failed deletions via queue
+    if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
+      await this.queueFailedRemovals(failedIds, retryCount + 1);
+    }
+
+    // Log if retry limit exceeded
+    if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
+      logger.error('Delete retry limit reached', failedIds);
+    }
+
+    return {
+      success: failedIds.length === 0,
+      partialFailure: failedIds.length > 0,
+      failedIds,
+      retryCount,
+    };
+  }
+
+  /* ========== UPLOAD SINGLE FILE ========== */
+  public async uploadSingle(data: ISingleUploader) {
+    const { file, ...rest } = data;
+    return this.uploader({ ...rest, buffer: file.buffer });
+  }
+
+  /* ========== UPLOAD MULTIPLE FILES WITH ROLLBACK ========== */
+  public async uploadMultiple(data: IMultipleUploader) {
+    const uploadedPublicIds: string[] = [];
+    const { files, folder, resourceType } = data;
+
+    try {
+      // Upload all files in parallel
+      return await Promise.all(
+        files.map(async ({ buffer }) => {
+          const res = await this.uploader({ folder, resourceType, buffer });
+
+          // Track uploaded files for rollback safety
+          uploadedPublicIds.push(res.public_id);
+          return res;
+        }),
+      );
+    } catch (error) {
+      // If any upload fails → rollback previously uploaded files
+
+      const deleteResults = await Promise.allSettled(
+        uploadedPublicIds.map((publicId) => this.remover({ publicId, resourceType })),
+      );
+
+      const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
+
+      // Retry failed cleanup via queue
+      await this.queueFailedRemovals(failedIds);
+
+      throw error;
+    }
+  }
 }
+
+export const cloudinary = new Cloudinary();
