@@ -1,7 +1,7 @@
 import { type Job, Worker } from 'bullmq';
 import { WORKER_CONFIGS } from '@/constants';
 import { logger } from '@/configs';
-import type { TJobName, TQueueKey } from '@/types';
+import type { IBaseMedia, TJobName, TQueueKey } from '@/types';
 import type { TSendOtpMail } from '@beautinique/be-zod';
 import { mailService } from './apis';
 import { mediaService } from './apis/MediaService';
@@ -93,6 +93,14 @@ class BullWorker {
         logger.info(`📩 Forwarding publicId to media-service for ${publicId}`);
         await mediaService.singleImageRemove(publicId);
         logger.info(`✅ publicId forwarded to media-service for ${publicId}`);
+        break;
+      }
+
+      case 'create-single-media': {
+        const payload = data as IBaseMedia;
+        logger.info(`📩 Forwarding publicId to media-service for ${payload.publicId}`);
+        await mediaService.createSingleMedia(payload);
+        logger.info(`✅ publicId forwarded to media-service for ${payload.publicId}`);
         break;
       }
 

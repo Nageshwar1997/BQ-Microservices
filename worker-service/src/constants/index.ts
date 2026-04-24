@@ -12,6 +12,8 @@ export const QUEUE_AND_JOB_NAMES = {
     'single-video-remove',
     'multiple-image-remove',
     'multiple-video-remove',
+    'create-single-media',
+    'create-multiple-media',
   ],
 } as const;
 
@@ -28,5 +30,17 @@ export const API_ROUTES_AND_METHODS = {
         remove: { path: '/image/multiple/remove', method: 'DELETE' },
       },
     },
+    media: {
+      create: {
+        single: { url: '/media/create/single', method: 'POST' },
+        multiple: { url: '/media/create/multiple', method: 'POST' },
+      },
+    },
   },
 };
+
+export const SERVICES = ['user-service'] as const;
+
+export const RESOURCES = ['image', 'video'] as const;
+
+export const STATUSES = ['pending', 'used', 'deleted'] as const;

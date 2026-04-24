@@ -1,5 +1,6 @@
 import { envs } from '@/envs';
 import { ApiRequest } from './ApiRequest';
+import type { IBaseMedia } from '@/types';
 
 class MediaService extends ApiRequest {
   constructor() {
@@ -7,7 +8,11 @@ class MediaService extends ApiRequest {
   }
 
   public async singleImageRemove(publicId: string) {
-    await this.request({ ...this.routes.media.image.single.remove, data: { publicId } });
+    return await this.request({ ...this.routes.media.image.single.remove, data: { publicId } });
+  }
+
+  public async createSingleMedia(data: IBaseMedia) {
+    return await this.request({ ...this.routes.media.media.create.single, data });
   }
 }
 

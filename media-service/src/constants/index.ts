@@ -32,6 +32,14 @@ export const GATEWAY_METHODS_AND_PATHS = {
     single: { base: '/single', ...BASE_METHODS_AND_PATHS },
     multiple: { base: '/multiple', ...BASE_METHODS_AND_PATHS },
   },
+  media: {
+    base: '/media',
+    create: {
+      base: '/create',
+      single: { method: 'post', path: '/single' },
+      multiple: { method: 'post', path: '/multiple' },
+    },
+  },
 } as const;
 
 export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
@@ -43,5 +51,13 @@ export const QUEUE_AND_JOB_NAMES = {
     'single-video-remove',
     'multiple-image-remove',
     'multiple-video-remove',
+    'create-single-media',
+    'create-multiple-media',
   ],
 } as const;
+
+export const SERVICES = ['user-service'] as const;
+
+export const RESOURCES = ['image', 'video'] as const;
+
+export const STATUSES = ['pending', 'used', 'deleted'] as const;

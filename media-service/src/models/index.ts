@@ -1,6 +1,7 @@
+import type { IMedia } from '@/types';
 import { Schema, Types, model } from 'mongoose';
 
-const MediaSchema = new Schema(
+const MediaSchema = new Schema<IMedia>(
   {
     publicId: { type: String, required: true, unique: true, index: true },
     url: { type: String },
@@ -22,4 +23,4 @@ const MediaSchema = new Schema(
 );
 MediaSchema.index({ status: 1, expiresAt: 1, isDeleted: 1, isUsed: 1, publicId: 1, url: 1 });
 
-export const Media = model('Media', MediaSchema);
+export const Media = model<IMedia>('Media', MediaSchema);

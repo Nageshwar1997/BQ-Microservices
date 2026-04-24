@@ -1,4 +1,4 @@
-import type { QUEUE_AND_JOB_NAMES } from '@/constants';
+import type { QUEUE_AND_JOB_NAMES, RESOURCES, SERVICES, STATUSES } from '@/constants';
 import type { JobsOptions } from 'bullmq';
 import type { Types } from 'mongoose';
 
@@ -21,7 +21,7 @@ export type IQueueJob<TData = unknown> = TQueueJobName & {
   options?: JobsOptions;
 };
 
-export type TResourceType = 'image' | 'video';
+export type TResourceType = (typeof RESOURCES)[number];
 
 interface IResource {
   resourceType: TResourceType;
@@ -55,3 +55,23 @@ export interface IMultipleRemover extends IResource {
   publicIds: string[];
   retryCount?: number;
 }
+
+export type TService = (typeof SERVICES)[number];
+
+export type TStatus = (typeof STATUSES)[number];
+
+export interface IBaseMedia {
+  publicId: string;
+  url: string;
+  resourceType: TResourceType;
+  uploadedBy: Types.ObjectId;
+  deletedBy: Types.ObjectId;
+  relatedTo: { service: TService; entity: string; entityId: string };
+  expiresAt: Date;
+  status: TStatus;
+  metadata: Record<string, unknown>;
+  isDeleted: boolean;
+  isUsed: boolean;
+}
+
+export interface IMedia extends IBaseMedia, ITimestamp, IId, Document {}
