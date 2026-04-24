@@ -67,11 +67,13 @@ export interface IBaseMedia {
   uploadedBy: Types.ObjectId;
   deletedBy: Types.ObjectId;
   relatedTo: { service: TService; entity: string; entityId: string };
-  expiresAt: Date;
+  expiresAt: Date | null;
   status: TStatus;
   metadata: Record<string, unknown>;
   isDeleted: boolean;
   isUsed: boolean;
 }
 
-export interface IMedia extends IBaseMedia, ITimestamp, IId, Document {}
+export interface IMedia extends IBaseMedia, ITimestamp, IId {}
+
+export type TMediaDoc = IMedia & Document;

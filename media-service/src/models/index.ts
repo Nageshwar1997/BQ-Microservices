@@ -1,8 +1,8 @@
 import { RESOURCES, STATUSES, STATUS_MAP } from '@/constants';
-import type { IMedia } from '@/types';
+import type { TMediaDoc } from '@/types';
 import { Schema, Types, model } from 'mongoose';
 
-const MediaSchema = new Schema<IMedia>(
+const MediaSchema = new Schema<TMediaDoc>(
   {
     publicId: { type: String, required: true, unique: true, index: true },
     url: { type: String },
@@ -15,7 +15,7 @@ const MediaSchema = new Schema<IMedia>(
       entityId: { type: String },
     },
     expiresAt: { type: Date, index: true },
-    status: { type: String, enum: STATUSES, default: STATUS_MAP.PENDING, index: true },
+    status: { type: String, enum: STATUSES, default: STATUS_MAP.UNUSED, index: true },
     metadata: { type: Schema.Types.Mixed },
     isDeleted: { type: Boolean, default: false, index: true },
     isUsed: { type: Boolean, default: false, index: true },
@@ -24,4 +24,4 @@ const MediaSchema = new Schema<IMedia>(
 );
 MediaSchema.index({ status: 1, expiresAt: 1, isDeleted: 1, isUsed: 1, publicId: 1, url: 1 });
 
-export const Media = model<IMedia>('Media', MediaSchema);
+export const Media = model<TMediaDoc>('Media', MediaSchema);

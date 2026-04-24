@@ -34,10 +34,20 @@ export const GATEWAY_METHODS_AND_PATHS = {
   },
   media: {
     base: '/media',
-    create: {
-      base: '/create',
+    unused: {
+      base: '/unused',
       single: { method: 'post', path: '/single' },
       multiple: { method: 'post', path: '/multiple' },
+    },
+    used: {
+      base: '/used',
+      single: { method: 'patch', path: '/single' },
+      multiple: { method: 'patch', path: '/multiple' },
+    },
+    deleted: {
+      base: '/deleted',
+      single: { method: 'delete', path: '/single' },
+      multiple: { method: 'delete', path: '/multiple' },
     },
   },
 } as const;
@@ -60,7 +70,7 @@ export const SERVICES = ['user-service'] as const;
 
 export const RESOURCES = ['image', 'video'] as const;
 
-export const STATUSES = ['PENDING', 'USED', 'DELETED'] as const;
+export const STATUSES = ['UNUSED', 'USED', 'DELETED'] as const;
 export const STATUS_MAP = Object.fromEntries(STATUSES.map((status) => [status, status])) as Record<
   TStatus,
   TStatus

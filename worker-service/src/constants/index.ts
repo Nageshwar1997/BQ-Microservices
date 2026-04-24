@@ -43,4 +43,4 @@ export const SERVICES = ['user-service'] as const;
 
 export const RESOURCES = ['image', 'video'] as const;
 
-export const STATUSES = ['PENDING', 'USED', 'DELETED'] as const;
+export const STATUSES = ['UNUSED', 'USED', 'DELETED'] as const;

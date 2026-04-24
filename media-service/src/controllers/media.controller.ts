@@ -1,6 +1,7 @@
+import { logger } from '@/configs';
 import { STATUS_MAP } from '@/constants';
 import { Media } from '@/models';
-import type { IBaseMedia } from '@/types';
+import type { IBaseMedia, IMedia } from '@/types';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 
@@ -27,37 +28,156 @@ export const createMultipleMediaController = async (req: Request, res: Response)
   res.success(200, 'Media created successfully');
 };
 
-export const markAsUsedController = async (req: Request, res: Response) => {
-  const { publicId, relatedTo } = req.body as Pick<IBaseMedia, 'publicId' | 'relatedTo'>;
+export const markAsUsedSingleMediaController = async (req: Request, res: Response) => {
+  const { publicId, relatedTo, metadata, url } = req.body as Partial<IMedia>;
 
-  if (!publicId) {
+  if (!publicId && !url) {
     throw new AppError({
-      message: 'publicId is required',
+      message: 'publicId or url is required',
       statusCode: 400,
       code: 'VALIDATION_ERROR',
     });
   }
 
-  const updated = await Media.findOneAndUpdate(
-    { publicId, status: STATUS_MAP.PENDING, isDeleted: false },
-    {
-      $set: {
-        status: STATUS_MAP.USED,
-        isUsed: true,
-        expiresAt: null,
-        ...(relatedTo && { relatedTo }),
-      },
-    },
-    { new: true },
-  );
+  const query = { ...(publicId ? { publicId } : { url }), isDeleted: false };
+
+  const updateData: Partial<IMedia> = {
+    ...(relatedTo && { relatedTo }),
+    ...(metadata && { metadata }),
+
+    status: STATUS_MAP.USED,
+    isUsed: true,
+    expiresAt: null,
+  };
+
+  const updated = await Media.findOneAndUpdate(query, updateData, { new: true, lean: true });
 
   if (!updated) {
     throw new AppError({
-      message: 'Media not found or already used/deleted',
+      message: 'Media not found or already deleted',
+      statusCode: 404,
+      code: 'NOT_FOUND',
+    });
+  }
+  res.success(200, 'Media updated successfully');
+};
+
+export const markAsUsedMultipleMediaController = async (req: Request, res: Response) => {
+  const payload = req.body as Partial<IMedia>[];
+
+  if (!Array.isArray(payload) || payload.length === 0) {
+    throw new AppError({
+      message: 'Payload must be a non-empty array',
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+    });
+  }
+
+  // 🔧 build bulk operations
+  const operations = payload.map((item) => {
+    const { publicId, url, relatedTo, metadata } = item;
+
+    if (!publicId && !url) {
+      throw new AppError({
+        message: 'Each item must have publicId or url',
+        statusCode: 400,
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    const filter = { ...(publicId ? { publicId } : { url }), isDeleted: false };
+
+    const update = {
+      ...(relatedTo && { relatedTo }),
+      ...(metadata && { metadata }),
+
+      status: STATUS_MAP.USED,
+      isUsed: true,
+      expiresAt: null,
+    };
+
+    return { updateOne: { filter, update } };
+  });
+
+  const result = await Media.bulkWrite(operations);
+
+  logger.info('Media updated successfully', {
+    matched: result.matchedCount,
+    modified: result.modifiedCount,
+  });
+
+  res.success(200, 'Media updated successfully');
+};
+
+export const markAsDeletedSingleMediaController = async (req: Request, res: Response) => {
+  const { publicId, url, deletedBy } = req.body as Partial<IMedia>;
+
+  if (!publicId && !url) {
+    throw new AppError({
+      message: 'publicId or url is required',
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+    });
+  }
+
+  const query = { ...(publicId ? { publicId } : { url }), isDeleted: false };
+
+  const updateData: Partial<IMedia> = {
+    isDeleted: true,
+    status: STATUS_MAP.DELETED,
+    ...(deletedBy && { deletedBy }),
+  };
+
+  const updated = await Media.findOneAndUpdate(query, updateData, { new: true, lean: true });
+
+  if (!updated) {
+    throw new AppError({
+      message: 'Media not found or already deleted',
       statusCode: 404,
       code: 'NOT_FOUND',
     });
   }
 
-  res.success(200, 'Media marked as used', { data: updated });
+  logger.info('Single media deleted', { publicId: updated.publicId });
+
+  res.success(200, 'Media deleted successfully');
+};
+
+export const markAsDeletedMultipleMediaController = async (req: Request, res: Response) => {
+  const payload = req.body as Partial<IMedia>[];
+
+  if (!Array.isArray(payload) || payload.length === 0) {
+    throw new AppError({
+      message: 'Payload must be a non-empty array',
+      statusCode: 400,
+      code: 'VALIDATION_ERROR',
+    });
+  }
+
+  const operations = payload.map((item) => {
+    const { publicId, url, deletedBy } = item;
+
+    if (!publicId && !url) {
+      throw new AppError({
+        message: 'Each item must have publicId or url',
+        statusCode: 400,
+        code: 'VALIDATION_ERROR',
+      });
+    }
+
+    const filter = { ...(publicId ? { publicId } : { url }), isDeleted: false };
+
+    const update = { isDeleted: true, status: STATUS_MAP.DELETED, ...(deletedBy && { deletedBy }) };
+
+    return { updateOne: { filter, update } };
+  });
+
+  const result = await Media.bulkWrite(operations, { ordered: false });
+
+  logger.info('Multiple media deleted', {
+    matched: result.matchedCount,
+    modified: result.modifiedCount,
+  });
+
+  res.success(200, 'Media deleted successfully');
 };
