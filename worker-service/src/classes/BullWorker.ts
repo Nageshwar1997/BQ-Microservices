@@ -1,7 +1,7 @@
 import { type Job, Worker } from 'bullmq';
 import { WORKER_CONFIGS } from '@/constants';
 import { logger } from '@/configs';
-import type { IBaseMedia, TJobName, TQueueKey, TResourceType } from '@/types';
+import type { IMedia, TJobName, TQueueKey, TResourceType } from '@/types';
 import type { TSendOtpMail } from '@beautinique/be-zod';
 import { mailService } from './apis';
 import { mediaService } from './apis/MediaService';
@@ -124,7 +124,7 @@ class BullWorker {
 
       case 'mark-as-unused-single-media': {
         await this.executeJob(jobName, async () => {
-          const payload = data as IBaseMedia;
+          const payload = data as IMedia;
           logger.info(
             `📡 Creating and Marking as Unused Single Media -> Media Service -> ${job.id}`,
           );
@@ -136,7 +136,7 @@ class BullWorker {
 
       case 'mark-as-unused-multiple-media': {
         await this.executeJob(jobName, async () => {
-          const payload = data as IBaseMedia;
+          const payload = data as IMedia;
           logger.info(
             `📡 Creating and Marking as Unused Multiple Media -> Media Service -> ${job.id}`,
           );
@@ -150,7 +150,7 @@ class BullWorker {
 
       case 'mark-as-used-single-media': {
         await this.executeJob(jobName, async () => {
-          const payload = data as Partial<IBaseMedia>;
+          const payload = data as Partial<IMedia>;
           logger.info(`📡 Marking as Used Single Media -> Media Service -> ${job.id}`);
           await mediaService.markAsUsedSingleMedia(payload);
           logger.info(`✅ Marked as Used Single Media -> Media Service -> ${job.id}`);
@@ -160,7 +160,7 @@ class BullWorker {
 
       case 'mark-as-used-multiple-media': {
         await this.executeJob(jobName, async () => {
-          const payload = data as Partial<IBaseMedia>;
+          const payload = data as Partial<IMedia>;
           logger.info(`📡 Marking as Used Multiple Media -> Media Service -> ${job.id}`);
           await mediaService.markAsUsedMultipleMedia(payload);
           logger.info(`✅ Marked as Used Multiple Media -> Media Service -> ${job.id}`);
@@ -170,7 +170,7 @@ class BullWorker {
 
       case 'mark-as-deleted-single-media': {
         await this.executeJob(jobName, async () => {
-          const payload = data as Partial<IBaseMedia>;
+          const payload = data as Partial<IMedia>;
           logger.info(`📡 Marking as Deleted Single Media -> Media Service -> ${job.id}`);
           await mediaService.markAsDeletedSingleMedia(payload);
           logger.info(`✅ Marked as Deleted Single Media -> Media Service -> ${job.id}`);
@@ -180,11 +180,64 @@ class BullWorker {
 
       case 'mark-as-deleted-multiple-media': {
         await this.executeJob(jobName, async () => {
-          const payload = data as Partial<IBaseMedia>;
+          const payload = data as Partial<IMedia>;
           logger.info(`📡 Marking as Deleted Multiple Media -> Media Service -> ${job.id}`);
           await mediaService.markAsDeletedMultipleMedia(payload);
           logger.info(`✅ Marked as Deleted Multiple Media -> Media Service -> ${job.id}`);
         });
+        break;
+      }
+
+      case 'single-media-remove-if-unused': {
+        await this.executeJob(jobName, async () => {
+          const { publicId, resourceType } = data as Pick<IMedia, 'publicId' | 'resourceType'>;
+
+          logger.info(`📡 Checking unused media -> ${job.id}`);
+
+          // 🔍 DB check
+          const media = await mediaService.getSingleMedia(publicId);
+
+          if (!media) return;
+
+          if (media.isUsed) {
+            logger.info(`⏭️ Skip delete (already used) -> ${job.id}`);
+            return;
+          }
+
+          // ✅ If unused then → delete
+          await mediaService.singleMediaRemove({ publicId, resourceType });
+
+          logger.info(`🗑️ Deleted unused single media -> ${job.id}`);
+        });
+
+        break;
+      }
+
+      case 'multiple-media-remove-if-unused': {
+        await this.executeJob(jobName, async () => {
+          const publicIds = data as string[];
+
+          // 🔍 Get media from Media Service DB
+          const medias = await mediaService.getMultipleMedia(publicIds);
+
+          if (medias.length === 0) return;
+
+          // ❌ skip if already used
+          const unusedMedias = medias.filter((m: IMedia) => !m.isUsed);
+
+          // 🗑️ remove only unused
+          const publicIdsToDelete = unusedMedias.map((m: IMedia) => m.publicId);
+
+          if (publicIdsToDelete.length > 0) {
+            await mediaService.multipleMediaRemove({
+              publicIds: publicIdsToDelete,
+              resourceType: unusedMedias[0].resourceType, //
+            });
+          }
+
+          logger.info(`🗑️ Deleted unused multiple media -> ${job.id}`);
+        });
+
         break;
       }
 

@@ -10,7 +10,7 @@ export type TService = (typeof SERVICES)[number];
 
 export type TStatus = (typeof STATUSES)[number];
 
-export interface IBaseMedia {
+export interface IMedia {
   publicId: string;
   url: string;
   resourceType: TResourceType;
@@ -22,4 +22,7 @@ export interface IBaseMedia {
   metadata: Record<string, unknown>;
   isDeleted: boolean;
   isUsed: boolean;
+  _id: string;
+  createdAt: Date;
+  updatedAt: Date;
 }

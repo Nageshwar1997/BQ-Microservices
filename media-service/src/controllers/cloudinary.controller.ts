@@ -18,11 +18,24 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
 
   const response = await cloudinary.uploadSingle({ file, folder, resourceType });
 
-  await bullQueue.addJob({
-    queueName: 'media-queue',
-    jobName: 'mark-as-unused-single-media',
-    data: generateBaseMediaPayload(response),
-  });
+  const payload = generateBaseMediaPayload(response);
+
+  await Promise.all([
+    // 1️⃣ Save as unused
+    bullQueue.addJob({
+      queueName: 'media-queue',
+      jobName: 'mark-as-unused-single-media',
+      data: payload,
+    }),
+
+    // 2️⃣ ⏱️ Delay delete check (after 1 hour)
+    bullQueue.addJob({
+      queueName: 'media-queue',
+      jobName: 'single-media-remove-if-unused',
+      data: payload,
+      options: { delay: 60 * 60 * 1000 },
+    }),
+  ]);
 
   res.success(200, 'Media uploaded successfully');
 };
@@ -33,11 +46,24 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
 
   const response = await cloudinary.uploadMultiple({ files, ...body });
 
-  await bullQueue.addJob({
-    queueName: 'media-queue',
-    jobName: 'mark-as-unused-multiple-media',
-    data: response.map((res) => generateBaseMediaPayload(res)),
-  });
+  const payload = response.map((res) => generateBaseMediaPayload(res));
+
+  await Promise.all([
+    // 1️⃣ Save as unused
+    bullQueue.addJob({
+      queueName: 'media-queue',
+      jobName: 'mark-as-unused-multiple-media',
+      data: payload,
+    }),
+
+    // 2️⃣ ⏱️ Delay delete check (after 1 hour)
+    bullQueue.addJob({
+      queueName: 'media-queue',
+      jobName: 'multiple-media-remove-if-unused',
+      data: payload,
+      options: { delay: 60 * 60 * 1000 },
+    }),
+  ]);
 
   res.success(200, 'Media uploaded successfully');
 };

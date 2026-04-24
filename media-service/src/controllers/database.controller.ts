@@ -181,3 +181,35 @@ export const markAsDeletedMultipleMediaController = async (req: Request, res: Re
 
   res.success(200, 'Media deleted successfully');
 };
+
+export const getNonDeletedSingleMediaController = async (req: Request, res: Response) => {
+  const { publicId } = req.params as { publicId: string };
+
+  const data = await Media.findOne({ publicId, isDeleted: false });
+
+  if (!data) {
+    throw new AppError({
+      message: 'Media not found or already deleted',
+      statusCode: 404,
+      code: 'NOT_FOUND',
+    });
+  }
+
+  res.success(200, 'Media found successfully', data);
+};
+
+export const getNonDeletedMultipleMediaController = async (req: Request, res: Response) => {
+  const { publicIds } = req.params as { publicIds: string[] };
+
+  const data = await Media.find({ publicId: { $in: publicIds }, isDeleted: false });
+
+  if (!data) {
+    throw new AppError({
+      message: 'Media not found or already deleted',
+      statusCode: 404,
+      code: 'NOT_FOUND',
+    });
+  }
+
+  res.success(200, 'Media found successfully', data);
+};

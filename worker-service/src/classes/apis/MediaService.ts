@@ -1,6 +1,6 @@
 import { envs } from '@/envs';
 import { ApiRequest } from './ApiRequest';
-import type { IBaseMedia, TResourceType } from '@/types';
+import type { IMedia, TResourceType } from '@/types';
 
 class MediaService extends ApiRequest {
   constructor() {
@@ -21,28 +21,42 @@ class MediaService extends ApiRequest {
   }
 
   // Database Workers
-  public async createUnusedSingleMedia(data: IBaseMedia) {
+  public async createUnusedSingleMedia(data: IMedia) {
     return await this.request({ ...this.routes.media.mark_as_unused.single, data });
   }
 
-  public async createUnusedMultipleMedia(data: IBaseMedia) {
+  public async createUnusedMultipleMedia(data: IMedia) {
     return await this.request({ ...this.routes.media.mark_as_unused.multiple, data });
   }
 
-  public async markAsUsedSingleMedia(data: Partial<IBaseMedia>) {
+  public async markAsUsedSingleMedia(data: Partial<IMedia>) {
     return await this.request({ ...this.routes.media.mark_as_used.single, data });
   }
 
-  public async markAsUsedMultipleMedia(data: Partial<IBaseMedia>) {
+  public async markAsUsedMultipleMedia(data: Partial<IMedia>) {
     return await this.request({ ...this.routes.media.mark_as_used.multiple, data });
   }
 
-  public async markAsDeletedSingleMedia(data: Partial<IBaseMedia>) {
+  public async markAsDeletedSingleMedia(data: Partial<IMedia>) {
     return await this.request({ ...this.routes.media.mark_as_deleted.single, data });
   }
 
-  public async markAsDeletedMultipleMedia(data: Partial<IBaseMedia>) {
+  public async markAsDeletedMultipleMedia(data: Partial<IMedia>) {
     return await this.request({ ...this.routes.media.mark_as_deleted.multiple, data });
+  }
+
+  public async getSingleMedia(publicId: string) {
+    return await this.request({
+      ...this.routes.media.get_non_deleted.single,
+      params: { publicId },
+    });
+  }
+
+  public async getMultipleMedia(publicIds: string[]) {
+    return await this.request({
+      ...this.routes.media.get_non_deleted.single,
+      params: { publicIds },
+    });
   }
 }
 

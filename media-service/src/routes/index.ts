@@ -8,6 +8,8 @@ import {
 import {
   createUnusedMultipleMediaController,
   createUnusedSingleMediaController,
+  getNonDeletedMultipleMediaController,
+  getNonDeletedSingleMediaController,
   markAsDeletedMultipleMediaController,
   markAsDeletedSingleMediaController,
   markAsUsedMultipleMediaController,
@@ -21,8 +23,14 @@ import { envs } from '@/envs';
 
 export const router = Router();
 
-const { cloudinary_remove, cloudinary_upload, mark_as_deleted, mark_as_unused, mark_as_used } =
-  GATEWAY_METHODS_AND_PATHS;
+const {
+  cloudinary_remove,
+  cloudinary_upload,
+  get_non_deleted,
+  mark_as_deleted,
+  mark_as_unused,
+  mark_as_used,
+} = GATEWAY_METHODS_AND_PATHS;
 
 // Cloudinary routes
 
@@ -88,4 +96,16 @@ router[mark_as_unused.multiple.method](
   `${mark_as_unused.base}${mark_as_unused.multiple.path}`,
   RequestMiddleware.emptyRequest({ body: true }),
   ResponseMiddleware.tryCatch(markAsUsedMultipleMediaController),
+);
+
+// Get Non Deleted Data Routes
+router[get_non_deleted.single.method](
+  `${get_non_deleted.base}${get_non_deleted.single.path}`,
+  RequestMiddleware.emptyRequest({ params: true }),
+  ResponseMiddleware.tryCatch(getNonDeletedSingleMediaController),
+);
+router[get_non_deleted.multiple.method](
+  `${get_non_deleted.base}${get_non_deleted.multiple.path}`,
+  RequestMiddleware.emptyRequest({ params: true }),
+  ResponseMiddleware.tryCatch(getNonDeletedMultipleMediaController),
 );

@@ -11,6 +11,8 @@ export const QUEUE_AND_JOB_NAMES = {
     // Cloudinary Job Names
     'single-media-remove',
     'multiple-media-remove',
+    'single-media-remove-if-unused',
+    'multiple-media-remove-if-unused',
 
     // Database Job Names
     'mark-as-unused-single-media',
@@ -38,6 +40,10 @@ export const API_ROUTES_AND_METHODS = {
     mark_as_deleted: {
       single: { method: 'delete', url: '/mark-as-deleted/single' },
       multiple: { method: 'delete', url: '/mark-as-deleted/multiple' },
+    },
+    get_non_deleted: {
+      single: { method: 'get', url: '/get-non-deleted/single' },
+      multiple: { method: 'get', url: '/get-non-deleted/multiple' },
     },
     cloudinary_upload: {
       single: { method: 'post', url: '/cloudinary-upload/single' },

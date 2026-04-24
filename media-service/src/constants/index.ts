@@ -31,6 +31,11 @@ export const GATEWAY_METHODS_AND_PATHS = {
     single: { method: 'delete', path: '/single' },
     multiple: { method: 'delete', path: '/multiple' },
   },
+  get_non_deleted: {
+    base: '/get-non-deleted',
+    single: { method: 'get', path: '/single' },
+    multiple: { method: 'get', path: '/multiple' },
+  },
   cloudinary_upload: {
     base: '/cloudinary-upload',
     single: { method: 'post', path: '/single' },
@@ -51,6 +56,8 @@ export const QUEUE_AND_JOB_NAMES = {
     // Cloudinary Job Names
     'single-media-remove',
     'multiple-media-remove',
+    'single-media-remove-if-unused',
+    'multiple-media-remove-if-unused',
 
     // Database Job Names
     'mark-as-unused-single-media',
