@@ -96,14 +96,18 @@ class Cloudinary {
   }
 
   /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
-  private async queueFailedRemovals(failedIds: string[], retryCount?: number) {
+  private async queueFailedRemovals(
+    failedIds: string[],
+    resourceType: TResourceType,
+    retryCount?: number,
+  ) {
     // Skip if nothing to retry
-    if (failedIds.length === 0) return;
+    if (failedIds.length === 0 && !resourceType) return;
 
     // Push failed deletions into background job queue
     await bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'multiple-remove',
+      jobName: resourceType === 'image' ? 'multiple-image-remove' : 'multiple-video-remove',
       data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
     });
   }
@@ -194,7 +198,7 @@ class Cloudinary {
 
     // Retry failed deletions via queue
     if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
-      await this.queueFailedRemovals(failedIds, retryCount + 1);
+      await this.queueFailedRemovals(failedIds, resourceType, retryCount + 1);
     }
 
     // Log if retry limit exceeded
@@ -242,7 +246,7 @@ class Cloudinary {
       const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
 
       // Retry failed cleanup via queue
-      await this.queueFailedRemovals(failedIds);
+      await this.queueFailedRemovals(failedIds, resourceType);
 
       throw error;
     }

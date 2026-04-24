@@ -38,5 +38,10 @@ export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
 
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],
-  'media-queue': ['single-remove', 'multiple-remove'],
+  'media-queue': [
+    'single-image-remove',
+    'single-video-remove',
+    'multiple-image-remove',
+    'multiple-video-remove',
+  ],
 } as const;

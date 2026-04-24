@@ -20,6 +20,6 @@ const MediaSchema = new Schema(
   },
   { timestamps: true, versionKey: false },
 );
-MediaSchema.index({ status: 1, expiresAt: 1 });
+MediaSchema.index({ status: 1, expiresAt: 1, isDeleted: 1, isUsed: 1, publicId: 1, url: 1 });
 
 export const Media = model('Media', MediaSchema);
