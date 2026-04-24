@@ -8,12 +8,17 @@ export const WORKER_CONFIGS: ConnectionOptions = envs.redis.worker;
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],
   'media-queue': [
-    'single-image-remove',
-    'single-video-remove',
-    'multiple-image-remove',
-    'multiple-video-remove',
-    'create-single-media',
-    'create-multiple-media',
+    // Cloudinary Job Names
+    'single-media-remove',
+    'multiple-media-remove',
+
+    // Database Job Names
+    'mark-as-unused-single-media',
+    'mark-as-unused-multiple-media',
+    'mark-as-used-single-media',
+    'mark-as-used-multiple-media',
+    'mark-as-deleted-single-media',
+    'mark-as-deleted-multiple-media',
   ],
 } as const;
 
@@ -22,19 +27,25 @@ export const API_ROUTES_AND_METHODS = {
     sendOtp: { url: '/send-otp', method: 'POST' },
   },
   media: {
-    image: {
-      single: {
-        remove: { path: '/image/single/remove', method: 'DELETE' },
-      },
-      multiple: {
-        remove: { path: '/image/multiple/remove', method: 'DELETE' },
-      },
+    mark_as_unused: {
+      single: { method: 'post', path: '/mark-as-unused/single' },
+      multiple: { method: 'post', url: '/mark-as-unused/multiple' },
     },
-    media: {
-      create: {
-        single: { url: '/media/create/single', method: 'POST' },
-        multiple: { url: '/media/create/multiple', method: 'POST' },
-      },
+    mark_as_used: {
+      single: { method: 'patch', url: '/mark-as-used/single' },
+      multiple: { method: 'patch', url: '/mark-as-used/multiple' },
+    },
+    mark_as_deleted: {
+      single: { method: 'delete', url: '/mark-as-deleted/single' },
+      multiple: { method: 'delete', url: '/mark-as-deleted/multiple' },
+    },
+    cloudinary_upload: {
+      single: { method: 'post', url: '/cloudinary-upload/single' },
+      multiple: { method: 'post', url: '/cloudinary-upload/multiple' },
+    },
+    cloudinary_remove: {
+      single: { method: 'delete', url: '/cloudinary-remove/single' },
+      multiple: { method: 'delete', url: '/cloudinary-remove/multiple' },
     },
   },
 };

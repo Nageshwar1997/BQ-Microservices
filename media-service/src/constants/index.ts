@@ -15,40 +15,31 @@ export const MIME_TO_FORMAT: Record<TResourceType, Record<string, string>> = {
   video: { 'video/mp4': 'mp4', 'video/webm': 'webm' },
 } as const;
 
-const BASE_METHODS_AND_PATHS = {
-  get: { path: '/', method: 'get' },
-  upload: { path: '/upload', method: 'post' },
-  remove: { path: '/remove', method: 'delete' },
-} as const;
-
 export const GATEWAY_METHODS_AND_PATHS = {
-  image: {
-    base: '/image',
-    single: { base: '/single', ...BASE_METHODS_AND_PATHS },
-    multiple: { base: '/multiple', ...BASE_METHODS_AND_PATHS },
+  mark_as_unused: {
+    base: '/mark-as-unused',
+    single: { method: 'post', path: '/single' },
+    multiple: { method: 'post', path: '/multiple' },
   },
-  video: {
-    base: '/video',
-    single: { base: '/single', ...BASE_METHODS_AND_PATHS },
-    multiple: { base: '/multiple', ...BASE_METHODS_AND_PATHS },
+  mark_as_used: {
+    base: '/mark-as-used',
+    single: { method: 'patch', path: '/single' },
+    multiple: { method: 'patch', path: '/multiple' },
   },
-  media: {
-    base: '/media',
-    unused: {
-      base: '/unused',
-      single: { method: 'post', path: '/single' },
-      multiple: { method: 'post', path: '/multiple' },
-    },
-    used: {
-      base: '/used',
-      single: { method: 'patch', path: '/single' },
-      multiple: { method: 'patch', path: '/multiple' },
-    },
-    deleted: {
-      base: '/deleted',
-      single: { method: 'delete', path: '/single' },
-      multiple: { method: 'delete', path: '/multiple' },
-    },
+  mark_as_deleted: {
+    base: '/mark-as-deleted',
+    single: { method: 'delete', path: '/single' },
+    multiple: { method: 'delete', path: '/multiple' },
+  },
+  cloudinary_upload: {
+    base: '/cloudinary-upload',
+    single: { method: 'post', path: '/single' },
+    multiple: { method: 'post', path: '/multiple' },
+  },
+  cloudinary_remove: {
+    base: '/cloudinary-remove',
+    single: { method: 'delete', path: '/single' },
+    multiple: { method: 'delete', path: '/multiple' },
   },
 } as const;
 
@@ -57,12 +48,17 @@ export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],
   'media-queue': [
-    'single-image-remove',
-    'single-video-remove',
-    'multiple-image-remove',
-    'multiple-video-remove',
-    'create-single-media',
-    'create-multiple-media',
+    // Cloudinary Job Names
+    'single-media-remove',
+    'multiple-media-remove',
+
+    // Database Job Names
+    'mark-as-unused-single-media',
+    'mark-as-unused-multiple-media',
+    'mark-as-used-single-media',
+    'mark-as-used-single-media',
+    'mark-as-deleted-multiple-media',
+    'mark-as-deleted-multiple-media',
   ],
 } as const;
 

@@ -1,2 +1,2 @@
-export * from './image.controller';
-export * from './media.controller';
+export * from './cloudinary.controller';
+export * from './database.controller';

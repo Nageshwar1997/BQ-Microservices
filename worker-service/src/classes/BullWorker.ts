@@ -1,7 +1,7 @@
 import { type Job, Worker } from 'bullmq';
 import { WORKER_CONFIGS } from '@/constants';
 import { logger } from '@/configs';
-import type { IBaseMedia, TJobName, TQueueKey } from '@/types';
+import type { IBaseMedia, TJobName, TQueueKey, TResourceType } from '@/types';
 import type { TSendOtpMail } from '@beautinique/be-zod';
 import { mailService } from './apis';
 import { mediaService } from './apis/MediaService';
@@ -102,33 +102,88 @@ class BullWorker {
     const jobName = job.name as TJobName<'media-queue'>;
 
     switch (jobName) {
-      case 'single-image-remove': {
+      case 'single-media-remove': {
         await this.executeJob(jobName, async () => {
-          const { publicId } = data;
-          logger.info(`📡 Removing Image -> Media Service -> ${job.id}`);
-          await mediaService.singleImageRemove(publicId);
-          logger.info(`✅ Removed Image -> Media Service -> ${job.id}`);
+          const payload = data as { publicId: string; resourceType: TResourceType };
+          logger.info(`📡 Removing Single Media -> Media Service -> ${job.id}`);
+          await mediaService.singleMediaRemove(payload);
+          logger.info(`✅ Removed Single Media -> Media Service -> ${job.id}`);
         });
         break;
       }
 
-      case 'create-single-media': {
+      case 'multiple-media-remove': {
+        await this.executeJob(jobName, async () => {
+          const payload = data as { publicIds: string[]; resourceType: TResourceType };
+          logger.info(`📡 Removing Multiple Media -> Media Service -> ${job.id}`);
+          await mediaService.multipleMediaRemove(payload);
+          logger.info(`✅ Removed Multiple Media -> Media Service -> ${job.id}`);
+        });
+        break;
+      }
+
+      case 'mark-as-unused-single-media': {
         await this.executeJob(jobName, async () => {
           const payload = data as IBaseMedia;
-          logger.info(`📡 Creating Single Media -> Media Service -> ${job.id}`);
-          await mediaService.createSingleMedia(payload);
-          logger.info(`✅ Created Single Media -> Media Service -> ${job.id}`);
+          logger.info(
+            `📡 Creating and Marking as Unused Single Media -> Media Service -> ${job.id}`,
+          );
+          await mediaService.createUnusedSingleMedia(payload);
+          logger.info(`✅ Created and Marked as Unused Single Media -> Media Service -> ${job.id}`);
         });
         break;
       }
 
-      case 'create-multiple-media': {
+      case 'mark-as-unused-multiple-media': {
         await this.executeJob(jobName, async () => {
-          const payload = data as IBaseMedia[];
+          const payload = data as IBaseMedia;
+          logger.info(
+            `📡 Creating and Marking as Unused Multiple Media -> Media Service -> ${job.id}`,
+          );
+          await mediaService.createUnusedMultipleMedia(payload);
+          logger.info(
+            `✅ Created and Marked as Unused Multiple Media -> Media Service -> ${job.id}`,
+          );
+        });
+        break;
+      }
 
-          logger.info(`📡 Creating Multiple Media -> Media Service -> ${job.id}`);
-          await mediaService.createMultipleMedia(payload);
-          logger.info(`✅ Created Multiple Media -> Media Service -> ${job.id}`);
+      case 'mark-as-used-single-media': {
+        await this.executeJob(jobName, async () => {
+          const payload = data as Partial<IBaseMedia>;
+          logger.info(`📡 Marking as Used Single Media -> Media Service -> ${job.id}`);
+          await mediaService.markAsUsedSingleMedia(payload);
+          logger.info(`✅ Marked as Used Single Media -> Media Service -> ${job.id}`);
+        });
+        break;
+      }
+
+      case 'mark-as-used-multiple-media': {
+        await this.executeJob(jobName, async () => {
+          const payload = data as Partial<IBaseMedia>;
+          logger.info(`📡 Marking as Used Multiple Media -> Media Service -> ${job.id}`);
+          await mediaService.markAsUsedMultipleMedia(payload);
+          logger.info(`✅ Marked as Used Multiple Media -> Media Service -> ${job.id}`);
+        });
+        break;
+      }
+
+      case 'mark-as-deleted-single-media': {
+        await this.executeJob(jobName, async () => {
+          const payload = data as Partial<IBaseMedia>;
+          logger.info(`📡 Marking as Deleted Single Media -> Media Service -> ${job.id}`);
+          await mediaService.markAsDeletedSingleMedia(payload);
+          logger.info(`✅ Marked as Deleted Single Media -> Media Service -> ${job.id}`);
+        });
+        break;
+      }
+
+      case 'mark-as-deleted-multiple-media': {
+        await this.executeJob(jobName, async () => {
+          const payload = data as Partial<IBaseMedia>;
+          logger.info(`📡 Marking as Deleted Multiple Media -> Media Service -> ${job.id}`);
+          await mediaService.markAsDeletedMultipleMedia(payload);
+          logger.info(`✅ Marked as Deleted Multiple Media -> Media Service -> ${job.id}`);
         });
         break;
       }

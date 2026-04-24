@@ -107,8 +107,8 @@ class Cloudinary {
     // Push failed deletions into background job queue
     await bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: resourceType === 'image' ? 'multiple-image-remove' : 'multiple-video-remove',
-      data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
+      jobName: 'multiple-media-remove',
+      data: { resourceType, publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
     });
   }
 

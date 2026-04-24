@@ -5,7 +5,7 @@ import type { IBaseMedia, IMedia } from '@/types';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 
-export const createSingleMediaController = async (req: Request, res: Response) => {
+export const createUnusedSingleMediaController = async (req: Request, res: Response) => {
   const payload = req.body as IBaseMedia;
   const data = await Media.create(payload);
 
@@ -16,7 +16,7 @@ export const createSingleMediaController = async (req: Request, res: Response) =
   res.success(200, 'Media created successfully');
 };
 
-export const createMultipleMediaController = async (req: Request, res: Response) => {
+export const createUnusedMultipleMediaController = async (req: Request, res: Response) => {
   const payload = req.body as IBaseMedia[];
 
   const data = await Media.insertMany(payload);
@@ -63,9 +63,9 @@ export const markAsUsedSingleMediaController = async (req: Request, res: Respons
 };
 
 export const markAsUsedMultipleMediaController = async (req: Request, res: Response) => {
-  const payload = req.body as Partial<IMedia>[];
+  const { data } = req.body as { data: Partial<IMedia>[] };
 
-  if (!Array.isArray(payload) || payload.length === 0) {
+  if (!Array.isArray(data) || data.length === 0) {
     throw new AppError({
       message: 'Payload must be a non-empty array',
       statusCode: 400,
@@ -74,7 +74,7 @@ export const markAsUsedMultipleMediaController = async (req: Request, res: Respo
   }
 
   // 🔧 build bulk operations
-  const operations = payload.map((item) => {
+  const operations = data.map((item) => {
     const { publicId, url, relatedTo, metadata } = item;
 
     if (!publicId && !url) {
