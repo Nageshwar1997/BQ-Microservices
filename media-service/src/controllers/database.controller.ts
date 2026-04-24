@@ -183,7 +183,7 @@ export const markAsDeletedMultipleMediaController = async (req: Request, res: Re
 };
 
 export const getNonDeletedSingleMediaController = async (req: Request, res: Response) => {
-  const { publicId } = req.params as { publicId: string };
+  const { publicId } = req.query as { publicId: string };
 
   const data = await Media.findOne({ publicId, isDeleted: false });
 
@@ -199,7 +199,7 @@ export const getNonDeletedSingleMediaController = async (req: Request, res: Resp
 };
 
 export const getNonDeletedMultipleMediaController = async (req: Request, res: Response) => {
-  const { publicIds } = req.params as { publicIds: string[] };
+  const { publicIds } = req.query as { publicIds: string[] };
 
   const data = await Media.find({ publicId: { $in: publicIds }, isDeleted: false });
 

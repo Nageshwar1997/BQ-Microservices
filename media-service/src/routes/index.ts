@@ -101,11 +101,11 @@ router[mark_as_unused.multiple.method](
 // Get Non Deleted Data Routes
 router[get_non_deleted.single.method](
   `${get_non_deleted.base}${get_non_deleted.single.path}`,
-  RequestMiddleware.emptyRequest({ params: true }),
+  RequestMiddleware.emptyRequest({ query: true }),
   ResponseMiddleware.tryCatch(getNonDeletedSingleMediaController),
 );
 router[get_non_deleted.multiple.method](
   `${get_non_deleted.base}${get_non_deleted.multiple.path}`,
-  RequestMiddleware.emptyRequest({ params: true }),
+  RequestMiddleware.emptyRequest({ query: true }),
   ResponseMiddleware.tryCatch(getNonDeletedMultipleMediaController),
 );

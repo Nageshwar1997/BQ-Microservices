@@ -10,7 +10,7 @@ const MediaSchema = new Schema<TMediaDoc>(
     uploadedBy: { type: Types.ObjectId },
     deletedBy: { type: Types.ObjectId },
     relatedTo: {
-      service: { type: String, enum: ['user-service'], required: true },
+      service: { type: String, enum: ['user-service'] },
       entity: { type: String },
       entityId: { type: String },
     },

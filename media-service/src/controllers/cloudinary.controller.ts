@@ -1,12 +1,14 @@
 import { bullQueue, cloudinary } from '@/classes';
-import type { TResourceType } from '@/types';
+import type { IBaseMedia, TResourceType } from '@/types';
 import { generateBaseMediaPayload } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 
 export const singleMediaUploadController = async (req: Request, res: Response) => {
   const file = req.file;
-  const { folder, resourceType } = req.body as { folder: string; resourceType: TResourceType };
+  const { folder, resourceType } = req.body as {
+    folder: string;
+  } & Pick<IBaseMedia, 'relatedTo' | 'resourceType'>;
 
   if (!file) {
     throw new AppError({
@@ -33,11 +35,11 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
       queueName: 'media-queue',
       jobName: 'single-media-remove-if-unused',
       data: payload,
-      options: { delay: 60 * 60 * 1000 },
+      options: { delay: 60 * 1000 },
     }),
   ]);
 
-  res.success(200, 'Media uploaded successfully');
+  res.success(200, 'Media uploaded successfully', { data: response.secure_url });
 };
 
 export const multipleMediaUploadController = async (req: Request, res: Response) => {
@@ -61,7 +63,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
       queueName: 'media-queue',
       jobName: 'multiple-media-remove-if-unused',
       data: payload,
-      options: { delay: 60 * 60 * 1000 },
+      options: { delay: 60 * 1000 },
     }),
   ]);
 

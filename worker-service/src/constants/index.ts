@@ -30,7 +30,7 @@ export const API_ROUTES_AND_METHODS = {
   },
   media: {
     mark_as_unused: {
-      single: { method: 'post', path: '/mark-as-unused/single' },
+      single: { method: 'post', url: '/mark-as-unused/single' },
       multiple: { method: 'post', url: '/mark-as-unused/multiple' },
     },
     mark_as_used: {
