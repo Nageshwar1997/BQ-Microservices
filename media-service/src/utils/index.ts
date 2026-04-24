@@ -1,4 +1,4 @@
-import type { TId, TService } from '@/types';
+import type { TId } from '@/types';
 import type { UploadApiResponse } from 'cloudinary';
 import { Types } from 'mongoose';
 
@@ -14,13 +14,12 @@ export const isNullOrUndefined = (value: unknown): value is null | undefined => 
 /* ========== OBJECT ID CONVERTER FUNCTION ========== */
 export const toObjectId = (id: string): TId => new Types.ObjectId(id);
 
-export const generateBaseMediaPayload = (data: UploadApiResponse, service: TService) => {
+export const generateBaseMediaPayload = (data: UploadApiResponse) => {
   return {
     url: data.secure_url,
     publicId: data.public_id,
     resourceType: data.resource_type,
     createdAt: data.created_at,
-    relatedTo: { service },
     metadata: {
       width: data.width,
       height: data.height,

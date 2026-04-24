@@ -1,5 +1,5 @@
 import { envs } from '@/envs';
-import type { TResourceType } from '@/types';
+import type { TResourceType, TStatus } from '@/types';
 import type { ConnectionOptions } from 'bullmq';
 
 export const ORIGINS = Object.values(envs.url.frontend);
@@ -60,4 +60,8 @@ export const SERVICES = ['user-service'] as const;
 
 export const RESOURCES = ['image', 'video'] as const;
 
-export const STATUSES = ['pending', 'used', 'deleted'] as const;
+export const STATUSES = ['PENDING', 'USED', 'DELETED'] as const;
+export const STATUS_MAP = Object.fromEntries(STATUSES.map((status) => [status, status])) as Record<
+  TStatus,
+  TStatus
+>;

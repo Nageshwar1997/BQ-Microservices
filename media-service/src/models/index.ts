@@ -1,3 +1,4 @@
+import { RESOURCES, STATUSES, STATUS_MAP } from '@/constants';
 import type { IMedia } from '@/types';
 import { Schema, Types, model } from 'mongoose';
 
@@ -5,7 +6,7 @@ const MediaSchema = new Schema<IMedia>(
   {
     publicId: { type: String, required: true, unique: true, index: true },
     url: { type: String },
-    resourceType: { type: String, enum: ['image', 'video'], required: true },
+    resourceType: { type: String, enum: RESOURCES, required: true },
     uploadedBy: { type: Types.ObjectId },
     deletedBy: { type: Types.ObjectId },
     relatedTo: {
@@ -14,7 +15,7 @@ const MediaSchema = new Schema<IMedia>(
       entityId: { type: String },
     },
     expiresAt: { type: Date, index: true },
-    status: { type: String, enum: ['pending', 'used', 'deleted'], default: 'pending', index: true },
+    status: { type: String, enum: STATUSES, default: STATUS_MAP.PENDING, index: true },
     metadata: { type: Schema.Types.Mixed },
     isDeleted: { type: Boolean, default: false, index: true },
     isUsed: { type: Boolean, default: false, index: true },

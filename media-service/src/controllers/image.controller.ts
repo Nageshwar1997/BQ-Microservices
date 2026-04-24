@@ -1,12 +1,11 @@
 import { bullQueue, cloudinary } from '@/classes';
-import type { TService } from '@/types';
 import { generateBaseMediaPayload } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 
 export const singleImageUploadController = async (req: Request, res: Response) => {
   const file = req.file;
-  const { folder, service } = req.body as { folder: string; service: TService };
+  const { folder } = req.body as { folder: string };
 
   if (!file) {
     throw new AppError({ message: 'No file uploaded', statusCode: 400, code: 'VALIDATION_ERROR' });
@@ -17,7 +16,7 @@ export const singleImageUploadController = async (req: Request, res: Response) =
   await bullQueue.addJob({
     queueName: 'media-queue',
     jobName: 'create-single-media',
-    data: generateBaseMediaPayload(response, service),
+    data: generateBaseMediaPayload(response),
   });
 
   res.success(200, 'Image uploaded successfully', { data: response.secure_url });
@@ -25,14 +24,14 @@ export const singleImageUploadController = async (req: Request, res: Response) =
 
 export const multipleImageUploadController = async (req: Request, res: Response) => {
   const files = req.files as Express.Multer.File[];
-  const { folder, service } = req.body;
+  const { folder } = req.body as { folder: string };
 
   const response = await cloudinary.uploadMultiple({ files, folder, resourceType: 'image' });
 
   await bullQueue.addJob({
     queueName: 'media-queue',
     jobName: 'create-multiple-media',
-    data: response.map((res) => generateBaseMediaPayload(res, service)),
+    data: response.map((res) => generateBaseMediaPayload(res)),
   });
 
   res.success(200, 'Images uploaded successfully', { data: response.map((res) => res.secure_url) });
