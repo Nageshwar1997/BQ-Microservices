@@ -13,3 +13,15 @@ export const createSingleMediaController = async (req: Request, res: Response) =
 
   res.success(200, 'Media created successfully');
 };
+
+export const createMultipleMediaController = async (req: Request, res: Response) => {
+  const payload = req.body as IBaseMedia[];
+
+  const data = await Media.insertMany(payload);
+
+  if (!data) {
+    throw new AppError({ message: 'Media not created', statusCode: 500, code: 'INTERNAL_ERROR' });
+  }
+
+  res.success(200, 'Media created successfully');
+};

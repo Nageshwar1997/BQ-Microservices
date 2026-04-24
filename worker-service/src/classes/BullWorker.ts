@@ -104,6 +104,14 @@ class BullWorker {
         break;
       }
 
+      case 'create-multiple-media': {
+        const payload = data as IBaseMedia;
+        logger.info(`📩 Forwarding publicId to media-service for ${payload.publicId}`);
+        await mediaService.createSingleMedia(payload);
+        logger.info(`✅ publicId forwarded to media-service for ${payload.publicId}`);
+        break;
+      }
+
       default:
         throw new Error(`🚫 Unknown email job: ${jobName}`);
     }

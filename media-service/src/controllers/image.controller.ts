@@ -1,11 +1,12 @@
 import { bullQueue, cloudinary } from '@/classes';
-import { Media } from '@/models';
+import type { TService } from '@/types';
+import { generateBaseMediaPayload } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 
 export const singleImageUploadController = async (req: Request, res: Response) => {
   const file = req.file;
-  const { folder, service } = req.body;
+  const { folder, service } = req.body as { folder: string; service: TService };
 
   if (!file) {
     throw new AppError({ message: 'No file uploaded', statusCode: 400, code: 'VALIDATION_ERROR' });
@@ -16,20 +17,7 @@ export const singleImageUploadController = async (req: Request, res: Response) =
   await bullQueue.addJob({
     queueName: 'media-queue',
     jobName: 'create-single-media',
-    data: {
-      url: response.secure_url,
-      publicId: response.public_id,
-      resourceType: response.resource_type,
-      createdAt: response.created_at,
-      relatedTo: { service },
-      metadata: {
-        width: response.width,
-        height: response.height,
-        format: response.format,
-        size: response.bytes,
-        folder: response.asset_folder,
-      },
-    },
+    data: generateBaseMediaPayload(response, service),
   });
 
   res.success(200, 'Image uploaded successfully', { data: response.secure_url });
@@ -41,28 +29,13 @@ export const multipleImageUploadController = async (req: Request, res: Response)
 
   const response = await cloudinary.uploadMultiple({ files, folder, resourceType: 'image' });
 
-  const data = await Promise.allSettled(
-    response.map((res) => {
-      return Media.create({
-        url: res.secure_url,
-        publicId: res.public_id,
-        resourceType: res.resource_type,
-        createdAt: res.created_at,
-        relatedTo: { service },
-        metadata: {
-          width: res.width,
-          height: res.height,
-          format: res.format,
-          size: res.bytes,
-          folder: res.asset_folder,
-        },
-      });
-    }),
-  );
-
-  res.success(200, 'Images uploaded successfully', {
-    data: data.map((res) => (res.status === 'fulfilled' ? { url: res.value.url } : null)),
+  await bullQueue.addJob({
+    queueName: 'media-queue',
+    jobName: 'create-multiple-media',
+    data: response.map((res) => generateBaseMediaPayload(res, service)),
   });
+
+  res.success(200, 'Images uploaded successfully', { data: response.map((res) => res.secure_url) });
 };
 
 export const singleImageRemoveController = async (req: Request, res: Response) => {

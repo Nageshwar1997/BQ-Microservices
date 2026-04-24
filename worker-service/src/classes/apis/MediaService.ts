@@ -14,6 +14,10 @@ class MediaService extends ApiRequest {
   public async createSingleMedia(data: IBaseMedia) {
     return await this.request({ ...this.routes.media.media.create.single, data });
   }
+
+  public async createMultipleMedia(data: IBaseMedia[]) {
+    return await this.request({ ...this.routes.media.media.create.multiple, data });
+  }
 }
 
 export const mediaService = new MediaService();

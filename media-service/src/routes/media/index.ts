@@ -1,5 +1,5 @@
 import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
-import { createSingleMediaController } from '@/controllers/createMedia.controller';
+import { createMultipleMediaController, createSingleMediaController } from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { Router } from 'express';
 
@@ -11,4 +11,10 @@ mediaRouter[create.single.method](
   `${create.base}${create.single.path}`,
   RequestMiddleware.emptyRequest({ body: true }),
   ResponseMiddleware.tryCatch(createSingleMediaController),
+);
+
+mediaRouter[create.multiple.method](
+  `${create.base}${create.multiple.path}`,
+  RequestMiddleware.emptyRequest({ body: true }),
+  ResponseMiddleware.tryCatch(createMultipleMediaController),
 );
