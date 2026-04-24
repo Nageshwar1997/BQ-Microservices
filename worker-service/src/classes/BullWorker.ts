@@ -65,17 +65,30 @@ class BullWorker {
     // Add more workers here
   }
 
+  /* ---------------- HELPERS ---------------- */
+  private async executeJob(jobName: string, handler: () => Promise<void>) {
+    try {
+      await handler();
+    } catch (err) {
+      logger.error(`❌ Job failed → ${jobName}`, err);
+      throw err;
+    }
+  }
+
   /* ---------------- HANDLERS ---------------- */
 
   private async handleEmailJobs(job: Job) {
     const { data } = job;
     const jobName = job.name as TJobName<'email-queue'>;
+
     switch (jobName) {
       case 'send-otp': {
-        const { email, otp } = data as TSendOtpMail;
-        logger.info(`📩 Forwarding OTP to mail-service for ${email}`);
-        await mailService.sendOtp({ email, otp });
-        logger.info(`✅ OTP forwarded to mail-service for ${email}`);
+        await this.executeJob(jobName, async () => {
+          const { email, otp } = data as TSendOtpMail;
+          logger.info(`📡 Sending OTP -> Mail Service -> ${job.id}`);
+          await mailService.sendOtp({ email, otp });
+          logger.info(`✅ Sent OTP -> Mail Service -> ${job.id}`);
+        });
         break;
       }
 
@@ -87,33 +100,41 @@ class BullWorker {
   private async handleMediaJobs(job: Job) {
     const { data } = job;
     const jobName = job.name as TJobName<'media-queue'>;
+
     switch (jobName) {
       case 'single-image-remove': {
-        const { publicId } = data;
-        logger.info(`📩 Forwarding publicId to media-service for ${publicId}`);
-        await mediaService.singleImageRemove(publicId);
-        logger.info(`✅ publicId forwarded to media-service for ${publicId}`);
+        await this.executeJob(jobName, async () => {
+          const { publicId } = data;
+          logger.info(`📡 Removing Image -> Media Service -> ${job.id}`);
+          await mediaService.singleImageRemove(publicId);
+          logger.info(`✅ Removed Image -> Media Service -> ${job.id}`);
+        });
         break;
       }
 
       case 'create-single-media': {
-        const payload = data as IBaseMedia;
-        logger.info(`📩 Forwarding publicId to media-service for ${payload.publicId}`);
-        await mediaService.createSingleMedia(payload);
-        logger.info(`✅ publicId forwarded to media-service for ${payload.publicId}`);
+        await this.executeJob(jobName, async () => {
+          const payload = data as IBaseMedia;
+          logger.info(`📡 Creating Single Media -> Media Service -> ${job.id}`);
+          await mediaService.createSingleMedia(payload);
+          logger.info(`✅ Created Single Media -> Media Service -> ${job.id}`);
+        });
         break;
       }
 
       case 'create-multiple-media': {
-        const payload = data as IBaseMedia;
-        logger.info(`📩 Forwarding publicId to media-service for ${payload.publicId}`);
-        await mediaService.createSingleMedia(payload);
-        logger.info(`✅ publicId forwarded to media-service for ${payload.publicId}`);
+        await this.executeJob(jobName, async () => {
+          const payload = data as IBaseMedia[];
+
+          logger.info(`📡 Creating Multiple Media -> Media Service -> ${job.id}`);
+          await mediaService.createMultipleMedia(payload);
+          logger.info(`✅ Created Multiple Media -> Media Service -> ${job.id}`);
+        });
         break;
       }
 
       default:
-        throw new Error(`🚫 Unknown email job: ${jobName}`);
+        throw new Error(`🚫 Unknown media job: ${jobName}`);
     }
   }
 
