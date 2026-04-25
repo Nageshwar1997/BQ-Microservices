@@ -1,5 +1,7 @@
 import { METHODS_AND_PATHS } from '@/constants';
 import {
+  githubCallbackController,
+  githubRedirectController,
   googleCallbackController,
   googleRedirectController,
   linkedinCallbackController,
@@ -8,7 +10,7 @@ import {
 } from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
 import { loginSchema } from '@beautinique/be-zod';
-import { type Request, type Response, Router } from 'express';
+import { Router } from 'express';
 
 export const loginRouter = Router();
 
@@ -49,14 +51,11 @@ loginRouter[login.oauth.linkedin.callback.method](
 // GitHub
 loginRouter[login.oauth.github.redirect.method](
   login.oauth.github.redirect.path,
-  (req: Request, res: Response) => {
-    res.success(200, 'Hello', { data: req.body });
-  },
+  ResponseMiddleware.tryCatch(githubRedirectController),
 );
 
 loginRouter[login.oauth.github.callback.method](
   login.oauth.github.callback.path,
-  (req: Request, res: Response) => {
-    res.success(200, 'Hello', { data: req.body });
-  },
+  RequestMiddleware.emptyRequest({ query: true }),
+  ResponseMiddleware.tryCatch(githubCallbackController),
 );
