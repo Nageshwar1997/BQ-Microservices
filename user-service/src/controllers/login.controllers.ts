@@ -38,7 +38,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
   await redisCache.setUser(user);
 
-  res.success(200, 'User logged in successfully', { token, user: restUser });
+  res.success(200, 'User logged in successfully', { data: { token, user: restUser } });
 };
 
 export const googleRedirectController = async (_req: Request, res: Response) => {
