@@ -28,6 +28,7 @@ loginRouter[login.oauth.google.redirect.method](
 
 loginRouter[login.oauth.google.callback.method](
   login.oauth.google.callback.path,
+  RequestMiddleware.emptyRequest({ query: true }),
   ResponseMiddleware.tryCatch(googleCallbackController),
 );
 
