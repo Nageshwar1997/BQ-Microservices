@@ -43,7 +43,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
 export const googleRedirectController = async (_req: Request, res: Response) => {
   const url = googleAuth.url();
-  res.success(200, 'User logged in successfully', { url });
+  res.success(200, 'User logged in successfully', { data: url });
 };
 
 export const googleCallbackController = async (req: Request, res: Response) => {
@@ -53,6 +53,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   // Fetch user info from Google
   const profile = await googleAuth.decode(String(code));
+
   if (!profile) throw new AppError({ message: 'User info not found', statusCode: 404 });
 
   // Check if user already exists (email = primary identity)
@@ -62,6 +63,9 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     // If GOOGLE not linked yet, link it
     if (!user.providers.includes('GOOGLE')) {
       user.providers.push('GOOGLE');
+      if (!user.avatar) {
+        user.avatar = profile.picture || '';
+      }
       await user.save();
     }
   } else {
@@ -76,5 +80,5 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   const token = generateJwtToken(user._id);
 
-  res.success(200, 'User logged in successfully', { token });
+  res.success(200, 'User logged in successfully', { data: token });
 };
