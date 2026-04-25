@@ -1,4 +1,4 @@
-import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
+import { METHODS_AND_PATHS } from '@/constants';
 import {
   registerAndSaveController,
   registerResendOtpController,
@@ -11,7 +11,7 @@ import { Router } from 'express';
 
 export const registerRouter = Router();
 
-const { resendOtp, sendOtp, verifyOtp, saveUser } = GATEWAY_METHODS_AND_PATHS.auth.register;
+const { resendOtp, sendOtp, verifyOtp, saveUser } = METHODS_AND_PATHS.auth.register;
 
 registerRouter[sendOtp.method](
   sendOtp.path,

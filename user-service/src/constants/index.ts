@@ -30,7 +30,7 @@ export const API_ROUTES_AND_METHODS = {
   },
 };
 
-export const GATEWAY_METHODS_AND_PATHS = {
+export const METHODS_AND_PATHS = {
   auth: {
     base: '/auth',
     login: {
@@ -63,7 +63,7 @@ export const GATEWAY_METHODS_AND_PATHS = {
       sendOtp: { path: '/send-otp', method: 'post' },
       resendOtp: { path: '/resend-otp', method: 'patch' },
       verifyOtp: { path: '/verify-otp', method: 'post' },
-      saveUser: { path: '/', method: 'post' },
+      saveUser: { path: '/save', method: 'post' },
     },
     password: {
       base: '/password',

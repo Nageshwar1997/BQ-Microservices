@@ -1,4 +1,4 @@
-import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
+import { METHODS_AND_PATHS } from '@/constants';
 import {
   googleCallbackController,
   googleRedirectController,
@@ -10,7 +10,7 @@ import { type Request, type Response, Router } from 'express';
 
 export const loginRouter = Router();
 
-const { login } = GATEWAY_METHODS_AND_PATHS.auth;
+const { login } = METHODS_AND_PATHS.auth;
 
 // Manual
 loginRouter[login.manual.method](
