@@ -2,6 +2,8 @@ import { METHODS_AND_PATHS } from '@/constants';
 import {
   googleCallbackController,
   googleRedirectController,
+  linkedinCallbackController,
+  linkedinRedirectController,
   manualLoginController,
 } from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
@@ -35,16 +37,13 @@ loginRouter[login.oauth.google.callback.method](
 // LinkedIn
 loginRouter[login.oauth.linkedin.redirect.method](
   login.oauth.linkedin.redirect.path,
-  (req: Request, res: Response) => {
-    res.success(200, 'Hello', { data: req.body });
-  },
+  ResponseMiddleware.tryCatch(linkedinRedirectController),
 );
 
 loginRouter[login.oauth.linkedin.callback.method](
   login.oauth.linkedin.callback.path,
-  (req: Request, res: Response) => {
-    res.success(200, 'Hello', { data: req.body });
-  },
+  RequestMiddleware.emptyRequest({ query: true }),
+  ResponseMiddleware.tryCatch(linkedinCallbackController),
 );
 
 // GitHub

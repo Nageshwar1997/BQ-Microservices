@@ -2,7 +2,6 @@ import { google } from 'googleapis';
 import { ApiRequest } from './ApiRequest';
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { envs } from '@/envs';
-import { parseData } from '@beautinique/be-utils';
 
 function getSocialAuthRedirectURL(provider: Exclude<TAuthProvider, 'MANUAL'>) {
   const redirectMap: Partial<Record<Exclude<TAuthProvider, 'MANUAL'>, string>> = {
@@ -72,11 +71,11 @@ class LinkedinAuth extends ApiRequest {
     });
   }
 
-  public decode(id_token: string) {
-    const base64Payload = id_token.split('.')[1];
-    const decoded = parseData(Buffer.from(base64Payload, 'base64').toString());
-
-    return decoded;
+  public decode(access_token: string) {
+    return this.request({
+      ...this.routes.oAuth.linkedin.decode,
+      headers: { Authorization: `Bearer ${access_token}` },
+    });
   }
 }
 

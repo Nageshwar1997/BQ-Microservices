@@ -17,6 +17,7 @@ export const API_ROUTES_AND_METHODS = {
         baseURL: 'https://www.linkedin.com',
         url: '/oauth/v2/accessToken',
       },
+      decode: { baseURL: 'https://api.linkedin.com', method: 'GET', url: '/v2/userinfo' },
     },
     github: {
       access_token: {
