@@ -9,24 +9,6 @@ import { Types } from 'mongoose';
 
 /* ======================= Auth Utils ======================= */
 
-const getSocialAuthAvatar = async (url: string) => {
-  if (!url) return '';
-  // const { headers, data } = await axios.get(url, { responseType: 'arraybuffer' });
-  // const file = {
-  //   buffer: Buffer.from(data),
-  //   mimetype: headers['content-type'],
-  //   originalname: 'profile-pic.jpg',
-  // };
-  //   const cldResp = await MediaModule.Utils.singleImageUploader({
-  //     file,
-  //     cloudinaryConfigOption: 'image',
-  //     folder: 'Profile_Pictures',
-  //   });
-
-  //   return cldResp?.secure_url || url;
-  return url;
-};
-
 export const createOAuthDbPayload = async (
   data: Record<string, string>,
   provider: TAuthProvider,
@@ -38,7 +20,7 @@ export const createOAuthDbPayload = async (
   const lastName =
     data.family_name || (nameParts.length > 1 ? nameParts?.slice(1)?.join(' ') : '') || '';
 
-  const avatar = await getSocialAuthAvatar(data.picture || data.avatar_url);
+  const avatar = data.picture || data.avatar_url;
 
   return {
     email: data.email,

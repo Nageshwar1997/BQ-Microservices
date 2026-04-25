@@ -135,19 +135,6 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     });
   }
 
-  // Profile picture upload
-  // const file = req.file as Express.Multer.File;
-  const avatar = '';
-  // if (file) {
-  //   const imageResult = await MediaModule.Utils.singleImageUploader({
-  //     file,
-  //     folder: 'Avatars',
-  //     cloudinaryConfigOption: 'image',
-  //   });
-  //   profilePic = imageResult?.secure_url ?? '';
-  // }
-
-  // import bcrypt from 'bcryptjs';
   const hashedPassword = bcrypt.hashSync(password, 10);
 
   try {
@@ -159,7 +146,6 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
         user.firstName = firstName;
         user.lastName = lastName;
         user.phoneNumber = phoneNumber;
-        if (avatar) user.avatar = avatar;
         await user.save();
       } else {
         throw new AppError({
@@ -177,7 +163,6 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
         email,
         phoneNumber,
         password: hashedPassword,
-        avatar,
         providers: ['MANUAL'],
         role: 'USER',
         status: 'ACTIVE',

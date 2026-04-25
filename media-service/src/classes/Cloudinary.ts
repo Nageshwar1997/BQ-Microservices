@@ -138,8 +138,23 @@ class Cloudinary {
           }
 
           // Successfully uploaded
-          const secure_url = result.playback_url || result.secure_url;
-          resolve({ ...result, secure_url });
+          let optimizedUrl = result.secure_url;
+
+          // IMAGE → f_auto,q_auto
+          if (result.resource_type === 'image') {
+            optimizedUrl = result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
+          }
+
+          // VIDEO → use playback_url
+          if (result.resource_type === 'video') {
+            if (result.playback_url) {
+              optimizedUrl = result.playback_url;
+            } else {
+              optimizedUrl = result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
+            }
+          }
+
+          resolve({ ...result, secure_url: optimizedUrl });
         },
       );
 

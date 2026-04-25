@@ -1,16 +1,11 @@
 import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
 import {
+  registerAndSaveController,
   registerResendOtpController,
   registerSendOtpController,
   registerVerifyOtpController,
 } from '@/controllers';
-import { envs } from '@/envs';
-import {
-  MulterMiddleware,
-  RequestMiddleware,
-  ResponseMiddleware,
-  ZodMiddleware,
-} from '@beautinique/be-middlewares';
+import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
 import { registerEmailSchema, registerOtpSchema, registerSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
 
@@ -41,8 +36,7 @@ registerRouter[verifyOtp.method](
 
 registerRouter[saveUser.method](
   saveUser.path,
-  MulterMiddleware.validate({ type: 'single', fieldName: 'avatar', isDev: envs.is_dev }),
   RequestMiddleware.emptyRequest({ body: true, file: false }),
   ZodMiddleware.validateSchema(registerSchema),
-  ResponseMiddleware.tryCatch(registerVerifyOtpController),
+  ResponseMiddleware.tryCatch(registerAndSaveController),
 );
