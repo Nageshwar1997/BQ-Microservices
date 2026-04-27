@@ -1,5 +1,4 @@
 import { bullQueue, redisCache } from '@/classes';
-import { logger } from '@/configs';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '@/services';
 import { generateJwtToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
@@ -23,15 +22,15 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   }
 
   // Store email in cache
-  const { otpToken, sendCount, otp } = await redisCache.setOtpToken(email);
+  const { otpToken, sendCount, otp, email: otpEmail } = await redisCache.setOtpToken(email);
 
   await bullQueue.addJob({
     queueName: 'email-queue',
     jobName: 'send-otp',
-    data: { email, otp },
+    data: { email: otpEmail, otp },
   });
 
-  res.success(200, 'OTP sent successfully', { data: { otpToken, sendCount } });
+  res.success(200, 'OTP sent successfully', { data: { otpToken, sendCount, email: otpEmail } });
 };
 
 export const registerResendOtpController = async (req: Request, res: Response) => {
@@ -137,7 +136,6 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   const hashedPassword = bcrypt.hashSync(password, 10);
 
-  try {
     if (user) {
       // User exists → oAuth-only
       if (!user.providers.includes('MANUAL')) {
@@ -179,15 +177,4 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     const token = generateJwtToken(user._id);
 
     res.success(201, 'User registered successfully', { token, user: restUser });
-  } catch (error) {
-    // if (avatar) await MediaModule.Utils.singleImageRemover(avatar, 'image');
-    logger.error('❌ Failed to register user:', error);
-    throw new AppError({
-      message: (error as unknown as Error).message || 'Failed to register user',
-      statusCode: 500,
-      code: 'INTERNAL_ERROR',
-    });
-  }
-
-  res.success(200, 'OTP verified successfully', { data: { otpToken } });
 };
