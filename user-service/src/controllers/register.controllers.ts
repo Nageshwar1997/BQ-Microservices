@@ -94,7 +94,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
     });
   }
 
-  res.success(200, 'OTP verified successfully', { data: { otpToken } });
+  res.success(200, 'OTP verified successfully', { data: { otpToken, email: parsedData.email } });
 };
 
 export const registerAndSaveController = async (req: Request, res: Response) => {
@@ -136,45 +136,45 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   const hashedPassword = bcrypt.hashSync(password, 10);
 
-    if (user) {
-      // User exists → oAuth-only
-      if (!user.providers.includes('MANUAL')) {
-        user.password = hashedPassword;
-        user.providers.push('MANUAL');
-        user.firstName = firstName;
-        user.lastName = lastName;
-        user.phoneNumber = phoneNumber;
-        await user.save();
-      } else {
-        throw new AppError({
-          message: 'Email already exists',
-          fieldErrors: { email: ['Email already exists'] },
-          code: 'AUTH_ERROR',
-          statusCode: 401, // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
-        });
-      }
+  if (user) {
+    // User exists → oAuth-only
+    if (!user.providers.includes('MANUAL')) {
+      user.password = hashedPassword;
+      user.providers.push('MANUAL');
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.phoneNumber = phoneNumber;
+      await user.save();
     } else {
-      // Completely new user → create
-      user = await createNewUser({
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        password: hashedPassword,
-        providers: ['MANUAL'],
-        role: 'USER',
-        status: 'ACTIVE',
+      throw new AppError({
+        message: 'Email already exists',
+        fieldErrors: { email: ['Email already exists'] },
+        code: 'AUTH_ERROR',
+        statusCode: 401, // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
       });
     }
+  } else {
+    // Completely new user → create
+    user = await createNewUser({
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      password: hashedPassword,
+      providers: ['MANUAL'],
+      role: 'USER',
+      status: 'ACTIVE',
+    });
+  }
 
-    // Delete OTP and Token from Redis
-    await redisCache.deleteOtpToken(otpToken);
+  // Delete OTP and Token from Redis
+  await redisCache.deleteOtpToken(otpToken);
 
-    const { password: _, ...restUser } = user.toObject();
+  const { password: _, ...restUser } = user.toObject();
 
-    await redisCache.setUser(restUser);
+  await redisCache.setUser(restUser);
 
-    const token = generateJwtToken(user._id);
+  const token = generateJwtToken(user._id);
 
-    res.success(201, 'User registered successfully', { token, user: restUser });
+  res.success(201, 'User registered successfully', { token, user: restUser });
 };

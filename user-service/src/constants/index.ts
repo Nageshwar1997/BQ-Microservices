@@ -71,7 +71,8 @@ export const METHODS_AND_PATHS = {
     },
   },
   user: {
-    base: '/users',
+    base: '/user',
+    me: { method: 'get', path: '/me' },
   },
 } as const;
 

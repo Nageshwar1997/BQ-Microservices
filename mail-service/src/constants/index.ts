@@ -39,6 +39,6 @@ export const GATEWAY_METHODS_AND_PATHS = {
     },
   },
   user: {
-    base: '/users',
+    base: '/user',
   },
 } as const;
