@@ -186,5 +186,5 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   await redisCache.setUser(restUser);
 
-  res.success(201, 'User registered successfully', { data: restUser });
+  res.success(201, 'User registered successfully', { user: restUser });
 };

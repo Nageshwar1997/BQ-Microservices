@@ -1,5 +1,6 @@
 import { githubAuth, googleAuth, linkedinAuth, redisCache } from '@/classes';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '@/services';
+import type { IUser } from '@/types';
 import { createOAuthDbPayload, generateJwtToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import bcrypt from 'bcryptjs';
@@ -7,7 +8,7 @@ import type { Request, Response } from 'express';
 
 export const manualLoginController = async (req: Request, res: Response) => {
   const { email, password, phoneNumber } = req.body ?? {};
-  const user = await getUserByEmailOrPhone({ email, phoneNumber });
+  const user = (await getUserByEmailOrPhone({ email, phoneNumber })) as IUser;
 
   if (!user.providers.includes('MANUAL')) {
     // Check if user has MANUAL login
@@ -32,9 +33,9 @@ export const manualLoginController = async (req: Request, res: Response) => {
     });
   }
 
-  const { password: _password, ...restUser } = user;
+  const { password: _, reason: __, status: ___, ...restUser } = user;
 
-  await redisCache.setUser(user);
+  await redisCache.setUser(restUser);
 
   res.success(200, 'User logged in successfully', { user: restUser });
 };
