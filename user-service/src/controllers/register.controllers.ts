@@ -1,5 +1,6 @@
 import { bullQueue, redisCache } from '@/classes';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '@/services';
+import type { IUser, IUserDoc } from '@/types';
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
@@ -132,9 +133,9 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   // Check for existing users
   const [emailUser, phoneUser] = await Promise.all([
     getUserByEmail({ email, lean: false }),
-    getUserByPhoneNumber({ phoneNumber }),
+    getUserByPhoneNumber({ phoneNumber, lean: false }),
   ]);
-  let user = emailUser || phoneUser;
+  let user = (emailUser || phoneUser) as IUserDoc | IUser;
 
   if (phoneUser && phoneUser._id.toString() !== emailUser?._id.toString()) {
     throw new AppError({
@@ -149,7 +150,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   if (user) {
     // User exists → oAuth-only
-    if (!user.providers.includes('MANUAL')) {
+    if (!user.providers.includes('MANUAL') && 'save' in user) {
       user.password = hashedPassword;
       user.providers.push('MANUAL');
       user.firstName = firstName;
@@ -181,7 +182,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   // Delete OTP and Token from Redis
   await redisCache.deleteOtpToken(otpToken);
 
-  const { password: _, ...restUser } = user.toObject();
+  const { password: _, ...restUser } = 'toObject' in user ? user.toObject() : user;
 
   await redisCache.setUser(restUser);
 

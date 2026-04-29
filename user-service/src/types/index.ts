@@ -22,9 +22,11 @@ export type TUser = Omit<TRegister, 'confirmPassword' | 'otp'> & {
   reason?: string | null;
 };
 
-export interface IUser extends TUser, IId, ITimestamp, Document {}
+export interface IUser extends TUser, IId, ITimestamp {}
 
-export interface ISeller extends IId, ITimestamp, Document, Pick<TUser, 'status' | 'reason'> {
+export interface IUserDoc extends IUser, Document {}
+
+export interface ISeller extends Pick<IUser, 'status' | 'reason'> {
   user: TId;
   approvalStatus: (typeof SELLER_APPROVAL_STATUS)[number];
   personalDetails: Omit<TSellerRequest['businessDetails'], 'category'>;
@@ -33,9 +35,13 @@ export interface ISeller extends IId, ITimestamp, Document, Pick<TUser, 'status'
   businessAddress: TSellerRequest['businessAddress'];
 }
 
-export interface IWishlist extends IId, ITimestamp, Document {
+export interface ISellerDoc extends ISeller, Document {}
+
+export interface IWishlist extends IId, ITimestamp {
   products: TId[];
 }
+
+export interface IWishlistDoc extends IWishlist, Document {}
 
 type TQueue = typeof QUEUE_AND_JOB_NAMES;
 export type TQueueKey = keyof TQueue;

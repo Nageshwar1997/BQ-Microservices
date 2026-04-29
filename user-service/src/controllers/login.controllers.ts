@@ -32,13 +32,11 @@ export const manualLoginController = async (req: Request, res: Response) => {
     });
   }
 
-  const token = generateJwtToken(user._id);
-
   const { password: _password, ...restUser } = user;
 
   await redisCache.setUser(user);
 
-  res.success(200, 'User logged in successfully', { data: { token, user: restUser } });
+  res.success(200, 'User logged in successfully', { user: restUser });
 };
 
 export const googleRedirectController = async (_req: Request, res: Response) => {
@@ -69,7 +67,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   if (user) {
     // If GOOGLE not linked yet, link it
-    if (!user.providers.includes('GOOGLE')) {
+    if (!user.providers.includes('GOOGLE') && 'save' in user) {
       user.providers.push('GOOGLE');
       if (!user.avatar) {
         user.avatar = profile.picture || '';
@@ -121,7 +119,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
   if (user) {
     // If GOOGLE not linked yet, link it
-    if (!user.providers.includes('LINKEDIN')) {
+    if (!user.providers.includes('LINKEDIN') && 'save' in user) {
       user.providers.push('LINKEDIN');
       if (!user.avatar) {
         user.avatar = profile.picture || '';
@@ -172,7 +170,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
 
   if (user) {
     // If GOOGLE not linked yet, link it
-    if (!user.providers.includes('GITHUB')) {
+    if (!user.providers.includes('GITHUB') && 'save' in user) {
       user.providers.push('GITHUB');
       if (!user.avatar) {
         user.avatar = profile.avatar_url || '';

@@ -1,9 +1,9 @@
 import { SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
-import type { ISeller, IUser, IWishlist } from '@/types';
+import type { ISeller, ISellerDoc, IUserDoc, IWishlistDoc } from '@/types';
 import { COUNTRIES, ROLES, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/be-constants';
 import { Schema, model } from 'mongoose';
 
-const userSchema = new Schema<IUser>(
+const userSchema = new Schema<IUserDoc>(
   {
     firstName: { type: String, trim: true },
     lastName: { type: String, trim: true },
@@ -69,7 +69,7 @@ const requiredDocumentsSchema = new Schema<ISeller['requiredDocuments']>(
   { versionKey: false, _id: false },
 );
 
-const sellerSchema = new Schema<ISeller>(
+const sellerSchema = new Schema<ISellerDoc>(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     businessAddress: businessAddressSchema,
@@ -86,7 +86,7 @@ const sellerSchema = new Schema<ISeller>(
 sellerSchema.index({ email: 1 }, { unique: true });
 sellerSchema.index({ phoneNumber: 1 }, { unique: true });
 
-const wishlistSchema = new Schema<IWishlist>(
+const wishlistSchema = new Schema<IWishlistDoc>(
   {
     _id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     products: [{ type: Schema.Types.ObjectId, ref: 'Product' }],
@@ -94,8 +94,8 @@ const wishlistSchema = new Schema<IWishlist>(
   { versionKey: false, timestamps: true },
 );
 
-export const User = model<IUser>('User', userSchema);
+export const User = model<IUserDoc>('User', userSchema);
 
-export const Seller = model<ISeller>('Seller', sellerSchema);
+export const Seller = model<ISellerDoc>('Seller', sellerSchema);
 
-export const Wishlist = model<IWishlist>('Wishlist', wishlistSchema);
+export const Wishlist = model<IWishlistDoc>('Wishlist', wishlistSchema);

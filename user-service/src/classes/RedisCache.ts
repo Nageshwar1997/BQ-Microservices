@@ -8,6 +8,14 @@ import { HOUR, MINUTE } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
 
+interface IOtpData {
+  otp: string;
+  email: string;
+  sendCount: number;
+}
+
+/* ================= CLIENT (Singleton) ================= */
+
 const client: RedisClientType = createClient({
   socket: {
     host: envs.redis.cache.host,
@@ -27,9 +35,12 @@ const client: RedisClientType = createClient({
   password: envs.redis.cache.password,
 });
 
+/* ================= CACHE CLASS ================= */
+
 class RedisCache {
   private client: RedisClientType;
   private isReady = false;
+
   private KEY_PREFIX = { USER: 'bq:user', OTP_TOKEN: 'bq:otp-token' };
 
   constructor() {
@@ -56,7 +67,7 @@ class RedisCache {
     });
   }
 
-  /* ---------------- CONNECTION ---------------- */
+  /* ================= CONNECTION ================= */
 
   public async connect() {
     try {
@@ -75,11 +86,11 @@ class RedisCache {
     return this.client;
   }
 
+  /* ================= CORE METHODS ================= */
+
   private async setData(key: string, ttl: number, data: unknown) {
     const client = this.getClient();
-    if (!client) {
-      throw new AppError({ message: 'Redis unavailable', statusCode: 500, code: 'INTERNAL_ERROR' });
-    }
+    if (!client) return;
 
     const strData = typeof data === 'string' ? data : stringifyData(data);
 
@@ -87,103 +98,89 @@ class RedisCache {
       await client.setEx(key, ttl, strData);
     } catch (err) {
       logger.warn('⚠️ Redis set failed:', err);
-      throw err;
     }
   }
 
   private async getData(key: string) {
     const client = this.getClient();
-    if (!client) {
-      throw new AppError({ message: 'Redis unavailable', statusCode: 500, code: 'INTERNAL_ERROR' });
-    }
+    if (!client) return null;
 
     try {
       const data = await client.get(key);
       return data ? parseData(data) : null;
     } catch (err) {
       logger.warn('⚠️ Redis get failed:', err);
-      throw err;
+      return null;
     }
   }
 
   private async deleteData(key: string) {
     const client = this.getClient();
-    if (!client) {
-      throw new AppError({ message: 'Redis unavailable', statusCode: 500, code: 'INTERNAL_ERROR' });
-    }
+    if (!client) return;
 
     try {
       await client.del(key);
     } catch (err) {
       logger.warn('⚠️ Redis delete failed:', err);
-      throw err;
     }
   }
 
-  /* ---------------- GET KEY ---------------- */
+  /* ================= KEY HELPERS ================= */
+
   private getUserKey(userId: string | TId) {
     return `${this.KEY_PREFIX.USER}:${userId}`;
   }
 
-  private getOtpTokenKey(otpToken: string) {
-    return `${this.KEY_PREFIX.OTP_TOKEN}:${otpToken}`;
+  private getOtpTokenKey(token: string) {
+    return `${this.KEY_PREFIX.OTP_TOKEN}:${token}`;
   }
 
-  /* ---------------- USER DB HELPER ---------------- */
+  /* ================= DB HELPER ================= */
 
-  private async getDbUser(userId: string | TId) {
-    return await getUserById({ id: userId });
+  private getDbUser(userId: string | TId) {
+    return getUserById({ id: userId });
   }
 
-  /* ---------------- SET USER CACHE ---------------- */
+  /* ================= USER CACHE ================= */
 
-  public async setUser(user: IUser) {
+  public async setUser(user: Omit<IUser, 'password' | 'reason' | 'status'>) {
     const key = this.getUserKey(user._id);
-    if (!user) return;
-
     await this.setData(key, HOUR * 24, user);
   }
 
-  /* ---------------- GET USER CACHE ---------------- */
-
-  public async getUser(userId: string | TId): Promise<IUser | null> {
-    const client = this.getClient();
-
-    // Redis unavailable → DB direct
-    if (!client) {
-      return await this.getDbUser(userId);
-    }
-
+  public async getUser(
+    userId: string | TId,
+  ): Promise<Omit<IUser, 'password' | 'reason' | 'status'> | null> {
     const key = this.getUserKey(userId);
 
-    const parsedUser = await this.getData(key);
-    if (parsedUser) {
-      return parsedUser;
+    // 1️. Try cache
+    const cachedUser = await this.getData(key);
+    if (cachedUser) {
+      return cachedUser;
     }
 
-    await this.deleteData(key);
-    const user = await this.getDbUser(userId);
-    if (user) await this.setUser(user);
+    // 2️. Fallback to DB
+    const rawUser = await this.getDbUser(userId);
+    if (!rawUser) return null;
+
+    const { status: _, ...user } = rawUser;
+
+    // 3️. Set cache (non-blocking)
+    void this.setUser(user);
 
     return user;
   }
 
-  /* ---------------- UPDATE USER CACHE ---------------- */
-
-  public async updateUser(user: IUser) {
-    if (!user) return;
-    // write-through
+  public async updateUser(user: Omit<IUser, 'password' | 'reason' | 'status'>) {
     await this.setUser(user);
   }
-
-  /* ---------------- DELETE USER CACHE ---------------- */
 
   public async deleteUser(userId: string | TId) {
     const key = this.getUserKey(userId);
     await this.deleteData(key);
   }
 
-  /* ---------------- SET OTP & TOKEN CACHE ---------------- */
+  /* ================= OTP CACHE ================= */
 
   public async setOtpToken(email: string) {
     const otp = generateOtp();
@@ -191,26 +188,17 @@ class RedisCache {
 
     const key = this.getOtpTokenKey(otpToken);
 
-    const sendCount = 1;
+    const data = { otp, email, sendCount: 1 };
 
-    await this.setData(key, MINUTE * 10, { otp, email, sendCount });
+    await this.setData(key, MINUTE * 10, data);
 
-    return { otpToken, sendCount, otp, email };
+    return { otpToken, ...data };
   }
-
-  /* ---------------- GET OTP & TOKEN CACHE ---------------- */
 
   public async getOtpToken(otpToken: string) {
     const key = this.getOtpTokenKey(otpToken);
-
-    const parsedData = (await this.getData(key)) as Awaited<
-      ReturnType<typeof this.setOtpToken>
-    > | null;
-
-    return parsedData;
+    return (await this.getData(key)) as IOtpData | null;
   }
-
-  /* ---------------- UPDATE OTP & TOKEN CACHE ---------------- */
 
   public async updateOtpToken(otpToken: string) {
     const prevData = await this.getOtpToken(otpToken);
@@ -225,27 +213,26 @@ class RedisCache {
 
     const key = this.getOtpTokenKey(otpToken);
 
-    const sendCount = ++prevData.sendCount;
-    const otp = generateOtp();
+    const updated = {
+      ...prevData,
+      sendCount: prevData.sendCount + 1,
+      otp: generateOtp(),
+    };
 
-    await this.setData(key, MINUTE * 10, { ...prevData, sendCount, otp });
+    await this.setData(key, MINUTE * 10, updated);
 
-    return { ...prevData, sendCount, otp } as Awaited<ReturnType<typeof this.setOtpToken>>;
+    return updated;
   }
-
-  /* ---------------- DELETE OTP & TOKEN CACHE ---------------- */
 
   public async deleteOtpToken(otpToken: string) {
     const key = this.getOtpTokenKey(otpToken);
     await this.deleteData(key);
   }
 
-  /* ---------------- CLOSE ---------------- */
+  /* ================= CLOSE ================= */
 
   public async close() {
     try {
-      if (!this.client) return;
-
       await this.client.quit();
       this.isReady = false;
 

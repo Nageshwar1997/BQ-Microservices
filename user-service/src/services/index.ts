@@ -1,5 +1,5 @@
 import { User } from '@/models';
-import type { IUser, TId, TUser } from '@/types';
+import type { IUser, IUserDoc, TId, TUser } from '@/types';
 import { toObjectId } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 
@@ -14,11 +14,11 @@ type TByEmail = Pick<IUser, 'email'> & ILean;
 type TByPhone = Pick<IUser, 'phoneNumber'> & ILean;
 type TByEmailOrPhone = TByEmail | TByPhone;
 
-export const getUserById = async (data: IById): Promise<IUser> => {
+export const getUserById = async (data: IById): Promise<IUser | IUserDoc> => {
   const { id, lean = true, password = false } = data;
   const _id = typeof id === 'string' ? toObjectId(id) : id;
   const baseQuery = User.findById(_id);
-  const query = password ? baseQuery.select('-password') : baseQuery;
+  const query = !password ? baseQuery.select('-password') : baseQuery;
 
   const user = await (lean ? query.lean() : query);
   if (!user) {
@@ -28,19 +28,19 @@ export const getUserById = async (data: IById): Promise<IUser> => {
   return user;
 };
 
-export const getUserByEmail = async (data: TByEmail): Promise<IUser | null> => {
+export const getUserByEmail = async (data: TByEmail): Promise<IUser | IUserDoc | null> => {
   const { lean = true, email } = data;
   const query = User.findOne({ email });
   return await (lean ? query.lean() : query);
 };
 
-export const getUserByPhoneNumber = async (data: TByPhone): Promise<IUser | null> => {
+export const getUserByPhoneNumber = async (data: TByPhone): Promise<IUser | IUserDoc | null> => {
   const { lean = true, phoneNumber } = data;
   const query = User.findOne({ phoneNumber });
   return await (lean ? query.lean() : query);
 };
 
-export const getUserByEmailOrPhone = async (data: TByEmailOrPhone): Promise<IUser> => {
+export const getUserByEmailOrPhone = async (data: TByEmailOrPhone): Promise<IUser | IUserDoc> => {
   const { lean = true, ...rest } = data;
 
   const conditions: Record<keyof typeof rest, string>[] = [];

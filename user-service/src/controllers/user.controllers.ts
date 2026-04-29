@@ -10,5 +10,5 @@ export const getSessionUserController = async (req: Request, res: Response) => {
     throw new AppError({ message: 'User not found', statusCode: 404 });
   }
 
-  res.success(200, 'User details fetched successfully', { data: user });
+  res.success(200, 'User details fetched successfully', { user });
 };
