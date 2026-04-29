@@ -1,6 +1,6 @@
 import type { QUEUE_AND_JOB_NAMES, SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
 import type { TAuthProvider, TRole } from '@beautinique/be-constants';
-import type { TRegister, TSellerRequest } from '@beautinique/be-zod';
+import type { TRegister, TRegisterEmail, TSellerRequest } from '@beautinique/be-zod';
 import type { JobsOptions } from 'bullmq';
 import type { Document, Types } from 'mongoose';
 
@@ -14,13 +14,14 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
-export type TUser = Omit<TRegister, 'confirmPassword' | 'otp'> & {
-  avatar?: string;
-  role: TRole;
-  providers: TAuthProvider[];
-  status: (typeof USER_STATUS)[number];
-  reason?: string | null;
-};
+export type TUser = TRegisterEmail &
+  Omit<TRegister, 'confirmPassword' | 'otp'> & {
+    avatar?: string;
+    role: TRole;
+    providers: TAuthProvider[];
+    status: (typeof USER_STATUS)[number];
+    reason?: string | null;
+  };
 
 export interface IUser extends TUser, IId, ITimestamp {}
 

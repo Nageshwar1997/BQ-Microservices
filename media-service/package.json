@@ -37,7 +37,7 @@
     "@beautinique/be-constants": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.8",
     "@beautinique/be-utils": "^1.0.4",
-    "@beautinique/be-zod": "^1.0.14",
+    "@beautinique/be-zod": "^1.0.15",
     "axios": "^1.15.0",
     "bcryptjs": "^3.0.3",
     "bullmq": "^5.74.1",

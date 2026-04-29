@@ -35,7 +35,7 @@
   "dependencies": {
     "@beautinique/be-classes": "^1.0.1",
     "@beautinique/be-middlewares": "^1.0.8",
-    "@beautinique/be-zod": "^1.0.13",
+    "@beautinique/be-zod": "^1.0.15",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "html-to-text": "^9.0.5",

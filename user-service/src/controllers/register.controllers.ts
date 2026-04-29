@@ -71,7 +71,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
     data: { email, otp },
   });
 
-  res.success(200, 'OTP resent successfully', { sendCount  });
+  res.success(200, 'OTP resent successfully', { sendCount });
 };
 
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
@@ -177,7 +177,12 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   // Delete OTP and Token from Redis
   await redisCache.deleteOtpData(token);
 
-  const { password: _, ...restUser } = 'toObject' in user ? user.toObject() : user;
+  const {
+    password: _,
+    reason: __,
+    status: ___,
+    ...restUser
+  } = 'toObject' in user ? user.toObject() : user;
 
   await redisCache.setUser(restUser);
 
