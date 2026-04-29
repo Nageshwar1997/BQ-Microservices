@@ -41,7 +41,7 @@ class RedisCache {
   private client: RedisClientType;
   private isReady = false;
 
-  private KEY_PREFIX = { USER: 'bq:user', OTP_TOKEN: 'bq:otp-token' };
+  private KEY_PREFIX = { USER: 'bq:user', TOKEN: 'bq:token' };
 
   constructor() {
     this.client = client;
@@ -131,8 +131,8 @@ class RedisCache {
     return `${this.KEY_PREFIX.USER}:${userId}`;
   }
 
-  private getOtpTokenKey(token: string) {
-    return `${this.KEY_PREFIX.OTP_TOKEN}:${token}`;
+  private getTokenKey(token: string) {
+    return `${this.KEY_PREFIX.TOKEN}:${token}`;
   }
 
   /* ================= DB HELPER ================= */
@@ -182,26 +182,26 @@ class RedisCache {
 
   /* ================= OTP CACHE ================= */
 
-  public async setOtpToken(email: string) {
+  public async setOtpData(email: string) {
     const otp = generateOtp();
-    const otpToken = generateTempToken(20);
+    const token = generateTempToken(20);
 
-    const key = this.getOtpTokenKey(otpToken);
+    const key = this.getTokenKey(token);
 
     const data = { otp, email, sendCount: 1 };
 
     await this.setData(key, MINUTE * 10, data);
 
-    return { otpToken, ...data };
+    return { token, ...data };
   }
 
-  public async getOtpToken(otpToken: string) {
-    const key = this.getOtpTokenKey(otpToken);
+  public async getOtpData(token: string) {
+    const key = this.getTokenKey(token);
     return (await this.getData(key)) as IOtpData | null;
   }
 
-  public async updateOtpToken(otpToken: string) {
-    const prevData = await this.getOtpToken(otpToken);
+  public async updateOtpData(token: string) {
+    const prevData = await this.getOtpData(token);
 
     if (!prevData) {
       throw new AppError({
@@ -211,7 +211,7 @@ class RedisCache {
       });
     }
 
-    const key = this.getOtpTokenKey(otpToken);
+    const key = this.getTokenKey(token);
 
     const updated = {
       ...prevData,
@@ -224,8 +224,8 @@ class RedisCache {
     return updated;
   }
 
-  public async deleteOtpToken(otpToken: string) {
-    const key = this.getOtpTokenKey(otpToken);
+  public async deleteOtpData(token: string) {
+    const key = this.getTokenKey(token);
     await this.deleteData(key);
   }
 

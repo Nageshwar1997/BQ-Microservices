@@ -22,8 +22,6 @@ registerRouter[sendOtp.method](
 
 registerRouter[resendOtp.method](
   resendOtp.path,
-  RequestMiddleware.emptyRequest({ body: true }),
-  ZodMiddleware.validateSchema(registerEmailSchema),
   ResponseMiddleware.tryCatch(registerResendOtpController),
 );
 

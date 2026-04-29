@@ -22,22 +22,21 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   }
 
   // Store email in cache
-  const { otpToken, sendCount, otp, email: otpEmail } = await redisCache.setOtpToken(email);
+  const { otp, token } = await redisCache.setOtpData(email);
 
   await bullQueue.addJob({
     queueName: 'email-queue',
     jobName: 'send-otp',
-    data: { email: otpEmail, otp },
+    data: { email, otp },
   });
 
-  res.success(200, 'OTP sent successfully', { data: { otpToken, sendCount, email: otpEmail } });
+  res.success(200, 'OTP sent successfully', { token });
 };
 
 export const registerResendOtpController = async (req: Request, res: Response) => {
-  const rawToken = req.get('Authorization') || '';
-  const otpToken = sanitizeToken(rawToken);
+  const token = sanitizeToken(req.get('Authorization') || '');
 
-  if (!rawToken || !otpToken) {
+  if (!token) {
     throw new AppError({
       message: 'Invalid or expired session',
       statusCode: 400,
@@ -45,12 +44,10 @@ export const registerResendOtpController = async (req: Request, res: Response) =
     });
   }
 
-  const { email } = req.body as TRegisterEmail;
-
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpToken(otpToken);
+  const parsedData = await redisCache.getOtpData(token);
 
-  if (!parsedData || parsedData.email !== email) {
+  if (!parsedData) {
     throw new AppError({
       message: 'OTP session expired or invalid',
       statusCode: 400,
@@ -58,7 +55,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
     });
   }
 
-  const { otp, sendCount } = await redisCache.updateOtpToken(otpToken);
+  const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
   if (sendCount > MAX_RESEND) {
     throw new AppError({
@@ -74,14 +71,13 @@ export const registerResendOtpController = async (req: Request, res: Response) =
     data: { email, otp },
   });
 
-  res.success(200, 'OTP resent successfully', { data: { otpToken, sendCount } });
+  res.success(200, 'OTP resent successfully', { sendCount  });
 };
 
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
-  const rawToken = req.get('Authorization') || '';
-  const otpToken = sanitizeToken(rawToken);
+  const token = sanitizeToken(req.get('Authorization') || '');
 
-  if (!rawToken || !otpToken) {
+  if (!token) {
     throw new AppError({
       message: 'Invalid or expired session',
       statusCode: 400,
@@ -92,7 +88,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const { otp } = req.body as TRegisterOtp;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpToken(otpToken);
+  const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData || parsedData.otp !== otp) {
     throw new AppError({
@@ -102,14 +98,13 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
     });
   }
 
-  res.success(200, 'OTP verified successfully', { data: { otpToken, email: parsedData.email } });
+  res.success(200, 'OTP verified successfully');
 };
 
 export const registerAndSaveController = async (req: Request, res: Response) => {
-  const rawToken = req.get('Authorization') || '';
-  const otpToken = sanitizeToken(rawToken);
+  const token = sanitizeToken(req.get('Authorization') || '');
 
-  if (!rawToken || !otpToken) {
+  if (!token) {
     throw new AppError({
       message: 'Invalid or expired session',
       statusCode: 400,
@@ -117,12 +112,12 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     });
   }
 
-  const { email, firstName, lastName, password, phoneNumber } = req.body as TRegister;
+  const { firstName, lastName, password, phoneNumber } = req.body as TRegister;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpToken(otpToken);
+  const parsedData = await redisCache.getOtpData(token);
 
-  if (!parsedData || parsedData.email !== email) {
+  if (!parsedData) {
     throw new AppError({
       message: 'OTP session expired or invalid',
       statusCode: 400,
@@ -132,7 +127,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   // Check for existing users
   const [emailUser, phoneUser] = await Promise.all([
-    getUserByEmail({ email, lean: false }),
+    getUserByEmail({ email: parsedData.email, lean: false }),
     getUserByPhoneNumber({ phoneNumber, lean: false }),
   ]);
   let user = (emailUser || phoneUser) as IUserDoc | IUser;
@@ -170,7 +165,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     user = await createNewUser({
       firstName,
       lastName,
-      email,
+      email: parsedData.email,
       phoneNumber,
       password: hashedPassword,
       providers: ['MANUAL'],
@@ -180,11 +175,11 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   }
 
   // Delete OTP and Token from Redis
-  await redisCache.deleteOtpToken(otpToken);
+  await redisCache.deleteOtpData(token);
 
   const { password: _, ...restUser } = 'toObject' in user ? user.toObject() : user;
 
   await redisCache.setUser(restUser);
 
-  res.success(201, 'User registered successfully', { user: restUser });
+  res.success(201, 'User registered successfully', { data: restUser });
 };
