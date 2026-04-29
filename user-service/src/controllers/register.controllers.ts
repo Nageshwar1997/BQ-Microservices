@@ -1,6 +1,5 @@
 import { bullQueue, redisCache } from '@/classes';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '@/services';
-import { generateJwtToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
@@ -38,7 +37,11 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   const otpToken = sanitizeToken(rawToken);
 
   if (!rawToken || !otpToken) {
-    throw new AppError({ message: 'Unauthorized', statusCode: 401, code: 'AUTH_ERROR' }); // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+    throw new AppError({
+      message: 'Invalid or expired session',
+      statusCode: 400,
+      code: 'AUTH_ERROR',
+    });
   }
 
   const { email } = req.body as TRegisterEmail;
@@ -49,7 +52,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   if (!parsedData || parsedData.email !== email) {
     throw new AppError({
       message: 'OTP session expired or invalid',
-      statusCode: 401, // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+      statusCode: 400,
       code: 'AUTH_ERROR',
     });
   }
@@ -59,7 +62,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   if (sendCount > MAX_RESEND) {
     throw new AppError({
       message: 'Maximum resend attempts reached',
-      statusCode: 401, // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+      statusCode: 400,
       code: 'AUTH_ERROR',
     });
   }
@@ -78,7 +81,11 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const otpToken = sanitizeToken(rawToken);
 
   if (!rawToken || !otpToken) {
-    throw new AppError({ message: 'Unauthorized', statusCode: 401, code: 'AUTH_ERROR' }); // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+    throw new AppError({
+      message: 'Invalid or expired session',
+      statusCode: 400,
+      code: 'AUTH_ERROR',
+    });
   }
 
   const { otp } = req.body as TRegisterOtp;
@@ -89,7 +96,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   if (!parsedData || parsedData.otp !== otp) {
     throw new AppError({
       message: 'OTP expired or invalid',
-      statusCode: 401, // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+      statusCode: 400,
       code: 'AUTH_ERROR',
     });
   }
@@ -102,7 +109,11 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   const otpToken = sanitizeToken(rawToken);
 
   if (!rawToken || !otpToken) {
-    throw new AppError({ message: 'Unauthorized', statusCode: 401, code: 'AUTH_ERROR' }); // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+    throw new AppError({
+      message: 'Invalid or expired session',
+      statusCode: 400,
+      code: 'AUTH_ERROR',
+    });
   }
 
   const { email, firstName, lastName, password, phoneNumber } = req.body as TRegister;
@@ -112,8 +123,8 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   if (!parsedData || parsedData.email !== email) {
     throw new AppError({
-      message: 'Unauthorized',
-      statusCode: 401, // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+      message: 'OTP session expired or invalid',
+      statusCode: 400,
       code: 'AUTH_ERROR',
     });
   }
@@ -150,7 +161,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
         message: 'Email already exists',
         fieldErrors: { email: ['Email already exists'] },
         code: 'AUTH_ERROR',
-        statusCode: 401, // NOTE - Don't change statusCode anyway, In frontend we handled logic base on it
+        statusCode: 400,
       });
     }
   } else {
@@ -174,7 +185,5 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   await redisCache.setUser(restUser);
 
-  const token = generateJwtToken(user._id);
-
-  res.success(201, 'User registered successfully', { token, user: restUser });
+  res.success(201, 'User registered successfully', { user: restUser });
 };

@@ -1,14 +1,14 @@
 import { METHODS_AND_PATHS } from '@/constants';
-import { getUserDetailsController } from '@/controllers';
+import { getSessionUserController } from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { Router } from 'express';
 
 export const userRouter = Router();
 
-const { me } = METHODS_AND_PATHS.user;
+const { session } = METHODS_AND_PATHS.user;
 
-userRouter[me.method](
-  me.path,
+userRouter[session.method](
+  session.path,
   RequestMiddleware.emptyRequest({ query: true }),
-  ResponseMiddleware.tryCatch(getUserDetailsController),
+  ResponseMiddleware.tryCatch(getSessionUserController),
 );

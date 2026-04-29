@@ -218,7 +218,7 @@ class RedisCache {
     if (!prevData) {
       throw new AppError({
         message: 'OTP session expired or invalid',
-        statusCode: 401,
+        statusCode: 400,
         code: 'AUTH_ERROR',
       });
     }

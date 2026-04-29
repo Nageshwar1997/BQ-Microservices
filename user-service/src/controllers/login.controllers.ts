@@ -16,7 +16,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
       code: 'AUTH_ERROR',
-      statusCode: 401,
+      statusCode: 400,
     });
   }
 
@@ -26,7 +26,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
   if (!isPasswordMatch) {
     throw new AppError({
       message: 'Login Failed',
-      statusCode: 401,
+      statusCode: 400,
       code: 'AUTH_ERROR',
       fieldErrors: { password: ['Wrong password'] },
     });

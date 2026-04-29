@@ -64,7 +64,7 @@ export const METHODS_AND_PATHS = {
       sendOtp: { path: '/send-otp', method: 'post' },
       resendOtp: { path: '/resend-otp', method: 'patch' },
       verifyOtp: { path: '/verify-otp', method: 'post' },
-      saveUser: { path: '/save', method: 'post' },
+      saveUser: { path: '/save-user', method: 'post' },
     },
     password: {
       base: '/password',
@@ -72,7 +72,7 @@ export const METHODS_AND_PATHS = {
   },
   user: {
     base: '/user',
-    me: { method: 'get', path: '/me' },
+    session: { method: 'get', path: '/session' },
   },
 } as const;
 
