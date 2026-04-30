@@ -1,10 +1,6 @@
-import { envs } from '@/envs';
-import type { TId, TUser } from '@/types';
-import { AppError } from '@beautinique/be-classes';
+import type { IUser, IUserDoc, TId, TMinimalUser, TUser } from '@/types';
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { randomBytes } from 'crypto';
-// import axios from 'axios';
-import { sign } from 'jsonwebtoken';
 import { Types } from 'mongoose';
 
 /* ======================= Auth Utils ======================= */
@@ -35,17 +31,18 @@ export const createOAuthDbPayload = async (
   };
 };
 
-export const generateJwtToken = (userId: string | TId) => {
-  const token = sign({ userId }, envs.jwt_secret, { expiresIn: '1d' });
+export const getMinimalUser = (user: IUser | IUserDoc): TMinimalUser => {
+  const {
+    password: _,
+    reason: __,
+    status: ___,
+    ...restUser
+  } = 'toObject' in user ? user.toObject() : user;
 
-  if (!token) {
-    throw new AppError({ message: 'Failed to generate token', statusCode: 500 });
-  }
-
-  return token;
+  return restUser;
 };
 
-/* ======================= Auth Utils Enc ======================= */
+/* ======================= Auth Utils End ======================= */
 
 /* ======================= User Utils Start ======================= */
 

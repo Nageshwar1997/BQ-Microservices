@@ -1,6 +1,7 @@
 import { bullQueue, redisCache } from '@/classes';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '@/services';
 import type { IUser, IUserDoc } from '@/types';
+import { getMinimalUser } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
@@ -177,14 +178,9 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   // Delete OTP and Token from Redis
   await redisCache.deleteOtpData(token);
 
-  const {
-    password: _,
-    reason: __,
-    status: ___,
-    ...restUser
-  } = 'toObject' in user ? user.toObject() : user;
+  const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(restUser);
+  await redisCache.setUser(minUser);
 
-  res.success(201, 'User registered successfully', { user: restUser });
+  res.success(201, 'User registered successfully', { user: minUser });
 };

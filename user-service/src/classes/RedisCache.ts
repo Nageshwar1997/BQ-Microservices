@@ -1,7 +1,7 @@
 import { logger } from '@/configs';
 import { envs } from '@/envs';
 import { getUserById } from '@/services';
-import type { IUser, TId } from '@/types';
+import type { TId, TMinimalUser } from '@/types';
 import { generateOtp, generateTempToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import { HOUR, MINUTE } from '@beautinique/be-constants';
@@ -143,14 +143,12 @@ class RedisCache {
 
   /* ================= USER CACHE ================= */
 
-  public async setUser(user: Omit<IUser, 'password' | 'reason' | 'status'>) {
+  public async setUser(user: TMinimalUser) {
     const key = this.getUserKey(user._id);
     await this.setData(key, HOUR * 24, user);
   }
 
-  public async getUser(
-    userId: string | TId,
-  ): Promise<Omit<IUser, 'password' | 'reason' | 'status'> | null> {
+  public async getUser(userId: string | TId): Promise<TMinimalUser | null> {
     const key = this.getUserKey(userId);
 
     // 1️. Try cache
@@ -171,7 +169,7 @@ class RedisCache {
     return user;
   }
 
-  public async updateUser(user: Omit<IUser, 'password' | 'reason' | 'status'>) {
+  public async updateUser(user: TMinimalUser) {
     await this.setUser(user);
   }
 

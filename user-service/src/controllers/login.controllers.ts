@@ -1,14 +1,13 @@
 import { githubAuth, googleAuth, linkedinAuth, redisCache } from '@/classes';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '@/services';
-import type { IUser } from '@/types';
-import { createOAuthDbPayload, generateJwtToken } from '@/utils';
+import { createOAuthDbPayload, getMinimalUser } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 export const manualLoginController = async (req: Request, res: Response) => {
   const { email, password, phoneNumber } = req.body ?? {};
-  const user = (await getUserByEmailOrPhone({ email, phoneNumber })) as IUser;
+  const user = await getUserByEmailOrPhone({ email, phoneNumber });
 
   if (!user.providers.includes('MANUAL')) {
     // Check if user has MANUAL login
@@ -33,16 +32,16 @@ export const manualLoginController = async (req: Request, res: Response) => {
     });
   }
 
-  const { password: _, reason: __, status: ___, ...restUser } = user;
+  const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(restUser);
+  await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: restUser });
+  res.success(200, 'User logged in successfully', { user: minUser });
 };
 
 export const googleRedirectController = async (_req: Request, res: Response) => {
   const url = googleAuth.url();
-  res.success(200, "Google's login page", { data: url });
+  res.success(200, "Google's login page", { url });
 };
 
 export const googleCallbackController = async (req: Request, res: Response) => {
@@ -83,16 +82,16 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     user = await createNewUser(payload);
   }
 
-  await redisCache.setUser(user);
+  const minUser = getMinimalUser(user);
 
-  const token = generateJwtToken(user._id);
+  await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { data: token });
+  res.success(200, 'User logged in successfully', { user: minUser });
 };
 
 export const linkedinRedirectController = async (_req: Request, res: Response) => {
   const url = linkedinAuth.url();
-  res.success(200, 'LinkedIn login page', { data: url });
+  res.success(200, 'LinkedIn login page', { url });
 };
 
 export const linkedinCallbackController = async (req: Request, res: Response) => {
@@ -135,16 +134,16 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
     user = await createNewUser(payload);
   }
 
-  await redisCache.setUser(user);
+  const minUser = getMinimalUser(user);
 
-  const token = generateJwtToken(user._id);
+  await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { data: token });
+  res.success(200, 'User logged in successfully', { user: minUser });
 };
 
 export const githubRedirectController = async (_req: Request, res: Response) => {
   const url = githubAuth.url();
-  res.success(200, 'GitHub login page', { data: url });
+  res.success(200, 'GitHub login page', { url });
 };
 
 export const githubCallbackController = async (req: Request, res: Response) => {
@@ -186,9 +185,9 @@ export const githubCallbackController = async (req: Request, res: Response) => {
     user = await createNewUser(payload);
   }
 
-  await redisCache.setUser(user);
+  const minUser = getMinimalUser(user);
 
-  const token = generateJwtToken(user._id);
+  await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { data: token });
+  res.success(200, 'User logged in successfully', { user: minUser });
 };

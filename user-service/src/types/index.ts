@@ -25,6 +25,8 @@ export type TUser = TRegisterEmail &
 
 export interface IUser extends TUser, IId, ITimestamp {}
 
+export type TMinimalUser = Omit<IUser, 'password' | 'reason' | 'status'>;
+
 export interface IUserDoc extends IUser, Document {}
 
 export interface ISeller extends Pick<IUser, 'status' | 'reason'> {
