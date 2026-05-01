@@ -68,6 +68,12 @@ export const METHODS_AND_PATHS = {
     },
     password: {
       base: '/password',
+      forgot: {
+        sendOtp: { path: '/forgot-send-otp', method: 'post' },
+        resendOtp: { path: '/forgot-resend-otp', method: 'patch' },
+        verifyOtp: { path: '/forgot-verify-otp', method: 'post' },
+        save: { path: '/forgot-save', method: 'post' },
+      },
     },
   },
   user: {

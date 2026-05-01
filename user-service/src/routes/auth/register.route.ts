@@ -34,7 +34,7 @@ registerRouter[verifyOtp.method](
 
 registerRouter[saveUser.method](
   saveUser.path,
-  RequestMiddleware.emptyRequest({ body: true, file: false }),
+  RequestMiddleware.emptyRequest({ body: true }),
   ZodMiddleware.validateSchema(registerSchema),
   ResponseMiddleware.tryCatch(registerAndSaveController),
 );
