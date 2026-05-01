@@ -41,9 +41,6 @@ const {
   IS_DEV,
 
   // J
-
-  JWT_SECRET,
-
   // K
   // L
 
@@ -122,9 +119,6 @@ export const envs = {
   is_dev,
 
   // J
-
-  jwt_secret: JWT_SECRET,
-
   // K
   // L
   // M
