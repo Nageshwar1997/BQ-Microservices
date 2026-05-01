@@ -37,5 +37,14 @@
     "bullmq": "^5.74.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nageshwar1997/BQ-Microservice.git",
+    "directory": "worker-service"
+  },
+  "homepage": "https://github.com/Nageshwar1997/BQ-Microservice/tree/main/worker-service#readme",
+  "bugs": {
+    "url": "https://github.com/Nageshwar1997/BQ-Microservice/issues"
   }
 }

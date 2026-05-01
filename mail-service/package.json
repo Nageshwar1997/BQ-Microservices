@@ -40,5 +40,14 @@
     "express": "^5.2.1",
     "html-to-text": "^9.0.5",
     "nodemailer": "^8.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nageshwar1997/BQ-Microservice.git",
+    "directory": "mail-service"
+  },
+  "homepage": "https://github.com/Nageshwar1997/BQ-Microservice/tree/main/mail-service#readme",
+  "bugs": {
+    "url": "https://github.com/Nageshwar1997/BQ-Microservice/issues"
   }
 }

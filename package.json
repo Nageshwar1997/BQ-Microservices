@@ -9,5 +9,12 @@
     "all": "npm run install:all && npm run dev:all",
     "bootstrap": "npm run install:all && npm run dev:all"
   },
-  "devDependencies": {}
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nageshwar1997/BQ-Microservice.git"
+  },
+  "homepage": "https://github.com/Nageshwar1997/BQ-Microservice#readme",
+  "bugs": {
+    "url": "https://github.com/Nageshwar1997/BQ-Microservice/issues[A"
+  }
 }

@@ -46,5 +46,14 @@
     "googleapis": "^171.4.0",
     "mongoose": "^9.4.1",
     "redis": "^5.12.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nageshwar1997/BQ-Microservice.git",
+    "directory": "user-service"
+  },
+  "homepage": "https://github.com/Nageshwar1997/BQ-Microservice/tree/main/user-service#readme",
+  "bugs": {
+    "url": "https://github.com/Nageshwar1997/BQ-Microservice/issues"
   }
 }
