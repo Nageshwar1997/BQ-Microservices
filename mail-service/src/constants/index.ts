@@ -1,4 +1,4 @@
-import { envs } from '@/envs';
+import { envs } from '../envs';
 
 export const ORIGINS = Object.values(envs.url.frontend);
 

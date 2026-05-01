@@ -1,4 +1,4 @@
-import { envs } from '@/envs';
+import { envs } from '../envs';
 
 export const baseHtmlLayout = (title: string, description: string, content: string) => {
   return `

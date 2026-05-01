@@ -1,7 +1,7 @@
-import { sendOtpController } from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
 import { sendOtpMailSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
+import { sendOtpController } from '../controllers';
 
 export const router = Router();
 

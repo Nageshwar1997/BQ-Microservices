@@ -1,8 +1,8 @@
-import { logger } from '@/configs';
-import { envs } from '@/envs';
-import { getOtpHtmlMessage } from '@/utils';
 import { convert } from 'html-to-text';
 import { createTransport } from 'nodemailer';
+import { logger } from '../configs';
+import { envs } from '../envs';
+import { getOtpHtmlMessage } from '../utils';
 
 const config = createTransport({
   host: envs.mail.host,

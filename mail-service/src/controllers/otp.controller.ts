@@ -1,7 +1,7 @@
-import { logger } from '@/configs';
-import { transporter } from '@/classes';
 import type { TSendOtpMail } from '@beautinique/be-zod';
 import type { Request, Response } from 'express';
+import { transporter } from '../classes';
+import { logger } from '../configs';
 
 export const sendOtpController = async (req: Request, res: Response) => {
   const { email, otp } = req.body as TSendOtpMail;
