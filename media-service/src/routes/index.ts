@@ -19,6 +19,7 @@ import {
   singleMediaUploadController,
 } from '../controllers';
 import { envs } from '../envs';
+import { METHODS_AND_PATHS } from '../constants';
 
 export const router = Router();
 
