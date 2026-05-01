@@ -1,8 +1,8 @@
-import { type Job, Worker } from 'bullmq';
-import { WORKER_CONFIGS } from '@/constants';
-import { logger } from '@/configs';
-import type { IMedia, TJobName, TQueueKey, TResourceType } from '@/types';
 import type { TSendOtpMail } from '@beautinique/be-zod';
+import { type Job, Worker } from 'bullmq';
+import { logger } from '../configs';
+import { WORKER_CONFIGS } from '../constants';
+import type { IMedia, TJobName, TQueueKey, TResourceType } from '../types';
 import { mailService } from './apis';
 import { mediaService } from './apis/MediaService';
 

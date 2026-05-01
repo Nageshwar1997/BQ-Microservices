@@ -1,5 +1,5 @@
-import { envs } from '@/envs';
 import type { ConnectionOptions } from 'bullmq';
+import { envs } from '../envs';
 
 export const ORIGINS = Object.values(envs.url.frontend);
 

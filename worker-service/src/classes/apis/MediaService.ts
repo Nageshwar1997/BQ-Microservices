@@ -1,6 +1,6 @@
-import { envs } from '@/envs';
+import { envs } from '../../envs';
+import type { IMedia, TResourceType } from '../../types';
 import { ApiRequest } from './ApiRequest';
-import type { IMedia, TResourceType } from '@/types';
 
 class MediaService extends ApiRequest {
   constructor() {

@@ -1,6 +1,6 @@
-import { envs } from '@/envs';
-import { ApiRequest } from './ApiRequest';
 import type { TSendOtpMail } from '@beautinique/be-zod';
+import { envs } from '../../envs';
+import { ApiRequest } from './ApiRequest';
 
 class MailService extends ApiRequest {
   constructor() {
