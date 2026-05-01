@@ -1,6 +1,6 @@
-import { envs } from '@/envs';
-import type { TResourceType, TStatus } from '@/types';
 import type { ConnectionOptions } from 'bullmq';
+import { envs } from '../envs';
+import type { TResourceType, TStatus } from '../types';
 
 export const ORIGINS = Object.values(envs.url.frontend);
 

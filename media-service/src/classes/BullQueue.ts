@@ -1,7 +1,7 @@
 import { type ConnectionOptions, Queue } from 'bullmq';
-import { logger } from '@/configs';
-import { QUEUE_CONFIGS } from '@/constants';
-import type { IQueueJob, TQueueKey } from '@/types';
+import { logger } from '../configs';
+import { QUEUE_CONFIGS } from '../constants';
+import type { IQueueJob, TQueueKey } from '../types';
 
 class BullQueue {
   private connection: ConnectionOptions;

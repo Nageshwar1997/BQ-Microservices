@@ -1,6 +1,6 @@
-import { RESOURCES, STATUSES, STATUS_MAP } from '@/constants';
-import type { TMediaDoc } from '@/types';
 import { Schema, Types, model } from 'mongoose';
+import { RESOURCES, STATUSES, STATUS_MAP } from '../constants';
+import type { TMediaDoc } from '../types';
 
 const MediaSchema = new Schema<TMediaDoc>(
   {

@@ -1,9 +1,9 @@
-import { logger } from '@/configs';
-import { STATUS_MAP } from '@/constants';
-import { Media } from '@/models';
-import type { IBaseMedia, IMedia } from '@/types';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
+import { logger } from '../configs';
+import { STATUS_MAP } from '../constants';
+import { Media } from '../models';
+import type { IBaseMedia, IMedia } from '../types';
 
 export const createUnusedSingleMediaController = async (req: Request, res: Response) => {
   const payload = req.body as IBaseMedia;

@@ -1,10 +1,10 @@
-import { Router } from 'express';
-import { GATEWAY_METHODS_AND_PATHS } from '@/constants';
 import {
   MulterMiddleware,
   RequestMiddleware,
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
+import { Router } from 'express';
+import { GATEWAY_METHODS_AND_PATHS } from '../constants';
 import {
   createUnusedMultipleMediaController,
   createUnusedSingleMediaController,
@@ -18,8 +18,8 @@ import {
   multipleMediaUploadController,
   singleMediaRemoveController,
   singleMediaUploadController,
-} from '@/controllers';
-import { envs } from '@/envs';
+} from '../controllers';
+import { envs } from '../envs';
 
 export const router = Router();
 

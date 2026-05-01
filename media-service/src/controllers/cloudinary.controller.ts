@@ -1,8 +1,8 @@
-import { bullQueue, cloudinary } from '@/classes';
-import type { TResourceType } from '@/types';
-import { generateBaseMediaPayload } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
+import { bullQueue, cloudinary } from '../classes';
+import type { TResourceType } from '../types';
+import { generateBaseMediaPayload } from '../utils';
 
 export const singleMediaUploadController = async (req: Request, res: Response) => {
   const file = req.file;

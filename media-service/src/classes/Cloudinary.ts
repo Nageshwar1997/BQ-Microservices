@@ -1,6 +1,10 @@
-import { logger } from '@/configs';
-import { MIME_TO_FORMAT } from '@/constants';
-import { envs } from '@/envs';
+import { AppError } from '@beautinique/be-classes';
+import { FILE_MIME } from '@beautinique/be-constants';
+import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
+import { randomUUID } from 'crypto';
+import { logger } from '../configs';
+import { MIME_TO_FORMAT } from '../constants';
+import { envs } from '../envs';
 import type {
   IMultipleRemover,
   IMultipleUploader,
@@ -10,11 +14,7 @@ import type {
   IUploader,
   IUploaderBase,
   TResourceType,
-} from '@/types';
-import { AppError } from '@beautinique/be-classes';
-import { FILE_MIME } from '@beautinique/be-constants';
-import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
-import { randomUUID } from 'crypto';
+} from '../types';
 import { bullQueue } from './BullQueue';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';

@@ -1,6 +1,6 @@
-import type { TId } from '@/types';
 import type { UploadApiResponse } from 'cloudinary';
 import { Types } from 'mongoose';
+import type { TId } from '../types';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;

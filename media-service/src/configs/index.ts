@@ -1,6 +1,6 @@
 import { LoggerMiddleware } from '@beautinique/be-middlewares';
-import { envs } from '@/envs';
 import { type ConnectOptions, connection } from 'mongoose';
+import { envs } from '../envs';
 
 export const databaseConfigs = {
   uri: envs.mongo_uri,

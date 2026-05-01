@@ -1,6 +1,6 @@
-import type { QUEUE_AND_JOB_NAMES, RESOURCES, SERVICES, STATUSES } from '@/constants';
 import type { JobsOptions } from 'bullmq';
 import type { Types } from 'mongoose';
+import type { QUEUE_AND_JOB_NAMES, RESOURCES, SERVICES, STATUSES } from '../constants';
 
 export type TId = Types.ObjectId;
 export interface IId {
