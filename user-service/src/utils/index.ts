@@ -1,7 +1,7 @@
-import type { IUser, IUserDoc, TId, TMinimalUser, TUser } from '@/types';
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
+import type { IUser, IUserDoc, TId, TMinimalUser, TUser } from '../types';
 
 /* ======================= Auth Utils ======================= */
 

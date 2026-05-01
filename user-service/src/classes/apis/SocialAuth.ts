@@ -1,7 +1,7 @@
-import { google } from 'googleapis';
-import { ApiRequest } from './ApiRequest';
 import type { TAuthProvider } from '@beautinique/be-constants';
-import { envs } from '@/envs';
+import { google } from 'googleapis';
+import { envs } from '../../envs';
+import { ApiRequest } from './ApiRequest';
 
 function getSocialAuthRedirectURL(provider: Exclude<TAuthProvider, 'MANUAL'>) {
   const redirectMap: Partial<Record<Exclude<TAuthProvider, 'MANUAL'>, string>> = {

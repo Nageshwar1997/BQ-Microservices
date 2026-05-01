@@ -1,4 +1,7 @@
-import { METHODS_AND_PATHS } from '@/constants';
+import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
+import { loginSchema } from '@beautinique/be-zod';
+import { Router } from 'express';
+import { METHODS_AND_PATHS } from '../../constants';
 import {
   githubCallbackController,
   githubRedirectController,
@@ -7,10 +10,7 @@ import {
   linkedinCallbackController,
   linkedinRedirectController,
   manualLoginController,
-} from '@/controllers';
-import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
-import { loginSchema } from '@beautinique/be-zod';
-import { Router } from 'express';
+} from '../../controllers';
 
 export const loginRouter = Router();
 

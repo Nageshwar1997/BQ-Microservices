@@ -1,8 +1,8 @@
-import type { QUEUE_AND_JOB_NAMES, SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
 import type { TAuthProvider, TRole } from '@beautinique/be-constants';
 import type { TRegister, TRegisterEmail, TSellerRequest } from '@beautinique/be-zod';
 import type { JobsOptions } from 'bullmq';
 import type { Document, Types } from 'mongoose';
+import type { QUEUE_AND_JOB_NAMES, SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants';
 
 export type TId = Types.ObjectId;
 export interface IId {

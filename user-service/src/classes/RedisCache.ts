@@ -1,12 +1,12 @@
-import { logger } from '@/configs';
-import { envs } from '@/envs';
-import { getUserById } from '@/services';
-import type { TId, TMinimalUser } from '@/types';
-import { generateOtp, generateTempToken } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import { HOUR, MINUTE } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
+import { logger } from '../configs';
+import { envs } from '../envs';
+import { getUserById } from '../services';
+import type { TId, TMinimalUser } from '../types';
+import { generateOtp, generateTempToken } from '../utils';
 
 interface IOtpData {
   otp: string;

@@ -1,7 +1,7 @@
-import { METHODS_AND_PATHS } from '@/constants';
-import { getSessionUserController } from '@/controllers';
 import { RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import { Router } from 'express';
+import { METHODS_AND_PATHS } from '../../constants';
+import { getSessionUserController } from '../../controllers';
 
 export const userRouter = Router();
 

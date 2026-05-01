@@ -1,6 +1,6 @@
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
 import { AppError, type AppSuccess } from '@beautinique/be-classes';
-import { API_ROUTES_AND_METHODS } from '@/constants';
+import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import { API_ROUTES_AND_METHODS } from '../../constants';
 
 export class ApiRequest {
   private instance: AxiosInstance;

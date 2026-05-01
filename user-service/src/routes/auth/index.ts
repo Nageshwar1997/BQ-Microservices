@@ -1,9 +1,9 @@
 import { Router } from 'express';
-import { registerRouter } from './register.route';
+import { METHODS_AND_PATHS } from '../../constants';
 import { loginRouter } from './login.route';
-import { passwordRouter } from './password.route';
-import { METHODS_AND_PATHS } from '@/constants';
 import { logoutRouter } from './logout.route';
+import { passwordRouter } from './password.route';
+import { registerRouter } from './register.route';
 
 export const authRouter = Router();
 

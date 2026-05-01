@@ -1,9 +1,9 @@
-import { githubAuth, googleAuth, linkedinAuth, redisCache } from '@/classes';
-import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '@/services';
-import { createOAuthDbPayload, getMinimalUser } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
+import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes';
+import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services';
+import { createOAuthDbPayload, getMinimalUser } from '../utils';
 
 export const manualLoginController = async (req: Request, res: Response) => {
   const { email, password, phoneNumber } = req.body ?? {};

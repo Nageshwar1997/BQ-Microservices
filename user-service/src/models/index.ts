@@ -1,7 +1,7 @@
-import { SELLER_APPROVAL_STATUS, USER_STATUS } from '@/constants';
-import type { ISeller, ISellerDoc, IUserDoc, IWishlistDoc } from '@/types';
 import { COUNTRIES, ROLES, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/be-constants';
 import { Schema, model } from 'mongoose';
+import { SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants';
+import type { ISeller, ISellerDoc, IUserDoc, IWishlistDoc } from '../types';
 
 const userSchema = new Schema<IUserDoc>(
   {

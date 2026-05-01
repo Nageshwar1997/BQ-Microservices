@@ -1,6 +1,6 @@
-import { redisCache } from '@/classes';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
+import { redisCache } from '../classes';
 
 export const getSessionUserController = async (req: Request, res: Response) => {
   const userId = req.query?.userId as string;

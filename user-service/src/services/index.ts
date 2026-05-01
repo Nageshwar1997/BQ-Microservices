@@ -1,7 +1,7 @@
-import { User } from '@/models';
-import type { IUser, IUserDoc, TId, TUser } from '@/types';
-import { toObjectId } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
+import { User } from '../models';
+import type { IUser, IUserDoc, TId, TUser } from '../types';
+import { toObjectId } from '../utils';
 
 interface ILean {
   lean?: boolean;

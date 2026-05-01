@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import { userRouter } from './user';
+import { METHODS_AND_PATHS } from '../constants';
 import { authRouter } from './auth';
-import { METHODS_AND_PATHS } from '@/constants';
+import { userRouter } from './user';
 
 export const router = Router();
 

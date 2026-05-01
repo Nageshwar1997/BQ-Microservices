@@ -1,13 +1,13 @@
-import { METHODS_AND_PATHS } from '@/constants';
+import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
+import { registerEmailSchema, registerOtpSchema, registerSchema } from '@beautinique/be-zod';
+import { Router } from 'express';
+import { METHODS_AND_PATHS } from '../../constants';
 import {
   registerAndSaveController,
   registerResendOtpController,
   registerSendOtpController,
   registerVerifyOtpController,
-} from '@/controllers';
-import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
-import { registerEmailSchema, registerOtpSchema, registerSchema } from '@beautinique/be-zod';
-import { Router } from 'express';
+} from '../../controllers';
 
 export const registerRouter = Router();
 

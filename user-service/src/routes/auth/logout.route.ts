@@ -1,5 +1,5 @@
-import { METHODS_AND_PATHS } from '@/constants';
 import { type Request, type Response, Router } from 'express';
+import { METHODS_AND_PATHS } from '../../constants';
 
 export const logoutRouter = Router();
 

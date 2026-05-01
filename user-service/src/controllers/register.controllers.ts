@@ -1,13 +1,13 @@
-import { bullQueue, redisCache } from '@/classes';
-import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '@/services';
-import type { IUser, IUserDoc } from '@/types';
-import { getMinimalUser } from '@/utils';
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
 import type { TRegister, TRegisterEmail, TRegisterOtp } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
+import { bullQueue, redisCache } from '../classes';
+import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services';
+import type { IUser, IUserDoc } from '../types';
+import { getMinimalUser } from '../utils';
 
 export const registerSendOtpController = async (req: Request, res: Response) => {
   const { email } = req.body as TRegisterEmail;
