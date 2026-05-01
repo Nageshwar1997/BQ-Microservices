@@ -4,7 +4,7 @@ import { ApiRequest } from './ApiRequest';
 
 class MediaService extends ApiRequest {
   constructor() {
-    super(`${envs.url.service.media}/media-service/api/v1`);
+    super(`${envs.url.service.media}/api/v1`);
   }
 
   // Cloudinary Workers

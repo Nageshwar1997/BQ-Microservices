@@ -4,7 +4,7 @@ import { ApiRequest } from './ApiRequest';
 
 class MailService extends ApiRequest {
   constructor() {
-    super(`${envs.url.service.mail}/mail-service/api/v1`);
+    super(`${envs.url.service.mail}/api/v1`);
   }
 
   public async sendOtp(data: TSendOtpMail) {

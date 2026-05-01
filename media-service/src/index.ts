@@ -1,19 +1,19 @@
-import 'dotenv/config';
-import path from 'path';
-import express, { type Request, type Response } from 'express';
-import { parse } from 'qs';
-import { envs } from './envs';
-import { router } from './routes';
 import { connectToDB } from '@beautinique/be-configs';
-import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
 import {
   CorsMiddleware,
   DatabaseMiddleware,
   RequestMiddleware,
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
-import { ORIGINS } from './constants';
+import 'dotenv/config';
+import express, { type Request, type Response } from 'express';
+import path from 'path';
+import { parse } from 'qs';
 import { bullQueue } from './classes';
+import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
+import { ORIGINS } from './constants';
+import { envs } from './envs';
+import { router } from './routes';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -45,12 +45,10 @@ app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Media Service API'));
 
 // Health Route
-app.get('/media-service/api/v1/health', (_: Request, res: Response) =>
-  res.success(200, 'Media Service is healthy'),
-);
+app.get('/health', (_: Request, res: Response) => res.success(200, 'Media Service is healthy'));
 
 // API Routes
-app.use('/media-service/api/v1', router);
+app.use('/api/v1', router);
 
 /* ---------------- ERROR HANDLING ---------------- */
 

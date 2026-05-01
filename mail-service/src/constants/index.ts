@@ -2,7 +2,7 @@ import { envs } from '../envs';
 
 export const ORIGINS = Object.values(envs.url.frontend);
 
-export const GATEWAY_METHODS_AND_PATHS = {
+export const METHODS_AND_PATHS = {
   auth: {
     base: '/auth',
     login: {

@@ -35,17 +35,17 @@ app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/mail-service', (_: Request, res: Response) =>
+app.get('/', (_: Request, res: Response) =>
   res.success(200, 'Welcome to the Mail Service API'),
 );
 
 // Health Route
-app.get('/mail-service/health', (_: Request, res: Response) =>
+app.get('/health', (_: Request, res: Response) =>
   res.success(200, 'Mail Service is healthy'),
 );
 
 // API Routes
-app.use('/mail-service/api/v1', router);
+app.use('/api/v1', router);
 
 /* ---------------- ERROR HANDLING ---------------- */
 

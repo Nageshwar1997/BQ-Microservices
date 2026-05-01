@@ -45,12 +45,12 @@ app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the User Service API'));
 
 // Health Route
-app.get('/user-service/api/v1/health', (_: Request, res: Response) =>
+app.get('/health', (_: Request, res: Response) =>
   res.success(200, 'User Service is healthy'),
 );
 
 // API Routes
-app.use('/user-service/api/v1', router);
+app.use('/api/v1', router);
 
 /* ---------------- ERROR HANDLING ---------------- */
 

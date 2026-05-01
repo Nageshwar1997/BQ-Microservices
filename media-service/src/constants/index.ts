@@ -15,7 +15,7 @@ export const MIME_TO_FORMAT: Record<TResourceType, Record<string, string>> = {
   video: { 'video/mp4': 'mp4', 'video/webm': 'webm' },
 } as const;
 
-export const GATEWAY_METHODS_AND_PATHS = {
+export const METHODS_AND_PATHS = {
   mark_as_unused: {
     base: '/mark-as-unused',
     single: { method: 'post', path: '/single' },

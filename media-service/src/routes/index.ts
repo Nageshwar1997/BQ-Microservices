@@ -4,7 +4,6 @@ import {
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
 import { Router } from 'express';
-import { GATEWAY_METHODS_AND_PATHS } from '../constants';
 import {
   createUnusedMultipleMediaController,
   createUnusedSingleMediaController,
@@ -30,7 +29,7 @@ const {
   mark_as_deleted,
   mark_as_unused,
   mark_as_used,
-} = GATEWAY_METHODS_AND_PATHS;
+} = METHODS_AND_PATHS;
 
 // Cloudinary routes
 
