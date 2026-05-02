@@ -8,13 +8,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
   const file = req.file;
   const { folder, resourceType } = req.body as { folder: string; resourceType: TResourceType };
 
-  if (!file) {
-    throw new AppError({
-      message: 'No file uploaded',
-      statusCode: 400,
-      code: 'VALIDATION_ERROR',
-    });
-  }
+  if (!file) throw new AppError({ message: 'File is required', code: 'BAD_REQUEST' });
 
   const response = await cloudinary.uploadSingle({ file, folder, resourceType });
 

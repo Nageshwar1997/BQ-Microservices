@@ -76,8 +76,7 @@ class Cloudinary {
     if (!allowedFormats.length) {
       throw new AppError({
         message: `Unsupported mime: ${baseMimes.join(', ')}`,
-        statusCode: 400,
-        code: 'UPLOAD_ERROR',
+        code: 'UNSUPPORTED_MEDIA_TYPE',
       });
     }
 
@@ -131,8 +130,7 @@ class Cloudinary {
             return reject(
               new AppError({
                 message: error?.message || `Failed to upload media`,
-                statusCode: 400,
-                code: 'UPLOAD_ERROR',
+                code: 'UNPROCESSABLE_ENTITY',
               }),
             );
           }
@@ -177,8 +175,7 @@ class Cloudinary {
             return reject(
               new AppError({
                 message: error.message || 'Failed to delete media',
-                statusCode: 400,
-                code: 'INTERNAL_ERROR',
+                code: 'UNPROCESSABLE_ENTITY',
               }),
             );
           }

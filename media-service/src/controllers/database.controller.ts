@@ -10,7 +10,7 @@ export const createUnusedSingleMediaController = async (req: Request, res: Respo
   const data = await Media.create(payload);
 
   if (!data) {
-    throw new AppError({ message: 'Media not created', statusCode: 500, code: 'INTERNAL_ERROR' });
+    throw new AppError({ message: 'Failed to create media', code: 'INTERNAL_SERVER_ERROR' });
   }
 
   res.success(200, 'Media created successfully');
@@ -22,7 +22,7 @@ export const createUnusedMultipleMediaController = async (req: Request, res: Res
   const data = await Media.insertMany(payload);
 
   if (!data) {
-    throw new AppError({ message: 'Media not created', statusCode: 500, code: 'INTERNAL_ERROR' });
+    throw new AppError({ message: 'Failed to create media', code: 'INTERNAL_SERVER_ERROR' });
   }
 
   res.success(200, 'Media created successfully');
@@ -32,11 +32,7 @@ export const markAsUsedSingleMediaController = async (req: Request, res: Respons
   const { publicId, relatedTo, metadata, url } = req.body as Partial<IMedia>;
 
   if (!publicId && !url) {
-    throw new AppError({
-      message: 'publicId or url is required',
-      statusCode: 400,
-      code: 'VALIDATION_ERROR',
-    });
+    throw new AppError({ message: 'publicId or url is required', code: 'VALIDATION_ERROR' });
   }
 
   const query = { ...(publicId ? { publicId } : { url }), isDeleted: false };
@@ -53,12 +49,9 @@ export const markAsUsedSingleMediaController = async (req: Request, res: Respons
   const updated = await Media.findOneAndUpdate(query, updateData, { new: true, lean: true });
 
   if (!updated) {
-    throw new AppError({
-      message: 'Media not found or already deleted',
-      statusCode: 404,
-      code: 'NOT_FOUND',
-    });
+    throw new AppError({ message: 'Media not found or already deleted', code: 'NOT_FOUND' });
   }
+
   res.success(200, 'Media updated successfully');
 };
 
@@ -66,11 +59,7 @@ export const markAsUsedMultipleMediaController = async (req: Request, res: Respo
   const { data } = req.body as { data: Partial<IMedia>[] };
 
   if (!Array.isArray(data) || data.length === 0) {
-    throw new AppError({
-      message: 'Payload must be a non-empty array',
-      statusCode: 400,
-      code: 'VALIDATION_ERROR',
-    });
+    throw new AppError({ message: 'Payload must be a non-empty array', code: 'VALIDATION_ERROR' });
   }
 
   // 🔧 build bulk operations
@@ -80,7 +69,6 @@ export const markAsUsedMultipleMediaController = async (req: Request, res: Respo
     if (!publicId && !url) {
       throw new AppError({
         message: 'Each item must have publicId or url',
-        statusCode: 400,
         code: 'VALIDATION_ERROR',
       });
     }
@@ -113,11 +101,7 @@ export const markAsDeletedSingleMediaController = async (req: Request, res: Resp
   const { publicId, url, deletedBy } = req.body as Partial<IMedia>;
 
   if (!publicId && !url) {
-    throw new AppError({
-      message: 'publicId or url is required',
-      statusCode: 400,
-      code: 'VALIDATION_ERROR',
-    });
+    throw new AppError({ message: 'publicId or url is required', code: 'VALIDATION_ERROR' });
   }
 
   const query = { ...(publicId ? { publicId } : { url }), isDeleted: false };
@@ -131,11 +115,7 @@ export const markAsDeletedSingleMediaController = async (req: Request, res: Resp
   const updated = await Media.findOneAndUpdate(query, updateData, { new: true, lean: true });
 
   if (!updated) {
-    throw new AppError({
-      message: 'Media not found or already deleted',
-      statusCode: 404,
-      code: 'NOT_FOUND',
-    });
+    throw new AppError({ message: 'Media not found or already deleted', code: 'NOT_FOUND' });
   }
 
   logger.info('Single media deleted', { publicId: updated.publicId });
@@ -147,11 +127,7 @@ export const markAsDeletedMultipleMediaController = async (req: Request, res: Re
   const payload = req.body as Partial<IMedia>[];
 
   if (!Array.isArray(payload) || payload.length === 0) {
-    throw new AppError({
-      message: 'Payload must be a non-empty array',
-      statusCode: 400,
-      code: 'VALIDATION_ERROR',
-    });
+    throw new AppError({ message: 'Payload must be a non-empty array', code: 'VALIDATION_ERROR' });
   }
 
   const operations = payload.map((item) => {
@@ -160,7 +136,6 @@ export const markAsDeletedMultipleMediaController = async (req: Request, res: Re
     if (!publicId && !url) {
       throw new AppError({
         message: 'Each item must have publicId or url',
-        statusCode: 400,
         code: 'VALIDATION_ERROR',
       });
     }
@@ -188,11 +163,7 @@ export const getNonDeletedSingleMediaController = async (req: Request, res: Resp
   const data = await Media.findOne({ publicId, isDeleted: false });
 
   if (!data) {
-    throw new AppError({
-      message: 'Media not found or already deleted',
-      statusCode: 404,
-      code: 'NOT_FOUND',
-    });
+    throw new AppError({ message: 'Media not found or already deleted', code: 'NOT_FOUND' });
   }
 
   res.success(200, 'Media found successfully', data);
@@ -204,11 +175,7 @@ export const getNonDeletedMultipleMediaController = async (req: Request, res: Re
   const data = await Media.find({ publicId: { $in: publicIds }, isDeleted: false });
 
   if (!data) {
-    throw new AppError({
-      message: 'Media not found or already deleted',
-      statusCode: 404,
-      code: 'NOT_FOUND',
-    });
+    throw new AppError({ message: 'Media not found or already deleted', code: 'NOT_FOUND' });
   }
 
   res.success(200, 'Media found successfully', data);
