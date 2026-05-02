@@ -13,7 +13,6 @@ import { router } from './routes';
 
 const app = express();
 let server: ReturnType<typeof app.listen> | null = null;
-let isTransporterReady = false;
 
 /* ---------------- MIDDLEWARES ---------------- */
 
@@ -39,13 +38,7 @@ app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Mail Service API'));
 
 // Health Route
-app.get('/health', (_: Request, res: Response) => {
-  res.success(200, 'Mail Service is healthy', {
-    status: 'UP',
-    service: 'mail-service',
-    transporter: isTransporterReady ? 'UP' : 'CONNECTING',
-  });
-});
+app.get('/health', (_: Request, res: Response) => res.success(200, 'Mail Service is healthy'));
 
 // API Routes
 app.use('/api/v1', router);
@@ -69,7 +62,6 @@ async function start() {
     transporter
       .connect()
       .then(() => {
-        isTransporterReady = true;
         logger.info('📨 Transporter connected');
       })
       .catch((err) => {
