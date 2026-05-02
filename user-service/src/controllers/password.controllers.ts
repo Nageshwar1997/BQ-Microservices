@@ -1,7 +1,7 @@
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
-import type { TPasswords, TRegisterEmail, TRegisterOtp } from '@beautinique/be-zod';
+import type { TEmail, TOtp, TPasswords } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { bullQueue, redisCache } from '../classes';
@@ -10,7 +10,7 @@ import type { IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
-  const { email } = req.body as TRegisterEmail;
+  const { email } = req.body as TEmail;
   const user = await getUserByEmail({ email });
 
   if (user && !user.providers.includes('MANUAL')) {
@@ -88,7 +88,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
     });
   }
 
-  const { otp } = req.body as TRegisterOtp;
+  const { otp } = req.body as TOtp;
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);

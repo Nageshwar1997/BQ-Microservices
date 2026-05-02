@@ -1,5 +1,5 @@
 import type { TAuthProvider, TRole } from '@beautinique/be-constants';
-import type { TRegister, TRegisterEmail, TSellerRequest } from '@beautinique/be-zod';
+import type { TEmail, TRegister, TSeller } from '@beautinique/be-zod';
 import type { JobsOptions } from 'bullmq';
 import type { Document, Types } from 'mongoose';
 import type { QUEUE_AND_JOB_NAMES, SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants';
@@ -14,7 +14,7 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
-export type TUser = TRegisterEmail &
+export type TUser = TEmail &
   Omit<TRegister, 'confirmPassword' | 'otp'> & {
     avatar?: string;
     role: TRole;
@@ -32,10 +32,10 @@ export interface IUserDoc extends IUser, Document {}
 export interface ISeller extends Pick<IUser, 'status' | 'reason'> {
   user: TId;
   approvalStatus: (typeof SELLER_APPROVAL_STATUS)[number];
-  personalDetails: Omit<TSellerRequest['businessDetails'], 'category'>;
-  businessDetails: TSellerRequest['businessDetails'];
+  personalDetails: Omit<TSeller['businessDetails'], 'category'>;
+  businessDetails: TSeller['businessDetails'];
   requiredDocuments: Record<'gst' | 'itr' | 'addressProof' | 'geoTagging', string>;
-  businessAddress: TSellerRequest['businessAddress'];
+  businessAddress: TSeller['businessAddress'];
 }
 
 export interface ISellerDoc extends ISeller, Document {}
