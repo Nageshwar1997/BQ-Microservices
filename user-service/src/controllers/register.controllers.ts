@@ -16,8 +16,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   if (user && user.providers.includes('MANUAL')) {
     throw new AppError({
       message: 'User already exists, please login',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
+      code: 'CONFLICT',
       fieldErrors: { email: ['Email already exists'] },
     });
   }
@@ -25,11 +24,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   // Store email in cache
   const { otp, token } = await redisCache.setOtpData(email);
 
-  await bullQueue.addJob({
-    queueName: 'email-queue',
-    jobName: 'send-otp',
-    data: { email, otp },
-  });
+  await bullQueue.addJob({ queueName: 'email-queue', jobName: 'send-otp', data: { email, otp } });
 
   res.success(200, 'OTP sent successfully', { token });
 };
@@ -38,39 +33,23 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({
-      message: 'Invalid or expired session',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
   }
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({
-      message: 'OTP session expired or invalid',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
   const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
   if (sendCount > MAX_RESEND) {
-    throw new AppError({
-      message: 'Maximum resend attempts reached',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
   }
 
-  await bullQueue.addJob({
-    queueName: 'email-queue',
-    jobName: 'send-otp',
-    data: { email, otp },
-  });
+  await bullQueue.addJob({ queueName: 'email-queue', jobName: 'send-otp', data: { email, otp } });
 
   res.success(200, 'OTP resent successfully', { sendCount });
 };
@@ -79,11 +58,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({
-      message: 'Invalid or expired session',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
   }
 
   const { otp } = req.body as TOtp;
@@ -92,11 +67,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData || parsedData.otp !== otp) {
-    throw new AppError({
-      message: 'OTP expired or invalid',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
   res.success(200, 'OTP verified successfully');
@@ -106,11 +77,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({
-      message: 'Invalid or expired session',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
   }
 
   const { firstName, lastName, password, phoneNumber } = req.body as TRegister;
@@ -119,11 +86,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({
-      message: 'OTP session expired or invalid',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
   // Check for existing users
@@ -137,8 +100,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     throw new AppError({
       message: 'Phone number already exists',
       fieldErrors: { phoneNumber: ['Phone number already exists'] },
-      code: 'AUTH_ERROR',
-      statusCode: 400,
+      code: 'CONFLICT',
     });
   }
 
@@ -157,8 +119,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
       throw new AppError({
         message: 'Email already exists',
         fieldErrors: { email: ['Email already exists'] },
-        code: 'AUTH_ERROR',
-        statusCode: 400,
+        code: 'CONFLICT',
       });
     }
   } else {

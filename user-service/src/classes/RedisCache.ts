@@ -202,11 +202,7 @@ class RedisCache {
     const prevData = await this.getOtpData(token);
 
     if (!prevData) {
-      throw new AppError({
-        message: 'OTP session expired or invalid',
-        statusCode: 400,
-        code: 'AUTH_ERROR',
-      });
+      throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
     }
 
     const key = this.getTokenKey(token);

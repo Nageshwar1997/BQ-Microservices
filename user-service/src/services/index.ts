@@ -21,9 +21,8 @@ export const getUserById = async (data: IById): Promise<IUser | IUserDoc> => {
   const query = !password ? baseQuery.select('-password') : baseQuery;
 
   const user = await (lean ? query.lean() : query);
-  if (!user) {
-    throw new AppError({ message: 'User not found', statusCode: 404, code: 'NOT_FOUND' });
-  }
+
+  if (!user) throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
 
   return user;
 };
@@ -55,11 +54,10 @@ export const getUserByEmailOrPhone = async (data: TByEmailOrPhone): Promise<IUse
   if (!user) {
     throw new AppError({
       message: 'User not found',
-      statusCode: 404,
       code: 'NOT_FOUND',
       fieldErrors: {
-        ...('email' in rest && rest.email && { email: ['User not found'] }),
-        ...('phoneNumber' in rest && rest.phoneNumber && { phoneNumber: ['User not found'] }),
+        ...('email' in rest && rest.email && { email: ['Invalid email'] }),
+        ...('phoneNumber' in rest && rest.phoneNumber && { phoneNumber: ['Invalid phone number'] }),
       },
     });
   }
@@ -71,7 +69,7 @@ export const createNewUser = async (payload: TUser): Promise<IUser> => {
   const user = await User.create(payload);
 
   if (!user) {
-    throw new AppError({ message: 'User not created', statusCode: 500, code: 'INTERNAL_ERROR' });
+    throw new AppError({ message: 'Failed to create user', code: 'INTERNAL_SERVER_ERROR' });
   }
 
   return user;
@@ -84,7 +82,7 @@ export const updateUser = async (
   const user = await User.findOneAndUpdate(filter, payload, { new: true });
 
   if (!user) {
-    throw new AppError({ message: 'User not found!', statusCode: 500, code: 'INTERNAL_ERROR' });
+    throw new AppError({ message: 'User not found!', code: 'NOT_FOUND' });
   }
 
   return user;

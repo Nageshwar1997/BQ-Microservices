@@ -19,19 +19,14 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
       message: `This account was created using an oAuth (${user.providers.join(
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-      code: 'AUTH_ERROR',
-      statusCode: 400,
+      code: 'AUTHORIZATION_ERROR',
     });
   }
 
   // Store email in cache
   const { otp, token } = await redisCache.setOtpData(email);
 
-  await bullQueue.addJob({
-    queueName: 'email-queue',
-    jobName: 'send-otp',
-    data: { email, otp },
-  });
+  await bullQueue.addJob({ queueName: 'email-queue', jobName: 'send-otp', data: { email, otp } });
 
   res.success(200, 'OTP sent successfully', { token });
 };
@@ -40,39 +35,23 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({
-      message: 'Invalid or expired session',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
   }
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({
-      message: 'OTP session expired or invalid',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
   const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
   if (sendCount > MAX_RESEND) {
-    throw new AppError({
-      message: 'Maximum resend attempts reached',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
   }
 
-  await bullQueue.addJob({
-    queueName: 'email-queue',
-    jobName: 'send-otp',
-    data: { email, otp },
-  });
+  await bullQueue.addJob({ queueName: 'email-queue', jobName: 'send-otp', data: { email, otp } });
 
   res.success(200, 'OTP resent successfully', { sendCount });
 };
@@ -81,11 +60,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({
-      message: 'Invalid or expired session',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
   }
 
   const { otp } = req.body as TOtp;
@@ -94,11 +69,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData || parsedData.otp !== otp) {
-    throw new AppError({
-      message: 'OTP expired or invalid',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
   res.success(200, 'OTP verified successfully');
@@ -108,11 +79,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({
-      message: 'Invalid or expired session',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
   }
 
   const { password } = req.body as TPasswords;
@@ -121,31 +88,22 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({
-      message: 'OTP session expired or invalid',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
   // Check for existing users
   const user = (await getUserByEmail({ email: parsedData.email, lean: false })) as IUserDoc;
 
   if (!user) {
-    throw new AppError({
-      message: 'User not found',
-      statusCode: 404,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
   }
 
-  const currentPassword = bcrypt.compareSync(password, user.password);
+  const isSamePassword = bcrypt.compareSync(password, user.password);
 
-  if (currentPassword) {
+  if (isSamePassword) {
     throw new AppError({
       message: 'New password cannot be same as current password',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
+      code: 'UNPROCESSABLE_ENTITY',
     });
   }
 
@@ -168,11 +126,7 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
   const user = req.user;
 
   if (!user) {
-    throw new AppError({
-      message: 'You are not logged in',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
   }
 
   const { currentPassword, password } = req.body as TChangePassword;
@@ -182,8 +136,7 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
   if (!isCurrentPasswordMatch) {
     throw new AppError({
       message: 'Current password is incorrect',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
+      code: 'VALIDATION_ERROR',
       fieldErrors: { currentPassword: ['Current password is incorrect'] },
     });
   }
@@ -193,8 +146,7 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
   if (isSamePassword) {
     throw new AppError({
       message: 'New password cannot be same as current password',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
+      code: 'UNPROCESSABLE_ENTITY',
       fieldErrors: { password: ['New password cannot be same as current password'] },
     });
   }
@@ -214,16 +166,11 @@ export const setPasswordController = async (req: AuthRequest, res: Response) => 
   const user = req.user;
 
   if (!user) {
-    throw new AppError({
-      message: 'You are not logged in',
-      statusCode: 404,
-      code: 'AUTH_ERROR',
-    });
+    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
   } else if (user.providers.includes('MANUAL')) {
     throw new AppError({
       message: 'Password already set. Please use forgot password.',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
+      code: 'UNPROCESSABLE_ENTITY',
     });
   }
 

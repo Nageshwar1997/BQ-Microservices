@@ -15,8 +15,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
       message: `This account was created using an oAuth (${user.providers.join(
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-      code: 'AUTH_ERROR',
-      statusCode: 400,
+      code: 'AUTHORIZATION_ERROR',
     });
   }
 
@@ -26,9 +25,8 @@ export const manualLoginController = async (req: Request, res: Response) => {
   if (!isPasswordMatch) {
     throw new AppError({
       message: 'Login Failed',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-      fieldErrors: { password: ['Wrong password'] },
+      code: 'VALIDATION_ERROR',
+      fieldErrors: { password: ['Incorrect password'] },
     });
   }
 
@@ -48,18 +46,14 @@ export const googleCallbackController = async (req: Request, res: Response) => {
   const { code } = req.query;
 
   if (!code) {
-    throw new AppError({
-      message: 'No code returned from Google',
-      code: 'VALIDATION_ERROR',
-      statusCode: 400,
-    });
+    throw new AppError({ message: 'No code returned from Google', code: 'BAD_REQUEST' });
   }
 
   // Fetch user info from Google
   const profile = await googleAuth.decode(String(code));
 
   if (!profile) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND', statusCode: 404 });
+    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
   }
 
   // Check if user already exists (email = primary identity)
@@ -98,11 +92,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
   const { code } = req.query;
 
   if (!code) {
-    throw new AppError({
-      message: 'No code returned from LinkedIn',
-      code: 'VALIDATION_ERROR',
-      statusCode: 400,
-    });
+    throw new AppError({ message: 'No code returned from LinkedIn', code: 'BAD_REQUEST' });
   }
 
   // Fetch user info from Google
@@ -111,7 +101,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
   const profile = await linkedinAuth.decode(access_token);
 
   if (!profile) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND', statusCode: 404 });
+    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
   }
 
   // Check if user already exists (email = primary identity)
@@ -150,11 +140,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
   const { code } = req.query;
 
   if (!code) {
-    throw new AppError({
-      message: 'No code returned from GitHub',
-      code: 'VALIDATION_ERROR',
-      statusCode: 400,
-    });
+    throw new AppError({ message: 'No code returned from GitHub', code: 'BAD_REQUEST' });
   }
 
   // Fetch user info from Google
@@ -162,7 +148,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
   const profile = await githubAuth.decode(access_token);
 
   if (!profile) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND', statusCode: 404 });
+    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
   }
 
   // Check if user already exists (email = primary identity)
