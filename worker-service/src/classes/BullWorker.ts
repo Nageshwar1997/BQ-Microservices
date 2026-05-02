@@ -1,4 +1,4 @@
-import type { TSendOtpMail } from '@beautinique/be-zod';
+import type { TEmailOtp } from '@beautinique/be-zod';
 import { type Job, Worker } from 'bullmq';
 import { logger } from '../configs';
 import { WORKER_CONFIGS } from '../constants';
@@ -84,7 +84,7 @@ class BullWorker {
     switch (jobName) {
       case 'send-otp': {
         await this.executeJob(jobName, async () => {
-          const { email, otp } = data as TSendOtpMail;
+          const { email, otp } = data as TEmailOtp;
           logger.info(`📡 Sending OTP -> Mail Service -> ${job.id}`);
           await mailService.sendOtp({ email, otp });
           logger.info(`✅ Sent OTP -> Mail Service -> ${job.id}`);
