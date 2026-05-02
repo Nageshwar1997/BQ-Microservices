@@ -19,7 +19,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
       message: `This account was created using an oAuth (${user.providers.join(
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-      code: 'AUTHORIZATION_ERROR',
+      code: 'UNPROCESSABLE_ENTITY',
     });
   }
 
