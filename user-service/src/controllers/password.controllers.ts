@@ -177,14 +177,14 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
 
   const { currentPassword, password } = req.body as TChangePassword;
 
-  const isMatched = bcrypt.compareSync(currentPassword, user.password);
+  const isSamePassword = bcrypt.compareSync(currentPassword, user.password);
 
-  if (!isMatched) {
+  if (isSamePassword) {
     throw new AppError({
-      message: 'Current password is incorrect',
+      message: 'New password cannot be same as current password',
       statusCode: 400,
       code: 'AUTH_ERROR',
-      fieldErrors: { currentPassword: ['Current password is incorrect'] },
+      fieldErrors: { password: ['New password cannot be same as current password'] },
     });
   }
 

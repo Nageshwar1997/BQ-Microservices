@@ -52,7 +52,7 @@ passwordRouter[forgot.save.method](
 passwordRouter[change.method](
   change.path,
   authenticate,
-  RequestMiddleware.emptyRequest({ body: true, query: true }),
+  RequestMiddleware.emptyRequest({ body: true }),
   ZodMiddleware.validateSchema(changePasswordSchema),
   ResponseMiddleware.tryCatch<AuthRequest>(changePasswordController),
 );
