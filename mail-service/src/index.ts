@@ -1,18 +1,19 @@
+import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import 'dotenv/config';
-import path from 'path';
 import express, { type Request, type Response } from 'express';
+import path from 'path';
 import { parse } from 'qs';
+import { transporter } from './classes';
+import { errorLogger, logger, requestLogger } from './configs';
+import { ORIGINS } from './constants';
 import { envs } from './envs';
 import { router } from './routes';
-import { errorLogger, logger, requestLogger } from './configs';
-import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
-import { ORIGINS } from './constants';
-import { transporter } from './classes';
 
 /* ---------------- APP SETUP ---------------- */
 
 const app = express();
 let server: ReturnType<typeof app.listen> | null = null;
+let isTransporterReady = false;
 
 /* ---------------- MIDDLEWARES ---------------- */
 
@@ -35,14 +36,16 @@ app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/', (_: Request, res: Response) =>
-  res.success(200, 'Welcome to the Mail Service API'),
-);
+app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Mail Service API'));
 
 // Health Route
-app.get('/health', (_: Request, res: Response) =>
-  res.success(200, 'Mail Service is healthy'),
-);
+app.get('/health', (_: Request, res: Response) => {
+  res.success(200, 'Mail Service is healthy', {
+    status: 'UP',
+    service: 'mail-service',
+    transporter: isTransporterReady ? 'UP' : 'CONNECTING',
+  });
+});
 
 // API Routes
 app.use('/api/v1', router);
@@ -62,8 +65,16 @@ async function start() {
       logger.info(`🚀 Server running on port: ${envs.port}`);
     });
 
-    // 🔥 Start workers AFTER server is up
-    await transporter.connect();
+    // 🔥 Connect transporter
+    transporter
+      .connect()
+      .then(() => {
+        isTransporterReady = true;
+        logger.info('📨 Transporter connected');
+      })
+      .catch((err) => {
+        logger.error('❌ Transporter connection failed:', err);
+      });
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);
@@ -76,11 +87,11 @@ async function shutdown() {
   logger.warn('🛑 Shutting down...');
 
   try {
-    // 1️⃣ Close workers
+    // Close transporter
     await transporter.close();
-    logger.info('✅ Workers closed');
+    logger.info('✅ Transporter closed');
 
-    // 2️⃣ Close server gracefully
+    // Close server
     if (server) {
       await new Promise<void>((resolve) => {
         server?.close(() => {
