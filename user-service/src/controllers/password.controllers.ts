@@ -5,8 +5,8 @@ import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@b
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { bullQueue, redisCache } from '../classes';
-import { getUserByEmail, getUserById } from '../services';
-import type { IUserDoc } from '../types';
+import { getUserByEmail, updateUser } from '../services';
+import type { AuthRequest, IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
@@ -164,10 +164,10 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   res.success(201, 'Password reset successfully', { user: minUser });
 };
 
-export const changePasswordController = async (req: Request, res: Response) => {
-  const userId = req.query?.userId as string;
+export const changePasswordController = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
 
-  if (!userId) {
+  if (!user) {
     throw new AppError({
       message: 'You are not logged in',
       statusCode: 400,
@@ -176,17 +176,6 @@ export const changePasswordController = async (req: Request, res: Response) => {
   }
 
   const { currentPassword, password } = req.body as TChangePassword;
-
-  // Check for existing users
-  const user = (await getUserById({ id: userId, lean: false, password: true })) as IUserDoc;
-
-  if (!user) {
-    throw new AppError({
-      message: 'User not found',
-      statusCode: 404,
-      code: 'AUTH_ERROR',
-    });
-  }
 
   const isMatched = bcrypt.compareSync(currentPassword, user.password);
 
@@ -201,35 +190,21 @@ export const changePasswordController = async (req: Request, res: Response) => {
 
   const hashedPassword = bcrypt.hashSync(password, 10);
 
-  user.password = hashedPassword;
-  await user.save();
+  const updatedUser = await updateUser({ _id: user._id }, { password: hashedPassword });
 
-  const minUser = getMinimalUser(user);
+  const minUser = getMinimalUser(updatedUser);
 
   await redisCache.setUser(minUser);
 
   res.success(201, 'Password changed successfully', { user: minUser });
 };
 
-export const setPasswordController = async (req: Request, res: Response) => {
-  const userId = req.query?.userId as string;
-
-  if (!userId) {
-    throw new AppError({
-      message: 'You are not logged in',
-      statusCode: 400,
-      code: 'AUTH_ERROR',
-    });
-  }
-
-  const { password } = req.body as TSetPassword;
-
-  // Check for existing users
-  const user = (await getUserById({ id: userId, lean: false, password: true })) as IUserDoc;
+export const setPasswordController = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
 
   if (!user) {
     throw new AppError({
-      message: 'User not found',
+      message: 'You are not logged in',
       statusCode: 404,
       code: 'AUTH_ERROR',
     });
@@ -241,12 +216,13 @@ export const setPasswordController = async (req: Request, res: Response) => {
     });
   }
 
+  const { password } = req.body as TSetPassword;
+
   const hashedPassword = bcrypt.hashSync(password, 10);
 
-  user.password = hashedPassword;
-  await user.save();
+  const updatedUser = await updateUser({ _id: user._id }, { password: hashedPassword });
 
-  const minUser = getMinimalUser(user);
+  const minUser = getMinimalUser(updatedUser);
 
   await redisCache.setUser(minUser);
 

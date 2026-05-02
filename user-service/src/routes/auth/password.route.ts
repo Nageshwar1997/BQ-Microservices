@@ -16,6 +16,7 @@ import {
   forgotPasswordVerifyOtpController,
   setPasswordController,
 } from '../../controllers';
+import type { AuthRequest } from '../../types';
 
 export const passwordRouter = Router();
 
@@ -49,14 +50,14 @@ passwordRouter[forgot.save.method](
 
 passwordRouter[change.method](
   change.path,
-  RequestMiddleware.emptyRequest({ body: true }),
+  RequestMiddleware.emptyRequest({ body: true, query: true }),
   ZodMiddleware.validateSchema(changePasswordSchema),
-  ResponseMiddleware.tryCatch(changePasswordController),
+  ResponseMiddleware.tryCatch<AuthRequest>(changePasswordController),
 );
 
 passwordRouter[set.method](
   set.path,
   RequestMiddleware.emptyRequest({ body: true }),
   ZodMiddleware.validateSchema(setPasswordSchema),
-  ResponseMiddleware.tryCatch(setPasswordController),
+  ResponseMiddleware.tryCatch<AuthRequest>(setPasswordController),
 );

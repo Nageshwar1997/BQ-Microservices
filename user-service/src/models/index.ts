@@ -25,6 +25,7 @@ userSchema.index(
   { unique: true, partialFilterExpression: { phoneNumber: { $ne: '' } } },
 );
 userSchema.index({ role: 1 });
+userSchema.index({ status: 1 });
 
 const businessAddressSchema = new Schema<ISeller['businessAddress']>(
   {

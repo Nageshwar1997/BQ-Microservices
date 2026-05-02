@@ -76,3 +76,16 @@ export const createNewUser = async (payload: TUser): Promise<IUser> => {
 
   return user;
 };
+
+export const updateUser = async (
+  filter: Partial<Pick<IUser, '_id' | 'email' | 'phoneNumber' | 'status' | 'role'>>,
+  payload: Partial<IUser>,
+): Promise<IUser> => {
+  const user = await User.findOneAndUpdate(filter, payload, { new: true });
+
+  if (!user) {
+    throw new AppError({ message: 'User not found!', statusCode: 500, code: 'INTERNAL_ERROR' });
+  }
+
+  return user;
+};
