@@ -11,7 +11,7 @@ export const authenticate = async (req: AuthRequest, _res: Response, next: NextF
     if (!userId) {
       throw new AppError({
         message: 'You are not logged in',
-        statusCode: 400,
+        statusCode: 401,
         code: 'AUTH_ERROR',
       });
     }
@@ -43,7 +43,7 @@ export const authorize =
       if (!userId) {
         throw new AppError({
           message: 'You are not logged in',
-          statusCode: 400,
+          statusCode: 401,
           code: 'AUTH_ERROR',
         });
       }
