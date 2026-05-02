@@ -35,7 +35,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
+    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
   }
 
   //  Get parsed data from cache
@@ -60,7 +60,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
+    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
   }
 
   const { otp } = req.body as TOtp;
@@ -79,7 +79,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
+    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
   }
 
   const { password } = req.body as TPasswords;

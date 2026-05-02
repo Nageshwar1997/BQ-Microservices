@@ -33,7 +33,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
+    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
   }
 
   //  Get parsed data from cache
@@ -58,7 +58,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
+    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
   }
 
   const { otp } = req.body as TOtp;
@@ -77,7 +77,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   const token = sanitizeToken(req.get('Authorization') || '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'VALIDATION_ERROR' });
+    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
   }
 
   const { firstName, lastName, password, phoneNumber } = req.body as TRegister;
