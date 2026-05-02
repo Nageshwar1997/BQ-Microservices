@@ -24,13 +24,9 @@ export class ApiRequest {
         throw new AppError({ message, globalErrors, fieldErrors, statusCode, code });
       }
       if (error instanceof Error) {
-        throw new AppError({ message: error.message, statusCode: 500, code: 'INTERNAL_ERROR' });
+        throw new AppError({ message: error.message, code: 'INTERNAL_SERVER_ERROR' });
       }
-      throw new AppError({
-        message: 'Something went wrong!',
-        statusCode: 500,
-        code: 'INTERNAL_ERROR',
-      });
+      throw new AppError({ message: 'Something went wrong!', code: 'INTERNAL_SERVER_ERROR' });
     }
   };
 }
