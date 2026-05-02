@@ -1,17 +1,25 @@
 import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
-import { emailSchema, otpSchema, passwordsSchema } from '@beautinique/be-zod';
+import {
+  changePasswordSchema,
+  emailSchema,
+  otpSchema,
+  passwordsSchema,
+  setPasswordSchema,
+} from '@beautinique/be-zod';
 import { Router } from 'express';
 import { METHODS_AND_PATHS } from '../../constants';
 import {
+  changePasswordController,
   forgotPasswordResendOtpController,
   forgotPasswordSaveController,
   forgotPasswordSendOtpController,
   forgotPasswordVerifyOtpController,
+  setPasswordController,
 } from '../../controllers';
 
 export const passwordRouter = Router();
 
-const { forgot } = METHODS_AND_PATHS.auth.password;
+const { forgot, change, set } = METHODS_AND_PATHS.auth.password;
 
 passwordRouter[forgot.sendOtp.method](
   forgot.sendOtp.path,
@@ -37,4 +45,18 @@ passwordRouter[forgot.save.method](
   RequestMiddleware.emptyRequest({ body: true }),
   ZodMiddleware.validateSchema(passwordsSchema),
   ResponseMiddleware.tryCatch(forgotPasswordSaveController),
+);
+
+passwordRouter[change.method](
+  change.path,
+  RequestMiddleware.emptyRequest({ body: true }),
+  ZodMiddleware.validateSchema(changePasswordSchema),
+  ResponseMiddleware.tryCatch(changePasswordController),
+);
+
+passwordRouter[set.method](
+  set.path,
+  RequestMiddleware.emptyRequest({ body: true }),
+  ZodMiddleware.validateSchema(setPasswordSchema),
+  ResponseMiddleware.tryCatch(setPasswordController),
 );

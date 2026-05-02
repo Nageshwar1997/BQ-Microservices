@@ -1,11 +1,11 @@
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
-import type { TEmail, TOtp, TPasswords } from '@beautinique/be-zod';
+import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { bullQueue, redisCache } from '../classes';
-import { getUserByEmail } from '../services';
+import { getUserByEmail, getUserById } from '../services';
 import type { IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';
 
@@ -161,5 +161,94 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
 
   await redisCache.setUser(minUser);
 
+  res.success(201, 'Password reset successfully', { user: minUser });
+};
+
+export const changePasswordController = async (req: Request, res: Response) => {
+  const userId = req.query?.userId as string;
+
+  if (!userId) {
+    throw new AppError({
+      message: 'You are not logged in',
+      statusCode: 400,
+      code: 'AUTH_ERROR',
+    });
+  }
+
+  const { currentPassword, password } = req.body as TChangePassword;
+
+  // Check for existing users
+  const user = (await getUserById({ id: userId, lean: false, password: true })) as IUserDoc;
+
+  if (!user) {
+    throw new AppError({
+      message: 'User not found',
+      statusCode: 404,
+      code: 'AUTH_ERROR',
+    });
+  }
+
+  const isMatched = bcrypt.compareSync(currentPassword, user.password);
+
+  if (!isMatched) {
+    throw new AppError({
+      message: 'Current password is incorrect',
+      statusCode: 400,
+      code: 'AUTH_ERROR',
+      fieldErrors: { currentPassword: ['Current password is incorrect'] },
+    });
+  }
+
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  user.password = hashedPassword;
+  await user.save();
+
+  const minUser = getMinimalUser(user);
+
+  await redisCache.setUser(minUser);
+
   res.success(201, 'Password changed successfully', { user: minUser });
+};
+
+export const setPasswordController = async (req: Request, res: Response) => {
+  const userId = req.query?.userId as string;
+
+  if (!userId) {
+    throw new AppError({
+      message: 'You are not logged in',
+      statusCode: 400,
+      code: 'AUTH_ERROR',
+    });
+  }
+
+  const { password } = req.body as TSetPassword;
+
+  // Check for existing users
+  const user = (await getUserById({ id: userId, lean: false, password: true })) as IUserDoc;
+
+  if (!user) {
+    throw new AppError({
+      message: 'User not found',
+      statusCode: 404,
+      code: 'AUTH_ERROR',
+    });
+  } else if (user.providers.includes('MANUAL')) {
+    throw new AppError({
+      message: 'Password already set. Please use forgot password.',
+      statusCode: 400,
+      code: 'AUTH_ERROR',
+    });
+  }
+
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  user.password = hashedPassword;
+  await user.save();
+
+  const minUser = getMinimalUser(user);
+
+  await redisCache.setUser(minUser);
+
+  res.success(201, 'Password set successfully', { user: minUser });
 };

@@ -74,6 +74,8 @@ export const METHODS_AND_PATHS = {
         verifyOtp: { path: '/forgot-verify-otp', method: 'post' },
         save: { path: '/forgot-save', method: 'post' },
       },
+      change: { path: '/change', method: 'patch' },
+      set: { path: '/set', method: 'patch' },
     },
   },
   user: {
