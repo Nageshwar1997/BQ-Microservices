@@ -23,10 +23,10 @@ export class ApiRequest {
         const code = error.response?.data?.code;
         throw new AppError({ message, globalErrors, fieldErrors, statusCode, code });
       }
-      if (error instanceof Error) {
-        throw new AppError({ message: error.message, code: 'INTERNAL_SERVER_ERROR' });
-      }
-      throw new AppError({ message: 'Something went wrong!', code: 'INTERNAL_SERVER_ERROR' });
+      throw new AppError({
+        message: error instanceof Error ? error.message : 'Something went wrong!',
+        code: 'INTERNAL_SERVER_ERROR',
+      });
     }
   };
 }
