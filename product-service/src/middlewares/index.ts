@@ -1,20 +1,20 @@
 import { AppError } from '@beautinique/be-classes';
 import type { TRole } from '@beautinique/be-constants';
-import type { NextFunction, Response } from 'express';
-import { getUserById } from '../services';
+import type { NextFunction, Request, Response } from 'express';
+import { envs } from '../envs';
 import type { AuthRequest } from '../types';
+import { toObjectId } from '../utils';
 
 export const authenticate = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   try {
     const userId = req.get('X-User-Id') || '';
+    const userRole = (req.get('X-User-Role') || 'USER') as TRole;
 
     if (!userId) {
       throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
     }
 
-    const user = await getUserById({ id: userId, password: true });
-
-    req.user = user;
+    req.user = { _id: toObjectId(userId), role: userRole };
 
     next();
   } catch (error) {
@@ -32,19 +32,34 @@ export const authorize =
         throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
       }
 
-      const user = await getUserById({ id: userId, password: true });
-
-      if (!allowedRoles.includes(user.role) || user.role !== userRole) {
+      if (!allowedRoles.includes(userRole)) {
         throw new AppError({
           message: 'You are not authorized to perform this action',
           code: 'AUTHORIZATION_ERROR',
         });
       }
 
-      req.user = user;
+      req.user = { _id: toObjectId(userId), role: userRole };
 
       next();
     } catch (error) {
       next(error);
     }
   };
+
+export const serviceAccess = async (req: Request, _res: Response, next: NextFunction) => {
+  try {
+    const secret = req.headers['x-service-secret'];
+
+    if (secret !== envs.service_secret) {
+      throw new AppError({
+        message: 'You are not authorized to access this service',
+        code: 'AUTHORIZATION_ERROR',
+      });
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};

@@ -26,15 +26,6 @@ const {
   // E
   // F
   // G
-
-  GITHUB_CLIENT_ID,
-  GITHUB_CLIENT_SECRET,
-  GITHUB_REDIRECT_ENDPOINT,
-
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  GOOGLE_REDIRECT_ENDPOINT,
-
   // H
   // I
 
@@ -43,11 +34,6 @@ const {
   // J
   // K
   // L
-
-  LINKEDIN_CLIENT_ID,
-  LINKEDIN_CLIENT_SECRET,
-  LINKEDIN_REDIRECT_ENDPOINT,
-
   // M
 
   MAIL_SERVICE_DEV_URL,
@@ -68,6 +54,9 @@ const {
 
   PORT,
 
+  PRODUCT_SERVICE_DEV_URL,
+  PRODUCT_SERVICE_PROD_URL,
+
   PUBLIC_DEV_URL_1,
   PUBLIC_DEV_URL_2,
 
@@ -82,6 +71,7 @@ const {
   // S
 
   SERVICE_NAME,
+  SERVICE_SECRET,
 
   // T
   // U
@@ -127,25 +117,6 @@ export const envs = {
 
   // N
   // O
-
-  oAuth: {
-    github: {
-      client_id: GITHUB_CLIENT_ID,
-      client_secret: GITHUB_CLIENT_SECRET,
-      redirect_endpoint: GITHUB_REDIRECT_ENDPOINT,
-    },
-    google: {
-      client_id: GOOGLE_CLIENT_ID,
-      client_secret: GOOGLE_CLIENT_SECRET,
-      redirect_endpoint: GOOGLE_REDIRECT_ENDPOINT,
-    },
-    linkedin: {
-      client_id: LINKEDIN_CLIENT_ID,
-      client_secret: LINKEDIN_CLIENT_SECRET,
-      redirect_endpoint: LINKEDIN_REDIRECT_ENDPOINT,
-    },
-  },
-
   // P
 
   port: Number(PORT),
@@ -171,6 +142,7 @@ export const envs = {
   // S
 
   service_name: SERVICE_NAME,
+  service_secret: SERVICE_SECRET,
 
   // T
   // U
@@ -187,6 +159,7 @@ export const envs = {
     service: {
       mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
       media: is_dev ? MEDIA_SERVICE_DEV_URL : MEDIA_SERVICE_PROD_URL,
+      product: is_dev ? PRODUCT_SERVICE_DEV_URL : PRODUCT_SERVICE_PROD_URL,
       user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
       worker: is_dev ? WORKER_SERVICE_DEV_URL : WORKER_SERVICE_PROD_URL,
     },
