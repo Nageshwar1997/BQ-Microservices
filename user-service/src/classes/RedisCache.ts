@@ -137,8 +137,8 @@ class RedisCache {
 
   /* ================= DB HELPER ================= */
 
-  private getDbUser(userId: string | TId) {
-    return getUserById({ id: userId });
+  private getDbUser(userId: string | TId, password?: boolean) {
+    return getUserById({ id: userId, password });
   }
 
   /* ================= USER CACHE ================= */
@@ -148,7 +148,7 @@ class RedisCache {
     await this.setData(key, HOUR * 24, user);
   }
 
-  public async getUser(userId: string | TId): Promise<TMinimalUser | null> {
+  public async getUser(userId: string | TId, password?: boolean): Promise<TMinimalUser> {
     const key = this.getUserKey(userId);
 
     // 1️. Try cache
@@ -158,8 +158,7 @@ class RedisCache {
     }
 
     // 2️. Fallback to DB
-    const rawUser = await this.getDbUser(userId);
-    if (!rawUser) return null;
+    const rawUser = await this.getDbUser(userId, password);
 
     const { status: _, ...user } = rawUser;
 

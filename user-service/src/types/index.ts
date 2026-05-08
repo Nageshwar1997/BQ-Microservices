@@ -57,5 +57,5 @@ export type IQueueJob<TData = unknown> = TQueueJobName & {
 };
 
 export interface AuthRequest extends Request {
-  user?: IUser | null;
+  user?: IUser | null | TMinimalUser;
 }

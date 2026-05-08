@@ -18,7 +18,7 @@ export const getUserById = async (data: IById): Promise<IUser | IUserDoc> => {
   const { id, lean = true, password = false } = data;
   const _id = typeof id === 'string' ? toObjectId(id) : id;
   const baseQuery = User.findById(_id);
-  const query = !password ? baseQuery.select('-password') : baseQuery;
+  const query = password ? baseQuery : baseQuery.select('-password');
 
   const user = await (lean ? query.lean() : query);
 
