@@ -19,3 +19,16 @@ export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],
 } as const;
+
+export const PRODUCT_STATUSES = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'BLOCKED'] as const;
+
+export const TRY_ON_CATEGORIES = ['LIP', 'EYE', 'HAIR', 'FACE', 'NAIL', 'SKIN'] as const;
+
+export const TRY_ON_TYPES = {
+  LIP: ['MATTE', 'GLOSS', 'SHIMMER', 'CRAYON'],
+  EYE: ['EYEBROW', 'EYELINER', 'KAJAL', 'EYESHADOW'],
+  HAIR: ['COLOR'],
+  FACE: ['CONCEALER', 'FOUNDATION', 'HIGHLIGHTER', 'BLUSH'],
+  NAIL: ['GEL', 'LIQUID'],
+  SKIN: ['MOISTURIZER', 'SERUM', 'TONER', 'CLEANSER'],
+} as const;

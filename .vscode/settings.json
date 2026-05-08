@@ -1,4 +1,11 @@
 {
   "terminal.integrated.defaultProfile.windows": "Git Bash",
-  "cSpell.words": ["bullmq", "cellspacing", "maxlength", "njsproj", "ntvs"]
+  "cSpell.words": [
+    "bullmq",
+    "cellspacing",
+    "kajal",
+    "maxlength",
+    "njsproj",
+    "ntvs"
+  ]
 }
