@@ -14,8 +14,10 @@ export const isNullOrUndefined = (value: unknown): value is null | undefined => 
 /* ========== OBJECT ID CONVERTER FUNCTION ========== */
 export const toObjectId = (id: string): TId => new Types.ObjectId(id);
 
-export const generateBaseMediaPayload = (data: UploadApiResponse) => {
+export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: string | TId }) => {
+  const userId = typeof data.userId === 'string' ? toObjectId(data.userId) : data.userId;
   return {
+    uploadedBy: userId,
     url: data.secure_url,
     publicId: data.public_id,
     resourceType: data.resource_type,

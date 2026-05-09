@@ -1,10 +1,16 @@
+import type { TRole } from '@beautinique/be-constants';
 import type { JobsOptions } from 'bullmq';
+import type { Request } from 'express';
 import type { Types } from 'mongoose';
 import type { QUEUE_AND_JOB_NAMES, RESOURCES, SERVICES, STATUSES } from '../constants';
 
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
+}
+
+export interface AuthRequest extends Request {
+  user?: { _id: string; role: TRole } | null;
 }
 
 export interface ITimestamp {
