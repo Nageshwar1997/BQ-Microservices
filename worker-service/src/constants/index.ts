@@ -1,8 +1,6 @@
 import type { ConnectionOptions } from 'bullmq';
 import { envs } from '../envs';
 
-export const ORIGINS = Object.values(envs.url.frontend);
-
 export const WORKER_CONFIGS: ConnectionOptions = envs.redis.worker;
 
 export const QUEUE_AND_JOB_NAMES = {

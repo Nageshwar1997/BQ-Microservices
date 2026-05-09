@@ -1,12 +1,11 @@
+import { RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
 import 'dotenv/config';
-import path from 'path';
 import express, { type Request, type Response } from 'express';
+import path from 'path';
 import { parse } from 'qs';
-import { envs } from './envs';
-import { errorLogger, logger, requestLogger } from './configs';
-import { CorsMiddleware, RequestMiddleware, ResponseMiddleware } from '@beautinique/be-middlewares';
-import { ORIGINS } from './constants';
 import { bullWorker } from './classes';
+import { errorLogger, logger, requestLogger } from './configs';
+import { envs } from './envs';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -29,7 +28,6 @@ app.use(requestLogger);
 
 // 4. Custom middlewares
 app.use(ResponseMiddleware.success);
-app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 
 /* ---------------- ROUTES ---------------- */
 

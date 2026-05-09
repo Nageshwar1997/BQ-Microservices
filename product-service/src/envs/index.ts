@@ -1,23 +1,12 @@
 const {
   // A
-
-  ADMIN_DEV_URL,
-  ADMIN_PROD_URL,
-
   // B
-
-  GATEWAY_DEV_URL,
-  GATEWAY_PROD_URL,
-
   // C
 
   CACHE_REDIS_HOST,
   CACHE_REDIS_PORT,
   CACHE_REDIS_PASSWORD,
   CACHE_REDIS_USERNAME,
-
-  CLIENT_DEV_URL,
-  CLIENT_PROD_URL,
 
   // D
 
@@ -26,6 +15,10 @@ const {
   // E
   // F
   // G
+
+  GATEWAY_DEV_URL,
+  GATEWAY_PROD_URL,
+
   // H
   // I
 
@@ -38,9 +31,6 @@ const {
 
   MAIL_SERVICE_DEV_URL,
   MAIL_SERVICE_PROD_URL,
-
-  MASTER_DEV_URL,
-  MASTER_PROD_URL,
 
   MEDIA_SERVICE_DEV_URL,
   MEDIA_SERVICE_PROD_URL,
@@ -56,9 +46,6 @@ const {
 
   PRODUCT_SERVICE_DEV_URL,
   PRODUCT_SERVICE_PROD_URL,
-
-  PUBLIC_DEV_URL_1,
-  PUBLIC_DEV_URL_2,
 
   // Q
 
@@ -148,13 +135,6 @@ export const envs = {
   // U
 
   url: {
-    frontend: {
-      client: is_dev ? CLIENT_DEV_URL : CLIENT_PROD_URL,
-      admin: is_dev ? ADMIN_DEV_URL : ADMIN_PROD_URL,
-      master: is_dev ? MASTER_DEV_URL : MASTER_PROD_URL,
-      public1: PUBLIC_DEV_URL_1,
-      public2: PUBLIC_DEV_URL_2,
-    },
     gateway: is_dev ? GATEWAY_DEV_URL : GATEWAY_PROD_URL,
     service: {
       mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,

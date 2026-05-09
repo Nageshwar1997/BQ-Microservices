@@ -2,8 +2,6 @@ import type { ConnectionOptions } from 'bullmq';
 import { envs } from '../envs';
 import type { TResourceType, TStatus } from '../types';
 
-export const ORIGINS = Object.values(envs.url.frontend);
-
 export const MIME_TO_FORMAT: Record<TResourceType, Record<string, string>> = {
   image: {
     'image/jpeg': 'jpg',

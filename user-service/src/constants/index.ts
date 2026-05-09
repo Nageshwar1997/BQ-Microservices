@@ -1,8 +1,6 @@
 import type { ConnectionOptions } from 'bullmq';
 import { envs } from '../envs';
 
-export const ORIGINS = Object.values(envs.url.frontend);
-
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 

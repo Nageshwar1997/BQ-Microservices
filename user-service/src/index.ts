@@ -1,19 +1,17 @@
-import 'dotenv/config';
-import path from 'path';
-import express, { type Request, type Response } from 'express';
-import { parse } from 'qs';
-import { envs } from './envs';
-import { router } from './routes';
 import { connectToDB } from '@beautinique/be-configs';
-import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
 import {
-  CorsMiddleware,
   DatabaseMiddleware,
   RequestMiddleware,
   ResponseMiddleware,
 } from '@beautinique/be-middlewares';
-import { ORIGINS } from './constants';
+import 'dotenv/config';
+import express, { type Request, type Response } from 'express';
+import path from 'path';
+import { parse } from 'qs';
 import { bullQueue, redisCache } from './classes';
+import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
+import { envs } from './envs';
+import { router } from './routes';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -36,7 +34,6 @@ app.use(requestLogger);
 
 // 4. Custom middlewares
 app.use(ResponseMiddleware.success);
-app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
@@ -45,9 +42,7 @@ app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the User Service API'));
 
 // Health Route
-app.get('/health', (_: Request, res: Response) =>
-  res.success(200, 'User Service is healthy'),
-);
+app.get('/health', (_: Request, res: Response) => res.success(200, 'User Service is healthy'));
 
 // API Routes
 app.use('/api/v1', router);

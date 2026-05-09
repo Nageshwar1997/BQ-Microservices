@@ -1,6 +1,5 @@
 import { connectToDB } from '@beautinique/be-configs';
 import {
-  CorsMiddleware,
   DatabaseMiddleware,
   RequestMiddleware,
   ResponseMiddleware,
@@ -11,7 +10,6 @@ import path from 'path';
 import { parse } from 'qs';
 import { bullQueue } from './classes';
 import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
-import { ORIGINS } from './constants';
 import { envs } from './envs';
 import { router } from './routes';
 
@@ -36,7 +34,6 @@ app.use(requestLogger);
 
 // 4. Custom middlewares
 app.use(ResponseMiddleware.success);
-app.use(CorsMiddleware.checkOrigin({ origins: ORIGINS }));
 app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
@@ -45,10 +42,12 @@ app.use(DatabaseMiddleware.checkConnection(isDbConnected));
 app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Media Service API'));
 
 // Health Route
-app.get('/health', (_: Request, res: Response) => res.success(200, 'Media Service is healthy'));
+app.get('/api/v1/health', (_: Request, res: Response) =>
+  res.success(200, 'Media Service is healthy'),
+);
 
 // API Routes
-app.use('/api/v1', router);
+app.use('/api/v2', router);
 
 /* ---------------- ERROR HANDLING ---------------- */
 
