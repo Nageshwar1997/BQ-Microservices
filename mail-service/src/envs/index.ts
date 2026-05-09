@@ -39,6 +39,12 @@ const {
   PORT,
 
   // Q
+
+  QUEUE_REDIS_HOST,
+  QUEUE_REDIS_PORT,
+  QUEUE_REDIS_PASSWORD,
+  QUEUE_REDIS_USERNAME,
+
   // R
   // S
 
@@ -97,6 +103,16 @@ export const envs = {
 
   // Q
   // R
+
+  redis: {
+    queue: {
+      host: QUEUE_REDIS_HOST,
+      port: Number(QUEUE_REDIS_PORT),
+      password: QUEUE_REDIS_PASSWORD,
+      username: QUEUE_REDIS_USERNAME,
+    },
+  },
+
   // S
 
   service_name: SERVICE_NAME,

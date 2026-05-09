@@ -1,10 +1,11 @@
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
+import { bullQueue } from '@beautinique/be-jobs';
 import { sanitizeToken } from '@beautinique/be-utils';
 import type { TEmail, TOtp, TRegister } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
-import { bullQueue, redisCache } from '../classes';
+import { redisCache } from '../classes';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services';
 import type { IUser, IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';

@@ -1,4 +1,5 @@
 import { connectToDB } from '@beautinique/be-configs';
+import { bullQueue } from '@beautinique/be-jobs';
 import {
   DatabaseMiddleware,
   RequestMiddleware,
@@ -8,7 +9,7 @@ import 'dotenv/config';
 import express, { type Request, type Response } from 'express';
 import path from 'path';
 import { parse } from 'qs';
-import { bullQueue, redisCache } from './classes';
+import { redisCache } from './classes';
 import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
 import { envs } from './envs';
 import { router } from './routes';
@@ -63,7 +64,11 @@ async function start() {
     });
 
     // 🔥 Start workers AFTER server is up
-    await Promise.all([connectToDB(databaseConfigs), redisCache.connect(), bullQueue.connect()]);
+    await Promise.all([
+      connectToDB(databaseConfigs),
+      redisCache.connect(),
+      bullQueue.connect(envs.redis.queue),
+    ]);
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);

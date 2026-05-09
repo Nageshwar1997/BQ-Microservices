@@ -3,10 +3,9 @@ import 'dotenv/config';
 import express, { type Request, type Response } from 'express';
 import path from 'path';
 import { parse } from 'qs';
-import { transporter } from './classes';
+import { transporter, workerManager } from './classes';
 import { errorLogger, logger, requestLogger } from './configs';
 import { envs } from './envs';
-import { router } from './routes';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -38,9 +37,6 @@ app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Mai
 // Health Route
 app.get('/health', (_: Request, res: Response) => res.success(200, 'Mail Service is healthy'));
 
-// API Routes
-app.use('/api/v1', router);
-
 /* ---------------- ERROR HANDLING ---------------- */
 
 app.use(ResponseMiddleware.notFound);
@@ -56,15 +52,8 @@ async function start() {
       logger.info(`🚀 Server running on port: ${envs.port}`);
     });
 
-    // 🔥 Connect transporter
-    transporter
-      .connect()
-      .then(() => {
-        logger.info('📨 Transporter connected');
-      })
-      .catch((err) => {
-        logger.error('❌ Transporter connection failed:', err);
-      });
+    // 🔥 Start workers and transporter AFTER server is up
+    await Promise.all([transporter.connect(), workerManager.start()]);
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
     process.exit(1);
@@ -77,9 +66,8 @@ async function shutdown() {
   logger.warn('🛑 Shutting down...');
 
   try {
-    // Close transporter
-    await transporter.close();
-    logger.info('✅ Transporter closed');
+    // 🔥 Stop workers and disconnect transporter
+    await Promise.all([transporter.disconnect(), workerManager.stop()]);
 
     // Close server
     if (server) {

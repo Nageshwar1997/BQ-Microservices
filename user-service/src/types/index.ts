@@ -1,9 +1,8 @@
 import type { TAuthProvider, TRole } from '@beautinique/be-constants';
 import type { TEmail, TRegister, TSeller } from '@beautinique/be-zod';
-import type { JobsOptions } from 'bullmq';
 import type { Request } from 'express';
 import type { Document, Types } from 'mongoose';
-import type { QUEUE_AND_JOB_NAMES, SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants';
+import type { SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -46,15 +45,6 @@ export interface IWishlist extends IId, ITimestamp {
 }
 
 export interface IWishlistDoc extends IWishlist, Document {}
-
-type TQueue = typeof QUEUE_AND_JOB_NAMES;
-export type TQueueKey = keyof TQueue;
-type TQueueJobName = { [K in TQueueKey]: { queueName: K; jobName: TQueue[K][number] } }[TQueueKey];
-
-export type IQueueJob<TData = unknown> = TQueueJobName & {
-  data: TData;
-  options?: JobsOptions;
-};
 
 export interface AuthRequest extends Request {
   user?: null | TMinimalUser;

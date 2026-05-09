@@ -1,6 +1,3 @@
-import type { ConnectionOptions } from 'bullmq';
-import { envs } from '../envs';
-
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
@@ -80,10 +77,4 @@ export const METHODS_AND_PATHS = {
     base: '/user',
     session: { method: 'get', path: '/session' },
   },
-} as const;
-
-export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
-
-export const QUEUE_AND_JOB_NAMES = {
-  'email-queue': ['send-otp'],
 } as const;
