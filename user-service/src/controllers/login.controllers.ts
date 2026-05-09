@@ -20,7 +20,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
   }
 
   // Compare password
-  const isPasswordMatch = bcrypt.compareSync(password, user.password);
+  const isPasswordMatch = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatch) {
     throw new AppError({

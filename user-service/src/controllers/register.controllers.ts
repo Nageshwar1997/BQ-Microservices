@@ -104,7 +104,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     });
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   if (user) {
     // User exists → oAuth-only

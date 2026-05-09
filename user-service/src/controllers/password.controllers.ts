@@ -5,7 +5,7 @@ import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@b
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { bullQueue, redisCache } from '../classes';
-import { getUserByEmail, updateUser } from '../services';
+import { getUserByEmail, getUserById, updateUser } from '../services';
 import type { AuthRequest, IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';
 
@@ -98,7 +98,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
     throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
   }
 
-  const isSamePassword = bcrypt.compareSync(password, user.password);
+  const isSamePassword = await bcrypt.compare(password, user.password);
 
   if (isSamePassword) {
     throw new AppError({
@@ -107,7 +107,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
     });
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   user.password = hashedPassword;
   await user.save();
@@ -119,19 +119,21 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
 
   await redisCache.setUser(minUser);
 
-  res.success(201, 'Password reset successfully', { user: minUser });
+  res.success(200, 'Password reset successfully', { user: minUser });
 };
 
 export const changePasswordController = async (req: AuthRequest, res: Response) => {
-  const user = req.user;
+  const userId = req.user?._id;
 
-  if (!user) {
+  if (!userId) {
     throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
   }
 
   const { currentPassword, password } = req.body as TChangePassword;
 
-  const isCurrentPasswordMatch = bcrypt.compareSync(currentPassword, user.password);
+  const user = (await getUserById({ id: userId, lean: false, password: true })) as IUserDoc;
+
+  const isCurrentPasswordMatch = await bcrypt.compare(currentPassword, user.password);
 
   if (!isCurrentPasswordMatch) {
     throw new AppError({
@@ -141,7 +143,7 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
     });
   }
 
-  const isSamePassword = bcrypt.compareSync(password, user.password);
+  const isSamePassword = await bcrypt.compare(password, user.password);
 
   if (isSamePassword) {
     throw new AppError({
@@ -151,15 +153,17 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
     });
   }
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
-  const updatedUser = await updateUser({ _id: user._id }, { password: hashedPassword });
+  user.password = hashedPassword;
+
+  const updatedUser = await user.save();
 
   const minUser = getMinimalUser(updatedUser);
 
   await redisCache.setUser(minUser);
 
-  res.success(201, 'Password changed successfully', { user: minUser });
+  res.success(200, 'Password changed successfully', { user: minUser });
 };
 
 export const setPasswordController = async (req: AuthRequest, res: Response) => {
@@ -176,7 +180,7 @@ export const setPasswordController = async (req: AuthRequest, res: Response) => 
 
   const { password } = req.body as TSetPassword;
 
-  const hashedPassword = bcrypt.hashSync(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10);
 
   const updatedUser = await updateUser({ _id: user._id }, { password: hashedPassword });
 
@@ -184,5 +188,5 @@ export const setPasswordController = async (req: AuthRequest, res: Response) => 
 
   await redisCache.setUser(minUser);
 
-  res.success(201, 'Password set successfully', { user: minUser });
+  res.success(200, 'Password set successfully', { user: minUser });
 };

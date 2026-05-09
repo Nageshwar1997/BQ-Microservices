@@ -6,7 +6,7 @@ import { logger } from '../configs';
 import { envs } from '../envs';
 import { getUserById } from '../services';
 import type { TId, TMinimalUser } from '../types';
-import { generateOtp, generateTempToken } from '../utils';
+import { generateOtp, generateTempToken, getMinimalUser } from '../utils';
 
 interface IOtpData {
   otp: string;
@@ -137,8 +137,8 @@ class RedisCache {
 
   /* ================= DB HELPER ================= */
 
-  private getDbUser(userId: string | TId, password?: boolean) {
-    return getUserById({ id: userId, password });
+  private getDbUser(userId: string | TId) {
+    return getUserById({ id: userId });
   }
 
   /* ================= USER CACHE ================= */
@@ -148,19 +148,19 @@ class RedisCache {
     await this.setData(key, HOUR * 24, user);
   }
 
-  public async getUser(userId: string | TId, password?: boolean): Promise<TMinimalUser> {
+  public async getUser(userId: string | TId): Promise<TMinimalUser> {
     const key = this.getUserKey(userId);
 
     // 1️. Try cache
-    const cachedUser = await this.getData(key);
+    const cachedUser: TMinimalUser = await this.getData(key);
     if (cachedUser) {
       return cachedUser;
     }
 
     // 2️. Fallback to DB
-    const rawUser = await this.getDbUser(userId, password);
+    const rawUser = await this.getDbUser(userId);
 
-    const { status: _, ...user } = rawUser;
+    const user = getMinimalUser(rawUser);
 
     // 3️. Set cache (non-blocking)
     void this.setUser(user);
