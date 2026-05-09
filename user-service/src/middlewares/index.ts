@@ -12,7 +12,7 @@ export const authenticate = async (req: AuthRequest, _res: Response, next: NextF
       throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
     }
 
-    const user = await redisCache.getUser(userId, true);
+    const user = await redisCache.getUser(userId);
 
     req.user = user;
 
@@ -32,7 +32,7 @@ export const authorize =
         throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
       }
 
-      const user = await redisCache.getUser(userId, true);
+      const user = await redisCache.getUser(userId);
 
       if (!allowedRoles.includes(user.role) || user.role !== userRole) {
         throw new AppError({
