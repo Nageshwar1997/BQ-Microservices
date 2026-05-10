@@ -1,7 +1,7 @@
 import { AppError } from '@beautinique/be-classes';
+import { MEDIA_STATUS_MAP } from '@beautinique/be-constants';
 import type { Request, Response } from 'express';
 import { logger } from '../configs';
-import { STATUS_MAP } from '../constants';
 import { Media } from '../models';
 import type { IBaseMedia, IMedia } from '../types';
 
@@ -41,7 +41,7 @@ export const markAsUsedSingleMediaController = async (req: Request, res: Respons
     ...(relatedTo && { relatedTo }),
     ...(metadata && { metadata }),
 
-    status: STATUS_MAP.USED,
+    status: MEDIA_STATUS_MAP.USED,
     isUsed: true,
     expiresAt: null,
   };
@@ -79,7 +79,7 @@ export const markAsUsedMultipleMediaController = async (req: Request, res: Respo
       ...(relatedTo && { relatedTo }),
       ...(metadata && { metadata }),
 
-      status: STATUS_MAP.USED,
+      status: MEDIA_STATUS_MAP.USED,
       isUsed: true,
       expiresAt: null,
     };
@@ -108,7 +108,7 @@ export const markAsDeletedSingleMediaController = async (req: Request, res: Resp
 
   const updateData: Partial<IMedia> = {
     isDeleted: true,
-    status: STATUS_MAP.DELETED,
+    status: MEDIA_STATUS_MAP.DELETED,
     ...(deletedBy && { deletedBy }),
   };
 
@@ -142,7 +142,11 @@ export const markAsDeletedMultipleMediaController = async (req: Request, res: Re
 
     const filter = { ...(publicId ? { publicId } : { url }), isDeleted: false };
 
-    const update = { isDeleted: true, status: STATUS_MAP.DELETED, ...(deletedBy && { deletedBy }) };
+    const update = {
+      isDeleted: true,
+      status: MEDIA_STATUS_MAP.DELETED,
+      ...(deletedBy && { deletedBy }),
+    };
 
     return { updateOne: { filter, update } };
   });

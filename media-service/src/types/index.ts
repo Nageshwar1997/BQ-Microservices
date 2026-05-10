@@ -1,8 +1,8 @@
-import type { TRole } from '@beautinique/be-constants';
+import type { TMediaResource, TMediaStatus, TRole, TService } from '@beautinique/be-constants';
 import type { JobsOptions } from 'bullmq';
 import type { Request } from 'express';
 import type { Types } from 'mongoose';
-import type { QUEUE_AND_JOB_NAMES, RESOURCES, SERVICES, STATUSES } from '../constants';
+import type { QUEUE_AND_JOB_NAMES } from '../constants';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -27,10 +27,8 @@ export type IQueueJob<TData = unknown> = TQueueJobName & {
   options?: JobsOptions;
 };
 
-export type TResourceType = (typeof RESOURCES)[number];
-
 interface IResource {
-  resourceType: TResourceType;
+  resourceType: TMediaResource;
 }
 
 export interface IUploaderBase extends IResource {
@@ -62,19 +60,14 @@ export interface IMultipleRemover extends IResource {
   retryCount?: number;
 }
 
-export type TService = (typeof SERVICES)[number];
-
-export type TStatus = (typeof STATUSES)[number];
-
-export interface IBaseMedia {
+export interface IBaseMedia extends IResource {
   publicId: string;
   url: string;
-  resourceType: TResourceType;
   uploadedBy: Types.ObjectId;
   deletedBy: Types.ObjectId;
   relatedTo: { service: TService; entity: string; entityId: string };
   expiresAt: Date | null;
-  status: TStatus;
+  status: TMediaStatus;
   metadata: Record<string, unknown>;
   isDeleted: boolean;
   isUsed: boolean;

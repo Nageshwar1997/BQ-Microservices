@@ -1,8 +1,8 @@
+import type { TMediaResource } from '@beautinique/be-constants';
 import type { ConnectionOptions } from 'bullmq';
 import { envs } from '../envs';
-import type { TResourceType, TStatus } from '../types';
 
-export const MIME_TO_FORMAT: Record<TResourceType, Record<string, string>> = {
+export const MIME_TO_FORMAT: Record<TMediaResource, Record<string, string>> = {
   image: {
     'image/jpeg': 'jpg',
     'image/jpg': 'jpg',
@@ -66,13 +66,3 @@ export const QUEUE_AND_JOB_NAMES = {
     'mark-as-deleted-multiple-media',
   ],
 } as const;
-
-export const SERVICES = ['user-service'] as const;
-
-export const RESOURCES = ['image', 'video'] as const;
-
-export const STATUSES = ['UNUSED', 'USED', 'DELETED'] as const;
-export const STATUS_MAP = Object.fromEntries(STATUSES.map((status) => [status, status])) as Record<
-  TStatus,
-  TStatus
->;

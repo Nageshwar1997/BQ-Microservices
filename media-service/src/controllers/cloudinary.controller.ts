@@ -1,7 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
+import type { TMediaResource } from '@beautinique/be-constants';
+import type { TMultipleMediaRemove, TSingleMediaRemove } from '@beautinique/be-jobs';
 import type { Request, Response } from 'express';
-import { bullQueue, cloudinary } from '../classes';
-import type { AuthRequest, TResourceType } from '../types';
+import { cloudinary, bullQueue as internalBullQueue } from '../classes';
+import type { AuthRequest } from '../types';
 import { generateBaseMediaPayload } from '../utils';
 
 export const singleMediaUploadController = async (req: AuthRequest, res: Response) => {
@@ -11,7 +13,7 @@ export const singleMediaUploadController = async (req: AuthRequest, res: Respons
 
   const { _id: userId } = user;
 
-  const { folder, resourceType } = body as { folder: string; resourceType: TResourceType };
+  const { folder, resourceType } = body as { folder: string; resourceType: TMediaResource };
 
   if (!file) throw new AppError({ message: 'File is required', code: 'BAD_REQUEST' });
 
@@ -21,14 +23,14 @@ export const singleMediaUploadController = async (req: AuthRequest, res: Respons
 
   await Promise.all([
     // 1️⃣ Save as unused
-    bullQueue.addJob({
+    internalBullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'mark-as-unused-single-media',
       data: payload,
     }),
 
     // 2️⃣ ⏱️ Delay delete check (after 1 hour)
-    bullQueue.addJob({
+    internalBullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'single-media-remove-if-unused',
       data: payload,
@@ -46,7 +48,7 @@ export const multipleMediaUploadController = async (req: AuthRequest, res: Respo
 
   const { _id: userId } = user;
 
-  const { folder, resourceType } = body as { folder: string; resourceType: TResourceType };
+  const { folder, resourceType } = body as { folder: string; resourceType: TMediaResource };
 
   if (!multerFiles) throw new AppError({ message: 'Files are required', code: 'BAD_REQUEST' });
 
@@ -58,14 +60,14 @@ export const multipleMediaUploadController = async (req: AuthRequest, res: Respo
 
   await Promise.all([
     // 1️⃣ Save as unused
-    bullQueue.addJob({
+    internalBullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'mark-as-unused-multiple-media',
       data: payload,
     }),
 
     // 2️⃣ ⏱️ Delay delete check (after 1 hour)
-    bullQueue.addJob({
+    internalBullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'multiple-media-remove-if-unused',
       data: payload,
@@ -77,7 +79,7 @@ export const multipleMediaUploadController = async (req: AuthRequest, res: Respo
 };
 
 export const singleMediaRemoveController = async (req: Request, res: Response) => {
-  const body = req.body as { publicId: string; resourceType: TResourceType };
+  const body = req.body as TSingleMediaRemove;
 
   await cloudinary.removeSingle(body);
 
@@ -85,11 +87,7 @@ export const singleMediaRemoveController = async (req: Request, res: Response) =
 };
 
 export const multipleMediaRemoveController = async (req: Request, res: Response) => {
-  const body = req.body as {
-    publicIds: string[];
-    retryCount?: number;
-    resourceType: TResourceType;
-  };
+  const body = req.body as TMultipleMediaRemove;
 
   await cloudinary.removeMultiple(body);
 

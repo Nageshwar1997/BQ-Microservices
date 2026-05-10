@@ -1,9 +1,10 @@
 import { AppError } from '@beautinique/be-classes';
-import { FILE_MIME } from '@beautinique/be-constants';
+import { FILE_MIME, type TMediaResource } from '@beautinique/be-constants';
+import type { TMultipleMediaRemove } from '@beautinique/be-jobs';
+import { bullQueue } from '@beautinique/be-jobs';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { randomUUID } from 'crypto';
 import { logger } from '../configs';
-import { MIME_TO_FORMAT } from '../constants';
 import { envs } from '../envs';
 import type {
   IMultipleRemover,
@@ -13,13 +14,11 @@ import type {
   ISingleUploader,
   IUploader,
   IUploaderBase,
-  TResourceType,
 } from '../types';
-import { bullQueue } from './BullQueue';
+import { MIME_TO_FORMAT } from '../constants';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
 const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
-
 class Cloudinary {
   private cloudinary: typeof v2;
 
@@ -63,7 +62,7 @@ class Cloudinary {
   }
 
   /* ========== ALLOWED FORMAT RESOLVER FUNCTION ========== */
-  private getAllowedFormats(resourceType: TResourceType) {
+  private getAllowedFormats(resourceType: TMediaResource) {
     // 🎞️ Chooses the mime collection based on the requested resource type
     const baseMimes =
       resourceType === 'image' ? FILE_MIME.IMAGE : resourceType === 'video' ? FILE_MIME.VIDEO : [];
@@ -95,11 +94,11 @@ class Cloudinary {
   }
 
   /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
-  private async queueFailedRemovals(
-    failedIds: string[],
-    resourceType: TResourceType,
-    retryCount?: number,
-  ) {
+  private async queueFailedRemovals({
+    publicIds: failedIds,
+    resourceType,
+    retryCount = 0,
+  }: TMultipleMediaRemove) {
     // Skip if nothing to retry
     if (failedIds.length === 0 && !resourceType) return;
 
@@ -210,7 +209,11 @@ class Cloudinary {
 
     // Retry failed deletions via queue
     if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
-      await this.queueFailedRemovals(failedIds, resourceType, retryCount + 1);
+      await this.queueFailedRemovals({
+        publicIds: failedIds,
+        resourceType,
+        retryCount: retryCount + 1,
+      });
     }
 
     // Log if retry limit exceeded
@@ -258,7 +261,7 @@ class Cloudinary {
       const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
 
       // Retry failed cleanup via queue
-      await this.queueFailedRemovals(failedIds, resourceType);
+      await this.queueFailedRemovals({ publicIds: failedIds, resourceType });
 
       throw error;
     }
