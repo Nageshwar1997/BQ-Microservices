@@ -12,7 +12,7 @@ class WorkerManager {
   /* ---------------- RUN WORKERS ---------------- */
   private runWorkers() {
     bullWorker.createWorker({
-      queueName: 'email-queue',
+      queueName: 'mail-queue',
       jobName: 'send-otp',
       handler: async (job) => await transporter.sendOtp(job.data.email, job.data.otp),
     });

@@ -27,7 +27,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
   // Store email in cache
   const { otp, token } = await redisCache.setOtpData(email);
 
-  await bullQueue.addJob({ queueName: 'email-queue', jobName: 'send-otp', data: { email, otp } });
+  await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
 
   res.success(200, 'OTP sent successfully', { token });
 };
@@ -52,7 +52,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
     throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
   }
 
-  await bullQueue.addJob({ queueName: 'email-queue', jobName: 'send-otp', data: { email, otp } });
+  await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
 
   res.success(200, 'OTP resent successfully', { sendCount });
 };

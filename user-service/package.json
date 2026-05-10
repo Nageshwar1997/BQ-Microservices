@@ -35,7 +35,7 @@
     "@beautinique/be-classes": "^1.0.5",
     "@beautinique/be-configs": "^1.0.5",
     "@beautinique/be-constants": "^1.0.6",
-    "@beautinique/be-jobs": "^1.0.1",
+    "@beautinique/be-jobs": "^1.0.2",
     "@beautinique/be-middlewares": "^1.0.12",
     "@beautinique/be-utils": "^1.0.4",
     "@beautinique/be-zod": "^1.0.16",
