@@ -63,14 +63,12 @@ export interface IMultipleRemover extends IResource {
 export interface IBaseMedia extends IResource {
   publicId: string;
   url: string;
-  uploadedBy: Types.ObjectId;
-  deletedBy: Types.ObjectId;
-  relatedTo: { service: TService; entity: string; entityId: string };
+  userId: Types.ObjectId;
+  relatedTo: { service: TService; entity: string };
   expiresAt: Date | null;
+  deletedAt: Date | null;
   status: TMediaStatus;
   metadata: Record<string, unknown>;
-  isDeleted: boolean;
-  isUsed: boolean;
 }
 
 export interface IMedia extends IBaseMedia, ITimestamp, IId {}

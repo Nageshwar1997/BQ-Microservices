@@ -1,7 +1,6 @@
 import { AppError } from '@beautinique/be-classes';
 import type { TMediaResource } from '@beautinique/be-constants';
-import type { TMultipleMediaRemove, TSingleMediaRemove } from '@beautinique/be-jobs';
-import type { Request, Response } from 'express';
+import type { Response } from 'express';
 import { cloudinary, bullQueue as internalBullQueue } from '../classes';
 import type { AuthRequest } from '../types';
 import { generateBaseMediaPayload } from '../utils';
@@ -29,12 +28,12 @@ export const singleMediaUploadController = async (req: AuthRequest, res: Respons
       data: payload,
     }),
 
-    // 2️⃣ ⏱️ Delay delete check (after 1 hour)
+    // 2️⃣ ⏱️ Delay delete check (after 1 day)
     internalBullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'single-media-remove-if-unused',
       data: payload,
-      options: { delay: 60 * 60 * 1000 },
+      options: { delay: 24 * 60 * 60 * 1000 },
     }),
   ]);
 
@@ -66,30 +65,14 @@ export const multipleMediaUploadController = async (req: AuthRequest, res: Respo
       data: payload,
     }),
 
-    // 2️⃣ ⏱️ Delay delete check (after 1 hour)
+    // 2️⃣ ⏱️ Delay delete check (after 1 day)
     internalBullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'multiple-media-remove-if-unused',
       data: payload,
-      options: { delay: 60 * 60 * 1000 },
+      options: { delay: 24 * 60 * 60 * 1000 },
     }),
   ]);
 
   res.success(200, 'Files uploaded successfully', { data: response.map((res) => res.secure_url) });
-};
-
-export const singleMediaRemoveController = async (req: Request, res: Response) => {
-  const body = req.body as TSingleMediaRemove;
-
-  await cloudinary.removeSingle(body);
-
-  res.success(200, 'Image removed successfully');
-};
-
-export const multipleMediaRemoveController = async (req: Request, res: Response) => {
-  const body = req.body as TMultipleMediaRemove;
-
-  await cloudinary.removeMultiple(body);
-
-  res.success(200, 'Image removed successfully');
 };

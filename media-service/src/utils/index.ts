@@ -17,7 +17,7 @@ export const toObjectId = (id: string): TId => new Types.ObjectId(id);
 export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: string | TId }) => {
   const userId = typeof data.userId === 'string' ? toObjectId(data.userId) : data.userId;
   return {
-    uploadedBy: userId,
+    userId,
     url: data.secure_url,
     publicId: data.public_id,
     resourceType: data.resource_type,
@@ -30,4 +30,18 @@ export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: str
       folder: data.asset_folder,
     },
   };
+};
+
+export const extractUrlInfo = (url: string) => {
+  const parts = url.split('/');
+
+  const uploadIndex = parts.indexOf('upload');
+
+  const resourceType = parts[uploadIndex - 1];
+
+  const publicIdWithExtension = parts.slice(uploadIndex + 2).join('/');
+
+  const publicId = publicIdWithExtension.replace(/\.[^/.]+$/, '');
+
+  return { resourceType, publicId };
 };
