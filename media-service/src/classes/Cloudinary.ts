@@ -1,10 +1,10 @@
 import { AppError } from '@beautinique/be-classes';
 import { FILE_MIME, type TMediaResource } from '@beautinique/be-constants';
-import type { TMultipleMediaRemove } from '@beautinique/be-jobs';
 import { bullQueue } from '@beautinique/be-jobs';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { randomUUID } from 'crypto';
 import { logger } from '../configs';
+import { MIME_TO_FORMAT } from '../constants';
 import { envs } from '../envs';
 import type {
   IMultipleRemover,
@@ -15,7 +15,6 @@ import type {
   IUploader,
   IUploaderBase,
 } from '../types';
-import { MIME_TO_FORMAT } from '../constants';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
 const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
@@ -94,19 +93,26 @@ class Cloudinary {
   }
 
   /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
-  private async queueFailedRemovals({
-    publicIds: failedIds,
-    resourceType,
+  private async queueFailedRemovals(
+    failedIds: string[],
+    resourceType: TMediaResource,
     retryCount = 0,
-  }: TMultipleMediaRemove) {
+  ) {
     // Skip if nothing to retry
     if (failedIds.length === 0 && !resourceType) return;
 
+    // Generate unique identifier
+    const batchId = randomUUID();
     // Push failed deletions into background job queue
     await bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'multiple-media-remove',
+      jobName: 'remove-multiple-media-directly',
       data: { resourceType, publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
+      options: {
+        jobId: `remove-multiple-directly-${batchId}`,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
     });
   }
 
@@ -209,11 +215,7 @@ class Cloudinary {
 
     // Retry failed deletions via queue
     if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
-      await this.queueFailedRemovals({
-        publicIds: failedIds,
-        resourceType,
-        retryCount: retryCount + 1,
-      });
+      await this.queueFailedRemovals(failedIds, resourceType, retryCount + 1);
     }
 
     // Log if retry limit exceeded
@@ -261,7 +263,7 @@ class Cloudinary {
       const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
 
       // Retry failed cleanup via queue
-      await this.queueFailedRemovals({ publicIds: failedIds, resourceType });
+      await this.queueFailedRemovals(failedIds, resourceType);
 
       throw error;
     }

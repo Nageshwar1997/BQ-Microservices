@@ -2,78 +2,152 @@ import { AppError } from '@beautinique/be-classes';
 import type { TMediaResource } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
 import type { Response } from 'express';
+
+import { randomUUID } from 'crypto';
 import { cloudinary } from '../classes';
+import { logger } from '../configs';
 import type { AuthRequest } from '../types';
 import { generateBaseMediaPayload } from '../utils';
+
+/* -------------------------------------------------------------------------- */
+/*                                  CONSTANTS                                 */
+/* -------------------------------------------------------------------------- */
+
+const CLEANUP_DELAY = 24 * 60 * 60 * 1000;
+
+/* -------------------------------------------------------------------------- */
+/*                            SINGLE MEDIA UPLOAD                             */
+/* -------------------------------------------------------------------------- */
 
 export const singleMediaUploadController = async (req: AuthRequest, res: Response) => {
   const { body, file, user } = req;
 
   if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
 
+  if (!file) throw new AppError({ message: 'File is required', code: 'BAD_REQUEST' });
+
   const { _id: userId } = user;
 
   const { folder, resourceType } = body as { folder: string; resourceType: TMediaResource };
 
-  if (!file) throw new AppError({ message: 'File is required', code: 'BAD_REQUEST' });
+  /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
-  const response = await cloudinary.uploadSingle({ file, folder, resourceType });
+  const uploadedMedia = await cloudinary.uploadSingle({ file, folder, resourceType });
 
-  const payload = generateBaseMediaPayload({ ...response, userId });
+  const payload = generateBaseMediaPayload({ ...uploadedMedia, userId });
 
-  await Promise.all([
-    // 1️⃣ Save as unused
-    bullQueue.addJob({
+  try {
+    // Generate unique identifier
+    const batchId = randomUUID();
+
+    /* ---------------- CREATE UNUSED MEDIA ---------------- */
+
+    await bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'create-unused-single-media',
+      jobName: 'create-single-unused-media',
       data: payload,
-    }),
+      options: {
+        jobId: `create-single-unused-${batchId}`,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    });
 
-    // 2️⃣ ⏱️ Delay delete check (after 1 day)
-    bullQueue.addJob({
+    /* ---------------- CLEANUP CHECK JOB ---------------- */
+
+    await bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'update-deleted-single-media',
+      jobName: 'delete-single-media',
       data: { publicId: payload.publicId },
-      options: { delay: 24 * 60 * 60 * 1000 },
-    }),
-  ]);
+      options: {
+        delay: CLEANUP_DELAY,
+        jobId: `delete-single-${batchId}`,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    });
+  } catch (error) {
+    /* ---------------- ROLLBACK CLOUDINARY ---------------- */
 
-  res.success(200, 'File uploaded successfully', { data: response.secure_url });
+    try {
+      await cloudinary.removeSingle({ publicId: payload.publicId, resourceType });
+    } catch (cleanupError) {
+      logger.error(`Failed to rollback single uploaded media: ${cleanupError}`);
+    }
+
+    throw error;
+  }
+
+  res.success(200, 'File uploaded successfully', { url: uploadedMedia.secure_url });
 };
+
+/* -------------------------------------------------------------------------- */
+/*                           MULTIPLE MEDIA UPLOAD                            */
+/* -------------------------------------------------------------------------- */
 
 export const multipleMediaUploadController = async (req: AuthRequest, res: Response) => {
   const { body, files: multerFiles, user } = req;
 
   if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
 
-  const { _id: userId } = user;
-
-  const { folder, resourceType } = body as { folder: string; resourceType: TMediaResource };
-
   if (!multerFiles) throw new AppError({ message: 'Files are required', code: 'BAD_REQUEST' });
 
   const files = multerFiles as Express.Multer.File[];
 
-  const response = await cloudinary.uploadMultiple({ files, folder, resourceType });
+  const { _id: userId } = user;
 
-  const payload = response.map((res) => generateBaseMediaPayload({ ...res, userId }));
+  const { folder, resourceType } = body as { folder: string; resourceType: TMediaResource };
 
-  await Promise.all([
-    // 1️⃣ Save as unused
-    bullQueue.addJob({
+  /* ---------------- CLOUDINARY UPLOAD ---------------- */
+
+  const uploadedMedia = await cloudinary.uploadMultiple({ files, folder, resourceType });
+
+  const payload = uploadedMedia.map((media) => generateBaseMediaPayload({ ...media, userId }));
+
+  const publicIds = payload.map(({ publicId }) => publicId);
+
+  try {
+    /* ---------------- CREATE UNUSED MEDIA ---------------- */
+    // Generate unique identifier
+    const batchId = randomUUID();
+
+    await bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'create-unused-multiple-media',
+      jobName: 'create-multiple-unused-media',
       data: payload,
-    }),
+      options: {
+        jobId: `create-multiple-unused-${batchId}`,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    });
 
-    // 2️⃣ ⏱️ Delay delete check (after 1 day)
-    bullQueue.addJob({
+    /* ---------------- CLEANUP CHECK JOB ---------------- */
+
+    await bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'update-deleted-multiple-media',
-      data: { publicIds: payload.map(({ publicId }) => publicId) },
-      options: { delay: 24 * 60 * 60 * 1000 },
-    }),
-  ]);
+      jobName: 'delete-multiple-media',
+      data: { publicIds },
+      options: {
+        delay: CLEANUP_DELAY,
+        jobId: `delete-multiple-${batchId}`,
+        attempts: 5,
+        backoff: { type: 'exponential', delay: 5000 },
+      },
+    });
+  } catch (error) {
+    /* ---------------- ROLLBACK CLOUDINARY ---------------- */
 
-  res.success(200, 'Files uploaded successfully', { data: response.map((res) => res.secure_url) });
+    try {
+      await cloudinary.removeMultiple({ publicIds, resourceType });
+    } catch (cleanupError) {
+      logger.error(`Failed to rollback multiple uploaded media: ${cleanupError}`);
+    }
+
+    throw error;
+  }
+
+  res.success(200, 'Files uploaded successfully', {
+    urls: uploadedMedia.map(({ secure_url }) => secure_url),
+  });
 };

@@ -14,13 +14,13 @@ class WorkerManager {
     // During Upload Fail Handlers
     bullWorker.createWorker({
       queueName: 'media-queue',
-      jobName: 'single-media-remove',
+      jobName: 'remove-single-media-directly',
       handler: async (job) => void (await cloudinary.removeSingle(job.data)),
     });
 
     bullWorker.createWorker({
       queueName: 'media-queue',
-      jobName: 'multiple-media-remove',
+      jobName: 'remove-multiple-media-directly',
       handler: async (job) => void (await cloudinary.removeMultiple(job.data)),
     });
   }
