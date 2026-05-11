@@ -22,9 +22,13 @@ const mediaSchema = new Schema<TMediaDoc>(
   { timestamps: true, versionKey: false },
 );
 
-// Indexes
+/* ---------------- INDEXES ---------------- */
+
 mediaSchema.index({ publicId: 1 }, { unique: true });
 mediaSchema.index({ status: 1, expiresAt: 1 });
-mediaSchema.index({ deletedAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 }); // 1 day
+
+/* ---------------- TTL INDEX ---------------- */
+
+mediaSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const Media = model<TMediaDoc>('Media', mediaSchema);

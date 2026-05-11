@@ -120,6 +120,129 @@ class WorkerManager {
         }
       },
     });
+
+    /* ---------------- DELETE SINGLE MEDIA ---------------- */
+
+    bullWorker.createWorker({
+      queueName: 'media-queue',
+      jobName: 'delete-single-media',
+      options: { concurrency: 5 },
+      handler: async (job) => {
+        try {
+          const { publicId } = job.data;
+
+          /* ---------------- FIND UNUSED MEDIA ---------------- */
+
+          const media = await Media.findOne({ publicId, status: MEDIA_STATUS_MAP.UNUSED });
+
+          /* ---------------- SKIP IF NOT FOUND ---------------- */
+
+          if (!media) {
+            logger.warn(`Unused media not found or already processed, publicId: ${publicId}`);
+
+            return;
+          }
+
+          /* ---------------- REMOVE FROM CLOUDINARY ---------------- */
+
+          await cloudinary.removeSingle({ publicId, resourceType: media.resourceType });
+
+          /* ---------------- MARK AS DELETED ---------------- */
+
+          await Media.updateOne(
+            { _id: media._id },
+            {
+              $set: {
+                status: MEDIA_STATUS_MAP.DELETED,
+                deletedAt: new Date(),
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              },
+            },
+          );
+        } catch (error) {
+          logger.error('Failed to delete single media', { error, data: job.data });
+
+          throw error;
+        }
+      },
+    });
+
+    /* ---------------- DELETE MULTIPLE MEDIA ---------------- */
+
+    bullWorker.createWorker({
+      queueName: 'media-queue',
+      jobName: 'delete-multiple-media',
+      options: { concurrency: 3 },
+      handler: async (job) => {
+        try {
+          const { publicIds } = job.data;
+
+          /* ---------------- FIND UNUSED MEDIAS ---------------- */
+
+          const medias = await Media.find({
+            publicId: { $in: publicIds },
+            status: MEDIA_STATUS_MAP.UNUSED,
+          }).lean();
+
+          /* ---------------- SKIP IF NOTHING FOUND ---------------- */
+
+          if (medias.length === 0) {
+            logger.warn('Unused medias not found or already processed', { publicIds });
+            return;
+          }
+
+          /* ---------------- GROUP BY RESOURCE TYPE ---------------- */
+
+          const groupedMedia = medias.reduce<Record<string, string[]>>((acc, media) => {
+            if (!acc[media.resourceType]) {
+              acc[media.resourceType] = [];
+            }
+
+            acc[media.resourceType].push(media.publicId);
+
+            return acc;
+          }, {});
+
+          /* ---------------- REMOVE FROM CLOUDINARY ---------------- */
+
+          await Promise.all(
+            Object.entries(groupedMedia).map(async ([resourceType, publicIds]) => {
+              await cloudinary.removeMultiple({
+                publicIds,
+                resourceType: resourceType as (typeof medias)[number]['resourceType'],
+              });
+            }),
+          );
+
+          /* ---------------- MARK AS DELETED ---------------- */
+
+          await Media.updateMany(
+            { _id: { $in: medias.map(({ _id }) => _id) } },
+            {
+              $set: {
+                status: MEDIA_STATUS_MAP.DELETED,
+                deletedAt: new Date(),
+                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+              },
+            },
+          );
+
+          /* ---------------- PARTIAL MATCH WARNING ---------------- */
+
+          if (medias.length !== publicIds.length) {
+            logger.warn('Some medias were already processed or not found', {
+              requestedCount: publicIds.length,
+              foundCount: medias.length,
+              publicIds,
+            });
+          }
+        } catch (error) {
+          logger.error('Failed to delete multiple media', { error, data: job.data });
+
+          throw error;
+        }
+      },
+    });
   }
 
   /* ---------------- START ---------------- */
