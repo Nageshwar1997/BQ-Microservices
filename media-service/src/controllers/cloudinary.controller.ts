@@ -1,7 +1,8 @@
 import { AppError } from '@beautinique/be-classes';
 import type { TMediaResource } from '@beautinique/be-constants';
+import { bullQueue } from '@beautinique/be-jobs';
 import type { Response } from 'express';
-import { cloudinary, bullQueue as internalBullQueue } from '../classes';
+import { cloudinary } from '../classes';
 import type { AuthRequest } from '../types';
 import { generateBaseMediaPayload } from '../utils';
 
@@ -22,17 +23,17 @@ export const singleMediaUploadController = async (req: AuthRequest, res: Respons
 
   await Promise.all([
     // 1️⃣ Save as unused
-    internalBullQueue.addJob({
+    bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'mark-as-unused-single-media',
+      jobName: 'create-unused-single-media',
       data: payload,
     }),
 
     // 2️⃣ ⏱️ Delay delete check (after 1 day)
-    internalBullQueue.addJob({
+    bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'single-media-remove-if-unused',
-      data: payload,
+      jobName: 'update-deleted-single-media',
+      data: { publicId: payload.publicId },
       options: { delay: 24 * 60 * 60 * 1000 },
     }),
   ]);
@@ -59,17 +60,17 @@ export const multipleMediaUploadController = async (req: AuthRequest, res: Respo
 
   await Promise.all([
     // 1️⃣ Save as unused
-    internalBullQueue.addJob({
+    bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'mark-as-unused-multiple-media',
+      jobName: 'create-unused-multiple-media',
       data: payload,
     }),
 
     // 2️⃣ ⏱️ Delay delete check (after 1 day)
-    internalBullQueue.addJob({
+    bullQueue.addJob({
       queueName: 'media-queue',
-      jobName: 'multiple-media-remove-if-unused',
-      data: payload,
+      jobName: 'update-deleted-multiple-media',
+      data: { publicIds: payload.map(({ publicId }) => publicId) },
       options: { delay: 24 * 60 * 60 * 1000 },
     }),
   ]);

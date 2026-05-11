@@ -1,3 +1,4 @@
+import type { TMediaResource } from '@beautinique/be-constants';
 import type { UploadApiResponse } from 'cloudinary';
 import { Types } from 'mongoose';
 import type { TId } from '../types';
@@ -20,7 +21,7 @@ export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: str
     userId,
     url: data.secure_url,
     publicId: data.public_id,
-    resourceType: data.resource_type,
+    resourceType: data.resource_type as TMediaResource,
     createdAt: data.created_at,
     metadata: {
       width: data.width,
