@@ -2,10 +2,12 @@ import { AppError } from '@beautinique/be-classes';
 import { FILE_MIME, type TMediaResource } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
+import pLimit from 'p-limit';
 import { logger } from '../configs';
 import { MIME_TO_FORMAT } from '../constants';
 import { envs } from '../envs';
+
 import type {
   IMultipleRemover,
   IMultipleUploader,
@@ -18,13 +20,17 @@ import type {
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
 const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
+const MAX_REMOVE_RETRIES = 5;
+const REMOVE_CONCURRENCY = 5;
+
 class Cloudinary {
   private cloudinary: typeof v2;
 
-  /* ========== INITIALIZE CLOUDINARY INSTANCE ========== */
+  /* ---------------- INITIALIZE ---------------- */
+
   private getCloudinary() {
-    // Configure Cloudinary SDK using environment variables
     v2.config({ ...envs.cloudinary, secure: true });
+
     return v2;
   }
 
@@ -45,7 +51,7 @@ class Cloudinary {
   }
 
   /* ========== GENERATE UNIQUE PUBLIC ID ========== */
-  private generatePublicId(): string {
+  private generatePublicId() {
     // Extract current date parts
     const now = new Date();
 
@@ -53,11 +59,7 @@ class Cloudinary {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
 
-    // Generate unique identifier
-    const uuid = randomUUID();
-
-    // Structured public_id (useful for organization & debugging)
-    return `${year}/${month}/${day}/${uuid}`;
+    return `${year}/${month}/${day}/${randomUUID()}`;
   }
 
   /* ========== ALLOWED FORMAT RESOLVER FUNCTION ========== */
@@ -101,18 +103,14 @@ class Cloudinary {
     // Skip if nothing to retry
     if (failedIds.length === 0 && !resourceType) return;
 
-    // Generate unique identifier
-    const batchId = randomUUID();
-    // Push failed deletions into background job queue
+    const batchId = createHash('md5').update(failedIds.sort().join('-')).digest('hex').slice(0, 12);
+
+    // Push failed deletions into background job queue+
     await bullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'remove-multiple-media-directly',
       data: { resourceType, publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
-      options: {
-        jobId: `remove-multiple-directly-${batchId}`,
-        attempts: 5,
-        backoff: { type: 'exponential', delay: 5000 },
-      },
+      options: { jobId: `remove-multiple-directly-${batchId}` },
     });
   }
 
@@ -134,7 +132,7 @@ class Cloudinary {
           if (error || !result) {
             return reject(
               new AppError({
-                message: error?.message || `Failed to upload media`,
+                message: error?.message || 'Failed to upload media',
                 code: 'UNPROCESSABLE_ENTITY',
               }),
             );
@@ -149,12 +147,10 @@ class Cloudinary {
           }
 
           // VIDEO → use playback_url
-          if (result.resource_type === 'video') {
-            if (result.playback_url) {
-              optimizedUrl = result.playback_url;
-            } else {
-              optimizedUrl = result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
-            }
+          else if (result.resource_type === 'video') {
+            optimizedUrl = result.playback_url
+              ? result.playback_url
+              : result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
           }
 
           resolve({ ...result, secure_url: optimizedUrl });
@@ -174,12 +170,21 @@ class Cloudinary {
         publicId,
         { resource_type: resourceType },
         (error, result) => {
-          if (error) {
+          if (error || !result) {
             logger.error('Cloudinary delete failed', error);
 
             return reject(
               new AppError({
-                message: error.message || 'Failed to delete media',
+                message: error?.message || 'Failed to delete media',
+                code: 'UNPROCESSABLE_ENTITY',
+              }),
+            );
+          }
+
+          if (result.result !== 'ok' && result.result !== 'not found') {
+            return reject(
+              new AppError({
+                message: `Unexpected delete result: ${result.result}`,
                 code: 'UNPROCESSABLE_ENTITY',
               }),
             );
@@ -192,35 +197,43 @@ class Cloudinary {
     });
   }
 
-  /* ========== REMOVE SINGLE FILE ========== */
-  public async removeSingle(data: ISingleRemover) {
-    return this.remover(data);
+  /* ========== REMOVE SINGLE WITH RETRY ========== */
+  public async removeSingle({ retryCount = 0, ...data }: ISingleRemover & { retryCount?: number }) {
+    try {
+      return await this.remover(data);
+    } catch (error) {
+      if (retryCount < MAX_REMOVE_RETRIES) {
+        await this.queueFailedRemovals([data.publicId], data.resourceType, retryCount + 1);
+      }
+
+      throw error;
+    }
   }
 
-  /* ========== REMOVE MULTIPLE FILES WITH RETRY LOGIC ========== */
+  /* ========== REMOVE MULTIPLE WITH RETRY ========== */
+
   public async removeMultiple({
     publicIds,
     resourceType,
-    retryCount = 0, // ⚠️ Required for retry tracking}
+    retryCount = 0, // ⚠️ Required for retry tracking
   }: IMultipleRemover) {
+    const limit = pLimit(REMOVE_CONCURRENCY);
+
     // Execute all deletions in parallel
     const removeResults = await Promise.allSettled(
-      publicIds.map((publicId) => this.remover({ publicId, resourceType })),
+      publicIds.map((publicId) => limit(() => this.remover({ publicId, resourceType }))),
     );
 
     // Extract failed IDs
     const failedIds = this.getFailedIds(removeResults, publicIds);
 
-    const MAX_REMOVE_RETRIES = 5;
-
-    // Retry failed deletions via queue
     if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
       await this.queueFailedRemovals(failedIds, resourceType, retryCount + 1);
     }
 
     // Log if retry limit exceeded
     if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
-      logger.error('Delete retry limit reached', failedIds);
+      logger.error('Delete retry limit reached', { failedIds, retryCount });
     }
 
     return {
@@ -234,27 +247,31 @@ class Cloudinary {
   /* ========== UPLOAD SINGLE FILE ========== */
   public async uploadSingle(data: ISingleUploader) {
     const { file, ...rest } = data;
+
     return this.uploader({ ...rest, buffer: file.buffer });
   }
 
   /* ========== UPLOAD MULTIPLE FILES WITH ROLLBACK ========== */
   public async uploadMultiple(data: IMultipleUploader) {
-    const uploadedPublicIds: string[] = [];
     const { files, folder, resourceType } = data;
 
-    try {
-      // Upload all files in parallel
-      return await Promise.all(
-        files.map(async ({ buffer }) => {
-          const res = await this.uploader({ folder, resourceType, buffer });
+    // Upload all files in parallel
+    const uploadResults = await Promise.allSettled(
+      files.map(({ buffer }) => this.uploader({ folder, resourceType, buffer })),
+    );
 
-          // Track uploaded files for rollback safety
-          uploadedPublicIds.push(res.public_id);
-          return res;
-        }),
-      );
-    } catch (error) {
-      // If any upload fails → rollback previously uploaded files
+    const successfulUploads = uploadResults
+      .filter(
+        (result): result is PromiseFulfilledResult<UploadApiResponse> =>
+          result.status === 'fulfilled',
+      )
+      .map((result) => result.value);
+
+    // If any upload fails → rollback previously uploaded files
+    const failedUploads = uploadResults.filter((result) => result.status === 'rejected');
+
+    if (failedUploads.length > 0) {
+      const uploadedPublicIds = successfulUploads.map(({ public_id }) => public_id);
 
       const deleteResults = await Promise.allSettled(
         uploadedPublicIds.map((publicId) => this.remover({ publicId, resourceType })),
@@ -265,8 +282,13 @@ class Cloudinary {
       // Retry failed cleanup via queue
       await this.queueFailedRemovals(failedIds, resourceType);
 
-      throw error;
+      throw new AppError({
+        message: 'Some uploads failed and rollback executed',
+        code: 'UNPROCESSABLE_ENTITY',
+      });
     }
+
+    return successfulUploads;
   }
 }
 
