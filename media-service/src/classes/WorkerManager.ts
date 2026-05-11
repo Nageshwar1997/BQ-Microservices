@@ -48,9 +48,7 @@ class WorkerManager {
     bullWorker.createWorker({
       queueName: 'media-queue',
       jobName: 'remove-multiple-media-directly',
-      options: {
-        concurrency: 3,
-      },
+      options: { concurrency: 3 },
 
       handler: async (job) => {
         try {
