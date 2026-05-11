@@ -1,7 +1,9 @@
 import { bullWorker } from '@beautinique/be-jobs';
 
+import { MEDIA_STATUS_MAP } from '@beautinique/be-constants';
 import { logger } from '../configs';
 import { envs } from '../envs';
+import { Media } from '../models';
 import { cloudinary } from './Cloudinary';
 
 class WorkerManager {
@@ -28,7 +30,6 @@ class WorkerManager {
       queueName: 'media-queue',
       jobName: 'remove-single-media-directly',
       options: { concurrency: 5 },
-
       handler: async (job) => {
         try {
           await cloudinary.removeSingle(job.data);
@@ -49,7 +50,6 @@ class WorkerManager {
       queueName: 'media-queue',
       jobName: 'remove-multiple-media-directly',
       options: { concurrency: 3 },
-
       handler: async (job) => {
         try {
           await cloudinary.removeMultiple(job.data);
@@ -59,6 +59,63 @@ class WorkerManager {
             data: job.data,
           });
 
+          throw error;
+        }
+      },
+    });
+
+    /* ---------------- MARK SINGLE MEDIA AS USED ---------------- */
+
+    bullWorker.createWorker({
+      queueName: 'media-queue',
+      jobName: 'mark-single-media-as-used',
+      options: { concurrency: 5 },
+      handler: async (job) => {
+        try {
+          const { publicId } = job.data;
+
+          const result = await Media.updateOne(
+            { publicId, status: MEDIA_STATUS_MAP.UNUSED },
+            { $set: { status: MEDIA_STATUS_MAP.USED }, $unset: { expiresAt: 1 } },
+          );
+
+          if (result.matchedCount === 0) {
+            logger.warn(`Media already used or not found, publicId: ${publicId}`);
+            return;
+          }
+        } catch (error) {
+          logger.error('Failed to mark single media as used', { error, data: job.data });
+          throw error;
+        }
+      },
+    });
+
+    /* ---------------- MARK MULTIPLE MEDIA AS USED ---------------- */
+
+    bullWorker.createWorker({
+      queueName: 'media-queue',
+      jobName: 'mark-multiple-media-as-used',
+      options: { concurrency: 3 },
+      handler: async (job) => {
+        try {
+          const { publicIds } = job.data;
+          const result = await Media.updateMany(
+            { publicId: { $in: publicIds }, status: MEDIA_STATUS_MAP.UNUSED },
+            { $set: { status: MEDIA_STATUS_MAP.USED }, $unset: { expiresAt: 1 } },
+          );
+
+          /* ---------------- PARTIAL MATCH WARNING ---------------- */
+
+          if (result.matchedCount !== publicIds.length) {
+            logger.warn('Some media were already used or not found', {
+              requestedCount: publicIds.length,
+              matchedCount: result.matchedCount,
+              modifiedCount: result.modifiedCount,
+              publicIds,
+            });
+          }
+        } catch (error) {
+          logger.error('Failed to mark multiple media as used', { error, data: job.data });
           throw error;
         }
       },
