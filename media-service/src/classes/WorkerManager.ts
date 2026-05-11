@@ -64,6 +64,49 @@ class WorkerManager {
       },
     });
 
+    /* ---------------- CREATE SINGLE UNUSED MEDIA ---------------- */
+
+    bullWorker.createWorker({
+      queueName: 'media-queue',
+      jobName: 'create-single-unused-media',
+      options: { concurrency: 5 },
+      handler: async (job) => {
+        try {
+          const media = job.data;
+
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          await Media.create({ ...media, status: MEDIA_STATUS_MAP.UNUSED, expiresAt });
+        } catch (error) {
+          logger.error('Failed to create single unused media', { error, data: job.data });
+
+          throw error;
+        }
+      },
+    });
+
+    /* ---------------- CREATE MULTIPLE UNUSED MEDIA ---------------- */
+
+    bullWorker.createWorker({
+      queueName: 'media-queue',
+      jobName: 'create-multiple-unused-media',
+      options: { concurrency: 3 },
+      handler: async (job) => {
+        try {
+          const medias = job.data;
+
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+          await Media.insertMany(
+            medias.map((media) => ({ ...media, status: MEDIA_STATUS_MAP.UNUSED, expiresAt })),
+          );
+        } catch (error) {
+          logger.error('Failed to create multiple unused media', { error, data: job.data });
+
+          throw error;
+        }
+      },
+    });
+
     /* ---------------- MARK SINGLE MEDIA AS USED ---------------- */
 
     bullWorker.createWorker({
