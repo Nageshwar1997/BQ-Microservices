@@ -4,8 +4,6 @@ export const HEADERS_KEYS = {
   serviceSecret: 'X-Service-Secret',
   userId: 'X-User-Id',
   userRole: 'X-User-Role',
-  authorization: 'Authorization',
-  contentType: 'Content-Type',
 } as const;
 
 export const MIME_TO_FORMAT: Record<TMediaResource, Record<string, string>> = {

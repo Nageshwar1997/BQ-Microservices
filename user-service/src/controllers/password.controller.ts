@@ -6,6 +6,7 @@ import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@b
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { redisCache } from '../classes';
+import { HEADERS_KEYS } from '../constants';
 import { getUserByEmail, getUserById, updateUser } from '../services';
 import type { AuthRequest, IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';
@@ -44,7 +45,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
 };
 
 export const forgotPasswordResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get('Authorization') || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -80,7 +81,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get('Authorization') || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -99,7 +100,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get('Authorization') || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });

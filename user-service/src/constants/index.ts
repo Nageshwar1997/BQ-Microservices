@@ -1,3 +1,11 @@
+export const HEADERS_KEYS = {
+  authorization: 'Authorization',
+  contentType: 'Content-Type',
+  serviceSecret: 'X-Service-Secret',
+  userId: 'X-User-Id',
+  userRole: 'X-User-Role',
+} as const;
+
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 

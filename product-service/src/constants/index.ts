@@ -30,3 +30,9 @@ export const TRY_ON_TYPES = {
   NAIL: ['GEL', 'LIQUID'],
   SKIN: ['MOISTURIZER', 'SERUM', 'TONER', 'CLEANSER'],
 } as const;
+
+export const HEADERS_KEYS = {
+  serviceSecret: 'X-Service-Secret',
+  userId: 'X-User-Id',
+  userRole: 'X-User-Role',
+} as const;

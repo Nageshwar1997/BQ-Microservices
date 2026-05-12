@@ -1,5 +1,6 @@
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { google } from 'googleapis';
+import { HEADERS_KEYS } from '../../constants';
 import { envs } from '../../envs';
 import { ApiRequest } from './ApiRequest';
 
@@ -43,7 +44,7 @@ class GoogleAuth extends ApiRequest {
 
     return this.request({
       ...this.routes.oAuth.google.decode,
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
+      headers: { [HEADERS_KEYS.authorization]: `Bearer ${tokens.access_token}` },
     });
   }
 }
@@ -67,14 +68,14 @@ class LinkedinAuth extends ApiRequest {
         client_id: envs.oAuth.linkedin.client_id,
         client_secret: envs.oAuth.linkedin.client_secret,
       },
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: { [HEADERS_KEYS.contentType]: 'application/x-www-form-urlencoded' },
     });
   }
 
   public decode(access_token: string) {
     return this.request({
       ...this.routes.oAuth.linkedin.decode,
-      headers: { Authorization: `Bearer ${access_token}` },
+      headers: { [HEADERS_KEYS.authorization]: `Bearer ${access_token}` },
     });
   }
 }
@@ -102,7 +103,7 @@ class GithubAuth extends ApiRequest {
     });
   }
   public async decode(access_token: string) {
-    const headers = { Authorization: `Bearer ${access_token}` };
+    const headers = { [HEADERS_KEYS.authorization]: `Bearer ${access_token}` };
     const profile = await this.request({ ...this.routes.oAuth.github.decode_profile, headers });
 
     if (!profile.email) {

@@ -58,7 +58,7 @@ export type IQueueJob<TData = unknown> = TQueueJobName & {
 };
 
 export interface AuthRequest extends Request {
-  user?: { _id: TId; role: TRole } | null;
+  user?: (IId & { role: TRole }) | null;
 }
 
 export type TProductStatus = (typeof PRODUCT_STATUSES)[number];

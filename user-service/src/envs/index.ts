@@ -33,11 +33,11 @@ const {
   IS_DEV,
 
   // J
-  
-    JOB_REDIS_HOST,
-    JOB_REDIS_PORT,
-    JOB_REDIS_PASSWORD,
-    JOB_REDIS_USERNAME,
+
+  JOB_REDIS_HOST,
+  JOB_REDIS_PORT,
+  JOB_REDIS_PASSWORD,
+  JOB_REDIS_USERNAME,
 
   // K
   // L
@@ -63,11 +63,12 @@ const {
 
   PORT,
 
-  // Q  
+  // Q
   // R
   // S
 
   SERVICE_NAME,
+  SERVICE_SECRET,
 
   // T
   // U
@@ -153,6 +154,7 @@ export const envs = {
   // S
 
   service_name: SERVICE_NAME,
+  service_secret: SERVICE_SECRET,
 
   // T
   // U

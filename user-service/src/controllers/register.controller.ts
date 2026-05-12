@@ -6,6 +6,7 @@ import type { TEmail, TOtp, TRegister } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { redisCache } from '../classes';
+import { HEADERS_KEYS } from '../constants';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services';
 import type { IUser, IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';
@@ -42,7 +43,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
 };
 
 export const registerResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get('Authorization') || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -78,7 +79,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
 };
 
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get('Authorization') || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -97,7 +98,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
 };
 
 export const registerAndSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get('Authorization') || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });

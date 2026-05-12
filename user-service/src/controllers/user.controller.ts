@@ -1,9 +1,10 @@
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 import { redisCache } from '../classes';
+import { HEADERS_KEYS } from '../constants';
 
 export const getSessionUserController = async (req: Request, res: Response) => {
-  const userId = req.get('X-User-Id') || '';
+  const userId = req.get(HEADERS_KEYS.userId);
 
   if (!userId) {
     throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });

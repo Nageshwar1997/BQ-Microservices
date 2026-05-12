@@ -3,6 +3,7 @@ import {
   checkDbConnection,
   errorResponse,
   notFoundResponse,
+  serviceAccess,
   setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
@@ -13,6 +14,7 @@ import path from 'path';
 import { parse } from 'qs';
 import { bullQueue, redisCache } from './classes';
 import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs';
+import { HEADERS_KEYS } from './constants';
 import { envs } from './envs';
 import { router } from './routes';
 
@@ -54,7 +56,11 @@ app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Use
 app.get('/health', (_: Request, res: Response) => res.success(200, 'User Service is healthy'));
 
 // API Routes
-app.use('/api/v1', router);
+app.use(
+  '/api/v1',
+  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),
+  router,
+);
 
 /* ---------------- ERROR HANDLING ---------------- */
 

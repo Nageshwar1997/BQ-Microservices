@@ -8,7 +8,7 @@ export interface IId {
 }
 
 export interface AuthRequest extends Request {
-  user?: { _id: string; role: TRole } | null;
+  user?: (IId & { role: TRole }) | null;
 }
 
 export interface ITimestamp {

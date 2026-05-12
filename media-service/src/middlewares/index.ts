@@ -3,6 +3,7 @@ import type { TRole } from '@beautinique/be-constants';
 import type { NextFunction, Response } from 'express';
 import { HEADERS_KEYS } from '../constants';
 import type { AuthRequest } from '../types';
+import { toObjectId } from '../utils';
 
 export const authenticate = (req: AuthRequest, _res: Response, next: NextFunction) => {
   const userId = req.get(HEADERS_KEYS.userId) || '';
@@ -12,7 +13,7 @@ export const authenticate = (req: AuthRequest, _res: Response, next: NextFunctio
     throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
   }
 
-  req.user = { _id: userId, role: userRole };
+  req.user = { _id: toObjectId(userId), role: userRole };
 
   next();
 };
@@ -34,7 +35,7 @@ export const authorize =
       });
     }
 
-    req.user = { _id: userId, role: userRole };
+    req.user = { _id: toObjectId(userId), role: userRole };
 
     next();
   };

@@ -2,11 +2,12 @@ import { AppError } from '@beautinique/be-classes';
 import type { TRole } from '@beautinique/be-constants';
 import type { NextFunction, Response } from 'express';
 import { redisCache } from '../classes';
+import { HEADERS_KEYS } from '../constants';
 import type { AuthRequest } from '../types';
 
 export const authenticate = async (req: AuthRequest, _res: Response, next: NextFunction) => {
   try {
-    const userId = req.get('X-User-Id') || '';
+    const userId = req.get(HEADERS_KEYS.userId);
 
     if (!userId) {
       throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
@@ -25,8 +26,8 @@ export const authenticate = async (req: AuthRequest, _res: Response, next: NextF
 export const authorize =
   (allowedRoles: TRole[]) => async (req: AuthRequest, _res: Response, next: NextFunction) => {
     try {
-      const userId = req.get('X-User-Id') || '';
-      const userRole = (req.get('X-User-Role') || 'USER') as TRole;
+      const userId = req.get(HEADERS_KEYS.userId);
+      const userRole = (req.get(HEADERS_KEYS.userRole) || 'USER') as TRole;
 
       if (!userId) {
         throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
