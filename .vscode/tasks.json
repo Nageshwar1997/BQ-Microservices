@@ -35,11 +35,11 @@
       }
     },
     {
-      "label": "worker-service",
+      "label": "product-service",
       "type": "shell",
       "command": "npm run dev",
       "options": {
-        "cwd": "${workspaceFolder}/worker-service",
+        "cwd": "${workspaceFolder}/product-service",
         "shell": {
           "executable": "C:\\Program Files\\Git\\bin\\bash.exe",
           "args": ["-lc"]
@@ -98,7 +98,7 @@
       "label": "Run all microservices in VS Code terminals",
       "dependsOn": [
         "user-service",
-        "worker-service",
+        "product-service",
         "mail-service",
         "media-service"
       ],

@@ -68,10 +68,6 @@ const {
 
   // V
   // W
-
-  WORKER_SERVICE_DEV_URL,
-  WORKER_SERVICE_PROD_URL,
-
   // X
   // Y
   // Z
@@ -141,7 +137,6 @@ export const envs = {
       media: is_dev ? MEDIA_SERVICE_DEV_URL : MEDIA_SERVICE_PROD_URL,
       product: is_dev ? PRODUCT_SERVICE_DEV_URL : PRODUCT_SERVICE_PROD_URL,
       user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
-      worker: is_dev ? WORKER_SERVICE_DEV_URL : WORKER_SERVICE_PROD_URL,
     },
   },
 
