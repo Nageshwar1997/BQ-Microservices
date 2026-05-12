@@ -50,10 +50,7 @@ export const METHODS_AND_PATHS = {
         },
       },
     },
-    logout: {
-      base: '/logout',
-      default: { path: '/:userId', method: 'delete' },
-    },
+    logout: { path: '/logout', method: 'delete' },
     register: {
       base: '/register',
       sendOtp: { path: '/send-otp', method: 'post' },
