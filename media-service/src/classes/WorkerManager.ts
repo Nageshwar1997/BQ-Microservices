@@ -11,7 +11,7 @@ class WorkerManager {
 
   private connect() {
     try {
-      bullWorker.connect(envs.redis.queue);
+      bullWorker.connect(envs.redis.job);
 
       logger.info('Bull workers connected successfully');
     } catch (error) {

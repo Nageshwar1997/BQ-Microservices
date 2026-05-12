@@ -6,7 +6,7 @@ import { transporter } from './Transporter';
 class WorkerManager {
   /* ---------------- CONNECT ---------------- */
   private connect() {
-    bullWorker.connect(envs.redis.queue);
+    bullWorker.connect(envs.redis.job);
   }
 
   /* ---------------- RUN WORKERS ---------------- */

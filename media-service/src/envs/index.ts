@@ -23,6 +23,12 @@ const {
   IS_DEV,
 
   // J
+
+  JOB_REDIS_HOST,
+  JOB_REDIS_PORT,
+  JOB_REDIS_PASSWORD,
+  JOB_REDIS_USERNAME,
+
   // K
   // L
   // M
@@ -43,12 +49,6 @@ const {
   PORT,
 
   // Q
-
-  QUEUE_REDIS_HOST,
-  QUEUE_REDIS_PORT,
-  QUEUE_REDIS_PASSWORD,
-  QUEUE_REDIS_USERNAME,
-
   // R
   // S
 
@@ -109,11 +109,11 @@ export const envs = {
   // R
 
   redis: {
-    queue: {
-      host: QUEUE_REDIS_HOST,
-      port: Number(QUEUE_REDIS_PORT),
-      password: QUEUE_REDIS_PASSWORD,
-      username: QUEUE_REDIS_USERNAME,
+    job: {
+      host: JOB_REDIS_HOST,
+      port: Number(JOB_REDIS_PORT),
+      password: JOB_REDIS_PASSWORD,
+      username: JOB_REDIS_USERNAME,
     },
   },
 

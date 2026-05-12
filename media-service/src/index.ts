@@ -109,7 +109,7 @@ async function start() {
     // 🔥 Start DB + Queue + Workers AFTER server starts
     await Promise.all([
       connectToDB(databaseConfigs),
-      bullQueue.connect(envs.redis.queue),
+      bullQueue.connect(envs.redis.job),
       workerManager.start(),
     ]);
 

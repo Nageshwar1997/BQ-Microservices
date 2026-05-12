@@ -111,7 +111,7 @@ async function start() {
     await Promise.all([
       connectToDB(databaseConfigs),
       redisCache.connect(),
-      bullQueue.connect(envs.redis.queue),
+      bullQueue.connect(envs.redis.job),
     ]);
 
     logger.info('✅ User service initialized');

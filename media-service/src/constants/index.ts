@@ -21,7 +21,7 @@ export const METHODS_AND_PATHS = {
   },
 } as const;
 
-export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.queue;
+export const QUEUE_CONFIGS: ConnectionOptions = envs.redis.job;
 
 export const QUEUE_AND_JOB_NAMES = {
   'email-queue': ['send-otp'],
