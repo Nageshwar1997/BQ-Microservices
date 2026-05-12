@@ -1,8 +1,8 @@
 import {
-  MulterMiddleware,
-  RequestMiddleware,
-  ResponseMiddleware,
-  ZodMiddleware,
+  checkEmptyRequest,
+  tryCatchResponse,
+  validateMulter,
+  zodValidator,
 } from '@beautinique/be-middlewares';
 import { mediaUploadSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
@@ -17,16 +17,16 @@ const { base, multiple, single } = METHODS_AND_PATHS.upload;
 // Upload
 router[single.method](
   `${base}${single.path}`,
-  MulterMiddleware.validate({ type: 'single', fieldName: 'file', isDev: envs.is_dev }),
-  RequestMiddleware.emptyRequest({ body: true, file: true }),
-  ZodMiddleware.validateSchema(mediaUploadSchema),
-  ResponseMiddleware.tryCatch(singleMediaUploadController),
+  validateMulter({ type: 'single', fieldName: 'file', isDev: envs.is_dev }),
+  checkEmptyRequest({ body: true, file: true }),
+  zodValidator(mediaUploadSchema),
+  tryCatchResponse(singleMediaUploadController),
 );
 
 router[multiple.method](
   `${base}${multiple.path}`,
-  MulterMiddleware.validate({ type: 'array', fieldName: 'files', isDev: envs.is_dev }),
-  RequestMiddleware.emptyRequest({ body: true, files: true }),
-  ZodMiddleware.validateSchema(mediaUploadSchema),
-  ResponseMiddleware.tryCatch(multipleMediaUploadController),
+  validateMulter({ type: 'array', fieldName: 'files', isDev: envs.is_dev }),
+  checkEmptyRequest({ body: true, files: true }),
+  zodValidator(mediaUploadSchema),
+  tryCatchResponse(multipleMediaUploadController),
 );

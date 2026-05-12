@@ -1,4 +1,4 @@
-import { LoggerMiddleware } from '@beautinique/be-middlewares';
+import { winstonLogs } from '@beautinique/be-middlewares';
 import { type ConnectOptions, connection } from 'mongoose';
 import { envs } from '../envs';
 
@@ -10,7 +10,11 @@ export const databaseConfigs = {
 
 export const isDbConnected = () => connection.readyState === 1;
 
-export const { errorLogger, logger, requestLogger } = LoggerMiddleware.createLogger({
+export const {
+  error: errorLogs,
+  logger,
+  request: requestLogs,
+} = winstonLogs({
   serviceName: envs.service_name,
   logDir: 'logs',
   level: envs.is_dev ? 'debug' : 'info',
