@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@beautinique/be-jobs": "^1.0.5",
-    "@beautinique/be-middlewares": "^1.0.14",
+    "@beautinique/be-middlewares": "^1.0.15",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "html-to-text": "^10.0.0",
