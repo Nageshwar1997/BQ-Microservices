@@ -46,9 +46,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Title is required',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        title: ['Title is required'],
-      },
+      fieldErrors: { title: ['Title is required'] },
     });
   }
 
@@ -56,9 +54,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Brand is required',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        brand: ['Brand is required'],
-      },
+      fieldErrors: { brand: ['Brand is required'] },
     });
   }
 
@@ -66,9 +62,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Description is required',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        description: ['Description is required'],
-      },
+      fieldErrors: { description: ['Description is required'] },
     });
   }
 
@@ -76,9 +70,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Original price must be greater than zero',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        originalPrice: ['Original price must be greater than zero'],
-      },
+      fieldErrors: { originalPrice: ['Original price must be greater than zero'] },
     });
   }
 
@@ -86,9 +78,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Selling price must be greater than zero',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        sellingPrice: ['Selling price must be greater than zero'],
-      },
+      fieldErrors: { sellingPrice: ['Selling price must be greater than zero'] },
     });
   }
 
@@ -96,9 +86,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Selling price cannot be greater than original price',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        sellingPrice: ['Selling price cannot be greater than original price'],
-      },
+      fieldErrors: { sellingPrice: ['Selling price cannot be greater than original price'] },
     });
   }
 
@@ -106,9 +94,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Invalid stock quantity',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        totalStock: ['Stock cannot be negative'],
-      },
+      fieldErrors: { totalStock: ['Stock cannot be negative'] },
     });
   }
 
@@ -118,9 +104,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Images must be an array',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        images: ['Images must be an array'],
-      },
+      fieldErrors: { images: ['Images must be an array'] },
     });
   }
 
@@ -128,9 +112,7 @@ export const createProductController = async (
     throw new AppError({
       message: 'Maximum 10 images allowed',
       code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        images: ['Maximum 10 images allowed'],
-      },
+      fieldErrors: { images: ['Maximum 10 images allowed'] },
     });
   }
 
@@ -139,9 +121,7 @@ export const createProductController = async (
       throw new AppError({
         message: 'Invalid image url',
         code: 'UNPROCESSABLE_ENTITY',
-        fieldErrors: {
-          images: ['Each image must be a valid url string'],
-        },
+        fieldErrors: { images: ['Each image must be a valid url string'] },
       });
     }
   }
