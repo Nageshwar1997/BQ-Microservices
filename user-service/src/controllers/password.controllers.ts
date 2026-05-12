@@ -24,10 +24,21 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
     });
   }
 
-  // Store email in cache
+  // Store EMAIL & OTP in cache
   const { otp, token } = await redisCache.setOtpData(email);
 
-  await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  try {
+    /* ---------------- SEND OTP ---------------- */
+
+    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  } catch (error) {
+    /* ---------------- ROLLBACK ---------------- */
+
+    // Queue add failed, remove OTP from Redis
+    await redisCache.deleteOtpData(token);
+
+    throw error;
+  }
 
   res.success(200, 'OTP sent successfully', { token });
 };
@@ -46,14 +57,25 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
     throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
+  // Update OTP & sendCount in cache
   const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
   if (sendCount > MAX_RESEND) {
     throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
   }
 
-  await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  try {
+    /* ---------------- SEND OTP ---------------- */
 
+    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  } catch (error) {
+    /* ---------------- ROLLBACK ---------------- */
+
+    // Queue add failed, remove OTP from Redis
+    await redisCache.deleteOtpData(token);
+
+    throw error;
+  }
   res.success(200, 'OTP resent successfully', { sendCount });
 };
 

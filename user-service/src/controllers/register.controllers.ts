@@ -25,7 +25,18 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   // Store email in cache
   const { otp, token } = await redisCache.setOtpData(email);
 
-  await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  try {
+    /* ---------------- SEND OTP ---------------- */
+
+    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  } catch (error) {
+    /* ---------------- ROLLBACK ---------------- */
+
+    // Queue add failed, remove OTP from Redis
+    await redisCache.deleteOtpData(token);
+
+    throw error;
+  }
 
   res.success(200, 'OTP sent successfully', { token });
 };
@@ -50,7 +61,18 @@ export const registerResendOtpController = async (req: Request, res: Response) =
     throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
   }
 
-  await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  try {
+    /* ---------------- SEND OTP ---------------- */
+
+    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+  } catch (error) {
+    /* ---------------- ROLLBACK ---------------- */
+
+    // Queue add failed, remove OTP from Redis
+    await redisCache.deleteOtpData(token);
+
+    throw error;
+  }
 
   res.success(200, 'OTP resent successfully', { sendCount });
 };

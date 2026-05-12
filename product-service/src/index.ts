@@ -6,6 +6,7 @@ import {
 } from '@beautinique/be-middlewares';
 import 'dotenv/config';
 import express, { type Request, type Response } from 'express';
+import type { Socket } from 'node:net';
 import path from 'path';
 import { parse } from 'qs';
 import { bullQueue, redisCache } from './classes';
@@ -16,7 +17,14 @@ import { router } from './routes';
 /* ---------------- APP SETUP ---------------- */
 
 const app = express();
+
+app.set('query parser', (str: string) => parse(str));
+
 let server: ReturnType<typeof app.listen> | null = null;
+
+/* ---------------- CONNECTION TRACKING ---------------- */
+
+const connections = new Set<Socket>();
 
 /* ---------------- MIDDLEWARES ---------------- */
 
@@ -24,10 +32,9 @@ let server: ReturnType<typeof app.listen> | null = null;
 app.use(RequestMiddleware.requestId);
 
 // 2. Parsers
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve('public')));
-app.set('query parser', (str: string) => parse(str));
 
 // 3. Logger
 app.use(requestLogger);
@@ -57,26 +64,65 @@ app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
 
 async function start() {
   try {
-    // 🌐 Start server
-    server = app.listen(envs.port, () => {
-      logger.info(`🚀 Server running on port: ${envs.port}`);
+    await new Promise<void>((resolve, reject) => {
+      const onError = (err: Error) => {
+        reject(err);
+      };
+
+      const httpServer = app.listen(envs.port, () => {
+        httpServer.off('error', onError);
+
+        logger.info(`🚀 Server running on port: ${envs.port}`);
+
+        resolve();
+      });
+
+      server = httpServer;
+
+      httpServer.once('error', onError);
     });
 
-    // 🔥 Start workers AFTER server is up
+    const httpServer = server;
+
+    if (!httpServer) {
+      throw new Error('HTTP server did not initialize');
+    }
+
+    httpServer.on('error', (err) => {
+      logger.error('❌ HTTP server error:', err);
+    });
+
+    // Track active connections
+    httpServer.on('connection', (socket: Socket) => {
+      connections.add(socket);
+
+      socket.on('close', () => {
+        connections.delete(socket);
+      });
+    });
+
+    // Optional hard timeouts
+    httpServer.keepAliveTimeout = 65_000;
+    httpServer.headersTimeout = 66_000;
+
+    // 🔥 Start DB + Redis + Queue AFTER server starts
     await Promise.all([connectToDB(databaseConfigs), redisCache.connect(), bullQueue.connect()]);
+
+    logger.info('✅ User service initialized');
   } catch (err) {
     logger.error('❌ Failed to start server:', err);
+
     process.exit(1);
   }
 }
 
 /* ---------------- SHUTDOWN ---------------- */
 
-async function shutdown() {
-  logger.warn('🛑 Shutting down...');
+async function shutdown(signal: string) {
+  logger.warn(`🛑 Received ${signal}. Starting graceful shutdown...`);
 
   try {
-    // 1️⃣ Close workers
+    // 🔥 Stop Redis + Queue first
     const results = await Promise.allSettled([redisCache.close(), bullQueue.close()]);
 
     results.forEach((result, index) => {
@@ -84,34 +130,51 @@ async function shutdown() {
         logger.error(`❌ Service ${index} failed to close:`, result.reason);
       }
     });
-    logger.info('✅ Workers closed');
 
-    // 2️⃣ Close server gracefully
+    logger.info('📦 Redis and queue stopped');
+
     if (server) {
-      await new Promise<void>((resolve) => {
-        server?.close(() => {
-          logger.info('🌐 Server closed');
+      // Force close hanging sockets after timeout
+      const forceCloseTimer = setTimeout(() => {
+        logger.warn('⚠️ Force closing hanging connections...');
+
+        for (const socket of connections) {
+          socket.destroy();
+        }
+      }, 10_000);
+
+      // Stop accepting new connections
+      await new Promise<void>((resolve, reject) => {
+        server?.close((err) => {
+          clearTimeout(forceCloseTimer);
+
+          if (err) return reject(err);
+
+          logger.info('🌐 HTTP server closed');
+
           resolve();
         });
       });
     }
 
     logger.info('✅ Shutdown complete');
+
     process.exit(0);
   } catch (err) {
     logger.error('❌ Shutdown error:', err);
+
     process.exit(1);
   }
 }
 
 /* ---------------- PROCESS SIGNALS ---------------- */
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
 
 /* ---------------- BOOTSTRAP ---------------- */
 
-start();
+void start();
 
 /* ---------------- EXPORT ---------------- */
 
