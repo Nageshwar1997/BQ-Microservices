@@ -54,6 +54,8 @@ const {
 
   SERVICE_NAME,
 
+  SERVICE_SECRET,
+
   // T
   // U
 
@@ -120,6 +122,7 @@ export const envs = {
   // S
 
   service_name: SERVICE_NAME,
+  service_secret: SERVICE_SECRET,
 
   // T
   // U

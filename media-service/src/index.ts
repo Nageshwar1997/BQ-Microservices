@@ -4,6 +4,7 @@ import {
   checkDbConnection,
   errorResponse,
   notFoundResponse,
+  serviceAccess,
   setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
@@ -13,6 +14,7 @@ import type { Socket } from 'node:net';
 import path from 'path';
 import { workerManager } from './classes';
 import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs';
+import { HEADERS_KEYS } from './constants';
 import { envs } from './envs';
 import { router } from './routes';
 
@@ -49,12 +51,14 @@ app.use(checkDbConnection(isDbConnected));
 app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Media Service API'));
 
 // Health Route
-app.get('/api/v1/health', (_: Request, res: Response) =>
-  res.success(200, 'Media Service is healthy'),
-);
+app.get('/health', (_: Request, res: Response) => res.success(200, 'Media Service is healthy'));
 
 // API Routes
-app.use('/api/v2', router);
+app.use(
+  '/api/v1',
+  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),
+  router,
+);
 
 /* ---------------- ERROR HANDLING ---------------- */
 
