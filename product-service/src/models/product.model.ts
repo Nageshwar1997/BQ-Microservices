@@ -1,6 +1,6 @@
 import { AppError } from '@beautinique/be-classes';
-import { model, Schema } from 'mongoose';
-import { PRODUCT_STATUSES, TRY_ON_CATEGORIES, TRY_ON_TYPES } from '../constants';
+import { Schema, model } from 'mongoose';
+import { PRODUCT_STATUSES, TRY_ON_CATEGORIES, TRY_ON_MAP } from '../constants';
 import type { ITryOnSchema, TProductDoc, TProductStatus } from '../types';
 
 const tryOnSchema = new Schema<ITryOnSchema>(
@@ -199,7 +199,7 @@ productSchema.pre('validate', function () {
       });
     }
 
-    const allowedTypes = TRY_ON_TYPES[category as keyof typeof TRY_ON_TYPES];
+    const allowedTypes = TRY_ON_MAP[category as keyof typeof TRY_ON_MAP];
 
     if (!allowedTypes.includes(type as never)) {
       throw new AppError({

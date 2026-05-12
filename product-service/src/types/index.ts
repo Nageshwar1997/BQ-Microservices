@@ -1,13 +1,11 @@
 import type { TRole } from '@beautinique/be-constants';
-import type { JobsOptions } from 'bullmq';
 import type { Request } from 'express';
 import type { Document, Types } from 'mongoose';
 import type {
-  CATEGORY_LEVELS,
+  CATEGORY_LEVELS_MAP,
   PRODUCT_STATUSES,
-  QUEUE_AND_JOB_NAMES,
   TRY_ON_CATEGORIES,
-  TRY_ON_TYPES,
+  TRY_ON_MAP,
 } from '../constants';
 
 export type TId = Types.ObjectId;
@@ -26,17 +24,17 @@ interface IBaseCategory {
 }
 
 export interface IL1Category extends IBaseCategory {
-  level: (typeof CATEGORY_LEVELS)[0];
+  level: (typeof CATEGORY_LEVELS_MAP)['L1'];
   parent: null;
 }
 
 export interface IL2Category extends IBaseCategory {
-  level: (typeof CATEGORY_LEVELS)[1];
+  level: (typeof CATEGORY_LEVELS_MAP)['L2'];
   parent: IL1Category | TId;
 }
 
 export interface IL3Category extends IBaseCategory {
-  level: (typeof CATEGORY_LEVELS)[2];
+  level: (typeof CATEGORY_LEVELS_MAP)['L3'];
   parent: IL2Category | TId;
 }
 
@@ -48,15 +46,6 @@ export interface IUser extends IId {
   role: TRole;
 }
 
-type TQueue = typeof QUEUE_AND_JOB_NAMES;
-export type TQueueKey = keyof TQueue;
-type TQueueJobName = { [K in TQueueKey]: { queueName: K; jobName: TQueue[K][number] } }[TQueueKey];
-
-export type IQueueJob<TData = unknown> = TQueueJobName & {
-  data: TData;
-  options?: JobsOptions;
-};
-
 export interface AuthRequest extends Request {
   user?: (IId & { role: TRole }) | null;
 }
@@ -65,32 +54,32 @@ export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
 
 export interface ILip {
   category: 'LIP';
-  type: (typeof TRY_ON_TYPES)['LIP'][number];
+  type: (typeof TRY_ON_MAP)['LIP'][number];
 }
 
 export interface IEye {
   category: 'EYE';
-  type: (typeof TRY_ON_TYPES)['EYE'][number];
+  type: (typeof TRY_ON_MAP)['EYE'][number];
 }
 
 export interface IHair {
   category: 'HAIR';
-  type: (typeof TRY_ON_TYPES)['HAIR'][number];
+  type: (typeof TRY_ON_MAP)['HAIR'][number];
 }
 
 export interface IFace {
   category: 'FACE';
-  type: (typeof TRY_ON_TYPES)['FACE'][number];
+  type: (typeof TRY_ON_MAP)['FACE'][number];
 }
 
 export interface INail {
   category: 'NAIL';
-  type: (typeof TRY_ON_TYPES)['NAIL'][number];
+  type: (typeof TRY_ON_MAP)['NAIL'][number];
 }
 
 export interface ISkin {
   category: 'SKIN';
-  type: (typeof TRY_ON_TYPES)['SKIN'][number];
+  type: (typeof TRY_ON_MAP)['SKIN'][number];
 }
 
 export type TTryOnCategory = ILip | IEye | IHair | IFace | INail | ISkin;

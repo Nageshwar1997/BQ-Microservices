@@ -1,4 +1,5 @@
 import { connectToDB } from '@beautinique/be-configs';
+import { bullQueue } from '@beautinique/be-jobs';
 import {
   checkDbConnection,
   errorResponse,
@@ -12,7 +13,7 @@ import express, { type Request, type Response } from 'express';
 import type { Socket } from 'node:net';
 import path from 'path';
 import { parse } from 'qs';
-import { bullQueue, redisCache } from './classes';
+import { redisCache } from './classes';
 import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs';
 import { HEADERS_KEYS } from './constants';
 import { envs } from './envs';
@@ -114,7 +115,11 @@ async function start() {
     httpServer.headersTimeout = 66_000;
 
     // 🔥 Start DB + Redis + Queue AFTER server starts
-    await Promise.all([connectToDB(databaseConfigs), redisCache.connect(), bullQueue.connect()]);
+    await Promise.all([
+      connectToDB(databaseConfigs),
+      redisCache.connect(),
+      bullQueue.connect(envs.redis.job),
+    ]);
 
     logger.info('✅ User service initialized');
   } catch (err) {

@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { Schema, model } from 'mongoose';
 import { CATEGORY_LEVELS } from '../constants';
 import type { TCategoryDoc } from '../types';
 
