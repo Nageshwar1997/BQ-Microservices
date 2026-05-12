@@ -42,7 +42,8 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mongoose": "^9.6.2",
-    "redis": "^5.12.1"
+    "redis": "^5.12.1",
+    "slugify": "^1.6.9"
   },
   "repository": {
     "type": "git",

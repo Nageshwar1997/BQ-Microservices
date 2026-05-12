@@ -104,7 +104,7 @@ export interface TProductDoc extends Document, IId, ITimestamp {
   howToUse: string;
   ingredients: string;
   additionalDetails: string;
-  commonImages: string[];
+  images: string[];
   variants: TId[];
   category: TId;
   seller: TId;

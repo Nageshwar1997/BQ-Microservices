@@ -12,7 +12,7 @@ const tryOnSchema = new Schema<ITryOnSchema>(
   { _id: false },
 );
 
-export const productSchema = new Schema<TProductDoc>(
+const productSchema = new Schema<TProductDoc>(
   {
     title: { type: String, required: true, trim: true, minlength: 2, maxlength: 200 },
     slug: { type: String, required: true, trim: true, lowercase: true, unique: true, index: true },
@@ -25,7 +25,7 @@ export const productSchema = new Schema<TProductDoc>(
     howToUse: { type: String, trim: true, default: '', maxlength: 5000 },
     ingredients: { type: String, trim: true, default: '', maxlength: 5000 },
     additionalDetails: { type: String, trim: true, default: '', maxlength: 5000 },
-    commonImages: {
+    images: {
       type: [String],
       required: true,
       default: [],
@@ -142,12 +142,12 @@ productSchema.pre('validate', function () {
    */
   if (this.status === 'APPROVED') {
     // Minimum one image required
-    if (this.commonImages.length === 0) {
+    if (this.images.length === 0) {
       throw new AppError({
         message: 'At least one image is required',
         code: 'UNPROCESSABLE_ENTITY',
         fieldErrors: {
-          commonImages: ['At least one image is required'],
+          images: ['At least one image is required'],
         },
       });
     }
