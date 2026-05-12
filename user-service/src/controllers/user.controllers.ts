@@ -4,6 +4,11 @@ import { redisCache } from '../classes';
 
 export const getSessionUserController = async (req: Request, res: Response) => {
   const userId = req.get('X-User-Id') || '';
+
+  if (!userId) {
+    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+  }
+
   const user = await redisCache.getUser(userId);
 
   if (!user) throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });

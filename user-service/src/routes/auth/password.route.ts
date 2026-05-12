@@ -1,4 +1,4 @@
-import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
+import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
 import {
   changePasswordSchema,
   emailSchema,
@@ -25,42 +25,42 @@ const { forgot, change, set } = METHODS_AND_PATHS.auth.password;
 
 passwordRouter[forgot.sendOtp.method](
   forgot.sendOtp.path,
-  RequestMiddleware.emptyRequest({ body: true }),
-  ZodMiddleware.validateSchema(emailSchema),
-  ResponseMiddleware.tryCatch(forgotPasswordSendOtpController),
+  checkEmptyRequest({ body: true }),
+  zodValidator(emailSchema),
+  tryCatchResponse(forgotPasswordSendOtpController),
 );
 
 passwordRouter[forgot.resendOtp.method](
   forgot.resendOtp.path,
-  ResponseMiddleware.tryCatch(forgotPasswordResendOtpController),
+  tryCatchResponse(forgotPasswordResendOtpController),
 );
 
 passwordRouter[forgot.verifyOtp.method](
   forgot.verifyOtp.path,
-  RequestMiddleware.emptyRequest({ body: true }),
-  ZodMiddleware.validateSchema(otpSchema),
-  ResponseMiddleware.tryCatch(forgotPasswordVerifyOtpController),
+  checkEmptyRequest({ body: true }),
+  zodValidator(otpSchema),
+  tryCatchResponse(forgotPasswordVerifyOtpController),
 );
 
 passwordRouter[forgot.save.method](
   forgot.save.path,
-  RequestMiddleware.emptyRequest({ body: true }),
-  ZodMiddleware.validateSchema(passwordsSchema),
-  ResponseMiddleware.tryCatch(forgotPasswordSaveController),
+  checkEmptyRequest({ body: true }),
+  zodValidator(passwordsSchema),
+  tryCatchResponse(forgotPasswordSaveController),
 );
 
 passwordRouter[change.method](
   change.path,
   authenticate,
-  RequestMiddleware.emptyRequest({ body: true }),
-  ZodMiddleware.validateSchema(changePasswordSchema),
-  ResponseMiddleware.tryCatch<AuthRequest>(changePasswordController),
+  checkEmptyRequest({ body: true }),
+  zodValidator(changePasswordSchema),
+  tryCatchResponse<AuthRequest>(changePasswordController),
 );
 
 passwordRouter[set.method](
   set.path,
   authenticate,
-  RequestMiddleware.emptyRequest({ body: true }),
-  ZodMiddleware.validateSchema(setPasswordSchema),
-  ResponseMiddleware.tryCatch<AuthRequest>(setPasswordController),
+  checkEmptyRequest({ body: true }),
+  zodValidator(setPasswordSchema),
+  tryCatchResponse<AuthRequest>(setPasswordController),
 );

@@ -1,4 +1,4 @@
-import { RequestMiddleware, ResponseMiddleware, ZodMiddleware } from '@beautinique/be-middlewares';
+import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
 import { loginSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
 import { METHODS_AND_PATHS } from '../../constants';
@@ -19,43 +19,43 @@ const { login } = METHODS_AND_PATHS.auth;
 // Manual
 loginRouter[login.manual.method](
   login.manual.path,
-  RequestMiddleware.emptyRequest({ body: true }),
-  ZodMiddleware.validateSchema(loginSchema),
-  ResponseMiddleware.tryCatch(manualLoginController),
+  checkEmptyRequest({ body: true }),
+  zodValidator(loginSchema),
+  tryCatchResponse(manualLoginController),
 );
 
 // Google
 loginRouter[login.oauth.google.redirect.method](
   login.oauth.google.redirect.path,
-  ResponseMiddleware.tryCatch(googleRedirectController),
+  tryCatchResponse(googleRedirectController),
 );
 
 loginRouter[login.oauth.google.callback.method](
   login.oauth.google.callback.path,
-  RequestMiddleware.emptyRequest({ query: true }),
-  ResponseMiddleware.tryCatch(googleCallbackController),
+  checkEmptyRequest({ query: true }),
+  tryCatchResponse(googleCallbackController),
 );
 
 // LinkedIn
 loginRouter[login.oauth.linkedin.redirect.method](
   login.oauth.linkedin.redirect.path,
-  ResponseMiddleware.tryCatch(linkedinRedirectController),
+  tryCatchResponse(linkedinRedirectController),
 );
 
 loginRouter[login.oauth.linkedin.callback.method](
   login.oauth.linkedin.callback.path,
-  RequestMiddleware.emptyRequest({ query: true }),
-  ResponseMiddleware.tryCatch(linkedinCallbackController),
+  checkEmptyRequest({ query: true }),
+  tryCatchResponse(linkedinCallbackController),
 );
 
 // GitHub
 loginRouter[login.oauth.github.redirect.method](
   login.oauth.github.redirect.path,
-  ResponseMiddleware.tryCatch(githubRedirectController),
+  tryCatchResponse(githubRedirectController),
 );
 
 loginRouter[login.oauth.github.callback.method](
   login.oauth.github.callback.path,
-  RequestMiddleware.emptyRequest({ query: true }),
-  ResponseMiddleware.tryCatch(githubCallbackController),
+  checkEmptyRequest({ query: true }),
+  tryCatchResponse(githubCallbackController),
 );

@@ -1,9 +1,11 @@
 import { connectToDB } from '@beautinique/be-configs';
 import { bullQueue } from '@beautinique/be-jobs';
 import {
-  DatabaseMiddleware,
-  RequestMiddleware,
-  ResponseMiddleware,
+  checkDbConnection,
+  errorResponse,
+  notFoundResponse,
+  setRequestId,
+  successResponse,
 } from '@beautinique/be-middlewares';
 import 'dotenv/config';
 import express, { type Request, type Response } from 'express';
@@ -11,7 +13,7 @@ import type { Socket } from 'node:net';
 import path from 'path';
 import { parse } from 'qs';
 import { redisCache } from './classes';
-import { databaseConfigs, errorLogger, isDbConnected, logger, requestLogger } from './configs';
+import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs';
 import { envs } from './envs';
 import { router } from './routes';
 
@@ -30,7 +32,7 @@ const connections = new Set<Socket>();
 /* ---------------- MIDDLEWARES ---------------- */
 
 // 1. Request ID
-app.use(RequestMiddleware.requestId);
+app.use(setRequestId);
 
 // 2. Parsers
 app.use(express.json({ limit: '10mb' }));
@@ -38,11 +40,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve('public')));
 
 // 3. Logger
-app.use(requestLogger);
+app.use(requestLogs);
 
 // 4. Custom middlewares
-app.use(ResponseMiddleware.success);
-app.use(DatabaseMiddleware.checkConnection(isDbConnected));
+app.use(successResponse);
+app.use(checkDbConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
 
@@ -57,9 +59,9 @@ app.use('/api/v1', router);
 
 /* ---------------- ERROR HANDLING ---------------- */
 
-app.use(ResponseMiddleware.notFound);
-app.use(errorLogger);
-app.use(ResponseMiddleware.error({ isDev: envs.is_dev }));
+app.use(notFoundResponse);
+app.use(errorLogs);
+app.use(errorResponse({ isDev: envs.is_dev }));
 
 /* ---------------- START ---------------- */
 
