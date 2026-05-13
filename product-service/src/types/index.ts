@@ -1,13 +1,14 @@
 import type { TRole } from '@beautinique/be-constants';
 import type { Request } from 'express';
-import type { Document, Types } from 'mongoose';
+import type { Document, InferSchemaType, Types } from 'mongoose';
 import type {
   CATEGORY_LEVELS_MAP,
-  CATEGORY_STATUS,
+  CATEGORY_STATUSES,
   PRODUCT_STATUSES,
   TRY_ON_CATEGORIES,
   TRY_ON_MAP,
 } from '../constants';
+import type { variantSchema } from '../models/variant.model';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -19,11 +20,23 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
+export interface IVariant extends IId, ITimestamp {
+  title: string;
+  stock: number;
+  images: string[];
+  color?: string;
+  status: (typeof CATEGORY_STATUSES)[number];
+}
+
+export type TVariant = InferSchemaType<typeof variantSchema> & IId;
+
+export type TVariantDoc = TVariant & Document;
+
 interface IBaseCategory {
   name: string;
   slug: string;
   expiresAt?: Date | null;
-  status: (typeof CATEGORY_STATUS)[number];
+  status: (typeof CATEGORY_STATUSES)[number];
   productCount: number;
   createdByRole: TRole;
   isLeaf: boolean;

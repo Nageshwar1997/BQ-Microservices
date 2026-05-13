@@ -24,7 +24,11 @@ export const CATEGORY_STATUS_MAP = {
   UNUSED: 'UNUSED',
 } as const;
 
-export const CATEGORY_STATUS = Object.values(CATEGORY_STATUS_MAP);
+export const VARIANT_STATUS_MAP = CATEGORY_STATUS_MAP;
+
+export const VARIANT_STATUSES = Object.values(VARIANT_STATUS_MAP);
+
+export const CATEGORY_STATUSES = Object.values(CATEGORY_STATUS_MAP);
 
 export const ROLES_MAP = Object.fromEntries(ROLES.map((role) => [role, role])) as Record<
   TRole,

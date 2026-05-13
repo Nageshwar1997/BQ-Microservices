@@ -5,7 +5,7 @@ import { type ClientSession } from 'mongoose';
 import { CATEGORY_LEVELS, CATEGORY_STATUS_MAP } from '../../constants';
 import { Category } from '../../models';
 import type { AuthRequest } from '../../types';
-import { generateSlug, toObjectId } from '../../utils';
+import { generateSlug, getObjId } from '../../utils';
 
 const CATEGORY_LEVEL_ACCESS: Record<number, string[]> = {
   1: ['ADMIN', 'MASTER'],
@@ -55,7 +55,7 @@ export const createCategoryController = async (
 
   /* ---------------- PARENT ---------------- */
 
-  const parent = parentId ? toObjectId(parentId) : null;
+  const parent = parentId ? getObjId(parentId) : null;
 
   if (parent) {
     const parentCategory = await Category.findById(parent).select('level').lean().session(session);

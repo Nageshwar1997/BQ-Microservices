@@ -1,5 +1,5 @@
 import { Schema, model } from 'mongoose';
-import { CATEGORY_LEVELS, CATEGORY_STATUS, CATEGORY_STATUS_MAP, ROLES_MAP } from '../constants';
+import { CATEGORY_LEVELS, CATEGORY_STATUSES, CATEGORY_STATUS_MAP, ROLES_MAP } from '../constants';
 import type { TCategoryDoc } from '../types';
 import { generateSlug } from '../utils';
 
@@ -27,7 +27,7 @@ const categorySchema = new Schema<TCategoryDoc>(
     /* PENDING, USED or UNUSED */
     status: {
       type: String,
-      enum: CATEGORY_STATUS,
+      enum: CATEGORY_STATUSES,
       default: CATEGORY_STATUS_MAP.PENDING,
       index: true,
     },
