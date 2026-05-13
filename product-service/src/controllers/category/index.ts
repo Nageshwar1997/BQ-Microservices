@@ -1,5 +1,7 @@
 import { AppError } from '@beautinique/be-classes';
 import type { Response } from 'express';
+import { MongoServerError } from 'mongodb';
+import { type ClientSession } from 'mongoose';
 import { CATEGORY_LEVELS, CATEGORY_STATUS_MAP } from '../../constants';
 import { Category } from '../../models';
 import type { AuthRequest } from '../../types';
@@ -11,7 +13,11 @@ const CATEGORY_LEVEL_ACCESS: Record<number, string[]> = {
   3: ['ADMIN', 'SELLER', 'MASTER'],
 };
 
-export const createCategoryController = async (req: AuthRequest, res: Response) => {
+export const createCategoryController = async (
+  req: AuthRequest,
+  res: Response,
+  session: ClientSession,
+) => {
   const { name, level, parentId } = req.body ?? {};
 
   const role = req.user?.role;
@@ -52,7 +58,7 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
   const parent = parentId ? toObjectId(parentId) : null;
 
   if (parent) {
-    const parentCategory = await Category.findById(parent);
+    const parentCategory = await Category.findById(parent).select('level').lean().session(session);
 
     if (!parentCategory) {
       throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
@@ -75,7 +81,10 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
 
   const slug = generateSlug(name, false);
 
-  const existingCategory = await Category.findOne({ parent, slug });
+  const existingCategory = await Category.findOne({ parent, slug })
+    .select('_id')
+    .lean()
+    .session(session);
 
   if (existingCategory) {
     throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
@@ -84,8 +93,8 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
   /* ---------------- STATUS ---------------- */
 
   /*
-    SELLER categories: PENDING
-    ADMIN/MASTER: USED
+    SELLER -> PENDING
+    ADMIN/MASTER -> USED
   */
 
   const status = role === 'SELLER' ? CATEGORY_STATUS_MAP.PENDING : CATEGORY_STATUS_MAP.USED;
@@ -101,7 +110,7 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
 
   /* ---------------- CREATE ---------------- */
 
-  const category = await Category.create({
+  const category = new Category({
     name,
     level,
     parent,
@@ -110,10 +119,20 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
     createdByRole: role,
   });
 
+  try {
+    await category.save({ session });
+  } catch (error) {
+    if (error instanceof MongoServerError && error.code === 11000) {
+      throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+    }
+
+    throw error;
+  }
+
   /* ---------------- UPDATE PARENT ---------------- */
 
   if (parent) {
-    await Category.findByIdAndUpdate(parent, { isLeaf: false });
+    await Category.findByIdAndUpdate(parent, { isLeaf: false }, { session });
   }
 
   res.success(201, 'Category created successfully', { category });

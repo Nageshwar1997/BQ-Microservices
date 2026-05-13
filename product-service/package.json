@@ -41,6 +41,7 @@
     "@beautinique/be-zod": "^1.0.17",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "mongodb": "^7.2.0",
     "mongoose": "^9.6.2",
     "redis": "^5.12.1",
     "slugify": "^1.6.9"
