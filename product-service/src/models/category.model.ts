@@ -5,18 +5,17 @@ import { generateSlug } from '../utils';
 
 const categorySchema = new Schema<TCategoryDoc>(
   {
+    /* Category Name */
     name: { type: String, required: true, trim: true, maxlength: 120, index: true },
     /* SEO + Atlas Search Friendly */
     slug: { type: String, required: true, trim: true, lowercase: true, index: true },
-    /*
-      1 -> Main
-      2 -> Sub
-      3 -> Final Product Category
-    */
+    /* 1 -> Main 2 -> Sub 3 -> Final Product Category */
     level: { type: Number, enum: CATEGORY_LEVELS, required: true, index: true },
-    /* Parent category */
+    /* Parent Category */
     parent: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
-    /* Product count only useful for LEVEL 3 categories */
+    /* Final category or not */
+    isLeaf: { type: Boolean, default: true, index: true },
+    /* Useful mainly for level 3 */
     productCount: { type: Number, default: 0, min: 0, index: true },
     /* ADMIN, SELLER or MASTER */
     createdByRole: {
@@ -32,7 +31,7 @@ const categorySchema = new Schema<TCategoryDoc>(
       default: CATEGORY_STATUS_MAP.PENDING,
       index: true,
     },
-    /* Auto delete temporary seller categories */
+    /* Temporary seller categories */
     expiresAt: { type: Date, index: { expires: 0 } },
   },
   {
@@ -54,11 +53,9 @@ categorySchema.pre('validate', function () {
 /* ---------------- UNIQUE HIERARCHY ---------------- */
 
 categorySchema.index(
-  { level: 1, parent: 1, slug: 1 },
+  { parent: 1, slug: 1 },
   {
     unique: true,
-    /* Ignore unused categories */
-    partialFilterExpression: { status: { $ne: CATEGORY_STATUS_MAP.UNUSED } },
   },
 );
 
@@ -72,6 +69,9 @@ categorySchema.index({ status: 1, level: 1 });
 
 // Tree queries
 categorySchema.index({ parent: 1, level: 1 });
+
+// Product validation
+categorySchema.index({ isLeaf: 1, level: 1 });
 
 // Cleanup queries
 categorySchema.index({ productCount: 1, createdByRole: 1 });

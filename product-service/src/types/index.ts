@@ -26,6 +26,7 @@ interface IBaseCategory {
   status: (typeof CATEGORY_STATUS)[number];
   productCount: number;
   createdByRole: TRole;
+  isLeaf: boolean;
 }
 
 export interface IL1Category extends IBaseCategory {

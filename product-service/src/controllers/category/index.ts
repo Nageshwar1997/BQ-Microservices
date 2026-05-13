@@ -16,9 +16,12 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
 
   const role = req.user?.role;
 
+  /* ---------------- AUTH ---------------- */
+
   if (!role) {
     throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
   }
+
   /* ---------------- VALIDATIONS ---------------- */
 
   if (!name || !level) {
@@ -37,40 +40,27 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
 
   const allowedRoles = CATEGORY_LEVEL_ACCESS[level];
 
-  if (!allowedRoles?.includes(role || '')) {
+  if (!allowedRoles?.includes(role)) {
     throw new AppError({
       message: 'You are not allowed to create this category level',
       code: 'AUTHORIZATION_ERROR',
     });
   }
 
-  /* ---------------- PARENT VALIDATION ---------------- */
+  /* ---------------- PARENT ---------------- */
 
-  const parentObjId = parentId ? toObjectId(parentId) : null;
+  const parent = parentId ? toObjectId(parentId) : null;
 
-  const existingCategory = await Category.findOne({
-    level,
-    parent: parentObjId,
-    slug: generateSlug(name, false),
-    status: { $ne: CATEGORY_STATUS_MAP.UNUSED },
-  });
-
-  if (existingCategory) {
-    throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
-  }
-
-  if (parentObjId) {
-    const parentCategory = await Category.findById(parentObjId);
+  if (parent) {
+    const parentCategory = await Category.findById(parent);
 
     if (!parentCategory) {
       throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
     }
 
     /*
-      Hierarchy validation
-
-      Level 2 -> parent must be level 1
-      Level 3 -> parent must be level 2
+      Level 2 -> Parent must be Level 1
+      Level 3 -> Parent must be Level 2
     */
 
     if (parentCategory.level !== level - 1) {
@@ -81,35 +71,50 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
     }
   }
 
-  /* ---------------- CATEGORY STATUS ---------------- */
+  /* ---------------- DUPLICATE CHECK ---------------- */
+
+  const slug = generateSlug(name, false);
+
+  const existingCategory = await Category.findOne({ parent, slug });
+
+  if (existingCategory) {
+    throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+  }
+
+  /* ---------------- STATUS ---------------- */
 
   /*
-    Admin categories directly USED
-
-    Seller categories start as PENDING
+    SELLER categories: PENDING
+    ADMIN/MASTER: USED
   */
 
   const status = role === 'SELLER' ? CATEGORY_STATUS_MAP.PENDING : CATEGORY_STATUS_MAP.USED;
 
-  /* ---------------- AUTO DELETE TIMER ---------------- */
+  /* ---------------- EXPIRES ---------------- */
 
   /*
-    Temporary categories only for
-    Seller level 3 categories
+    Temporary seller categories
   */
 
   const expiresAt =
     level === 3 && role === 'SELLER' ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined;
-  /* ---------------- CREATE CATEGORY ---------------- */
+
+  /* ---------------- CREATE ---------------- */
 
   const category = await Category.create({
     name,
     level,
-    parent: parentObjId,
+    parent,
     status,
     expiresAt,
     createdByRole: role,
   });
 
-  res.success(200, 'Category created successfully', { category });
+  /* ---------------- UPDATE PARENT ---------------- */
+
+  if (parent) {
+    await Category.findByIdAndUpdate(parent, { isLeaf: false });
+  }
+
+  res.success(201, 'Category created successfully', { category });
 };
