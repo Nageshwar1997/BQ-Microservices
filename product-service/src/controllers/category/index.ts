@@ -1,16 +1,13 @@
 import { AppError } from '@beautinique/be-classes';
 import type { Response } from 'express';
-
-import { CATEGORY_LEVELS } from '../../constants';
+import { CATEGORY_LEVELS, CATEGORY_STATUS_MAP } from '../../constants';
 import { Category } from '../../models';
-
 import type { AuthRequest } from '../../types';
-
 import { toObjectId } from '../../utils';
 
 const CATEGORY_LEVEL_ACCESS: Record<number, string[]> = {
-  1: ['ADMIN'],
-  2: ['ADMIN'],
+  1: ['ADMIN', 'MASTER'],
+  2: ['ADMIN', 'MASTER'],
   3: ['ADMIN', 'SELLER', 'MASTER'],
 };
 
@@ -19,27 +16,21 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
 
   const role = req.user?.role;
 
+  if (!role) {
+    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+  }
   /* ---------------- VALIDATIONS ---------------- */
 
   if (!name || !level) {
-    throw new AppError({
-      message: 'All fields are required',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new AppError({ message: 'All fields are required', code: 'UNPROCESSABLE_ENTITY' });
   }
 
   if (!CATEGORY_LEVELS.includes(level)) {
-    throw new AppError({
-      message: 'Invalid category level',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new AppError({ message: 'Invalid category level', code: 'UNPROCESSABLE_ENTITY' });
   }
 
   if (level !== 1 && !parentId) {
-    throw new AppError({
-      message: 'Parent category is required',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new AppError({ message: 'Parent category is required', code: 'UNPROCESSABLE_ENTITY' });
   }
 
   /* ---------------- ROLE ACCESS ---------------- */
@@ -61,10 +52,7 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
     const parentCategory = await Category.findById(parentObjId);
 
     if (!parentCategory) {
-      throw new AppError({
-        message: 'Parent category not found',
-        code: 'NOT_FOUND',
-      });
+      throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
     }
 
     /*
@@ -82,11 +70,35 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
     }
   }
 
+  /* ---------------- CATEGORY STATUS ---------------- */
+
+  /*
+    Admin categories directly USED
+
+    Seller categories start as PENDING
+  */
+
+  const status = role === 'SELLER' ? CATEGORY_STATUS_MAP.PENDING : CATEGORY_STATUS_MAP.USED;
+
+  /* ---------------- AUTO DELETE TIMER ---------------- */
+
+  /*
+    Temporary categories only for
+    Seller level 3 categories
+  */
+
+  const expiresAt =
+    level === 3 && role === 'SELLER' ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined;
   /* ---------------- CREATE CATEGORY ---------------- */
 
-  const category = await Category.create({ name, level, parent: parentObjId });
+  const category = await Category.create({
+    name,
+    level,
+    parent: parentObjId,
+    status,
+    expiresAt,
+    createdByRole: role,
+  });
 
-  return res
-    .status(201)
-    .json({ success: true, message: 'Category created successfully', data: category });
+  res.success(200, 'Category created successfully', { category });
 };

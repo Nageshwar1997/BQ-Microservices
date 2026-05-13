@@ -24,6 +24,8 @@ interface IBaseCategory {
   slug: string;
   expiresAt?: Date | null;
   status: (typeof CATEGORY_STATUS)[number];
+  productCount: number;
+  createdByRole: TRole;
 }
 
 export interface IL1Category extends IBaseCategory {

@@ -1,3 +1,5 @@
+import { ROLES, type TRole } from '@beautinique/be-constants';
+
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
@@ -17,13 +19,17 @@ export const PRODUCT_STATUS_MAP = {
 export const PRODUCT_STATUSES = Object.values(PRODUCT_STATUS_MAP);
 
 export const CATEGORY_STATUS_MAP = {
-  DRAFT: 'DRAFT',
   PENDING: 'PENDING',
   USED: 'USED',
   UNUSED: 'UNUSED',
 } as const;
 
 export const CATEGORY_STATUS = Object.values(CATEGORY_STATUS_MAP);
+
+export const ROLES_MAP = Object.fromEntries(ROLES.map((role) => [role, role])) as Record<
+  TRole,
+  TRole
+>;
 
 export const TRY_ON_CATEGORIES = ['LIP', 'EYE', 'HAIR', 'FACE', 'NAIL', 'SKIN'] as const;
 
