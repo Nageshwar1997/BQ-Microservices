@@ -155,7 +155,7 @@ export const createProductController = async (
     level: 1,
     parent: null,
     name: categoryL1.name,
-    value: categoryL1.category,
+    slug: categoryL1.category,
     session,
   });
 
@@ -163,7 +163,7 @@ export const createProductController = async (
     level: 2,
     parent: category_1._id,
     name: categoryL2.name,
-    value: categoryL2.category,
+    slug: categoryL2.category,
     session,
   });
 
@@ -171,7 +171,7 @@ export const createProductController = async (
     level: 3,
     parent: category_2._id,
     name: categoryL3.name,
-    value: categoryL3.category,
+    slug: categoryL3.category,
     session,
   });
 

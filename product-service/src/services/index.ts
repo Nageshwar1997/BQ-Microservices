@@ -5,15 +5,15 @@ import type { TCategory } from '../types';
 
 export const findOrCreateCategory = async ({
   name,
-  value,
+  slug,
   parent = null,
   level,
   session,
-}: Omit<TCategory, '_id'> & { session?: ClientSession }) => {
+}: Partial<Omit<TCategory, '_id'>> & { session?: ClientSession }) => {
   try {
     const category = await Category.findOneAndUpdate(
-      { value, level, parent },
-      { $setOnInsert: { name, value, level, parent } },
+      { slug, level, parent },
+      { $setOnInsert: { name, slug, level, parent } },
       { upsert: true, new: true, session },
     );
 
