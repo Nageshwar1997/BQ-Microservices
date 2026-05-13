@@ -1,9 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
-import { findOrCreateCategory } from '../services';
-import { generateSlug, getUser } from '../utils';
-import { Product } from '../models';
+import { Product } from '../../models';
+import { findOrCreateCategory } from '../../services';
+import { generateSlug, getUser } from '../../utils';
 
 export const createProductController = async (
   req: Request,
