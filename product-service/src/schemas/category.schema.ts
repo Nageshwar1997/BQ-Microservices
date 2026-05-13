@@ -1,9 +1,8 @@
-import { Schema, model } from 'mongoose';
+import { Schema } from 'mongoose';
 import { CATEGORY_LEVELS, CATEGORY_STATUSES, CATEGORY_STATUS_MAP, ROLES_MAP } from '../constants';
-import type { TCategoryDoc } from '../types';
 import { generateSlug } from '../utils';
 
-const categorySchema = new Schema<TCategoryDoc>(
+export const categorySchema = new Schema(
   {
     /* Category Name */
     name: { type: String, required: true, trim: true, maxlength: 120, index: true },
@@ -75,5 +74,3 @@ categorySchema.index({ isLeaf: 1, level: 1 });
 
 // Cleanup queries
 categorySchema.index({ productCount: 1, createdByRole: 1 });
-
-export const Category = model<TCategoryDoc>('Category', categorySchema);

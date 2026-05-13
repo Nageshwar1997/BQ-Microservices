@@ -1,25 +1,17 @@
 import { AppError } from '@beautinique/be-classes';
-import type { NextFunction, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
-import { Product } from '../models/product.model';
 import { findOrCreateCategory } from '../services';
-import type { AuthRequest } from '../types';
-import { generateSlug } from '../utils';
+import { generateSlug, getUser } from '../utils';
+import { Product } from '../models';
 
 export const createProductController = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const sellerId = req.user?._id;
-
-  if (!sellerId) {
-    throw new AppError({
-      message: 'You are not logged in',
-      code: 'AUTHENTICATION_ERROR',
-    });
-  }
+  const { _id: sellerId } = getUser(req);
 
   const {
     title,

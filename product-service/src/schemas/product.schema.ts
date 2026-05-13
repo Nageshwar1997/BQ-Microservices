@@ -1,18 +1,18 @@
 import { AppError } from '@beautinique/be-classes';
-import { Schema, model } from 'mongoose';
+import { Schema } from 'mongoose';
 import { PRODUCT_STATUSES, TRY_ON_CATEGORIES, TRY_ON_MAP } from '../constants';
-import type { ITryOnSchema, TProductDoc, TProductStatus } from '../types';
+import type { ITryOn, TProductStatus } from '../types';
 
-const tryOnSchema = new Schema<ITryOnSchema>(
+const tryOnSchema = new Schema<ITryOn>(
   {
-    enabled: { type: Boolean, default: false },
+    enabled: { type: Boolean },
     category: { type: String, enum: TRY_ON_CATEGORIES, required: false },
     type: { type: String, required: false },
   },
   { _id: false },
 );
 
-const productSchema = new Schema<TProductDoc>(
+export const productSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, minlength: 2, maxlength: 200 },
     slug: { type: String, required: true, trim: true, lowercase: true, unique: true, index: true },
@@ -212,5 +212,3 @@ productSchema.pre('validate', function () {
     }
   }
 });
-
-export const Product = model<TProductDoc>('Product', productSchema);

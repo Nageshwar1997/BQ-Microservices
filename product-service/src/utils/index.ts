@@ -1,7 +1,8 @@
 import { AppError } from '@beautinique/be-classes';
+import type { Request } from 'express';
 import { Types } from 'mongoose';
 import slugify from 'slugify';
-import type { AuthRequest, TId } from '../types';
+import type { TId } from '../types';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -27,7 +28,7 @@ export const generateSlug = (text: string, unique = true) => {
 };
 
 /* ========== GET AUTH USER ========== */
-export const getUser = (req: AuthRequest) => {
+export const getUser = (req: Request) => {
   const user = req.user;
 
   if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });

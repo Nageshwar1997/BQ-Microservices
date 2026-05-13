@@ -1,14 +1,7 @@
 import type { TRole } from '@beautinique/be-constants';
-import type { Request } from 'express';
 import type { Document, InferSchemaType, Types } from 'mongoose';
-import type {
-  CATEGORY_LEVELS_MAP,
-  CATEGORY_STATUSES,
-  PRODUCT_STATUSES,
-  TRY_ON_CATEGORIES,
-  TRY_ON_MAP,
-} from '../constants';
-import type { variantSchema } from '../models/variant.model';
+import type { PRODUCT_STATUSES, TRY_ON_MAP } from '../constants';
+import type { categorySchema, productSchema, variantSchema } from '../schemas';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -20,53 +13,17 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
-export interface IVariant extends IId, ITimestamp {
-  title: string;
-  stock: number;
-  images: string[];
-  color?: string;
-  status: (typeof CATEGORY_STATUSES)[number];
-}
+export type TCategory = InferSchemaType<typeof categorySchema> & IId;
+export type TCategoryDoc = TCategory & Document;
 
 export type TVariant = InferSchemaType<typeof variantSchema> & IId;
-
 export type TVariantDoc = TVariant & Document;
 
-interface IBaseCategory {
-  name: string;
-  slug: string;
-  expiresAt?: Date | null;
-  status: (typeof CATEGORY_STATUSES)[number];
-  productCount: number;
-  createdByRole: TRole;
-  isLeaf: boolean;
-}
-
-export interface IL1Category extends IBaseCategory {
-  level: (typeof CATEGORY_LEVELS_MAP)['L1'];
-  parent: null;
-}
-
-export interface IL2Category extends IBaseCategory {
-  level: (typeof CATEGORY_LEVELS_MAP)['L2'];
-  parent: IL1Category | TId;
-}
-
-export interface IL3Category extends IBaseCategory {
-  level: (typeof CATEGORY_LEVELS_MAP)['L3'];
-  parent: IL2Category | TId;
-}
-
-export type TCategory = (IL1Category | IL2Category | IL3Category) & IId;
-
-export type TCategoryDoc = TCategory & Document;
+export type TProduct = InferSchemaType<typeof productSchema> & IId;
+export type TProductDoc = TProduct & Document;
 
 export interface IUser extends IId {
   role: TRole;
-}
-
-export interface AuthRequest extends Request {
-  user?: (IId & { role: TRole }) | null;
 }
 
 export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
@@ -104,38 +61,3 @@ export interface ISkin {
 export type TTryOnCategory = ILip | IEye | IHair | IFace | INail | ISkin;
 
 export type ITryOn = { enabled: false } | ({ enabled: true } & TTryOnCategory);
-
-export interface ITryOnSchema {
-  enabled: boolean;
-  category?: (typeof TRY_ON_CATEGORIES)[number];
-  type?: string;
-}
-
-export interface TProductDoc extends Document, IId, ITimestamp {
-  title: string;
-  slug: string;
-  brand: string;
-  originalPrice: number;
-  sellingPrice: number;
-  discount: number;
-  totalStock: number;
-  description: string;
-  howToUse: string;
-  ingredients: string;
-  additionalDetails: string;
-  images: string[];
-  variants: TId[];
-  category: TId;
-  seller: TId;
-  approver: TId | null;
-  reviews: TId[];
-  totalSales: number;
-  averageRating: number;
-  totalReviews: number;
-  status: TProductStatus;
-  rejectionReason?: string;
-  approvedAt?: Date | null;
-  draftExpiresAt?: Date;
-  isDeleted: boolean;
-  tryOn: ITryOn;
-}

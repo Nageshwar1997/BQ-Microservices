@@ -1,11 +1,10 @@
 import { AppError } from '@beautinique/be-classes';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
 import { CATEGORY_LEVELS, CATEGORY_STATUS_MAP } from '../../constants';
 import { Category } from '../../models';
-import type { AuthRequest } from '../../types';
-import { generateSlug, getObjId } from '../../utils';
+import { generateSlug, getObjId, getUser } from '../../utils';
 
 const CATEGORY_LEVEL_ACCESS: Record<number, string[]> = {
   1: ['ADMIN', 'MASTER'],
@@ -14,19 +13,13 @@ const CATEGORY_LEVEL_ACCESS: Record<number, string[]> = {
 };
 
 export const createCategoryController = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   session: ClientSession,
 ) => {
   const { name, level, parentId } = req.body ?? {};
 
-  const role = req.user?.role;
-
-  /* ---------------- AUTH ---------------- */
-
-  if (!role) {
-    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-  }
+  const { role } = getUser(req);
 
   /* ---------------- VALIDATIONS ---------------- */
 

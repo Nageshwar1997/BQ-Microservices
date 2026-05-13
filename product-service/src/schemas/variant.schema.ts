@@ -1,6 +1,5 @@
-import { Schema, model } from 'mongoose';
+import { Schema } from 'mongoose';
 import { ROLES_MAP, VARIANT_STATUSES, VARIANT_STATUS_MAP } from '../constants';
-import type { TVariantDoc } from '../types';
 
 export const variantSchema = new Schema(
   {
@@ -71,5 +70,3 @@ variantSchema.index({ productId: 1, 'type.text': 1 });
 
 // Cleanup queries
 variantSchema.index({ createdByRole: 1, expiresAt: 1 });
-
-export const Variant = model<TVariantDoc>('Variant', variantSchema);

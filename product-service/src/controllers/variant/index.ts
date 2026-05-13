@@ -1,14 +1,14 @@
 import { AppError } from '@beautinique/be-classes';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';
 import { VARIANT_STATUS_MAP } from '../../constants';
 import { Variant } from '../../models/variant.model';
-import type { AuthRequest, TVariant } from '../../types';
+import type { TVariant } from '../../types';
 import { getUser, isNullOrUndefined } from '../../utils';
 
 export const createVariantController = async (
-  req: AuthRequest,
+  req: Request,
   res: Response,
   session: ClientSession,
 ) => {
