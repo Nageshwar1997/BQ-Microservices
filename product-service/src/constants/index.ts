@@ -6,7 +6,24 @@ export const CATEGORY_LEVELS = Object.values(CATEGORY_LEVELS_MAP);
 
 export const METHODS_AND_PATHS = { category: { base: '/category' } } as const;
 
-export const PRODUCT_STATUSES = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'BLOCKED'] as const;
+export const PRODUCT_STATUS_MAP = {
+  DRAFT: 'DRAFT',
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+  BLOCKED: 'BLOCKED',
+} as const;
+
+export const PRODUCT_STATUSES = Object.values(PRODUCT_STATUS_MAP);
+
+export const CATEGORY_STATUS_MAP = {
+  DRAFT: 'DRAFT',
+  PENDING: 'PENDING',
+  USED: 'USED',
+  UNUSED: 'UNUSED',
+} as const;
+
+export const CATEGORY_STATUS = Object.values(CATEGORY_STATUS_MAP);
 
 export const TRY_ON_CATEGORIES = ['LIP', 'EYE', 'HAIR', 'FACE', 'NAIL', 'SKIN'] as const;
 
