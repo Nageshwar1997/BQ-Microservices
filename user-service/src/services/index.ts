@@ -1,7 +1,7 @@
 import { AppError } from '@beautinique/be-classes';
 import { User } from '../models';
 import type { IUser, IUserDoc, TId, TUser } from '../types';
-import { toObjectId } from '../utils';
+import { getObjId } from '../utils';
 
 interface ILean {
   lean?: boolean;
@@ -16,7 +16,7 @@ type TByEmailOrPhone = TByEmail | TByPhone;
 
 export const getUserById = async (data: IById): Promise<IUser | IUserDoc> => {
   const { id, lean = true, password = false } = data;
-  const _id = typeof id === 'string' ? toObjectId(id) : id;
+  const _id = getObjId(id);
   const baseQuery = User.findById(_id);
   const query = password ? baseQuery : baseQuery.select('-password');
 

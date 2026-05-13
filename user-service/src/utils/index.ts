@@ -55,4 +55,6 @@ export const generateTempToken = (bytes = 32) => {
 
 export const toObjectId = (id: string): TId => new Types.ObjectId(id);
 
+export const getObjId = (id: string | TId): TId => (typeof id === 'string' ? toObjectId(id) : id);
+
 /* ======================= User Utils End ======================= */
