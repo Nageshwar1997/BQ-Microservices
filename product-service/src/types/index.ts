@@ -3,6 +3,7 @@ import type { Request } from 'express';
 import type { Document, Types } from 'mongoose';
 import type {
   CATEGORY_LEVELS_MAP,
+  CATEGORY_STATUS,
   PRODUCT_STATUSES,
   TRY_ON_CATEGORIES,
   TRY_ON_MAP,
@@ -20,7 +21,9 @@ export interface ITimestamp {
 
 interface IBaseCategory {
   name: string;
-  value: string;
+  slug: string;
+  expiresAt?: Date | null;
+  status: (typeof CATEGORY_STATUS)[number];
 }
 
 export interface IL1Category extends IBaseCategory {
