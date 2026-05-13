@@ -3,7 +3,7 @@ import type { Response } from 'express';
 import { CATEGORY_LEVELS, CATEGORY_STATUS_MAP } from '../../constants';
 import { Category } from '../../models';
 import type { AuthRequest } from '../../types';
-import { toObjectId } from '../../utils';
+import { generateSlug, toObjectId } from '../../utils';
 
 const CATEGORY_LEVEL_ACCESS: Record<number, string[]> = {
   1: ['ADMIN', 'MASTER'],
@@ -47,6 +47,17 @@ export const createCategoryController = async (req: AuthRequest, res: Response) 
   /* ---------------- PARENT VALIDATION ---------------- */
 
   const parentObjId = parentId ? toObjectId(parentId) : null;
+
+  const existingCategory = await Category.findOne({
+    level,
+    parent: parentObjId,
+    slug: generateSlug(name, false),
+    status: { $ne: CATEGORY_STATUS_MAP.UNUSED },
+  });
+
+  if (existingCategory) {
+    throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+  }
 
   if (parentObjId) {
     const parentCategory = await Category.findById(parentObjId);
