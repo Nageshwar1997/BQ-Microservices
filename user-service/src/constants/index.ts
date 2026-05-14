@@ -4,6 +4,7 @@ export const HEADERS_KEYS = {
   serviceSecret: 'X-Service-Secret',
   userId: 'X-User-Id',
   userRole: 'X-User-Role',
+  loginRole: 'X-Login-Role',
 } as const;
 
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;

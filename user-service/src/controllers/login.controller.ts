@@ -1,7 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
+import type { TRole } from '@beautinique/be-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes';
+import { HEADERS_KEYS } from '../constants';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services';
 import { createOAuthDbPayload, getMinimalUser } from '../utils';
 
@@ -16,6 +18,15 @@ export const manualLoginController = async (req: Request, res: Response) => {
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
       code: 'UNPROCESSABLE_ENTITY',
+    });
+  }
+
+  const role = req.get(HEADERS_KEYS.loginRole) as TRole | undefined;
+
+  if (role && user.role !== role && user.role !== 'MASTER') {
+    throw new AppError({
+      message: 'You are not authorized to perform this action',
+      code: 'AUTHORIZATION_ERROR',
     });
   }
 
