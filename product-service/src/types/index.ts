@@ -22,6 +22,24 @@ export type TVariantDoc = TVariant & Document;
 export type TProduct = InferSchemaType<typeof productSchema> & IId;
 export type TProductDoc = TProduct & Document;
 
+export type TDraftProduct = Pick<
+  TProduct,
+  | 'additionalDetails'
+  | 'brand'
+  | 'description'
+  | 'howToUse'
+  | 'images'
+  | 'ingredients'
+  | 'originalPrice'
+  | 'sellingPrice'
+  | 'title'
+  | 'totalStock'
+> & {
+  step: number;
+  category: Pick<TCategory, 'level' | 'parent' | 'name'>;
+  variants: Pick<TVariant, 'images' | 'price' | 'stock' | 'title' | 'type'>[];
+};
+
 export interface IUser extends IId {
   role: TRole;
 }

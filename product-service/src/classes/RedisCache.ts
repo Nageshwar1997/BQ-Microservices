@@ -1,7 +1,8 @@
-// import { parseData, stringifyData } from '@beautinique/be-utils';
+import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
 import { logger } from '../configs';
 import { envs } from '../envs';
+import type { TDraftProduct } from '../types';
 // import type { TId } from '../types';
 
 /* ================= CLIENT (Singleton) ================= */
@@ -32,12 +33,9 @@ class RedisCache {
   // Make it private later
   protected isReady = false;
 
-  // private KEY_PREFIX = {
-  //   CATEGORY: 'bq:category',
-  //   PRODUCT: 'bq:product',
-  //   PRODUCTS: 'bq:products',
-  //   CATEGORIES: 'bq:categories',
-  // };
+  private KEY_PREFIX = {
+    DRAFT_PRODUCT: 'bq:draft-product',
+  };
 
   constructor() {
     this.client = client;
@@ -74,75 +72,65 @@ class RedisCache {
     }
   }
 
-  // private getClient(): RedisClientType | null {
-  //   if (!this.isReady) {
-  //     logger.warn('⚠️ Redis unavailable → fallback to DB');
-  //     return null;
-  //   }
-  //   return this.client;
-  // }
+  private getClient(): RedisClientType | null {
+    if (!this.isReady) {
+      logger.warn('⚠️ Redis unavailable → fallback to DB');
+      return null;
+    }
+    return this.client;
+  }
 
   /* ================= CORE METHODS ================= */
 
-  // private async setData(key: string, ttl: number, data: unknown) {
-  //   const client = this.getClient();
-  //   if (!client) return;
+  private async setData(key: string, ttl: number, data: unknown) {
+    const client = this.getClient();
+    if (!client) return;
 
-  //   const strData = typeof data === 'string' ? data : stringifyData(data);
+    const strData = typeof data === 'string' ? data : stringifyData(data);
 
-  //   try {
-  //     await client.setEx(key, ttl, strData);
-  //   } catch (err) {
-  //     logger.warn('⚠️ Redis set failed:', err);
-  //   }
-  // }
+    try {
+      await client.setEx(key, ttl, strData);
+    } catch (err) {
+      logger.warn('⚠️ Redis set failed:', err);
+    }
+  }
 
-  // private async getData(key: string) {
-  //   const client = this.getClient();
-  //   if (!client) return null;
+  private async getData(key: string) {
+    const client = this.getClient();
+    if (!client) return null;
 
-  //   try {
-  //     const data = await client.get(key);
-  //     return data ? parseData(data) : null;
-  //   } catch (err) {
-  //     logger.warn('⚠️ Redis get failed:', err);
-  //     return null;
-  //   }
-  // }
+    try {
+      const data = await client.get(key);
+      return data ? parseData(data) : null;
+    } catch (err) {
+      logger.warn('⚠️ Redis get failed:', err);
+      return null;
+    }
+  }
 
-  // private async deleteData(key: string) {
-  //   const client = this.getClient();
-  //   if (!client) return;
+  private async deleteData(key: string) {
+    const client = this.getClient();
+    if (!client) return;
 
-  //   try {
-  //     await client.del(key);
-  //   } catch (err) {
-  //     logger.warn('⚠️ Redis delete failed:', err);
-  //   }
-  // }
+    try {
+      await client.del(key);
+    } catch (err) {
+      logger.warn('⚠️ Redis delete failed:', err);
+    }
+  }
 
   /* ================= KEY HELPERS ================= */
 
-  // private getCategoryKey(value: string) {
-  //   return `${this.KEY_PREFIX.CATEGORY}:${value}`;
-  // }
-  // private getCategoriesKey() {
-  //   return `${this.KEY_PREFIX.CATEGORIES}`;
-  // }
+  private getDraftProductKey(userId: string, draftId: string) {
+    return `${this.KEY_PREFIX.DRAFT_PRODUCT}:${userId}:${draftId}`;
+  }
 
-  // private getProductKey(productId: string | TId) {
-  //   return `${this.KEY_PREFIX.PRODUCT}:${productId}`;
-  // }
-
-  // private getProductsKey() {
-  //   return `${this.KEY_PREFIX.PRODUCTS}`;
-  // }
+  public setDraftProduct(userId: string, draftId: string, ttl: number, data: TDraftProduct) {
+    const key = this.getDraftProductKey(userId, draftId);
+    return this.setData(key, ttl, data);
+  }
 
   /* ================= DB HELPER ================= */
-
-  /* ================= CATEGORY CACHE ================= */
-
-  /* ================= PRODUCT CACHE ================= */
 
   /* ================= CLOSE ================= */
 
