@@ -11,7 +11,7 @@ export const METHODS_AND_PATHS = {
     base: '/category',
     add: { method: 'post', path: '/add' },
     get: {
-      all: { method: 'get', path: '/all' },
+      byParentLevel: { method: 'get', path: '/by-parent-level' },
     },
   },
 } as const;

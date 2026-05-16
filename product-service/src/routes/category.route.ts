@@ -2,7 +2,7 @@ import { checkEmptyRequest, tryCatchSessionResponse } from '@beautinique/be-midd
 import { Router } from 'express';
 import { METHODS_AND_PATHS } from '../constants';
 import { addCategoryController } from '../controllers';
-import { getAllCategories } from '../controllers/category/getCategory';
+import { getCategoriesByParentLevel } from '../controllers/category/getCategory';
 import { authorize } from '../middlewares';
 
 export const categoryRouter = Router();
@@ -16,8 +16,8 @@ categoryRouter[add.method](
   tryCatchSessionResponse(addCategoryController),
 );
 
-categoryRouter[get.all.method](
-  get.all.path,
+categoryRouter[get.byParentLevel.method](
+  get.byParentLevel.path,
   authorize(['ADMIN', 'MASTER', 'SELLER']),
-  tryCatchSessionResponse(getAllCategories),
+  tryCatchSessionResponse(getCategoriesByParentLevel),
 );
