@@ -6,7 +6,7 @@ import { envs } from '../envs';
 import { Category } from '../models';
 import type { TCategory, TDraftProduct } from '../types';
 
-type TCacheCategory = Pick<TCategory, 'level' | 'parent' | 'name' | "_id" | "slug">;
+type TCacheCategory = Pick<TCategory, 'level' | 'parent' | 'name' | '_id' | 'slug'>;
 
 /* ================= CLIENT (Singleton) ================= */
 
