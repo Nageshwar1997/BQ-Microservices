@@ -3,7 +3,7 @@ import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';
 import { VARIANT_STATUS_MAP } from '../../constants';
-import { Variant } from '../../models/variant.model';
+import { Variant } from '../../models';
 import type { TVariant } from '../../types';
 import { getUser, isNullOrUndefined } from '../../utils';
 

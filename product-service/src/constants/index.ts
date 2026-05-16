@@ -6,7 +6,15 @@ export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as con
 export const CATEGORY_LEVELS_MAP = { L1: 1, L2: 2, L3: 3 } as const;
 export const CATEGORY_LEVELS = Object.values(CATEGORY_LEVELS_MAP);
 
-export const METHODS_AND_PATHS = { category: { base: '/category' } } as const;
+export const METHODS_AND_PATHS = {
+  category: {
+    base: '/category',
+    add: { method: 'post', path: '/add' },
+    get: {
+      all: { method: 'get', path: '/all' },
+    },
+  },
+} as const;
 
 export const PRODUCT_STATUS_MAP = {
   DRAFT: 'DRAFT',

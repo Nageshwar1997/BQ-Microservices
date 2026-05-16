@@ -1,7 +1,9 @@
+import { AppError } from '@beautinique/be-classes';
 import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
 import { logger } from '../configs';
 import { envs } from '../envs';
+import { Category } from '../models';
 import type { TDraftProduct } from '../types';
 // import type { TId } from '../types';
 
@@ -35,6 +37,7 @@ class RedisCache {
 
   private KEY_PREFIX = {
     DRAFT_PRODUCT: 'bq:draft-product',
+    CATEGORIES: 'bq:categories',
   };
 
   constructor() {
@@ -108,18 +111,22 @@ class RedisCache {
     }
   }
 
-  private async deleteData(key: string) {
-    const client = this.getClient();
-    if (!client) return;
+  // private async deleteData(key: string) {
+  //   const client = this.getClient();
+  //   if (!client) return;
 
-    try {
-      await client.del(key);
-    } catch (err) {
-      logger.warn('⚠️ Redis delete failed:', err);
-    }
-  }
+  //   try {
+  //     await client.del(key);
+  //   } catch (err) {
+  //     logger.warn('⚠️ Redis delete failed:', err);
+  //   }
+  // }
 
   /* ================= KEY HELPERS ================= */
+
+  private getCategoriesKey() {
+    return this.KEY_PREFIX.CATEGORIES;
+  }
 
   private getDraftProductKey(userId: string, draftId: string) {
     return `${this.KEY_PREFIX.DRAFT_PRODUCT}:${userId}:${draftId}`;
@@ -130,7 +137,38 @@ class RedisCache {
     return this.setData(key, ttl, data);
   }
 
+  /* ================= CACHE HELPER ================= */
+
+  /* ================= CATEGORY ================= */
+
+  public async getAllCategories() {
+    const key = this.getCategoriesKey();
+
+    // 1️. Try cache
+    const cachedCategories = await this.getData(key);
+    if (cachedCategories) {
+      return cachedCategories;
+    }
+
+    // 2️. Fallback to DB
+    return this.getAllDbCategories();
+  }
+
   /* ================= DB HELPER ================= */
+
+  private async getAllDbCategories() {
+    const categories = await Category.find().lean().exec();
+
+    if (!categories) {
+      throw new AppError({ message: 'Categories not found', code: 'NOT_FOUND' });
+    }
+
+    const key = this.getCategoriesKey();
+
+    void this.setData(key, 60 * 60 * 24, categories);
+
+    return categories;
+  }
 
   /* ================= CLOSE ================= */
 
