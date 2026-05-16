@@ -6,6 +6,8 @@ import { envs } from '../envs';
 import { Category } from '../models';
 import type { TCategory, TDraftProduct } from '../types';
 
+type TCacheCategory = Pick<TCategory, 'level' | 'parent' | 'name' | "_id" | "slug">;
+
 /* ================= CLIENT (Singleton) ================= */
 
 const client: RedisClientType = createClient({
@@ -140,11 +142,11 @@ class RedisCache {
 
   /* ================= CATEGORY ================= */
 
-  public async getAllCategories(): Promise<TCategory[]> {
+  public async getAllCategories(): Promise<TCacheCategory[]> {
     const key = this.getCategoriesKey();
 
     // 1️. Try cache
-    const cachedCategories: TCategory[] | null = await this.getData(key);
+    const cachedCategories: TCacheCategory[] | null = await this.getData(key);
     if (cachedCategories && cachedCategories.length > 0) {
       return cachedCategories;
     }
@@ -155,8 +157,8 @@ class RedisCache {
 
   /* ================= DB HELPER ================= */
 
-  private async getAllDbCategories(): Promise<TCategory[]> {
-    const categories = await Category.find().lean().exec();
+  private async getAllDbCategories(): Promise<TCacheCategory[]> {
+    const categories = await Category.find().select('_id name slug parent level').lean().exec();
 
     if (!categories) {
       throw new AppError({ message: 'Categories not found', code: 'NOT_FOUND' });
