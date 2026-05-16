@@ -4,8 +4,7 @@ import { type RedisClientType, createClient } from 'redis';
 import { logger } from '../configs';
 import { envs } from '../envs';
 import { Category } from '../models';
-import type { TDraftProduct } from '../types';
-// import type { TId } from '../types';
+import type { TCategory, TDraftProduct } from '../types';
 
 /* ================= CLIENT (Singleton) ================= */
 
@@ -141,12 +140,12 @@ class RedisCache {
 
   /* ================= CATEGORY ================= */
 
-  public async getAllCategories() {
+  public async getAllCategories(): Promise<TCategory[]> {
     const key = this.getCategoriesKey();
 
     // 1️. Try cache
-    const cachedCategories = await this.getData(key);
-    if (cachedCategories) {
+    const cachedCategories: TCategory[] | null = await this.getData(key);
+    if (cachedCategories && cachedCategories.length > 0) {
       return cachedCategories;
     }
 
@@ -156,7 +155,7 @@ class RedisCache {
 
   /* ================= DB HELPER ================= */
 
-  private async getAllDbCategories() {
+  private async getAllDbCategories(): Promise<TCategory[]> {
     const categories = await Category.find().lean().exec();
 
     if (!categories) {

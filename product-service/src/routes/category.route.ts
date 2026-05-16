@@ -16,4 +16,8 @@ categoryRouter[add.method](
   tryCatchSessionResponse(addCategoryController),
 );
 
-categoryRouter[get.all.method](get.all.path, tryCatchSessionResponse(getAllCategories));
+categoryRouter[get.all.method](
+  get.all.path,
+  authorize(['ADMIN', 'MASTER', 'SELLER']),
+  tryCatchSessionResponse(getAllCategories),
+);
