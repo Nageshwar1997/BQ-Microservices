@@ -11,7 +11,7 @@ export const addCategoryController = async (
   res: Response,
   session: ClientSession,
 ) => {
-  const { _id:userId } = getUser(req);
+  const { _id: userId } = getUser(req);
 
   const { name, level, parentId } = req.body ?? {};
 

@@ -11,7 +11,7 @@ const { add, get } = METHODS_AND_PATHS.category;
 
 categoryRouter[add.method](
   add.path,
-  authorize(['ADMIN', 'MASTER', 'SELLER']),
+  authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ body: true }),
   tryCatchSessionResponse(addCategoryController),
 );
