@@ -8,6 +8,15 @@ export const categorySchema = new Schema(
     name: { type: String, required: true, trim: true, maxlength: 120, index: true },
     /* SEO + Atlas Search Friendly */
     slug: { type: String, required: true, trim: true, lowercase: true, index: true },
+    /* Category Description */
+    description: {
+      type: String,
+      trim: true,
+      minlength: 10,
+      maxlength: 150,
+      index: true,
+      default: null,
+    },
     /* 1 -> Main 2 -> Sub 3 -> Final Product Category */
     level: { type: Number, enum: CATEGORY_LEVELS, required: true, index: true },
     /* Parent Category */
@@ -40,7 +49,7 @@ categorySchema.index({ parent: 1, slug: 1 }, { unique: true });
 /* ---------------- SEARCH INDEXES ---------------- */
 
 // Atlas Search support
-categorySchema.index({ name: 'text', slug: 'text' });
+categorySchema.index({ name: 'text', slug: 'text', description: 'text' });
 
 // Filter queries
 categorySchema.index({ uploadedBy: 1, level: 1 });

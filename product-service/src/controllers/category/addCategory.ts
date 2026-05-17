@@ -13,7 +13,7 @@ export const addCategoryController = async (
 ) => {
   const { _id: userId } = getUser(req);
 
-  const { name, level, parentId } = req.body ?? {};
+  const { name, level, parentId, description } = req.body ?? {};
 
   /* ---------------- VALIDATIONS ---------------- */
 
@@ -72,6 +72,7 @@ export const addCategoryController = async (
     name,
     level,
     parent,
+    description,
     uploadedBy: userId,
   });
 
