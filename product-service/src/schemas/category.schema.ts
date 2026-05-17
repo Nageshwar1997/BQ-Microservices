@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { CATEGORY_LEVELS, CATEGORY_STATUSES, CATEGORY_STATUS_MAP, ROLES_MAP } from '../constants';
+import { CATEGORY_LEVELS } from '../constants';
 import { generateSlug } from '../utils';
 
 export const categorySchema = new Schema(
@@ -16,22 +16,8 @@ export const categorySchema = new Schema(
     isLeaf: { type: Boolean, default: true, index: true },
     /* Useful mainly for level 3 */
     productCount: { type: Number, default: 0, min: 0, index: true },
-    /* ADMIN, SELLER or MASTER */
-    createdByRole: {
-      type: String,
-      enum: [ROLES_MAP.ADMIN, ROLES_MAP.SELLER, ROLES_MAP.MASTER],
-      required: true,
-      index: true,
-    },
-    /* PENDING, USED or UNUSED */
-    status: {
-      type: String,
-      enum: CATEGORY_STATUSES,
-      default: CATEGORY_STATUS_MAP.PENDING,
-      index: true,
-    },
-    /* Temporary seller categories */
-    expiresAt: { type: Date, index: { expires: 0 } },
+    /* Uploaded By */
+    uploadedBy: { type: Schema.Types.ObjectId, required: true, index: true },
   },
   {
     timestamps: true,
@@ -44,27 +30,20 @@ export const categorySchema = new Schema(
 /* ---------------- AUTO SLUG ---------------- */
 
 categorySchema.pre('validate', function () {
-  if (this.name) {
-    this.slug = generateSlug(this.name, false);
-  }
+  if (this.name) this.slug = generateSlug(this.name, false);
 });
 
 /* ---------------- UNIQUE HIERARCHY ---------------- */
 
-categorySchema.index(
-  { parent: 1, slug: 1 },
-  {
-    unique: true,
-  },
-);
+categorySchema.index({ parent: 1, slug: 1 }, { unique: true });
 
 /* ---------------- SEARCH INDEXES ---------------- */
 
 // Atlas Search support
 categorySchema.index({ name: 'text', slug: 'text' });
 
-// Fast filtering
-categorySchema.index({ status: 1, level: 1 });
+// Filter queries
+categorySchema.index({ uploadedBy: 1, level: 1 });
 
 // Tree queries
 categorySchema.index({ parent: 1, level: 1 });
@@ -73,4 +52,4 @@ categorySchema.index({ parent: 1, level: 1 });
 categorySchema.index({ isLeaf: 1, level: 1 });
 
 // Cleanup queries
-categorySchema.index({ productCount: 1, createdByRole: 1 });
+categorySchema.index({ productCount: 1, level: 1 });

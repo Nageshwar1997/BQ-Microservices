@@ -2,24 +2,18 @@ import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
-import { CATEGORY_LEVELS, CATEGORY_STATUS_MAP } from '../../constants';
+import { CATEGORY_LEVELS } from '../../constants';
 import { Category } from '../../models';
 import { generateSlug, getObjId, getUser } from '../../utils';
-
-const CATEGORY_LEVEL_ACCESS: Record<number, string[]> = {
-  1: ['ADMIN', 'MASTER'],
-  2: ['ADMIN', 'MASTER'],
-  3: ['ADMIN', 'SELLER', 'MASTER'],
-};
 
 export const addCategoryController = async (
   req: Request,
   res: Response,
   session: ClientSession,
 ) => {
-  const { name, level, parentId } = req.body ?? {};
+  const { _id:userId } = getUser(req);
 
-  const { role } = getUser(req);
+  const { name, level, parentId } = req.body ?? {};
 
   /* ---------------- VALIDATIONS ---------------- */
 
@@ -33,17 +27,6 @@ export const addCategoryController = async (
 
   if (level !== 1 && !parentId) {
     throw new AppError({ message: 'Parent category is required', code: 'UNPROCESSABLE_ENTITY' });
-  }
-
-  /* ---------------- ROLE ACCESS ---------------- */
-
-  const allowedRoles = CATEGORY_LEVEL_ACCESS[level];
-
-  if (!allowedRoles?.includes(role)) {
-    throw new AppError({
-      message: 'You are not allowed to create this category level',
-      code: 'AUTHORIZATION_ERROR',
-    });
   }
 
   /* ---------------- PARENT ---------------- */
@@ -83,33 +66,13 @@ export const addCategoryController = async (
     throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
   }
 
-  /* ---------------- STATUS ---------------- */
-
-  /*
-    SELLER -> PENDING
-    ADMIN/MASTER -> USED
-  */
-
-  const status = role === 'SELLER' ? CATEGORY_STATUS_MAP.PENDING : CATEGORY_STATUS_MAP.USED;
-
-  /* ---------------- EXPIRES ---------------- */
-
-  /*
-    Temporary seller categories
-  */
-
-  const expiresAt =
-    level === 3 && role === 'SELLER' ? new Date(Date.now() + 24 * 60 * 60 * 1000) : undefined;
-
   /* ---------------- CREATE ---------------- */
 
   const category = new Category({
     name,
     level,
     parent,
-    status,
-    expiresAt,
-    createdByRole: role,
+    uploadedBy: userId,
   });
 
   try {
