@@ -3,9 +3,8 @@ import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
 import { redisCache } from '../../classes';
-import { CATEGORY_LEVELS } from '../../constants';
+import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '../../constants';
 import { Category } from '../../models';
-import type { TCategory } from '../../types';
 import { generateSlug, getObjId, getUser } from '../../utils';
 
 export const addCategoryController = async (
@@ -15,8 +14,7 @@ export const addCategoryController = async (
 ) => {
   const { _id: userId } = getUser(req);
 
-  const { name, level: levelStr, parent: parentId, description } = req.body ?? {};
-  const level = Number(levelStr) as TCategory['level'];
+  const { name, level, parent: parentId, description } = req.body ?? {};
   /* ---------------- VALIDATIONS ---------------- */
 
   if (!name || !level) {
@@ -27,7 +25,7 @@ export const addCategoryController = async (
     throw new AppError({ message: 'Invalid category level', code: 'UNPROCESSABLE_ENTITY' });
   }
 
-  if (level !== 1 && !parentId) {
+  if (level !== CATEGORY_LEVELS_MAP.L1 && !parentId) {
     throw new AppError({ message: 'Parent category is required', code: 'UNPROCESSABLE_ENTITY' });
   }
 
@@ -47,7 +45,7 @@ export const addCategoryController = async (
       Level 3 -> Parent must be Level 2
     */
 
-    if (parentCategory.level !== level - 1) {
+    if (parentCategory.level !== String(level - 1)) {
       throw new AppError({
         message: `Invalid parent category for level ${level}`,
         code: 'UNPROCESSABLE_ENTITY',

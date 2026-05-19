@@ -3,7 +3,7 @@ import { ROLES, type TRole } from '@beautinique/be-constants';
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
-export const CATEGORY_LEVELS_MAP = { L1: 1, L2: 2, L3: 3 } as const;
+export const CATEGORY_LEVELS_MAP = { L1: '1', L2: '2', L3: '3' } as const;
 export const CATEGORY_LEVELS = Object.values(CATEGORY_LEVELS_MAP);
 
 export const METHODS_AND_PATHS = {
