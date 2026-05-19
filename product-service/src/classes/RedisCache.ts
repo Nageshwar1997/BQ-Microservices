@@ -158,7 +158,11 @@ class RedisCache {
   /* ================= DB HELPER ================= */
 
   private async getAllDbCategories(): Promise<TCacheCategory[]> {
-    const categories = await Category.find().select('_id name slug parent level').lean().exec();
+    const categories = await Category.find()
+      .select('_id name slug parent level')
+      .sort({ slug: 1 })
+      .lean()
+      .exec();
 
     if (!categories) {
       throw new AppError({ message: 'Categories not found', code: 'NOT_FOUND' });
