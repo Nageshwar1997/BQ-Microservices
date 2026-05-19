@@ -4,7 +4,7 @@ import { CATEGORY_LEVELS_MAP } from '../../constants';
 
 export const getCategoriesByParentLevel = async (req: Request, res: Response) => {
   const parentId = req.query.parentId?.toString();
-  const level = req.query.level;
+  const level = Number(req.query.level);
 
   const allCategories = await redisCache.getAllCategories();
 

@@ -45,7 +45,7 @@ export const addCategoryController = async (
       Level 3 -> Parent must be Level 2
     */
 
-    if (parentCategory.level !== String(level - 1)) {
+    if (parentCategory.level !== level - 1) {
       throw new AppError({
         message: `Invalid parent category for level ${level}`,
         code: 'UNPROCESSABLE_ENTITY',
