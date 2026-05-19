@@ -2,8 +2,10 @@ import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
+import { redisCache } from '../../classes';
 import { CATEGORY_LEVELS } from '../../constants';
 import { Category } from '../../models';
+import type { TCategory } from '../../types';
 import { generateSlug, getObjId, getUser } from '../../utils';
 
 export const addCategoryController = async (
@@ -13,8 +15,8 @@ export const addCategoryController = async (
 ) => {
   const { _id: userId } = getUser(req);
 
-  const { name, level, parentId, description } = req.body ?? {};
-
+  const { name, level: levelStr, parent: parentId, description } = req.body ?? {};
+  const level = Number(levelStr) as TCategory['level'];
   /* ---------------- VALIDATIONS ---------------- */
 
   if (!name || !level) {
@@ -55,9 +57,7 @@ export const addCategoryController = async (
 
   /* ---------------- DUPLICATE CHECK ---------------- */
 
-  const slug = generateSlug(name, false);
-
-  const existingCategory = await Category.findOne({ parent, slug })
+  const existingCategory = await Category.findOne({ parent, slug: generateSlug(name, false) })
     .select('_id')
     .lean()
     .session(session);
@@ -68,13 +68,7 @@ export const addCategoryController = async (
 
   /* ---------------- CREATE ---------------- */
 
-  const category = new Category({
-    name,
-    level,
-    parent,
-    description,
-    uploadedBy: userId,
-  });
+  const category = new Category({ name, level, parent, description, uploadedBy: userId });
 
   try {
     await category.save({ session });
@@ -92,5 +86,9 @@ export const addCategoryController = async (
     await Category.findByIdAndUpdate(parent, { isLeaf: false }, { session });
   }
 
-  res.success(201, 'Category created successfully', { category });
+  /* ---------------- REDIS ---------------- */
+
+  await redisCache.updateCategoriesCache();
+
+  res.success(201, 'Category created successfully');
 };

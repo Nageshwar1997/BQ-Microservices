@@ -155,6 +155,10 @@ class RedisCache {
     return this.getAllDbCategories();
   }
 
+  public async updateCategoriesCache() {
+   void this.getAllDbCategories();
+  }
+
   /* ================= DB HELPER ================= */
 
   private async getAllDbCategories(): Promise<TCacheCategory[]> {
