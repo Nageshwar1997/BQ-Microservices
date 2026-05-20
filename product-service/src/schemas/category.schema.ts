@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { CATEGORY_LEVELS } from '../constants';
+import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '../constants';
 import { generateSlug } from '../utils';
 
 export const categorySchema = new Schema(
@@ -24,7 +24,7 @@ export const categorySchema = new Schema(
     /* Final category or not */
     isLeaf: { type: Boolean, default: true, index: true },
     /* Useful mainly for level 3 */
-    productCount: { type: Number, default: 0, min: 0, index: true },
+    productCount: { type: Number, min: 0, index: true },
     /* Created By */
     createdBy: { type: Schema.Types.ObjectId, required: true, index: true },
     /* Updated By */
@@ -42,6 +42,10 @@ export const categorySchema = new Schema(
 
 categorySchema.pre('validate', function () {
   if (this.name) this.slug = generateSlug(this.name, false);
+  // Only L3 can have products
+  if (this.level !== CATEGORY_LEVELS_MAP.L3) {
+    this.productCount = 0;
+  }
 });
 
 /* ---------------- UNIQUE HIERARCHY ---------------- */

@@ -11,6 +11,7 @@ export const METHODS_AND_PATHS = {
     base: '/category',
     add: { method: 'post', path: '/add' },
     update: { method: 'patch', path: '/update' },
+    delete: { method: 'delete', path: '/delete/:categoryId' },
     get: {
       byParentLevel: { method: 'get', path: '/by-parent-level' },
     },
