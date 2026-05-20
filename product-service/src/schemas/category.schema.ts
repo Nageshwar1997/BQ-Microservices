@@ -5,7 +5,7 @@ import { generateSlug } from '../utils';
 export const categorySchema = new Schema(
   {
     /* Category Name */
-    name: { type: String, required: true, trim: true, maxlength: 120, index: true },
+    name: { type: String, required: true, trim: true, minlength: 2, maxlength: 120, index: true },
     /* SEO + Atlas Search Friendly */
     slug: { type: String, required: true, trim: true, lowercase: true, index: true },
     /* Category Description */
