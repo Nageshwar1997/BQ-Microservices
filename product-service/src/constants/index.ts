@@ -10,6 +10,7 @@ export const METHODS_AND_PATHS = {
   category: {
     base: '/category',
     add: { method: 'post', path: '/add' },
+    update: { method: 'patch', path: '/update' },
     get: {
       byParentLevel: { method: 'get', path: '/by-parent-level' },
     },

@@ -25,8 +25,10 @@ export const categorySchema = new Schema(
     isLeaf: { type: Boolean, default: true, index: true },
     /* Useful mainly for level 3 */
     productCount: { type: Number, default: 0, min: 0, index: true },
-    /* Uploaded By */
-    uploadedBy: { type: Schema.Types.ObjectId, required: true, index: true },
+    /* Created By */
+    createdBy: { type: Schema.Types.ObjectId, required: true, index: true },
+    /* Updated By */
+    updatedBy: { type: Schema.Types.ObjectId, index: true },
   },
   {
     timestamps: true,
@@ -52,7 +54,8 @@ categorySchema.index({ parent: 1, slug: 1 }, { unique: true });
 categorySchema.index({ name: 'text', slug: 'text', description: 'text' });
 
 // Filter queries
-categorySchema.index({ uploadedBy: 1, level: 1 });
+categorySchema.index({ createdBy: 1, level: 1 });
+categorySchema.index({ updatedBy: 1, level: 1 });
 
 // Tree queries
 categorySchema.index({ parent: 1, level: 1 });
