@@ -43,6 +43,15 @@ export const updateCategoryController = async (
     throw new AppError({ message: 'Category not found', code: 'NOT_FOUND' });
   }
 
+  /* ---------------- LEVEL IMMUTABLE ---------------- */
+
+  if (existingCategory.level !== level) {
+    throw new AppError({
+      message: 'Category level cannot be changed',
+      code: 'UNPROCESSABLE_ENTITY',
+    });
+  }
+
   /* ---------------- PARENT ---------------- */
 
   const parent = parentId ? getObjId(parentId) : null;
@@ -76,7 +85,9 @@ export const updateCategoryController = async (
   }
 
   /* ---------------- DUPLICATE CHECK ---------------- */
+
   const slug = generateSlug(name, false);
+
   const duplicateCategory = await Category.findOne({ _id: { $ne: categoryId }, parent, slug })
     .select('_id')
     .lean()
@@ -91,7 +102,7 @@ export const updateCategoryController = async (
   try {
     await Category.findByIdAndUpdate(
       categoryId,
-      { name, level, parent, description, slug, updatedBy: userId },
+      { name, slug, parent, description, updatedBy: userId },
       { session },
     );
   } catch (error) {
