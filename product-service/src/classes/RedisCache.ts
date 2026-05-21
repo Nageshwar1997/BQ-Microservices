@@ -156,7 +156,7 @@ class RedisCache {
   }
 
   public async updateCategoriesCache() {
-   void this.getAllDbCategories();
+    await this.getAllDbCategories();
   }
 
   /* ================= DB HELPER ================= */
@@ -174,7 +174,7 @@ class RedisCache {
 
     const key = this.getCategoriesKey();
 
-    void this.setData(key, 60 * 60 * 24, categories);
+    await this.setData(key, 60 * 60 * 24, categories);
 
     return categories;
   }

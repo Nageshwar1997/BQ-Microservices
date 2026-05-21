@@ -54,18 +54,13 @@ categorySchema.index({ parent: 1, slug: 1 }, { unique: true });
 
 /* ---------------- SEARCH INDEXES ---------------- */
 
-// Atlas Search support
 categorySchema.index({ name: 'text', slug: 'text', description: 'text' });
 
-// Filter queries
+/* ---------------- FILTER INDEXES ---------------- */
+
 categorySchema.index({ createdBy: 1, level: 1 });
-categorySchema.index({ updatedBy: 1, level: 1 });
 
-// Tree queries
+/* ---------------- TREE INDEXES ---------------- */
+
 categorySchema.index({ parent: 1, level: 1 });
-
-// Product validation
 categorySchema.index({ isLeaf: 1, level: 1 });
-
-// Cleanup queries
-categorySchema.index({ productCount: 1, level: 1 });

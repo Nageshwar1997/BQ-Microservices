@@ -5,7 +5,6 @@ import { type ClientSession } from 'mongoose';
 import { redisCache } from '../../classes';
 import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '../../constants';
 import { Category } from '../../models';
-import type { TCategory } from '../../types';
 import { generateSlug, getObjId, getUser } from '../../utils';
 
 export const addCategoryController = async (
@@ -67,7 +66,7 @@ export const addCategoryController = async (
 
   /* ---------------- CREATE ---------------- */
 
-  const category = new Category<Partial<TCategory>>({
+  const category = new Category({
     name,
     level,
     parent,
