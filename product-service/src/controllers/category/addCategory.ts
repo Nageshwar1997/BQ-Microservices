@@ -92,7 +92,14 @@ export const addCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.updateCategoriesCache();
+  await redisCache.setCategory({
+    _id: category._id,
+    name: category.name,
+    slug: category.slug,
+    parent: category.parent,
+    level: category.level,
+    description: category.description,
+  });
 
   res.success(201, 'Category created successfully');
 };

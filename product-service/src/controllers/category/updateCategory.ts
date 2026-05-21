@@ -6,6 +6,7 @@ import { redisCache } from '../../classes';
 import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '../../constants';
 import { Category } from '../../models';
 import { generateSlug, getObjId, getUser } from '../../utils';
+import type { TCacheCategory } from '../../types';
 
 export const updateCategoryController = async (
   req: Request,
@@ -98,12 +99,26 @@ export const updateCategoryController = async (
   }
 
   /* ---------------- UPDATE ---------------- */
+  /* ---------------- UPDATE ---------------- */
+
+  let updatedCategory: TCacheCategory | null;
 
   try {
-    await Category.findByIdAndUpdate(
+    updatedCategory = await Category.findByIdAndUpdate(
       categoryId,
-      { name, slug, parent, description, updatedBy: userId },
-      { session },
+      {
+        name,
+        slug,
+        parent,
+        description,
+        updatedBy: userId,
+      },
+      {
+        session,
+        new: true,
+        lean: true,
+        select: '_id name slug parent level description',
+      },
     );
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {
@@ -134,7 +149,11 @@ export const updateCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.updateCategoriesCache();
+  /* ---------------- REDIS ---------------- */
+
+  if (updatedCategory) {
+    await redisCache.setCategory(updatedCategory);
+  }
 
   res.success(200, 'Category updated successfully');
 };

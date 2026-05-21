@@ -4,9 +4,7 @@ import { type RedisClientType, createClient } from 'redis';
 import { logger } from '../configs';
 import { envs } from '../envs';
 import { Category } from '../models';
-import type { TCategory, TDraftProduct } from '../types';
-
-type TCacheCategory = Pick<TCategory, 'level' | 'parent' | 'name' | '_id' | 'slug' | 'description'>;
+import type { TCacheCategory, TDraftProduct } from '../types';
 
 /* ================= CLIENT (Singleton) ================= */
 
@@ -99,18 +97,18 @@ class RedisCache {
     }
   }
 
-  private async getData(key: string) {
-    const client = this.getClient();
-    if (!client) return null;
+  // private async getData(key: string) {
+  //   const client = this.getClient();
+  //   if (!client) return null;
 
-    try {
-      const data = await client.get(key);
-      return data ? parseData(data) : null;
-    } catch (err) {
-      logger.warn('⚠️ Redis get failed:', err);
-      return null;
-    }
-  }
+  //   try {
+  //     const data = await client.get(key);
+  //     return data ? parseData(data) : null;
+  //   } catch (err) {
+  //     logger.warn('⚠️ Redis get failed:', err);
+  //     return null;
+  //   }
+  // }
 
   // private async deleteData(key: string) {
   //   const client = this.getClient();
@@ -122,6 +120,46 @@ class RedisCache {
   //     logger.warn('⚠️ Redis delete failed:', err);
   //   }
   // }
+
+  private async setHashData(key: string, field: string, data: unknown) {
+    const client = this.getClient();
+
+    if (!client) return;
+
+    try {
+      await client.hSet(key, field, stringifyData(data));
+    } catch (err) {
+      logger.warn('⚠️ Redis hSet failed:', err);
+    }
+  }
+
+  private async getHashData<T>(key: string): Promise<T[]> {
+    const client = this.getClient();
+
+    if (!client) return [];
+
+    try {
+      const data = await client.hGetAll(key);
+
+      return Object.values(data).map((item) => parseData(item));
+    } catch (err) {
+      logger.warn('⚠️ Redis hGetAll failed:', err);
+
+      return [];
+    }
+  }
+
+  private async deleteHashField(key: string, field: string) {
+    const client = this.getClient();
+
+    if (!client) return;
+
+    try {
+      await client.hDel(key, field);
+    } catch (err) {
+      logger.warn('⚠️ Redis hDel failed:', err);
+    }
+  }
 
   /* ================= KEY HELPERS ================= */
 
@@ -145,25 +183,20 @@ class RedisCache {
   public async getAllCategories(): Promise<TCacheCategory[]> {
     const key = this.getCategoriesKey();
 
-    // 1️. Try cache
-    const cachedCategories: TCacheCategory[] | null = await this.getData(key);
-    if (cachedCategories && cachedCategories.length > 0) {
-      return cachedCategories;
+    const categories = await this.getHashData<TCacheCategory>(key);
+
+    if (categories?.length > 0) {
+      return categories;
     }
 
-    // 2️. Fallback to DB
-    return this.getAllDbCategories();
-  }
-
-  public async updateCategoriesCache() {
-    await this.getAllDbCategories();
+    return this.seedCategoriesCache();
   }
 
   /* ================= DB HELPER ================= */
 
-  private async getAllDbCategories(): Promise<TCacheCategory[]> {
+  private async seedCategoriesCache(): Promise<TCacheCategory[]> {
     const categories = await Category.find()
-      .select('_id name slug parent level')
+      .select('_id name slug parent level description')
       .sort({ slug: 1 })
       .lean()
       .exec();
@@ -174,9 +207,23 @@ class RedisCache {
 
     const key = this.getCategoriesKey();
 
-    await this.setData(key, 60 * 60 * 24, categories);
+    await Promise.all(
+      categories.map((category) => this.setHashData(key, category._id.toString(), category)),
+    );
 
     return categories;
+  }
+
+  public async setCategory(category: TCacheCategory) {
+    const key = this.getCategoriesKey();
+
+    await this.setHashData(key, category._id.toString(), category);
+  }
+
+  public async deleteCategory(categoryId: string) {
+    const key = this.getCategoriesKey();
+
+    await this.deleteHashField(key, categoryId);
   }
 
   /* ================= CLOSE ================= */

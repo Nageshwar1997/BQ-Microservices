@@ -15,12 +15,18 @@ export interface ITimestamp {
 
 export type TCategory = InferSchemaType<typeof categorySchema> & IId;
 export type TCategoryDoc = TCategory & Document;
+export type TCacheCategory = Pick<
+  TCategory,
+  'level' | 'parent' | 'name' | '_id' | 'slug' | 'description'
+>;
 
 export type TVariant = InferSchemaType<typeof variantSchema> & IId;
 export type TVariantDoc = TVariant & Document;
 
 export type TProduct = InferSchemaType<typeof productSchema> & IId;
 export type TProductDoc = TProduct & Document;
+
+
 
 export type TDraftProduct = Pick<
   TProduct,

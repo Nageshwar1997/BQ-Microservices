@@ -11,13 +11,13 @@ export const deleteCategoryController = async (
   res: Response,
   session: ClientSession,
 ) => {
-  const { categoryId: _id } = req.params ?? {};
+  const categoryId = req.params?.categoryId?.toString();
 
-  const categoryId = getObjId(_id?.toString());
+  const categoryObjId = getObjId(categoryId);
 
   /* ---------------- EXISTING CATEGORY ---------------- */
 
-  const category = await Category.findById(categoryId)
+  const category = await Category.findById(categoryObjId)
     .select('parent level isLeaf productCount')
     .lean()
     .session(session);
@@ -50,7 +50,7 @@ export const deleteCategoryController = async (
 
   /* ---------------- DELETE CATEGORY ---------------- */
 
-  await Category.findByIdAndDelete(categoryId, { session });
+  await Category.findByIdAndDelete(categoryObjId, { session });
 
   /* ---------------- UPDATE PARENT LEAF ---------------- */
 
@@ -66,7 +66,7 @@ export const deleteCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.updateCategoriesCache();
+  await redisCache.deleteCategory(categoryId);
 
   res.success(200, 'Category deleted successfully');
 };
