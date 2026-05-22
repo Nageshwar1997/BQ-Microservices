@@ -109,7 +109,7 @@ export const updateCategoryController = async (
         name,
         slug,
         parent,
-        description,
+        ...(description && { description }),
         updatedBy: userId,
       },
       {
