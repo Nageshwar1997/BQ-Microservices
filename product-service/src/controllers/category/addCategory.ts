@@ -1,5 +1,4 @@
 import { AppError } from '@beautinique/be-classes';
-import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
@@ -17,23 +16,9 @@ export const addCategoryController = async (
 
   const { name, level, parent: parentId, description } = req.body as TCategory;
 
-  /* ---------------- VALIDATIONS ---------------- */
-
-  if (!name || !level) {
-    throw new AppError({ message: 'All fields are required', code: 'UNPROCESSABLE_ENTITY' });
-  }
-
-  if (!CATEGORY_LEVELS.includes(level)) {
-    throw new AppError({ message: 'Invalid category level', code: 'UNPROCESSABLE_ENTITY' });
-  }
-
-  if (level !== CATEGORY_LEVELS_MAP.L1 && !parentId) {
-    throw new AppError({ message: 'Parent category is required', code: 'UNPROCESSABLE_ENTITY' });
-  }
-
   /* ---------------- PARENT ---------------- */
 
-  const parent = parentId ? getObjId(parentId) : null;
+  const parent = parentId ? getObjId(parentId) : undefined;
 
   if (parent) {
     const parentCategory = await Category.findById(parent)

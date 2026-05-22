@@ -15,12 +15,11 @@ export const categorySchema = new Schema(
       minlength: 10,
       maxlength: 150,
       index: true,
-      default: null,
     },
     /* 1 -> Main 2 -> Sub 3 -> Final Product Category */
     level: { type: Number, enum: CATEGORY_LEVELS, required: true, index: true },
     /* Parent Category */
-    parent: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    parent: { type: Schema.Types.ObjectId, ref: 'Category', index: true },
     /* Final category or not */
     isLeaf: { type: Boolean, default: true, index: true },
     /* Useful mainly for level 3 */
@@ -41,7 +40,23 @@ export const categorySchema = new Schema(
 /* ---------------- AUTO SLUG ---------------- */
 
 categorySchema.pre('validate', function () {
-  if (this.name) this.slug = generateSlug(this.name, false);
+  if (this.name) {
+    this.slug = generateSlug(this.name, false);
+  }
+
+  /* ---------------- LEVEL RULES ---------------- */
+
+  // L1
+  if (this.level === CATEGORY_LEVELS_MAP.L1) {
+    this.parent = undefined;
+    this.description = undefined;
+  }
+
+  // L2
+  if (this.level === CATEGORY_LEVELS_MAP.L2) {
+    this.description = undefined;
+  }
+
   // Only L3 can have products
   if (this.level !== CATEGORY_LEVELS_MAP.L3) {
     this.productCount = 0;

@@ -1,5 +1,4 @@
 import { AppError } from '@beautinique/be-classes';
-import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';
@@ -7,6 +6,7 @@ import { redisCache } from '../../classes';
 import { Category } from '../../models';
 import type { ICategory } from '../../types';
 import { generateSlug, getObjId, getUser } from '../../utils';
+import type { TUpdateCategory } from '@beautinique/be-zod';
 
 export const updateCategoryController = async (
   req: Request,
@@ -15,23 +15,9 @@ export const updateCategoryController = async (
 ) => {
   const userId = getUser(req)._id;
 
-  const { name, level, parent: parentId, description } = req.body ?? {};
+  const { name, level, parent: parentId, description } = req.body as TUpdateCategory;
 
   const categoryId = getObjId(req.params.categoryId.toString());
-
-  /* ---------------- VALIDATIONS ---------------- */
-
-  if (!name || !level) {
-    throw new AppError({ message: 'All fields are required', code: 'UNPROCESSABLE_ENTITY' });
-  }
-
-  if (!CATEGORY_LEVELS.includes(level)) {
-    throw new AppError({ message: 'Invalid category level', code: 'UNPROCESSABLE_ENTITY' });
-  }
-
-  if (level !== CATEGORY_LEVELS_MAP.L1 && !parentId) {
-    throw new AppError({ message: 'Parent category is required', code: 'UNPROCESSABLE_ENTITY' });
-  }
 
   /* ---------------- EXISTING CATEGORY ---------------- */
 
@@ -56,7 +42,7 @@ export const updateCategoryController = async (
 
   /* ---------------- PARENT ---------------- */
 
-  const parent = parentId ? getObjId(parentId) : null;
+  const parent = parentId ? getObjId(parentId) : undefined;
 
   if (parent) {
     // self parent check
