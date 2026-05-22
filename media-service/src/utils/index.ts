@@ -1,8 +1,8 @@
+import { AppError } from '@beautinique/be-classes';
 import type { TMediaResource } from '@beautinique/be-constants';
 import type { UploadApiResponse } from 'cloudinary';
 import { Types } from 'mongoose';
 import type { TId } from '../types';
-import { AppError } from '@beautinique/be-classes';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -27,7 +27,7 @@ export const getObjId = (id: string | TId): TId => {
   return typeof id === 'string' ? toObjectId(id) : id;
 };
 
-export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: string | TId }) => {
+export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: string }) => {
   const userId = getObjId(data.userId);
   return {
     userId,

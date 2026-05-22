@@ -1,11 +1,10 @@
 import { AppError } from '@beautinique/be-classes';
 import type { TRole } from '@beautinique/be-constants';
-import type { NextFunction, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { redisCache } from '../classes';
 import { HEADERS_KEYS } from '../constants';
-import type { AuthRequest } from '../types';
 
-export const authenticate = async (req: AuthRequest, _res: Response, next: NextFunction) => {
+export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
   try {
     const userId = req.get(HEADERS_KEYS.userId);
 
@@ -24,7 +23,7 @@ export const authenticate = async (req: AuthRequest, _res: Response, next: NextF
 };
 
 export const authorize =
-  (allowedRoles: TRole[]) => async (req: AuthRequest, _res: Response, next: NextFunction) => {
+  (allowedRoles: TRole[]) => async (req: Request, _res: Response, next: NextFunction) => {
     try {
       const userId = req.get(HEADERS_KEYS.userId);
       const userRole = (req.get(HEADERS_KEYS.userRole) || 'USER') as TRole;

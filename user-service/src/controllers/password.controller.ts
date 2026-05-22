@@ -8,7 +8,7 @@ import type { Request, Response } from 'express';
 import { redisCache } from '../classes';
 import { HEADERS_KEYS } from '../constants';
 import { getUserByEmail, getUserById, updateUser } from '../services';
-import type { AuthRequest, IUserDoc } from '../types';
+import type { IUserDoc } from '../types';
 import { getMinimalUser, getObjId } from '../utils';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
@@ -146,7 +146,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   res.success(200, 'Password reset successfully', { user: minUser });
 };
 
-export const changePasswordController = async (req: AuthRequest, res: Response) => {
+export const changePasswordController = async (req: Request, res: Response) => {
   const userId = req.user?._id;
 
   if (!userId) {
@@ -190,7 +190,7 @@ export const changePasswordController = async (req: AuthRequest, res: Response) 
   res.success(200, 'Password changed successfully', { user: minUser });
 };
 
-export const setPasswordController = async (req: AuthRequest, res: Response) => {
+export const setPasswordController = async (req: Request, res: Response) => {
   const user = req.user;
 
   if (!user) {

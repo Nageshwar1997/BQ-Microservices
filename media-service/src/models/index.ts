@@ -12,7 +12,7 @@ const mediaSchema = new Schema<TMediaDoc>(
     publicId: { type: String, required: true, unique: true, index: true },
     url: { type: String },
     resourceType: { type: String, enum: MEDIA_RESOURCES, required: true, index: true },
-    userId: { type: Schema.Types.ObjectId },
+    userId: { type: Schema.Types.ObjectId, required: true },
     relatedTo: { service: { type: String, enum: SERVICES }, entity: { type: String } },
     expiresAt: { type: Date, index: true },
     deletedAt: { type: Date, index: true },

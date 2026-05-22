@@ -1,8 +1,5 @@
-import type { TSeller } from '@beautinique/be-zod';
-import type { Request } from 'express';
 import type { Document, InferSchemaType, Types } from 'mongoose';
-import type { SELLER_APPROVAL_STATUS } from '../constants';
-import type { userSchema } from '../schemas/user.schema';
+import type { sellerSchema, userSchema, wishlistSchema } from '../schemas';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -28,23 +25,10 @@ export type TMinimalUser = Omit<
 > &
   IStrId;
 
-export interface ISeller extends Pick<IUser, 'status' | 'reason'> {
-  user: TId;
-  approvalStatus: (typeof SELLER_APPROVAL_STATUS)[number];
-  personalDetails: Omit<TSeller['businessDetails'], 'category'>;
-  businessDetails: TSeller['businessDetails'];
-  requiredDocuments: Record<'gst' | 'itr' | 'addressProof' | 'geoTagging', string>;
-  businessAddress: TSeller['businessAddress'];
-}
+export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
 
 export interface ISellerDoc extends ISeller, Document {}
 
-export interface IWishlist extends IId, ITimestamp {
-  products: TId[];
-}
+export interface IWishlist extends InferSchemaType<typeof wishlistSchema>, IId {}
 
 export interface IWishlistDoc extends IWishlist, Document {}
-
-export interface AuthRequest extends Request {
-  user?: null | TMinimalUser;
-}

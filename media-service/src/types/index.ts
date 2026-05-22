@@ -1,14 +1,9 @@
-import type { TMediaResource, TMediaStatus, TRole, TService } from '@beautinique/be-constants';
-import type { Request } from 'express';
+import type { TMediaResource, TMediaStatus, TService } from '@beautinique/be-constants';
 import type { Types } from 'mongoose';
 
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
-}
-
-export interface AuthRequest extends Request {
-  user?: (IId & { role: TRole }) | null;
 }
 
 export interface ITimestamp {

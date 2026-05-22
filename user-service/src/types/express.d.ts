@@ -1,4 +1,5 @@
 import 'express-serve-static-core';
+import type { TMinimalUser } from '.';
 
 declare module 'express-serve-static-core' {
   interface Response {
@@ -6,5 +7,6 @@ declare module 'express-serve-static-core' {
   }
   interface Request {
     requestId?: string;
+    user?: null | TMinimalUser;
   }
 }

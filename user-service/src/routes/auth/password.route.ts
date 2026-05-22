@@ -17,7 +17,6 @@ import {
   setPasswordController,
 } from '../../controllers';
 import { authenticate } from '../../middlewares';
-import type { AuthRequest } from '../../types';
 
 export const passwordRouter = Router();
 
@@ -54,7 +53,7 @@ passwordRouter[change.method](
   authenticate,
   checkEmptyRequest({ body: true }),
   zodValidator(changePasswordSchema),
-  tryCatchResponse<AuthRequest>(changePasswordController),
+  tryCatchResponse(changePasswordController),
 );
 
 passwordRouter[set.method](
@@ -62,5 +61,5 @@ passwordRouter[set.method](
   authenticate,
   checkEmptyRequest({ body: true }),
   zodValidator(setPasswordSchema),
-  tryCatchResponse<AuthRequest>(setPasswordController),
+  tryCatchResponse(setPasswordController),
 );

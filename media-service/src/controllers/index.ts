@@ -2,15 +2,14 @@ import { AppError } from '@beautinique/be-classes';
 import { bullQueue } from '@beautinique/be-jobs';
 import type { TMediaUpload } from '@beautinique/be-zod';
 import { createHash } from 'crypto';
-import type { Response } from 'express';
+import type { Request, Response } from 'express';
 import { cloudinary } from '../classes';
 import { logger } from '../configs';
-import type { AuthRequest } from '../types';
 import { generateBaseMediaPayload } from '../utils';
 
 const CLEANUP_DELAY = 24 * 60 * 60 * 1000;
 
-export const singleMediaUploadController = async (req: AuthRequest, res: Response) => {
+export const singleMediaUploadController = async (req: Request, res: Response) => {
   const { body, file, user } = req;
 
   if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
@@ -69,7 +68,7 @@ export const singleMediaUploadController = async (req: AuthRequest, res: Respons
   res.success(200, 'File uploaded successfully', { url: uploadedMedia.secure_url });
 };
 
-export const multipleMediaUploadController = async (req: AuthRequest, res: Response) => {
+export const multipleMediaUploadController = async (req: Request, res: Response) => {
   const { body, files: multerFiles, user } = req;
 
   if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });

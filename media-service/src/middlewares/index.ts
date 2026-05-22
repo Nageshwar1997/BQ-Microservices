@@ -1,11 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
 import type { TRole } from '@beautinique/be-constants';
-import type { NextFunction, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { HEADERS_KEYS } from '../constants';
-import type { AuthRequest } from '../types';
-import { getObjId } from '../utils';
 
-export const authenticate = (req: AuthRequest, _res: Response, next: NextFunction) => {
+export const authenticate = (req: Request, _res: Response, next: NextFunction) => {
   const userId = req.get(HEADERS_KEYS.userId) || '';
   const userRole = (req.get(HEADERS_KEYS.userRole) || 'USER') as TRole;
 
@@ -13,13 +11,13 @@ export const authenticate = (req: AuthRequest, _res: Response, next: NextFunctio
     throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
   }
 
-  req.user = { _id: getObjId(userId), role: userRole };
+  req.user = { _id: userId, role: userRole };
 
   next();
 };
 
 export const authorize =
-  (allowedRoles: TRole[]) => (req: AuthRequest, _res: Response, next: NextFunction) => {
+  (allowedRoles: TRole[]) => (req: Request, _res: Response, next: NextFunction) => {
     const userId = req.get(HEADERS_KEYS.userId) || '';
 
     if (!userId) {
@@ -35,7 +33,7 @@ export const authorize =
       });
     }
 
-    req.user = { _id: getObjId(userId), role: userRole };
+    req.user = { _id: userId, role: userRole };
 
     next();
   };

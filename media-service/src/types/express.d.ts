@@ -6,5 +6,6 @@ declare module 'express-serve-static-core' {
   }
   interface Request {
     requestId?: string;
+    user?: { _id: string; role: TRole } | null;
   }
 }
