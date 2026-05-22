@@ -81,10 +81,10 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     }
   } else {
     // Prepare payload
-    const payload = await createOAuthDbPayload(profile, 'GOOGLE');
+    const payload = createOAuthDbPayload(profile, 'GOOGLE');
 
     // Create new user
-    user = await createNewUser(payload);
+    user = await createNewUser({ ...payload });
   }
 
   const minUser = getMinimalUser(user);
@@ -129,7 +129,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
     }
   } else {
     // Prepare payload
-    const payload = await createOAuthDbPayload(profile, 'LINKEDIN');
+    const payload = createOAuthDbPayload(profile, 'LINKEDIN');
 
     // Create new user
     user = await createNewUser(payload);
@@ -176,7 +176,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
     }
   } else {
     // Prepare payload
-    const payload = await createOAuthDbPayload(profile, 'GITHUB');
+    const payload = createOAuthDbPayload(profile, 'GITHUB');
 
     // Create new user
     user = await createNewUser(payload);

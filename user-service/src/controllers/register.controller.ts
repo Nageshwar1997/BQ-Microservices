@@ -157,6 +157,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
       providers: ['MANUAL'],
       role: 'USER',
       status: 'ACTIVE',
+      avatar: '',
     });
   }
 

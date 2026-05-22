@@ -2,6 +2,7 @@ import type { TMediaResource } from '@beautinique/be-constants';
 import type { UploadApiResponse } from 'cloudinary';
 import { Types } from 'mongoose';
 import type { TId } from '../types';
+import { AppError } from '@beautinique/be-classes';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -13,9 +14,18 @@ export const isNullOrUndefined = (value: unknown): value is null | undefined => 
 };
 
 /* ========== OBJECT ID CONVERTER FUNCTION ========== */
-export const toObjectId = (id: string): TId => new Types.ObjectId(id);
 
-export const getObjId = (id: string | TId): TId => (typeof id === 'string' ? toObjectId(id) : id);
+export const toObjectId = (id: string): TId => {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new AppError({ message: 'Invalid object id', code: 'UNPROCESSABLE_ENTITY' });
+  }
+
+  return new Types.ObjectId(id);
+};
+
+export const getObjId = (id: string | TId): TId => {
+  return typeof id === 'string' ? toObjectId(id) : id;
+};
 
 export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: string | TId }) => {
   const userId = getObjId(data.userId);

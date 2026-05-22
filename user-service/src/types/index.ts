@@ -1,12 +1,16 @@
-import type { TAuthProvider, TRole } from '@beautinique/be-constants';
-import type { TEmail, TRegister, TSeller } from '@beautinique/be-zod';
+import type { TSeller } from '@beautinique/be-zod';
 import type { Request } from 'express';
-import type { Document, Types } from 'mongoose';
-import type { SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants';
+import type { Document, InferSchemaType, Types } from 'mongoose';
+import type { SELLER_APPROVAL_STATUS } from '../constants';
+import type { userSchema } from '../schemas/user.schema';
 
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
+}
+
+export interface IStrId {
+  _id: string;
 }
 
 export interface ITimestamp {
@@ -14,23 +18,15 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
-export type TUser = TEmail &
-  Omit<TRegister, 'confirmPassword' | 'otp'> & {
-    avatar?: string;
-    role: TRole;
-    providers: TAuthProvider[];
-    status: (typeof USER_STATUS)[number];
-    reason?: string | null;
-  };
+export interface IUser extends InferSchemaType<typeof userSchema>, IId {}
 
-export interface IUser extends TUser, IId, ITimestamp {}
+export interface IUserDoc extends IUser, Document {}
 
 export type TMinimalUser = Omit<
   IUser,
-  'password' | 'reason' | 'status' | 'createdAt' | 'updatedAt'
->;
-
-export interface IUserDoc extends IUser, Document {}
+  'password' | 'reason' | 'status' | 'createdAt' | 'updatedAt' | '_id'
+> &
+  IStrId;
 
 export interface ISeller extends Pick<IUser, 'status' | 'reason'> {
   user: TId;

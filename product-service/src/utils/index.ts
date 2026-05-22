@@ -26,6 +26,7 @@ export const toObjectId = (id: string): TId => {
 export const getObjId = (id: string | TId): TId => {
   return typeof id === 'string' ? toObjectId(id) : id;
 };
+
 /* ========== GENERATE SLUG ========== */
 export const generateSlug = (text: string, unique = true) => {
   const slug = slugify(text, { lower: true, strict: true, trim: true });

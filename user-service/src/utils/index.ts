@@ -1,14 +1,15 @@
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
-import type { IUser, IUserDoc, TId, TMinimalUser, TUser } from '../types';
+import type { IUser, IUserDoc, TId, TMinimalUser } from '../types';
+import { AppError } from '@beautinique/be-classes';
 
 /* ======================= Auth Utils ======================= */
 
-export const createOAuthDbPayload = async (
+export const createOAuthDbPayload = (
   data: Record<string, string>,
   provider: TAuthProvider,
-): Promise<TUser> => {
+): Omit<IUser, '_id' | 'createdAt' | 'updatedAt'> => {
   const fullName = data.name?.trim() || '';
   const nameParts = fullName.split(/\s+/);
 
@@ -32,16 +33,11 @@ export const createOAuthDbPayload = async (
 };
 
 export const getMinimalUser = (user: IUser | IUserDoc): TMinimalUser => {
-  const {
-    password: _,
-    reason: __,
-    status: ___,
-    createdAt: ____,
-    updatedAt: _____,
-    ...restUser
-  } = 'toObject' in user ? user.toObject() : user;
+  const { _id, firstName, lastName, email, phoneNumber, avatar, role, providers }: IUser =
+    'toObject' in user ? user.toObject() : user;
 
-  return restUser;
+  // return restUser;
+  return { _id: _id.toString(), firstName, lastName, email, phoneNumber, avatar, role, providers };
 };
 
 /* ======================= Auth Utils End ======================= */
@@ -55,8 +51,18 @@ export const generateTempToken = (bytes = 32) => {
   return randomBytes(bytes).toString('hex');
 };
 
-export const toObjectId = (id: string): TId => new Types.ObjectId(id);
+/* ========== OBJECT ID CONVERTER FUNCTION ========== */
 
-export const getObjId = (id: string | TId): TId => (typeof id === 'string' ? toObjectId(id) : id);
+export const toObjectId = (id: string): TId => {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new AppError({ message: 'Invalid object id', code: 'UNPROCESSABLE_ENTITY' });
+  }
+
+  return new Types.ObjectId(id);
+};
+
+export const getObjId = (id: string | TId): TId => {
+  return typeof id === 'string' ? toObjectId(id) : id;
+};
 
 /* ======================= User Utils End ======================= */

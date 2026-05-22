@@ -1,31 +1,8 @@
-import { COUNTRIES, ROLES, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/be-constants';
+import { COUNTRIES, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/be-constants';
 import { Schema, model } from 'mongoose';
 import { SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants';
-import type { ISeller, ISellerDoc, IUserDoc, IWishlistDoc } from '../types';
-
-const userSchema = new Schema<IUserDoc>(
-  {
-    firstName: { type: String, trim: true },
-    lastName: { type: String, trim: true },
-    phoneNumber: { type: String, trim: true },
-    email: { type: String, trim: true, lowercase: true },
-    avatar: { type: String, default: '', trim: true },
-    role: { type: String, enum: ROLES, default: 'USER' },
-    password: { type: String, trim: true },
-    providers: { type: [String], default: ['MANUAL'] },
-    status: { type: String, enum: USER_STATUS, default: 'ACTIVE' },
-    reason: { type: String },
-  },
-  { versionKey: false, timestamps: true },
-);
-
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index(
-  { phoneNumber: 1 },
-  { unique: true, partialFilterExpression: { phoneNumber: { $ne: '' } } },
-);
-userSchema.index({ role: 1 });
-userSchema.index({ status: 1 });
+import { userSchema } from '../schemas/user.schema';
+import type { ISeller, ISellerDoc, IWishlistDoc } from '../types';
 
 const businessAddressSchema = new Schema<ISeller['businessAddress']>(
   {
@@ -95,8 +72,8 @@ const wishlistSchema = new Schema<IWishlistDoc>(
   { versionKey: false, timestamps: true },
 );
 
-export const User = model<IUserDoc>('User', userSchema);
+export const User = model('User', userSchema);
 
-export const Seller = model<ISellerDoc>('Seller', sellerSchema);
+export const Seller = model('Seller', sellerSchema);
 
-export const Wishlist = model<IWishlistDoc>('Wishlist', wishlistSchema);
+export const Wishlist = model('Wishlist', wishlistSchema);

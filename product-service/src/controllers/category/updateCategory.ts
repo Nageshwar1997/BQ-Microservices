@@ -144,6 +144,7 @@ export const updateCategoryController = async (
       new: true,
       lean: true,
       select: '_id name slug parent level description',
+      runValidators: true,
     }).exec();
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {

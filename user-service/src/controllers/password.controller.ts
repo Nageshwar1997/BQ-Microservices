@@ -9,7 +9,7 @@ import { redisCache } from '../classes';
 import { HEADERS_KEYS } from '../constants';
 import { getUserByEmail, getUserById, updateUser } from '../services';
 import type { AuthRequest, IUserDoc } from '../types';
-import { getMinimalUser } from '../utils';
+import { getMinimalUser, getObjId } from '../utils';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
   const { email } = req.body as TEmail;
@@ -206,7 +206,7 @@ export const setPasswordController = async (req: AuthRequest, res: Response) => 
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const updatedUser = await updateUser({ _id: user._id }, { password: hashedPassword });
+  const updatedUser = await updateUser({ _id: getObjId(user._id) }, { password: hashedPassword });
 
   const minUser = getMinimalUser(updatedUser);
 

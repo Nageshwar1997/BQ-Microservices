@@ -1,6 +1,6 @@
 import { AppError } from '@beautinique/be-classes';
 import { User } from '../models';
-import type { IUser, IUserDoc, TId, TUser } from '../types';
+import type { IUser, TId } from '../types';
 import { getObjId } from '../utils';
 
 interface ILean {
@@ -14,7 +14,7 @@ type TByEmail = Pick<IUser, 'email'> & ILean;
 type TByPhone = Pick<IUser, 'phoneNumber'> & ILean;
 type TByEmailOrPhone = TByEmail | TByPhone;
 
-export const getUserById = async (data: IById): Promise<IUser | IUserDoc> => {
+export const getUserById = async (data: IById) => {
   const { id, lean = true, password = false } = data;
   const _id = getObjId(id);
   const baseQuery = User.findById(_id);
@@ -27,37 +27,35 @@ export const getUserById = async (data: IById): Promise<IUser | IUserDoc> => {
   return user;
 };
 
-export const getUserByEmail = async (data: TByEmail): Promise<IUser | IUserDoc | null> => {
+export const getUserByEmail = async (data: TByEmail) => {
   const { lean = true, email } = data;
   const query = User.findOne({ email });
   return await (lean ? query.lean() : query);
 };
 
-export const getUserByPhoneNumber = async (data: TByPhone): Promise<IUser | IUserDoc | null> => {
+export const getUserByPhoneNumber = async (data: TByPhone) => {
   const { lean = true, phoneNumber } = data;
   const query = User.findOne({ phoneNumber });
   return await (lean ? query.lean() : query);
 };
 
-export const getUserByEmailOrPhone = async (data: TByEmailOrPhone): Promise<IUser | IUserDoc> => {
-  const { lean = true, ...rest } = data;
+export const getUserByEmailOrPhone = async ({ lean = true, ...data }: TByEmailOrPhone) => {
+  const conditions: Record<keyof typeof data, string>[] = [];
 
-  const conditions: Record<keyof typeof rest, string>[] = [];
-
-  if ('email' in rest && rest.email) conditions.push({ email: rest.email });
-  if ('phoneNumber' in rest && rest.phoneNumber) conditions.push({ phoneNumber: rest.phoneNumber });
+  if ('email' in data && data.email) conditions.push({ email: data.email });
+  if ('phoneNumber' in data && data.phoneNumber) conditions.push({ phoneNumber: data.phoneNumber });
 
   const query = { $or: conditions };
 
-  const user: IUser | null = lean ? await User.findOne(query).lean() : await User.findOne(query);
+  const user = lean ? await User.findOne(query).lean() : await User.findOne(query);
 
   if (!user) {
     throw new AppError({
       message: 'User not found',
       code: 'NOT_FOUND',
       fieldErrors: {
-        ...('email' in rest && rest.email && { email: ['Invalid email'] }),
-        ...('phoneNumber' in rest && rest.phoneNumber && { phoneNumber: ['Invalid phone number'] }),
+        ...('email' in data && data.email && { email: ['Invalid email'] }),
+        ...('phoneNumber' in data && data.phoneNumber && { phoneNumber: ['Invalid phone number'] }),
       },
     });
   }
@@ -65,7 +63,7 @@ export const getUserByEmailOrPhone = async (data: TByEmailOrPhone): Promise<IUse
   return user;
 };
 
-export const createNewUser = async (payload: TUser): Promise<IUser> => {
+export const createNewUser = async (payload: Omit<IUser, '_id' | 'createdAt' | 'updatedAt' | "reason">) => {
   const user = await User.create(payload);
 
   if (!user) {
@@ -78,7 +76,7 @@ export const createNewUser = async (payload: TUser): Promise<IUser> => {
 export const updateUser = async (
   filter: Partial<Pick<IUser, '_id' | 'email' | 'phoneNumber' | 'status' | 'role'>>,
   payload: Partial<IUser>,
-): Promise<IUser> => {
+) => {
   const user = await User.findOneAndUpdate(filter, payload, { new: true });
 
   if (!user) {
