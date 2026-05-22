@@ -25,7 +25,10 @@ export type TUser = TEmail &
 
 export interface IUser extends TUser, IId, ITimestamp {}
 
-export type TMinimalUser = Omit<IUser, 'password' | 'reason' | 'status'>;
+export type TMinimalUser = Omit<
+  IUser,
+  'password' | 'reason' | 'status' | 'createdAt' | 'updatedAt'
+>;
 
 export interface IUserDoc extends IUser, Document {}
 

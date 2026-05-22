@@ -163,7 +163,7 @@ class RedisCache {
     const user = getMinimalUser(rawUser);
 
     // 3️. Set cache (non-blocking)
-    void this.setUser(user);
+    await this.setUser(user);
 
     return user;
   }

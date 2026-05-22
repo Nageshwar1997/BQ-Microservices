@@ -36,6 +36,8 @@ export const getMinimalUser = (user: IUser | IUserDoc): TMinimalUser => {
     password: _,
     reason: __,
     status: ___,
+    createdAt: ____,
+    updatedAt: _____,
     ...restUser
   } = 'toObject' in user ? user.toObject() : user;
 
