@@ -9,13 +9,7 @@ export const categorySchema = new Schema(
     /* SEO + Atlas Search Friendly */
     slug: { type: String, required: true, trim: true, lowercase: true, index: true },
     /* Category Description */
-    description: {
-      type: String,
-      trim: true,
-      minlength: 10,
-      maxlength: 150,
-      index: true,
-    },
+    description: { type: String, trim: true, minlength: 10, maxlength: 150, index: true },
     /* 1 -> Main 2 -> Sub 3 -> Final Product Category */
     level: { type: Number, enum: CATEGORY_LEVELS, required: true, index: true },
     /* Parent Category */
