@@ -1,9 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
+import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
 import { redisCache } from '../../classes';
-import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '../../constants';
 import { Category } from '../../models';
 import { generateSlug, getObjId, getUser } from '../../utils';
 

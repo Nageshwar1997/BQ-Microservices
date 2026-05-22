@@ -1,5 +1,5 @@
+import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import { Schema } from 'mongoose';
-import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '../constants';
 import { generateSlug } from '../utils';
 
 export const categorySchema = new Schema(
