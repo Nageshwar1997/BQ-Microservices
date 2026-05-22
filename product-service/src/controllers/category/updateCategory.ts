@@ -15,9 +15,9 @@ export const updateCategoryController = async (
 ) => {
   const userId = getUser(req)._id;
 
-  const { name, level, parent: parentId, description, _id } = req.body ?? {};
+  const { name, level, parent: parentId, description } = req.body ?? {};
 
-  const categoryId = getObjId(_id);
+  const categoryId = getObjId(req.params.categoryId.toString());
 
   /* ---------------- VALIDATIONS ---------------- */
 

@@ -14,10 +14,18 @@ export const isNullOrUndefined = (value: unknown): value is null | undefined => 
 };
 
 /* ========== OBJECT ID CONVERTER FUNCTION ========== */
-export const toObjectId = (id: string): TId => new Types.ObjectId(id);
 
-export const getObjId = (id: string | TId): TId => (typeof id === 'string' ? toObjectId(id) : id);
+export const toObjectId = (id: string): TId => {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new AppError({ message: 'Invalid object id', code: 'UNPROCESSABLE_ENTITY' });
+  }
 
+  return new Types.ObjectId(id);
+};
+
+export const getObjId = (id: string | TId): TId => {
+  return typeof id === 'string' ? toObjectId(id) : id;
+};
 /* ========== GENERATE SLUG ========== */
 export const generateSlug = (text: string, unique = true) => {
   const slug = slugify(text, { lower: true, strict: true, trim: true });

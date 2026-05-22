@@ -23,7 +23,7 @@ categoryRouter[add.method](
 categoryRouter[update.method](
   update.path,
   authorize(['ADMIN', 'MASTER']),
-  checkEmptyRequest({ body: true }),
+  checkEmptyRequest({ body: true, params: true }),
   tryCatchSessionResponse(updateCategoryController),
 );
 
