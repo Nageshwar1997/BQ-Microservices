@@ -23,7 +23,7 @@ export const categorySchema = new Schema(
     /* Final category or not */
     isLeaf: { type: Boolean, default: true, index: true },
     /* Useful mainly for level 3 */
-    productCount: { type: Number, min: 0, index: true },
+    productCount: { type: Number, index: true },
     /* Created By */
     createdBy: { type: Schema.Types.ObjectId, required: true, index: true },
     /* Updated By */
@@ -55,11 +55,6 @@ categorySchema.pre('validate', function () {
   // L2
   if (this.level === CATEGORY_LEVELS_MAP.L2) {
     this.description = undefined;
-  }
-
-  // Only L3 can have products
-  if (this.level !== CATEGORY_LEVELS_MAP.L3) {
-    this.productCount = 0;
   }
 });
 

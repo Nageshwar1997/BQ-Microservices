@@ -1,4 +1,5 @@
 import { AppError } from '@beautinique/be-classes';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
@@ -61,9 +62,9 @@ export const addCategoryController = async (
   const category = new Category({
     name,
     level,
-    parent,
-    description,
     createdBy: userId,
+    ...((level === CATEGORY_LEVELS_MAP.L2 || level === CATEGORY_LEVELS_MAP.L3) && { parent }),
+    ...(level === CATEGORY_LEVELS_MAP.L3 && { productCount: 0, description }),
   });
 
   try {
