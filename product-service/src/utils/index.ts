@@ -48,17 +48,15 @@ export const getMinimalCategory = (category: ICategory): TCacheCategory => {
   const { _id, level, description, parent, name, slug } = category;
   const base = { _id: _id.toString(), name, slug };
   switch (level) {
-    case 1: {
-      return { ...base, level, description, parent: undefined };
-    }
-    case 2: {
-      return { ...base, level, parent: parent?.toString() || '', description };
-    }
     case 3: {
       return { ...base, level, parent: parent?.toString() || '', description: description || '' };
     }
+    case 2: {
+      return { ...base, level, parent: parent?.toString() || '', description: undefined };
+    }
+    case 1:
     default: {
-      return { ...base, level, description, parent: parent?.toString() };
+      return { ...base, level, description: undefined, parent: undefined };
     }
   }
 };
