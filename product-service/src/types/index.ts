@@ -1,6 +1,6 @@
 import type { TRole } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
-import type { Document, InferSchemaType, Types } from 'mongoose';
+import type { InferSchemaType, Types } from 'mongoose';
 import type { PRODUCT_STATUSES, TRY_ON_MAP } from '../constants';
 import type { categorySchema, productSchema, variantSchema } from '../schemas';
 
@@ -20,14 +20,12 @@ export interface ITimestamp {
 }
 
 export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
-export interface ICategoryDoc extends ICategory, Document {}
+
 export type TCacheCategory = TCategory & IIdStr & Pick<ICategory, 'slug'>;
 
 export type TVariant = InferSchemaType<typeof variantSchema> & IId;
-export type TVariantDoc = TVariant & Document;
 
 export type TProduct = InferSchemaType<typeof productSchema> & IId;
-export type TProductDoc = TProduct & Document;
 
 export type TDraftProduct = Pick<
   TProduct,
@@ -53,36 +51,15 @@ export interface IUser extends IId {
 
 export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
 
-export interface ILip {
-  category: 'LIP';
-  type: (typeof TRY_ON_MAP)['LIP'][number];
-}
+type TTryOn = typeof TRY_ON_MAP;
+type TTryOnKey = keyof TTryOn;
 
-export interface IEye {
-  category: 'EYE';
-  type: (typeof TRY_ON_MAP)['EYE'][number];
-}
+type TTryOnCategoryMap = {
+  [K in TTryOnKey]: { category: K; type: TTryOn[K][number] };
+}[TTryOnKey];
 
-export interface IHair {
-  category: 'HAIR';
-  type: (typeof TRY_ON_MAP)['HAIR'][number];
-}
+type TTryOnDisabled = { enabled: false } | ({ enabled: false } & TTryOnCategoryMap);
 
-export interface IFace {
-  category: 'FACE';
-  type: (typeof TRY_ON_MAP)['FACE'][number];
-}
+type TTryOnEnabled = { enabled: true } & TTryOnCategoryMap;
 
-export interface INail {
-  category: 'NAIL';
-  type: (typeof TRY_ON_MAP)['NAIL'][number];
-}
-
-export interface ISkin {
-  category: 'SKIN';
-  type: (typeof TRY_ON_MAP)['SKIN'][number];
-}
-
-export type TTryOnCategory = ILip | IEye | IHair | IFace | INail | ISkin;
-
-export type ITryOn = { enabled: false } | ({ enabled: true } & TTryOnCategory);
+export type ITryOn = TTryOnDisabled | TTryOnEnabled;

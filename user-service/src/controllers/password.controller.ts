@@ -5,10 +5,11 @@ import { sanitizeToken } from '@beautinique/be-utils';
 import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
+import type { HydratedDocument } from 'mongoose';
 import { redisCache } from '../classes';
 import { HEADERS_KEYS } from '../constants';
 import { getUserByEmail, getUserById, updateUser } from '../services';
-import type { IUserDoc } from '../types';
+import type { IUser } from '../types';
 import { getMinimalUser, getObjId } from '../utils';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
@@ -116,7 +117,10 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   }
 
   // Check for existing users
-  const user = (await getUserByEmail({ email: parsedData.email, lean: false })) as IUserDoc;
+  const user = (await getUserByEmail({
+    email: parsedData.email,
+    lean: false,
+  })) as HydratedDocument<IUser>;
 
   if (!user) {
     throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
@@ -155,7 +159,11 @@ export const changePasswordController = async (req: Request, res: Response) => {
 
   const { currentPassword, password } = req.body as TChangePassword;
 
-  const user = (await getUserById({ id: userId, lean: false, password: true })) as IUserDoc;
+  const user = (await getUserById({
+    id: userId,
+    lean: false,
+    password: true,
+  })) as HydratedDocument<IUser>;
 
   const isCurrentPasswordMatch = await bcrypt.compare(currentPassword, user.password);
 

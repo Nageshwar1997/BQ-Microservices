@@ -1,8 +1,8 @@
+import { AppError } from '@beautinique/be-classes';
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
-import type { IUser, IUserDoc, TId, TMinimalUser } from '../types';
-import { AppError } from '@beautinique/be-classes';
+import type { IUser, TId } from '../types';
 
 /* ======================= Auth Utils ======================= */
 
@@ -32,12 +32,17 @@ export const createOAuthDbPayload = (
   };
 };
 
-export const getMinimalUser = (user: IUser | IUserDoc): TMinimalUser => {
-  const { _id, firstName, lastName, email, phoneNumber, avatar, role, providers }: IUser =
-    'toObject' in user ? user.toObject() : user;
-
-  // return restUser;
-  return { _id: _id.toString(), firstName, lastName, email, phoneNumber, avatar, role, providers };
+export const getMinimalUser = (user: IUser) => {
+  return {
+    _id: user._id.toString(),
+    firstName: user.firstName,
+    lastName: user.lastName,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    avatar: user.avatar,
+    role: user.role,
+    providers: user.providers,
+  };
 };
 
 /* ======================= Auth Utils End ======================= */

@@ -5,9 +5,8 @@ import {
   SERVICES,
 } from '@beautinique/be-constants';
 import { Schema, model } from 'mongoose';
-import type { TMediaDoc } from '../types';
 
-const mediaSchema = new Schema<TMediaDoc>(
+export const mediaSchema = new Schema(
   {
     publicId: { type: String, required: true, unique: true, index: true },
     url: { type: String },
@@ -31,4 +30,4 @@ mediaSchema.index({ status: 1, expiresAt: 1 });
 
 mediaSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-export const Media = model<TMediaDoc>('Media', mediaSchema);
+export const Media = model('Media', mediaSchema);

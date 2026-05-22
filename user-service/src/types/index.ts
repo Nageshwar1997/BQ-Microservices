@@ -1,5 +1,6 @@
-import type { Document, InferSchemaType, Types } from 'mongoose';
+import type { InferSchemaType, Types } from 'mongoose';
 import type { sellerSchema, userSchema, wishlistSchema } from '../schemas';
+import type { getMinimalUser } from '../utils';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -17,18 +18,8 @@ export interface ITimestamp {
 
 export interface IUser extends InferSchemaType<typeof userSchema>, IId {}
 
-export interface IUserDoc extends IUser, Document {}
-
-export type TMinimalUser = Omit<
-  IUser,
-  'password' | 'reason' | 'status' | 'createdAt' | 'updatedAt' | '_id'
-> &
-  IStrId;
+export type TMinimalUser = ReturnType<typeof getMinimalUser>;
 
 export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
 
-export interface ISellerDoc extends ISeller, Document {}
-
 export interface IWishlist extends InferSchemaType<typeof wishlistSchema>, IId {}
-
-export interface IWishlistDoc extends IWishlist, Document {}

@@ -8,7 +8,6 @@ import type { Request, Response } from 'express';
 import { redisCache } from '../classes';
 import { HEADERS_KEYS } from '../constants';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services';
-import type { IUser, IUserDoc } from '../types';
 import { getMinimalUser } from '../utils';
 
 export const registerSendOtpController = async (req: Request, res: Response) => {
@@ -118,7 +117,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     getUserByEmail({ email: parsedData.email, lean: false }),
     getUserByPhoneNumber({ phoneNumber, lean: false }),
   ]);
-  let user = (emailUser || phoneUser) as IUserDoc | IUser;
+  let user = emailUser || phoneUser;
 
   if (phoneUser && phoneUser._id.toString() !== emailUser?._id.toString()) {
     throw new AppError({

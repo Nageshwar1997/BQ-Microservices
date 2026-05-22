@@ -1,5 +1,5 @@
-import type { TMediaResource, TMediaStatus, TService } from '@beautinique/be-constants';
-import type { Types } from 'mongoose';
+import type { InferSchemaType, Types } from 'mongoose';
+import type { mediaSchema } from '../models';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -11,50 +11,37 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
-interface IResource {
-  resourceType: TMediaResource;
-}
+type TMedia = InferSchemaType<typeof mediaSchema>;
 
-export interface IUploaderBase extends IResource {
+export interface IMedia extends TMedia, IId {}
+
+type TResource = Pick<TMedia, 'resourceType'>;
+
+export interface IUploaderBase extends TResource {
   folder: string;
 }
 
-export interface IUploader extends IResource, IUploaderBase {
+export interface IUploader extends TResource, IUploaderBase {
   buffer: Buffer<ArrayBufferLike>;
 }
 
-export interface ISingleUploader extends IResource, IUploaderBase {
+export interface ISingleUploader extends TResource, IUploaderBase {
   file: Express.Multer.File;
 }
 
-export interface IMultipleUploader extends IResource, IUploaderBase {
+export interface IMultipleUploader extends TResource, IUploaderBase {
   files: Express.Multer.File[];
 }
 
-export interface IRemover extends IResource {
+export interface IRemover extends TResource {
   publicId: string;
 }
 
-export interface ISingleRemover extends IResource {
+export interface ISingleRemover extends TResource {
   publicId: string;
 }
 
-export interface IMultipleRemover extends IResource {
+export interface IMultipleRemover extends TResource {
   publicIds: string[];
   retryCount?: number;
 }
-
-export interface IBaseMedia extends IResource {
-  publicId: string;
-  url: string;
-  userId: Types.ObjectId;
-  relatedTo: { service: TService; entity: string };
-  expiresAt: Date | null;
-  deletedAt: Date | null;
-  status: TMediaStatus;
-  metadata: Record<string, unknown>;
-}
-
-export interface IMedia extends IBaseMedia, ITimestamp, IId {}
-
-export type TMediaDoc = IMedia & Document;
