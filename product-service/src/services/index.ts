@@ -1,7 +1,7 @@
 import { AppError } from '@beautinique/be-classes';
 import type { ClientSession } from 'mongoose';
 import { Category } from '../models';
-import type { TCategory } from '../types';
+import type { ICategory } from '../types';
 
 export const findOrCreateCategory = async ({
   name,
@@ -9,7 +9,7 @@ export const findOrCreateCategory = async ({
   parent = null,
   level,
   session,
-}: Partial<Omit<TCategory, '_id'>> & { session?: ClientSession }) => {
+}: Partial<Omit<ICategory, '_id'>> & { session?: ClientSession }) => {
   try {
     const category = await Category.findOneAndUpdate(
       { slug, level, parent },

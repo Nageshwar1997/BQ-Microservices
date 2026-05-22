@@ -2,7 +2,7 @@ import { AppError } from '@beautinique/be-classes';
 import type { Request } from 'express';
 import { Types } from 'mongoose';
 import slugify from 'slugify';
-import type { TId } from '../types';
+import type { ICategory, TCacheCategory, TId } from '../types';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -42,4 +42,23 @@ export const getUser = (req: Request) => {
   if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
 
   return user;
+};
+
+export const getMinimalCategory = (category: ICategory): TCacheCategory => {
+  const { _id, level, description, parent, name, slug } = category;
+  const base = { _id: _id.toString(), name, slug };
+  switch (level) {
+    case 1: {
+      return { ...base, level, description, parent: undefined };
+    }
+    case 2: {
+      return { ...base, level, parent: parent?.toString() || '', description };
+    }
+    case 3: {
+      return { ...base, level, parent: parent?.toString() || '', description: description || '' };
+    }
+    default: {
+      return { ...base, level, description, parent: parent?.toString() };
+    }
+  }
 };

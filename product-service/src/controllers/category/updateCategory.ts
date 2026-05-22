@@ -5,7 +5,7 @@ import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';
 import { redisCache } from '../../classes';
 import { Category } from '../../models';
-import type { TCacheCategory } from '../../types';
+import type { ICategory } from '../../types';
 import { generateSlug, getObjId, getUser } from '../../utils';
 
 export const updateCategoryController = async (
@@ -38,7 +38,8 @@ export const updateCategoryController = async (
   const existingCategory = await Category.findById(categoryId)
     .select('parent level')
     .lean()
-    .session(session);
+    .session(session)
+    .exec();
 
   if (!existingCategory) {
     throw new AppError({ message: 'Category not found', code: 'NOT_FOUND' });
@@ -92,7 +93,8 @@ export const updateCategoryController = async (
   const duplicateCategory = await Category.findOne({ _id: { $ne: categoryId }, parent, slug })
     .select('_id')
     .lean()
-    .session(session);
+    .session(session)
+    .exec();
 
   if (duplicateCategory) {
     throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
@@ -100,7 +102,7 @@ export const updateCategoryController = async (
 
   /* ---------------- UPDATE ---------------- */
 
-  let updatedCategory: TCacheCategory | null;
+  let updatedCategory: ICategory | null;
 
   try {
     updatedCategory = await Category.findByIdAndUpdate(
@@ -118,7 +120,7 @@ export const updateCategoryController = async (
         lean: true,
         select: '_id name slug parent level description',
       },
-    );
+    ).exec();
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {
       throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
@@ -133,20 +135,24 @@ export const updateCategoryController = async (
     const oldParentChildrenCount = await Category.countDocuments({
       parent: existingCategory.parent,
       _id: { $ne: categoryId },
-    }).session(session);
+    })
+      .session(session)
+      .exec();
 
     if (oldParentChildrenCount === 0) {
-      await Category.findByIdAndUpdate(existingCategory.parent, { isLeaf: true }, { session });
+      await Category.findByIdAndUpdate(
+        existingCategory.parent,
+        { isLeaf: true },
+        { session },
+      ).exec();
     }
   }
 
   /* ---------------- NEW PARENT UPDATE ---------------- */
 
   if (parent) {
-    await Category.findByIdAndUpdate(parent, { isLeaf: false }, { session });
+    await Category.findByIdAndUpdate(parent, { isLeaf: false }, { session }).exec();
   }
-
-  /* ---------------- REDIS ---------------- */
 
   /* ---------------- REDIS ---------------- */
 

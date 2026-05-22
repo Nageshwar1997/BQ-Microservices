@@ -1,11 +1,17 @@
 import type { TRole } from '@beautinique/be-constants';
+import type { TCategory } from '@beautinique/be-zod';
 import type { Document, InferSchemaType, Types } from 'mongoose';
 import type { PRODUCT_STATUSES, TRY_ON_MAP } from '../constants';
 import type { categorySchema, productSchema, variantSchema } from '../schemas';
 
 export type TId = Types.ObjectId;
+export type TStrId = string;
 export interface IId {
   _id: TId;
+}
+
+export interface IIdStr {
+  _id: TStrId;
 }
 
 export interface ITimestamp {
@@ -13,12 +19,9 @@ export interface ITimestamp {
   updatedAt: Date;
 }
 
-export type TCategory = InferSchemaType<typeof categorySchema> & IId;
-export type TCategoryDoc = TCategory & Document;
-export type TCacheCategory = Pick<
-  TCategory,
-  'level' | 'parent' | 'name' | '_id' | 'slug' | 'description'
->;
+export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
+export interface ICategoryDoc extends ICategory, Document {}
+export type TCacheCategory = TCategory & IIdStr & Pick<ICategory, 'slug'>;
 
 export type TVariant = InferSchemaType<typeof variantSchema> & IId;
 export type TVariantDoc = TVariant & Document;

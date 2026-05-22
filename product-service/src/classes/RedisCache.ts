@@ -3,7 +3,8 @@ import { type RedisClientType, createClient } from 'redis';
 import { logger } from '../configs';
 import { envs } from '../envs';
 import { Category } from '../models';
-import type { TCacheCategory, TDraftProduct } from '../types';
+import type { ICategory, TCacheCategory, TDraftProduct } from '../types';
+import { getMinimalCategory } from '../utils';
 
 /* ================= CLIENT (Singleton) ================= */
 
@@ -209,10 +210,11 @@ class RedisCache {
     return this.seedCategoriesCache();
   }
 
-  public async setCategory(category: TCacheCategory) {
+  public async setCategory(category: ICategory) {
     const key = this.getCategoriesKey();
+    const minimalCategory = getMinimalCategory(category);
 
-    await this.setHashData(key, category._id.toString(), category);
+    await this.setHashData(key, category._id.toString(), minimalCategory);
   }
 
   public async deleteCategory(categoryId: string) {
@@ -227,18 +229,20 @@ class RedisCache {
     const categories = await Category.find()
       .select('_id name slug parent level description')
       .sort({ level: 1, slug: 1 })
-      .lean()
+      .lean<ICategory[]>()
       .exec();
 
     const key = this.getCategoriesKey();
 
+    const minimalCategories = categories.map((category) => getMinimalCategory(category));
+
     await Promise.all(
-      categories.map((category) => this.setHashData(key, category._id.toString(), category)),
+      minimalCategories.map((category) => this.setHashData(key, category._id, category)),
     );
 
     logger.info('📦 Categories cache seeded from DB');
 
-    return categories;
+    return minimalCategories;
   }
 
   /* ================= CLOSE ================= */

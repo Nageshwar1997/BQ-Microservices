@@ -1,5 +1,6 @@
 import { AppError } from '@beautinique/be-classes';
 import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
+import type { TCategory } from '@beautinique/be-zod';
 import type { Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
@@ -14,7 +15,8 @@ export const addCategoryController = async (
 ) => {
   const { _id: userId } = getUser(req);
 
-  const { name, level, parent: parentId, description } = req.body ?? {};
+  const { name, level, parent: parentId, description } = req.body as TCategory;
+
   /* ---------------- VALIDATIONS ---------------- */
 
   if (!name || !level) {
@@ -34,7 +36,11 @@ export const addCategoryController = async (
   const parent = parentId ? getObjId(parentId) : null;
 
   if (parent) {
-    const parentCategory = await Category.findById(parent).select('level').lean().session(session);
+    const parentCategory = await Category.findById(parent)
+      .select('level')
+      .lean()
+      .session(session)
+      .exec();
 
     if (!parentCategory) {
       throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
@@ -58,7 +64,8 @@ export const addCategoryController = async (
   const existingCategory = await Category.findOne({ parent, slug: generateSlug(name, false) })
     .select('_id')
     .lean()
-    .session(session);
+    .session(session)
+    .exec();
 
   if (existingCategory) {
     throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
@@ -87,19 +94,12 @@ export const addCategoryController = async (
   /* ---------------- UPDATE PARENT ---------------- */
 
   if (parent) {
-    await Category.findByIdAndUpdate(parent, { isLeaf: false }, { session });
+    await Category.findByIdAndUpdate(parent, { isLeaf: false }, { session }).exec();
   }
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.setCategory({
-    _id: category._id,
-    name: category.name,
-    slug: category.slug,
-    parent: category.parent,
-    level: category.level,
-    description: category.description,
-  });
+  await redisCache.setCategory(category);
 
   res.success(201, 'Category created successfully');
 };

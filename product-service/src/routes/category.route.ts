@@ -1,4 +1,9 @@
-import { checkEmptyRequest, tryCatchSessionResponse } from '@beautinique/be-middlewares';
+import {
+  checkEmptyRequest,
+  tryCatchSessionResponse,
+  zodValidator,
+} from '@beautinique/be-middlewares';
+import { categoryUpdateZodSchema, categoryZodSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
 import { METHODS_AND_PATHS } from '../constants';
 import {
@@ -17,6 +22,7 @@ categoryRouter[add.method](
   add.path,
   authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ body: true }),
+  zodValidator(categoryZodSchema),
   tryCatchSessionResponse(addCategoryController),
 );
 
@@ -24,6 +30,7 @@ categoryRouter[update.method](
   update.path,
   authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ body: true, params: true }),
+  zodValidator(categoryUpdateZodSchema),
   tryCatchSessionResponse(updateCategoryController),
 );
 
