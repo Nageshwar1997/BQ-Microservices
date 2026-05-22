@@ -99,7 +99,6 @@ export const updateCategoryController = async (
   }
 
   /* ---------------- UPDATE ---------------- */
-  /* ---------------- UPDATE ---------------- */
 
   let updatedCategory: TCacheCategory | null;
 

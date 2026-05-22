@@ -26,8 +26,6 @@ export type TVariantDoc = TVariant & Document;
 export type TProduct = InferSchemaType<typeof productSchema> & IId;
 export type TProductDoc = TProduct & Document;
 
-
-
 export type TDraftProduct = Pick<
   TProduct,
   | 'additionalDetails'
