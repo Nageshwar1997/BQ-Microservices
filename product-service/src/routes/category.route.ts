@@ -1,5 +1,6 @@
 import {
   checkEmptyRequest,
+  tryCatchResponse,
   tryCatchSessionResponse,
   zodValidator,
 } from '@beautinique/be-middlewares';
@@ -9,6 +10,7 @@ import { METHODS_AND_PATHS } from '../constants';
 import {
   addCategoryController,
   deleteCategoryController,
+  getCategoriesByHierarchy,
   getCategoriesByParentLevel,
   updateCategoryController,
 } from '../controllers';
@@ -44,6 +46,10 @@ categoryRouter[remove.method](
 categoryRouter[get.byParentLevel.method](
   get.byParentLevel.path,
   authorize(['ADMIN', 'MASTER', 'SELLER']),
-  checkEmptyRequest({ query: true }),
-  tryCatchSessionResponse(getCategoriesByParentLevel),
+  tryCatchResponse(getCategoriesByParentLevel),
+);
+
+categoryRouter[get.byHierarchy.method](
+  get.byHierarchy.path,
+  tryCatchResponse(getCategoriesByHierarchy),
 );

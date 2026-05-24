@@ -2,10 +2,11 @@ import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { Request, Response } from 'express';
 import { redisCache } from '../../classes';
+import type { TCategoryHierarchy } from '../../types';
 
 export const getCategoriesByParentLevel = async (req: Request, res: Response) => {
-  const parentId = req.query.parent?.toString() as TCategory['parent'];
-  const level = Number(req.query.level) as TCategory['level'];
+  const parentId = req.query.parent?.toString() as TCategory['parent'] | undefined;
+  const level = Number(req.query.level) as TCategory['level'] | undefined;
 
   const allCategories = await redisCache.getAllCategories();
 
@@ -24,4 +25,39 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
   });
 
   res.success(200, 'Categories fetched successfully', { categories });
+};
+
+export const getCategoriesByHierarchy = async (_req: Request, res: Response) => {
+  const allCategories = await redisCache.getAllCategories();
+
+  // Parent wise map
+  const parentMap = new Map<string, TCategoryHierarchy[]>();
+
+  // Prepare map
+  allCategories.forEach((category) => {
+    if (!category.parent) return;
+
+    if (!parentMap.has(category.parent)) {
+      parentMap.set(category.parent, []);
+    }
+
+    parentMap.get(category.parent)?.push({ ...category, subcategories: [] });
+  });
+
+  // Recursive builder
+  const buildHierarchy = (parentId: string): TCategoryHierarchy[] => {
+    return (
+      parentMap.get(parentId)?.map((category) => ({
+        ...category,
+        subcategories: buildHierarchy(category._id),
+      })) || []
+    );
+  };
+
+  // Root level categories
+  const hierarchy: TCategoryHierarchy[] = allCategories
+    .filter((category) => category.level === 1)
+    .map((level1) => ({ ...level1, subcategories: buildHierarchy(level1._id) }));
+
+  res.success(200, 'Categories fetched successfully', { categories: hierarchy });
 };

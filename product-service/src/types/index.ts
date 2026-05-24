@@ -23,6 +23,8 @@ export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {
 
 export type TCacheCategory = TCategory & IIdStr & Pick<ICategory, 'slug'>;
 
+export type TCategoryHierarchy = TCacheCategory & { subcategories: TCategoryHierarchy[] };
+
 export type TVariant = InferSchemaType<typeof variantSchema> & IId;
 
 export type TProduct = InferSchemaType<typeof productSchema> & IId;

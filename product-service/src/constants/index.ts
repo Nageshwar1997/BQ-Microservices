@@ -3,7 +3,11 @@ import { ROLES, type TRole } from '@beautinique/be-constants';
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
+const BASE = '/api/v1/product-service' as const;
 export const METHODS_AND_PATHS = {
+  base: BASE,
+  home: { method: 'get', path: '/' },
+  health: { method: 'get', path: '/health' },
   category: {
     base: '/category',
     add: { method: 'post', path: '/add' },
@@ -11,6 +15,7 @@ export const METHODS_AND_PATHS = {
     delete: { method: 'delete', path: '/delete/:categoryId' },
     get: {
       byParentLevel: { method: 'get', path: '/by-parent-level' },
+      byHierarchy: { method: 'get', path: '/by-hierarchy' },
     },
   },
 } as const;
