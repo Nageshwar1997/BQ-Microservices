@@ -1,6 +1,5 @@
 import { type Request, type Response, Router } from 'express';
 import { METHODS_AND_PATHS } from '../constants';
-import { authorize } from '../middlewares';
 import { categoryRouter } from './category.route';
 
 export const router = Router();
@@ -17,4 +16,4 @@ router[health.method](health.path, (_: Request, res: Response) =>
   res.success(200, 'Product Service is healthy'),
 );
 
-router.use(category.base, authorize(['ADMIN', 'MASTER', 'SELLER']), categoryRouter);
+router.use(category.base, categoryRouter);
