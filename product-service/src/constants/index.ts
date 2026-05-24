@@ -12,7 +12,7 @@ export const METHOD_MAP = {
 } as const;
 
 export const METHODS_AND_PATHS = {
-  base: '/api/v1/product-service',
+  base: '/api/v1',
   home: { method: METHOD_MAP.GET, path: '/' },
   health: { method: METHOD_MAP.GET, path: '/health' },
   category: {

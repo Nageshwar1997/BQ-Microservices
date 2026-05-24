@@ -69,7 +69,7 @@ export const OAUTH_API_ROUTES_AND_METHODS = {
 } as const;
 
 export const METHODS_AND_PATHS = {
-  base: '/api/v1/user-service',
+  base: '/api/v1',
   home: { method: METHOD_MAP.GET, path: '/' },
   health: { method: METHOD_MAP.GET, path: '/health' },
   auth: {

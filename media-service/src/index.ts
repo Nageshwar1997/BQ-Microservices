@@ -18,7 +18,7 @@ import { HEADERS_KEYS, METHODS_AND_PATHS } from './constants';
 import { envs } from './envs';
 import { router } from './routes';
 
-const { base } = METHODS_AND_PATHS;
+const { base, home, health } = METHODS_AND_PATHS;
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -49,6 +49,13 @@ app.use(checkDbConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
 
+// Home Route
+app[home.method](home.path, (_, res) => res.success(200, 'Welcome to the Media Service API'));
+
+// Health Route
+app[health.method](health.path, (_, res) => res.success(200, 'Media Service is healthy'));
+
+// Api Routes
 app.use(
   base,
   serviceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),
