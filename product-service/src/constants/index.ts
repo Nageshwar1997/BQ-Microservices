@@ -3,19 +3,26 @@ import { ROLES, type TRole } from '@beautinique/be-constants';
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
-const BASE = '/api/v1/product-service' as const;
+export const METHOD_MAP = {
+  GET: 'get',
+  POST: 'post',
+  PUT: 'put',
+  PATCH: 'patch',
+  DELETE: 'delete',
+} as const;
+
 export const METHODS_AND_PATHS = {
-  base: BASE,
-  home: { method: 'get', path: '/' },
-  health: { method: 'get', path: '/health' },
+  base: '/api/v1/product-service',
+  home: { method: METHOD_MAP.GET, path: '/' },
+  health: { method: METHOD_MAP.GET, path: '/health' },
   category: {
     base: '/category',
-    add: { method: 'post', path: '/add' },
-    update: { method: 'patch', path: '/update/:categoryId' },
-    delete: { method: 'delete', path: '/delete/:categoryId' },
+    add: { method: METHOD_MAP.POST, path: '/' },
+    update: { method: METHOD_MAP.PATCH, path: '/:categoryId' },
+    delete: { method: METHOD_MAP.DELETE, path: '/:categoryId' },
     get: {
-      byParentLevel: { method: 'get', path: '/by-parent-level' },
-      byHierarchy: { method: 'get', path: '/by-hierarchy' },
+      byParentLevel: { method: METHOD_MAP.GET, path: '/by-parent-level' },
+      byHierarchy: { method: METHOD_MAP.GET, path: '/by-hierarchy' },
     },
   },
 } as const;
