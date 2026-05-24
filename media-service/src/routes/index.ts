@@ -1,35 +1,21 @@
-import {
-  checkEmptyRequest,
-  tryCatchResponse,
-  validateMulter,
-  zodValidator,
-} from '@beautinique/be-middlewares';
-import { mediaUploadSchema } from '@beautinique/be-zod';
-import { Router } from 'express';
+import { type Request, type Response, Router } from 'express';
 import { METHODS_AND_PATHS } from '../constants';
-import { multipleMediaUploadController, singleMediaUploadController } from '../controllers';
-import { envs } from '../envs';
 import { authenticate } from '../middlewares';
+import { uploadRouter } from './upload.route';
 
 export const router = Router();
 
-const { base, multiple, single } = METHODS_AND_PATHS.upload;
+const { health, home, upload } = METHODS_AND_PATHS;
+
+// Home Route
+router[home.method](home.path, (_: Request, res: Response) =>
+  res.success(200, 'Welcome to the Media Service API'),
+);
+
+// Health Route
+router[health.method](health.path, (_: Request, res: Response) =>
+  res.success(200, 'Media Service is healthy'),
+);
 
 // Upload
-router[single.method](
-  `${base}${single.path}`,
-  authenticate,
-  validateMulter({ type: 'single', fieldName: 'file', isDev: envs.is_dev }),
-  checkEmptyRequest({ body: true, file: true }),
-  zodValidator(mediaUploadSchema),
-  tryCatchResponse(singleMediaUploadController),
-);
-
-router[multiple.method](
-  `${base}${multiple.path}`,
-  authenticate,
-  validateMulter({ type: 'array', fieldName: 'files', isDev: envs.is_dev }),
-  checkEmptyRequest({ body: true, files: true }),
-  zodValidator(mediaUploadSchema),
-  tryCatchResponse(multipleMediaUploadController),
-);
+router.use(upload.base, authenticate, uploadRouter);

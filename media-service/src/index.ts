@@ -9,14 +9,16 @@ import {
   successResponse,
 } from '@beautinique/be-middlewares';
 import 'dotenv/config';
-import express, { type Request, type Response } from 'express';
+import express from 'express';
 import type { Socket } from 'node:net';
 import path from 'path';
 import { workerManager } from './classes';
 import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs';
-import { HEADERS_KEYS } from './constants';
+import { HEADERS_KEYS, METHODS_AND_PATHS } from './constants';
 import { envs } from './envs';
 import { router } from './routes';
+
+const { base } = METHODS_AND_PATHS;
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -47,15 +49,8 @@ app.use(checkDbConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
 
-// Home Route
-app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Media Service API'));
-
-// Health Route
-app.get('/health', (_: Request, res: Response) => res.success(200, 'Media Service is healthy'));
-
-// API Routes
 app.use(
-  '/api/v1',
+  base,
   serviceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),
   router,
 );

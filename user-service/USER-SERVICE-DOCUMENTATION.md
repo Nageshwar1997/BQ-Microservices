@@ -478,7 +478,7 @@ Factory middleware. Accepts an array of allowed roles → also fetches user from
 
 ## 15. External OAuth Routes (for API reference)
 
-These are the external URL endpoints all auth providers call (defined in `constants/index.ts` as `API_ROUTES_AND_METHODS`):
+These are the external URL endpoints all auth providers call (defined in `constants/index.ts` as `OAUTH_API_ROUTES_AND_METHODS`):
 
 | Provider  | Method | URL                                              | Purpose              |
 |-----------|--------|--------------------------------------------------|----------------------|

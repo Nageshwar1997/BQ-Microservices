@@ -52,7 +52,6 @@ app.use(checkDbConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
 
-// API Routes
 app.use(
   base,
   serviceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),

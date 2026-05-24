@@ -1,6 +1,6 @@
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { google } from 'googleapis';
-import { HEADERS_KEYS } from '../../constants';
+import { HEADERS_KEYS, OAUTH_API_ROUTES_AND_METHODS } from '../../constants';
 import { envs } from '../../envs';
 import { ApiRequest } from './ApiRequest';
 
@@ -15,6 +15,7 @@ function getSocialAuthRedirectURL(provider: Exclude<TAuthProvider, 'MANUAL'>) {
 }
 
 class GoogleAuth extends ApiRequest {
+  private readonly routes = OAUTH_API_ROUTES_AND_METHODS.google;
   private getClient() {
     return new google.auth.OAuth2(
       envs.oAuth.google.client_id,
@@ -43,13 +44,14 @@ class GoogleAuth extends ApiRequest {
     client.setCredentials(tokens);
 
     return this.request({
-      ...this.routes.oAuth.google.decode,
+      ...this.routes.decode,
       headers: { [HEADERS_KEYS.authorization]: `Bearer ${tokens.access_token}` },
     });
   }
 }
 
 class LinkedinAuth extends ApiRequest {
+  private readonly routes = OAUTH_API_ROUTES_AND_METHODS.linkedin;
   public url() {
     const redirectUri = encodeURIComponent(getSocialAuthRedirectURL('LINKEDIN'));
     const client_id = envs.oAuth.linkedin.client_id;
@@ -60,7 +62,7 @@ class LinkedinAuth extends ApiRequest {
 
   public access_token(code: string) {
     return this.request({
-      ...this.routes.oAuth.linkedin.access_token,
+      ...this.routes.access_token,
       data: {
         grant_type: 'authorization_code',
         code,
@@ -74,13 +76,14 @@ class LinkedinAuth extends ApiRequest {
 
   public decode(access_token: string) {
     return this.request({
-      ...this.routes.oAuth.linkedin.decode,
+      ...this.routes.decode,
       headers: { [HEADERS_KEYS.authorization]: `Bearer ${access_token}` },
     });
   }
 }
 
 class GithubAuth extends ApiRequest {
+  private readonly routes = OAUTH_API_ROUTES_AND_METHODS.github;
   public url() {
     const params = new URLSearchParams({
       client_id: envs.oAuth.github.client_id,
@@ -92,7 +95,7 @@ class GithubAuth extends ApiRequest {
   }
   public access_token(code: string) {
     return this.request({
-      ...this.routes.oAuth.github.access_token,
+      ...this.routes.access_token,
       data: {
         client_id: envs.oAuth.github.client_id,
         client_secret: envs.oAuth.github.client_secret,
@@ -104,10 +107,10 @@ class GithubAuth extends ApiRequest {
   }
   public async decode(access_token: string) {
     const headers = { [HEADERS_KEYS.authorization]: `Bearer ${access_token}` };
-    const profile = await this.request({ ...this.routes.oAuth.github.decode_profile, headers });
+    const profile = await this.request({ ...this.routes.decode_profile, headers });
 
     if (!profile.email) {
-      const emails = await this.request({ ...this.routes.oAuth.github.decode_emails, headers });
+      const emails = await this.request({ ...this.routes.decode_emails, headers });
 
       const email =
         emails.find((email: Record<string, string | boolean>) => email.primary)?.email ||

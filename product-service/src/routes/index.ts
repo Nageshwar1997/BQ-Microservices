@@ -9,12 +9,12 @@ const { health, home, category } = METHODS_AND_PATHS;
 
 // Home Route
 router[home.method](home.path, (_: Request, res: Response) =>
-  res.success(200, 'Welcome to the User Service API'),
+  res.success(200, 'Welcome to the Product Service API'),
 );
 
 // Health Route
 router[health.method](health.path, (_: Request, res: Response) =>
-  res.success(200, 'User Service is healthy'),
+  res.success(200, 'Product Service is healthy'),
 );
 
 router.use(category.base, authorize(['ADMIN', 'MASTER', 'SELLER']), categoryRouter);

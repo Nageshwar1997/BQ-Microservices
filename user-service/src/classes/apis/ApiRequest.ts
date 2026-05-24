@@ -1,16 +1,14 @@
 import { AppError, type AppSuccess } from '@beautinique/be-classes';
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
-import { API_ROUTES_AND_METHODS } from '../../constants';
 
 export class ApiRequest {
-  private instance: AxiosInstance;
+  private readonly instance: AxiosInstance;
 
   constructor(baseURL?: string) {
     this.instance = axios.create({ baseURL });
   }
 
-  protected routes = API_ROUTES_AND_METHODS;
-  protected request = async (config: AxiosRequestConfig) => {
+  protected async request(config: AxiosRequestConfig) {
     try {
       const { data } = await this.instance.request(config);
       return data as AppSuccess;
@@ -28,5 +26,5 @@ export class ApiRequest {
         code: 'INTERNAL_SERVER_ERROR',
       });
     }
-  };
+  }
 }
