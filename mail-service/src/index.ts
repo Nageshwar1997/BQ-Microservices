@@ -5,7 +5,7 @@ import {
   successResponse,
 } from '@beautinique/be-middlewares';
 import 'dotenv/config';
-import express, { type Request, type Response } from 'express';
+import express from 'express';
 import type { Socket } from 'node:net';
 import path from 'path';
 import { parse } from 'qs';
@@ -44,10 +44,10 @@ app.use(successResponse);
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/', (_: Request, res: Response) => res.success(200, 'Welcome to the Mail Service API'));
+app.get('api/v1/mail-service', (_, res) => res.success(200, 'Welcome to the Mail Service API'));
 
 // Health Route
-app.get('/health', (_: Request, res: Response) => res.success(200, 'Mail Service is healthy'));
+app.get('api/v1/mail-service/health', (_, res) => res.success(200, 'Mail Service is healthy'));
 
 /* ---------------- ERROR HANDLING ---------------- */
 
