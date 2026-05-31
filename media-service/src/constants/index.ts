@@ -35,3 +35,9 @@ export const METHODS_AND_PATHS = {
     multiple: { method: METHOD_MAP.POST, path: '/multiple' },
   },
 } as const;
+
+const MINUTE = 60 * 1000;
+const HOUR = MINUTE * 60;
+const DAY = HOUR * 24;
+
+export const CLEANUP_DELAY = 2 * DAY;

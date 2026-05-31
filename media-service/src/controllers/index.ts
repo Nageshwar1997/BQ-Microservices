@@ -5,9 +5,8 @@ import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
 import { cloudinary } from '../classes';
 import { logger } from '../configs';
+import { CLEANUP_DELAY } from '../constants';
 import { generateBaseMediaPayload } from '../utils';
-
-const CLEANUP_DELAY = 24 * 60 * 60 * 1000;
 
 export const singleMediaUploadController = async (req: Request, res: Response) => {
   const { body, file, user } = req;

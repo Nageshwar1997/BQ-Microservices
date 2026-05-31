@@ -2,6 +2,7 @@ import { bullWorker } from '@beautinique/be-jobs';
 
 import { MEDIA_STATUS_MAP } from '@beautinique/be-constants';
 import { logger } from '../configs';
+import { CLEANUP_DELAY } from '../constants';
 import { envs } from '../envs';
 import { Media } from '../models';
 import { cloudinary } from './Cloudinary';
@@ -74,7 +75,7 @@ class WorkerManager {
         try {
           const media = job.data;
 
-          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const expiresAt = new Date(Date.now() + CLEANUP_DELAY);
           await Media.create({ ...media, status: MEDIA_STATUS_MAP.UNUSED, expiresAt });
         } catch (error) {
           logger.error('Failed to create single unused media', { error, data: job.data });
@@ -94,7 +95,7 @@ class WorkerManager {
         try {
           const medias = job.data;
 
-          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+          const expiresAt = new Date(Date.now() + CLEANUP_DELAY);
 
           await Media.insertMany(
             medias.map((media) => ({ ...media, status: MEDIA_STATUS_MAP.UNUSED, expiresAt })),
@@ -198,7 +199,7 @@ class WorkerManager {
               $set: {
                 status: MEDIA_STATUS_MAP.DELETED,
                 deletedAt: new Date(),
-                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                expiresAt: new Date(Date.now() + CLEANUP_DELAY),
               },
             },
           );
@@ -265,7 +266,7 @@ class WorkerManager {
               $set: {
                 status: MEDIA_STATUS_MAP.DELETED,
                 deletedAt: new Date(),
-                expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                expiresAt: new Date(Date.now() + CLEANUP_DELAY),
               },
             },
           );
