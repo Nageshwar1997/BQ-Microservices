@@ -8,12 +8,12 @@ import { Schema, model } from 'mongoose';
 
 export const mediaSchema = new Schema(
   {
-    publicId: { type: String, required: true, unique: true, index: true },
-    url: { type: String },
+    publicId: { type: String, required: true, unique: true },
+    url: { type: String, required: true, unique: true },
     resourceType: { type: String, enum: MEDIA_RESOURCES, required: true, index: true },
     userId: { type: Schema.Types.ObjectId, required: true },
     relatedTo: { service: { type: String, enum: SERVICES }, entity: { type: String } },
-    expiresAt: { type: Date, index: true },
+    expiresAt: { type: Date },
     deletedAt: { type: Date, index: true },
     status: { type: String, enum: MEDIA_STATUSES, default: MEDIA_STATUS_MAP.UNUSED, index: true },
     metadata: { type: Schema.Types.Mixed },
@@ -23,7 +23,6 @@ export const mediaSchema = new Schema(
 
 /* ---------------- INDEXES ---------------- */
 
-mediaSchema.index({ publicId: 1 }, { unique: true });
 mediaSchema.index({ status: 1, expiresAt: 1 });
 
 /* ---------------- TTL INDEX ---------------- */
