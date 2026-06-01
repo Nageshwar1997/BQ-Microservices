@@ -50,8 +50,6 @@ export const ROLES_MAP = Object.fromEntries(ROLES.map((role) => [role, role])) a
   TRole
 >;
 
-export const TRY_ON_CATEGORIES = ['LIP', 'EYE', 'HAIR', 'FACE', 'NAIL', 'SKIN'] as const;
-
 export const TRY_ON_MAP = {
   LIP: ['MATTE', 'GLOSS', 'SHIMMER', 'CRAYON'],
   EYE: ['EYEBROW', 'EYELINER', 'KAJAL', 'EYESHADOW'],
@@ -60,6 +58,8 @@ export const TRY_ON_MAP = {
   NAIL: ['GEL', 'LIQUID'],
   SKIN: ['MOISTURIZER', 'SERUM', 'TONER', 'CLEANSER'],
 } as const;
+
+export const TRY_ON_CATEGORIES = Object.keys(TRY_ON_MAP) as (keyof typeof TRY_ON_MAP)[];
 
 export const HEADERS_KEYS = {
   serviceSecret: 'X-Service-Secret',
