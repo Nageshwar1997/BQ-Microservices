@@ -1,4 +1,3 @@
-import { AppError } from '@beautinique/be-classes';
 import { bullQueue } from '@beautinique/be-jobs';
 import type { TMediaUpload } from '@beautinique/be-zod';
 import { createHash } from 'crypto';
@@ -6,18 +5,15 @@ import type { Request, Response } from 'express';
 import { cloudinary } from '../classes';
 import { logger } from '../configs';
 import { CLEANUP_DELAY } from '../constants';
-import { generateBaseMediaPayload } from '../utils';
+import { generateBaseMediaPayload, getUser } from '../utils';
 
 export const singleMediaUploadController = async (req: Request, res: Response) => {
-  const { body, file, user } = req;
+  const { _id: userId } = getUser(req);
 
-  if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-
-  if (!file) throw new AppError({ message: 'File is required', code: 'BAD_REQUEST' });
-
-  const { _id: userId } = user;
-
-  const { folder, resourceType } = body as TMediaUpload;
+  const {
+    body: { folder, resourceType },
+    file,
+  } = req as { file: Express.Multer.File; body: TMediaUpload };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
@@ -68,17 +64,12 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
 };
 
 export const multipleMediaUploadController = async (req: Request, res: Response) => {
-  const { body, files: multerFiles, user } = req;
+  const { _id: userId } = getUser(req);
 
-  if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-
-  if (!multerFiles) throw new AppError({ message: 'Files are required', code: 'BAD_REQUEST' });
-
-  const files = multerFiles as Express.Multer.File[];
-
-  const { _id: userId } = user;
-
-  const { folder, resourceType } = body as TMediaUpload;
+  const {
+    body: { folder, resourceType },
+    files,
+  } = req as { files: Express.Multer.File[]; body: TMediaUpload };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 

@@ -3,6 +3,7 @@ import type { TMediaResource } from '@beautinique/be-constants';
 import type { UploadApiResponse } from 'cloudinary';
 import { Types } from 'mongoose';
 import type { TId } from '../types';
+import type { Request } from 'express';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -25,6 +26,15 @@ export const toObjectId = (id: string): TId => {
 
 export const getObjId = (id: string | TId): TId => {
   return typeof id === 'string' ? toObjectId(id) : id;
+};
+
+/* ========== GET AUTH USER ========== */
+export const getUser = (req: Request) => {
+  const user = req.user;
+
+  if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+
+  return user;
 };
 
 export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: string }) => {
