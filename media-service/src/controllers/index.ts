@@ -11,13 +11,13 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
   const { _id: userId } = getUser(req);
 
   const {
-    body: { folder, resourceType },
+    body: { folder },
     file,
   } = req as { file: Express.Multer.File; body: TMediaUpload };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
-  const uploadedMedia = await cloudinary.uploadSingle({ file, folder, resourceType });
+  const uploadedMedia = await cloudinary.uploadSingle({ file, folder });
 
   const payload = generateBaseMediaPayload({ ...uploadedMedia, userId });
 
@@ -52,7 +52,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
     /* ---------------- ROLLBACK CLOUDINARY ---------------- */
 
     try {
-      await cloudinary.removeSingle({ publicId: payload.publicId, resourceType });
+      await cloudinary.removeSingle({ publicId: payload.publicId });
     } catch (cleanupError) {
       logger.error('Failed to rollback uploaded single media', cleanupError);
     }
@@ -67,13 +67,13 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
   const { _id: userId } = getUser(req);
 
   const {
-    body: { folder, resourceType },
+    body: { folder },
     files,
   } = req as { files: Express.Multer.File[]; body: TMediaUpload };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
-  const uploadedMedia = await cloudinary.uploadMultiple({ files, folder, resourceType });
+  const uploadedMedia = await cloudinary.uploadMultiple({ files, folder });
 
   const payload = uploadedMedia.map((media) => generateBaseMediaPayload({ ...media, userId }));
 
@@ -114,7 +114,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
     /* ---------------- ROLLBACK CLOUDINARY ---------------- */
 
     try {
-      await cloudinary.removeMultiple({ publicIds, resourceType });
+      await cloudinary.removeMultiple({ publicIds });
     } catch (cleanupError) {
       logger.error('Failed to rollback uploaded multiple media', cleanupError);
     }

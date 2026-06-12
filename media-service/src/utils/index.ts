@@ -1,9 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
 import type { TMediaResource } from '@beautinique/be-constants';
 import type { UploadApiResponse } from 'cloudinary';
+import type { Request } from 'express';
 import { Types } from 'mongoose';
 import type { TId } from '../types';
-import type { Request } from 'express';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -53,18 +53,4 @@ export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: str
       folder: data.asset_folder,
     },
   };
-};
-
-export const extractUrlInfo = (url: string) => {
-  const parts = url.split('/');
-
-  const uploadIndex = parts.indexOf('upload');
-
-  const resourceType = parts[uploadIndex - 1];
-
-  const publicIdWithExtension = parts.slice(uploadIndex + 2).join('/');
-
-  const publicId = publicIdWithExtension.replace(/\.[^/.]+$/, '');
-
-  return { resourceType, publicId };
 };

@@ -1,5 +1,6 @@
 import type { InferSchemaType, Types } from 'mongoose';
 import type { mediaSchema } from '../models';
+import type { TMediaUpload } from '@beautinique/be-zod';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -15,33 +16,29 @@ type TMedia = InferSchemaType<typeof mediaSchema>;
 
 export interface IMedia extends TMedia, IId {}
 
-type TResource = Pick<TMedia, 'resourceType'>;
 
-export interface IUploaderBase extends TResource {
-  folder: string;
-}
 
-export interface IUploader extends TResource, IUploaderBase {
-  buffer: Buffer<ArrayBufferLike>;
-}
-
-export interface ISingleUploader extends TResource, IUploaderBase {
+export interface IUploader extends TMediaUpload {
   file: Express.Multer.File;
 }
 
-export interface IMultipleUploader extends TResource, IUploaderBase {
+export interface ISingleUploader extends TMediaUpload {
+  file: Express.Multer.File;
+}
+
+export interface IMultipleUploader extends TMediaUpload {
   files: Express.Multer.File[];
 }
 
-export interface IRemover extends TResource {
+export interface IRemover {
   publicId: string;
 }
 
-export interface ISingleRemover extends TResource {
+export interface ISingleRemover {
   publicId: string;
 }
 
-export interface IMultipleRemover extends TResource {
+export interface IMultipleRemover {
   publicIds: string[];
   retryCount?: number;
 }

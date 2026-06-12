@@ -189,7 +189,7 @@ class WorkerManager {
 
           /* ---------------- REMOVE FROM CLOUDINARY ---------------- */
 
-          await cloudinary.removeSingle({ publicId, resourceType: media.resourceType });
+          await cloudinary.removeSingle({ publicId });
 
           /* ---------------- MARK AS DELETED ---------------- */
 
@@ -249,14 +249,7 @@ class WorkerManager {
 
           /* ---------------- REMOVE FROM CLOUDINARY ---------------- */
 
-          await Promise.all(
-            Object.entries(groupedMedia).map(async ([resourceType, publicIds]) => {
-              await cloudinary.removeMultiple({
-                publicIds,
-                resourceType: resourceType as (typeof medias)[number]['resourceType'],
-              });
-            }),
-          );
+          await cloudinary.removeMultiple({ publicIds: Object.values(groupedMedia).flat() });
 
           /* ---------------- MARK AS DELETED ---------------- */
 

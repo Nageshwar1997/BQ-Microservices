@@ -1,21 +1,22 @@
 import { AppError } from '@beautinique/be-classes';
-import { FILE_MIME, type TMediaResource } from '@beautinique/be-constants';
+import { type TMediaResource } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { createHash, randomUUID } from 'crypto';
 import pLimit from 'p-limit';
 import { logger } from '../configs';
-import { MIME_TO_FORMAT } from '../constants';
+import { FILE_EXTENSIONS, FILE_MIME } from '../constants';
 import { envs } from '../envs';
 
+import type { TMediaUpload } from '@beautinique/be-zod';
 import type {
+  IMedia,
   IMultipleRemover,
   IMultipleUploader,
   IRemover,
   ISingleRemover,
   ISingleUploader,
   IUploader,
-  IUploaderBase,
 } from '../types';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
@@ -38,16 +39,31 @@ class Cloudinary {
     this.cloudinary = this.getCloudinary();
   }
 
+  private getResourceTypeFromPublicId(publicId: string): TMediaResource {
+    if (publicId.includes('Beautinique/Images/')) {
+      return 'image';
+    }
+
+    if (publicId.includes('Beautinique/Videos/')) {
+      return 'video';
+    }
+
+    return 'image';
+  }
+
   /* ========== GENERATE SAFE FOLDER PATH ========== */
-  private generateFolderName({ folder, resourceType }: IUploaderBase) {
+  private generateFolderName({
+    folder,
+    resourceType,
+  }: TMediaUpload & Pick<IMedia, 'resourceType'>) {
     // Replace unsafe characters with underscore
     const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
-    const type = resourceType === 'image' ? 'Images' : 'Videos';
+    const mediaType = resourceType === 'image' ? 'Images' : 'Videos';
     // Normalize folder name (trim + replace spaces)
     const subfolder = sanitize((folder || DEFAULT_FOLDER_NAME).trim().replace(/\s+/g, '_'));
 
     // Final Cloudinary folder path
-    return `Beautinique/${type}/${subfolder}`;
+    return `Beautinique/${mediaType}/${subfolder}`;
   }
 
   /* ========== GENERATE UNIQUE PUBLIC ID ========== */
@@ -62,27 +78,6 @@ class Cloudinary {
     return `${year}/${month}/${day}/${randomUUID()}`;
   }
 
-  /* ========== ALLOWED FORMAT RESOLVER FUNCTION ========== */
-  private getAllowedFormats(resourceType: TMediaResource) {
-    // 🎞️ Chooses the mime collection based on the requested resource type
-    const baseMimes =
-      resourceType === 'image' ? FILE_MIME.IMAGE : resourceType === 'video' ? FILE_MIME.VIDEO : [];
-
-    // 🧾 Maps mime types into Cloudinary-supported formats
-    const allowedFormats = baseMimes
-      .map((mime) => MIME_TO_FORMAT[resourceType][mime])
-      .filter((format): format is string => Boolean(format));
-
-    if (!allowedFormats.length) {
-      throw new AppError({
-        message: `Unsupported mime: ${baseMimes.join(', ')}`,
-        code: 'UNSUPPORTED_MEDIA_TYPE',
-      });
-    }
-
-    return allowedFormats;
-  }
-
   /* ========== EXTRACT FAILED IDS FROM RESULTS ========== */
   private getFailedIds(results: PromiseSettledResult<unknown>[], ids: string[]) {
     // Return only IDs whose corresponding promise failed
@@ -95,13 +90,9 @@ class Cloudinary {
   }
 
   /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */
-  private async queueFailedRemovals(
-    failedIds: string[],
-    resourceType: TMediaResource,
-    retryCount = 0,
-  ) {
+  private async queueFailedRemovals(failedIds: string[], retryCount = 0) {
     // Skip if nothing to retry
-    if (failedIds.length === 0 && !resourceType) return;
+    if (failedIds.length === 0) return;
 
     const batchId = createHash('md5').update(failedIds.sort().join('-')).digest('hex').slice(0, 12);
 
@@ -109,13 +100,40 @@ class Cloudinary {
     await bullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'remove-multiple-media-directly',
-      data: { resourceType, publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
+      data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
       options: { jobId: `remove-multiple-directly-${batchId}` },
     });
   }
 
+  private getResourceType(file: Express.Multer.File): TMediaResource {
+    const mimeType = file.mimetype.toLowerCase();
+
+    if (FILE_MIME.image.includes(mimeType as never)) {
+      return 'image';
+    }
+
+    if (FILE_MIME.video.includes(mimeType as never)) {
+      return 'video';
+    }
+
+    const extension = file.originalname.split('.').pop()?.toLowerCase();
+
+    if (extension) {
+      if (FILE_EXTENSIONS.image.includes(extension as never)) {
+        return 'image';
+      }
+
+      if (FILE_EXTENSIONS.video.includes(extension as never)) {
+        return 'video';
+      }
+    }
+
+    return 'image';
+  }
+
   /* ========== INTERNAL UPLOAD HANDLER (STREAM) ========== */
-  private uploader({ buffer, folder, resourceType }: IUploader) {
+  private uploader({ file, folder }: IUploader) {
+    const resourceType = this.getResourceType(file);
     return new Promise<UploadApiResponse>((resolve, reject) => {
       // Upload using stream (efficient for large files like images or videos)
       const stream = this.cloudinary.uploader.upload_stream(
@@ -123,7 +141,7 @@ class Cloudinary {
           folder: this.generateFolderName({ folder, resourceType }),
           public_id: this.generatePublicId(),
           resource_type: resourceType,
-          allowed_formats: this.getAllowedFormats(resourceType),
+          allowed_formats: [...FILE_EXTENSIONS[resourceType]],
           ...(resourceType === 'video' && {
             chunk_size: 5000000, // Upload in chunks (~5MB)
           }),
@@ -158,17 +176,18 @@ class Cloudinary {
       );
 
       // Send buffer to stream
-      stream.end(buffer);
+      stream.end(file.buffer);
     });
   }
 
   /* ========== INTERNAL DELETE HANDLER ========== */
-  private remover({ publicId, resourceType }: IRemover) {
+  private remover({ publicId }: IRemover) {
+    const resource_type = this.getResourceTypeFromPublicId(publicId) ?? 'raw';
     return new Promise<DeleteApiResponse>((resolve, reject) => {
       // Delete asset from Cloudinary
       this.cloudinary.uploader.destroy(
         publicId,
-        { resource_type: resourceType },
+        { resource_type, invalidate: true },
         (error, result) => {
           if (error || !result) {
             logger.error('Cloudinary delete failed', error);
@@ -197,13 +216,29 @@ class Cloudinary {
     });
   }
 
+  public getCloudinaryPublicId(url: string): string {
+    try {
+      const { pathname } = new URL(url);
+
+      const match = pathname.match(/\/upload\/(?:[^/]+\/)*(?:v\d+\/)?(.+)$/);
+
+      if (!match) {
+        throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
+      }
+
+      return match[1]?.replace(/\.[^/.]+$/, '');
+    } catch {
+      throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
+    }
+  }
+
   /* ========== REMOVE SINGLE WITH RETRY ========== */
   public async removeSingle({ retryCount = 0, ...data }: ISingleRemover & { retryCount?: number }) {
     try {
       return await this.remover(data);
     } catch (error) {
       if (retryCount < MAX_REMOVE_RETRIES) {
-        await this.queueFailedRemovals([data.publicId], data.resourceType, retryCount + 1);
+        await this.queueFailedRemovals([data.publicId], retryCount + 1);
       }
 
       throw error;
@@ -214,21 +249,20 @@ class Cloudinary {
 
   public async removeMultiple({
     publicIds,
-    resourceType,
     retryCount = 0, // ⚠️ Required for retry tracking
   }: IMultipleRemover) {
     const limit = pLimit(REMOVE_CONCURRENCY);
 
     // Execute all deletions in parallel
     const removeResults = await Promise.allSettled(
-      publicIds.map((publicId) => limit(() => this.remover({ publicId, resourceType }))),
+      publicIds.map((publicId) => limit(() => this.remover({ publicId }))),
     );
 
     // Extract failed IDs
     const failedIds = this.getFailedIds(removeResults, publicIds);
 
     if (failedIds.length > 0 && retryCount < MAX_REMOVE_RETRIES) {
-      await this.queueFailedRemovals(failedIds, resourceType, retryCount + 1);
+      await this.queueFailedRemovals(failedIds, retryCount + 1);
     }
 
     // Log if retry limit exceeded
@@ -246,18 +280,16 @@ class Cloudinary {
 
   /* ========== UPLOAD SINGLE FILE ========== */
   public async uploadSingle(data: ISingleUploader) {
-    const { file, ...rest } = data;
-
-    return this.uploader({ ...rest, buffer: file.buffer });
+    return this.uploader(data);
   }
 
   /* ========== UPLOAD MULTIPLE FILES WITH ROLLBACK ========== */
   public async uploadMultiple(data: IMultipleUploader) {
-    const { files, folder, resourceType } = data;
+    const { files, folder } = data;
 
     // Upload all files in parallel
     const uploadResults = await Promise.allSettled(
-      files.map(({ buffer }) => this.uploader({ folder, resourceType, buffer })),
+      files.map((file) => this.uploader({ folder, file })),
     );
 
     const successfulUploads = uploadResults
@@ -274,13 +306,13 @@ class Cloudinary {
       const uploadedPublicIds = successfulUploads.map(({ public_id }) => public_id);
 
       const deleteResults = await Promise.allSettled(
-        uploadedPublicIds.map((publicId) => this.remover({ publicId, resourceType })),
+        uploadedPublicIds.map((publicId) => this.remover({ publicId })),
       );
 
       const failedIds = this.getFailedIds(deleteResults, uploadedPublicIds);
 
       // Retry failed cleanup via queue
-      await this.queueFailedRemovals(failedIds, resourceType);
+      await this.queueFailedRemovals(failedIds);
 
       throw new AppError({
         message: 'Some uploads failed and rollback executed',
