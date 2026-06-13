@@ -8,7 +8,7 @@ import type {
   TProductMediaAndGallery,
   TProductStockAndVariants,
   TProductTryOnConfiguration,
-} from '../controllers/product/createAndSaveProductByStep';
+} from '../controllers/product/saveDraftProduct.controller';
 import { envs } from '../envs';
 import { Category } from '../models';
 import type { ICategory, TCacheCategory } from '../types';
@@ -328,8 +328,6 @@ class RedisCache {
 
     return this.exists(key);
   }
-
-
 
   /* ================= CATEGORY ================= */
 
