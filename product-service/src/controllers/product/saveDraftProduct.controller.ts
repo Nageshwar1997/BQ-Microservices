@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { redisCache } from '../../classes';
+import type { TTryOnCategoryMap } from '../../types';
 import { getUser } from '../../utils';
 
 export interface TProductBasicInfo {
@@ -58,31 +59,7 @@ export type TProductTryOnConfiguration = (
     }
   | {
       enabled: true;
-      tryon:
-        | {
-            type: 'LIP';
-            subType: 'MATTE' | 'GLOSS' | 'SHIMMER' | 'CRAYON';
-          }
-        | {
-            type: 'EYE';
-            subType: 'EYEBROW' | 'EYELINER' | 'KAJAL' | 'EYESHADOW';
-          }
-        | {
-            type: 'HAIR';
-            subType: 'COLOR';
-          }
-        | {
-            type: 'FACE';
-            subType: 'CONCEALER' | 'FOUNDATION' | 'HIGHLIGHTER' | 'BLUSH';
-          }
-        | {
-            type: 'NAIL';
-            subType: 'GEL' | 'LIQUID';
-          }
-        | {
-            type: 'SKIN';
-            subType: 'MOISTURIZER' | 'SERUM' | 'TONER' | 'CLEANSER';
-          };
+      tryon: TTryOnCategoryMap;
     }
 ) & { step: 4 };
 
