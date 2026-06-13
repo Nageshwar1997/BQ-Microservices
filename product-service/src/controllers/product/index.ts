@@ -1,2 +1,2 @@
-export * from './createProduct.controller';
+export * from './createPendingProduct.controller';
 export * from './saveDraftProduct.controller';

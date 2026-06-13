@@ -1,4 +1,5 @@
-import { ROLES, type TRole } from '@beautinique/be-constants';
+import { ROLES } from '@beautinique/be-constants';
+import type { TTryOn, TTryOnKey } from '../types';
 
 export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
 export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
@@ -37,28 +38,17 @@ export const METHODS_AND_PATHS = {
   },
 } as const;
 
-export const PRODUCT_STATUS_MAP = {
-  DRAFT: 'DRAFT',
-  PENDING: 'PENDING',
-  APPROVED: 'APPROVED',
-  REJECTED: 'REJECTED',
-  BLOCKED: 'BLOCKED',
-} as const;
+export const PRODUCT_STATUSES = ['DELETED', 'PENDING', 'APPROVED', 'REJECTED', 'BLOCKED'] as const;
 
-export const PRODUCT_STATUSES = Object.values(PRODUCT_STATUS_MAP);
+export const PRODUCT_STATUS_MAP = Object.fromEntries(
+  PRODUCT_STATUSES.map((status) => [status, status]),
+) as {
+  [K in (typeof PRODUCT_STATUSES)[number]]: K;
+};
 
-export const VARIANT_STATUS_MAP = {
-  PENDING: 'PENDING',
-  USED: 'USED',
-  UNUSED: 'UNUSED',
-} as const;
-
-export const VARIANT_STATUSES = Object.values(VARIANT_STATUS_MAP);
-
-export const ROLES_MAP = Object.fromEntries(ROLES.map((role) => [role, role])) as Record<
-  TRole,
-  TRole
->;
+export const ROLES_MAP = Object.fromEntries(ROLES.map((role) => [role, role])) as {
+  [K in (typeof ROLES)[number]]: K;
+};
 
 export const TRY_ON_MAP = {
   LIP: ['MATTE', 'GLOSS', 'SHIMMER', 'CRAYON'],
@@ -69,7 +59,9 @@ export const TRY_ON_MAP = {
   SKIN: ['MOISTURIZER', 'SERUM', 'TONER', 'CLEANSER'],
 } as const;
 
-export const TRY_ON_CATEGORIES = Object.keys(TRY_ON_MAP) as (keyof typeof TRY_ON_MAP)[];
+export const TRY_ON_CATEGORIES = Object.keys(TRY_ON_MAP) as (TTryOnKey)[];
+
+export const TRY_ON_SUBCATEGORIES = Object.values(TRY_ON_MAP).flat() as TTryOn[TTryOnKey][number][];
 
 export const HEADERS_KEYS = {
   serviceSecret: 'X-Service-Secret',

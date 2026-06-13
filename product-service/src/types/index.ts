@@ -29,39 +29,23 @@ export type TVariant = InferSchemaType<typeof variantSchema> & IId;
 
 export type TProduct = InferSchemaType<typeof productSchema> & IId;
 
-export type TDraftProduct = Pick<
-  TProduct,
-  | 'additionalDetails'
-  | 'brand'
-  | 'description'
-  | 'howToUse'
-  | 'images'
-  | 'ingredients'
-  | 'originalPrice'
-  | 'sellingPrice'
-  | 'title'
-  | 'totalStock'
-> & {
-  step: number;
-  category: Pick<TCategory, 'level' | 'parent' | 'name'>;
-  variants: Pick<TVariant, 'images' | 'price' | 'stock' | 'title' | 'type'>[];
-};
-
 export interface IUser extends IId {
   role: TRole;
 }
 
 export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
 
-type TTryOn = typeof TRY_ON_MAP;
-type TTryOnKey = keyof TTryOn;
+export type TTryOn = typeof TRY_ON_MAP;
+export type TTryOnKey = keyof TTryOn;
 
 type TTryOnCategoryMap = {
-  [K in TTryOnKey]: { category: K; type: TTryOn[K][number] };
+  [K in TTryOnKey]: { category: K; subCategory: TTryOn[K][number] };
 }[TTryOnKey];
 
-type TTryOnDisabled = { enabled: false } | ({ enabled: false } & TTryOnCategoryMap);
+type TTryOnDisabled =
+  | { enabled: false }
+  | ({ enabled: false; configured: boolean } & TTryOnCategoryMap);
 
-type TTryOnEnabled = { enabled: true } & TTryOnCategoryMap;
+type TTryOnEnabled = { enabled: true; configured: boolean } & TTryOnCategoryMap;
 
 export type ITryOn = TTryOnDisabled | TTryOnEnabled;
