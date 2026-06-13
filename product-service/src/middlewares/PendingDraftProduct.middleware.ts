@@ -80,8 +80,8 @@ export const pendingDraftProduct = async (req: Request, res: Response, next: Nex
       enabled: draft.tryOnConfiguration.enabled,
       configured: 'tryon' in draft.tryOnConfiguration,
       ...('tryon' in draft.tryOnConfiguration && {
-        category: draft.tryOnConfiguration.tryon.type,
-        subCategory: draft.tryOnConfiguration.tryon.subType,
+        category: draft.tryOnConfiguration.tryon.category,
+        subCategory: draft.tryOnConfiguration.tryon.subCategory,
       }),
     },
   };
