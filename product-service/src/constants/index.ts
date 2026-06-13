@@ -25,6 +25,17 @@ export const METHODS_AND_PATHS = {
       byHierarchy: { method: METHOD_MAP.GET, path: '/by-hierarchy' },
     },
   },
+  product: {
+    base: '/product',
+    draft: {
+      base: '/draft',
+      save: { method: METHOD_MAP.POST, path: '/' }, // For upload new Product as draft
+      get: { method: METHOD_MAP.GET, path: '/' }, // For get existing draft Product
+      remove: { method: METHOD_MAP.DELETE, path: '/' }, // For remove existing draft
+      update: { method: METHOD_MAP.POST, path: '/renew' }, // For already published product and seller again made some changes
+    },
+    createDraft: { method: METHOD_MAP.POST, path: '/create-draft' },
+  },
 } as const;
 
 export const PRODUCT_STATUS_MAP = {
