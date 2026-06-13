@@ -1,9 +1,17 @@
 import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
 import { logger } from '../configs';
+import type {
+  TDraftProduct,
+  TProductBasicInfo,
+  TProductDescriptionAndContent,
+  TProductMediaAndGallery,
+  TProductStockAndVariants,
+  TProductTryOnConfiguration,
+} from '../controllers/product/createAndSaveProductByStep';
 import { envs } from '../envs';
 import { Category } from '../models';
-import type { ICategory, TCacheCategory, TDraftProduct } from '../types';
+import type { ICategory, TCacheCategory } from '../types';
 import { getMinimalCategory } from '../utils';
 
 /* ================= CLIENT (Singleton) ================= */
@@ -37,7 +45,7 @@ class RedisCache {
   private client: RedisClientType;
   private isReady = false;
 
-  private readonly CATEGORY_TTL = 60 * 60 * 24;
+  private readonly ONE_DAY_TTL = 60 * 60 * 24;
 
   private KEY_PREFIX = {
     DRAFT_PRODUCT: 'bq:draft-product',
@@ -96,43 +104,47 @@ class RedisCache {
 
   /* ================= CORE METHODS ================= */
 
-  private async setData(key: string, ttl: number, data: unknown) {
-    const client = this.getClient();
-
-    if (!client) return;
-
-    const strData = typeof data === 'string' ? data : stringifyData(data);
-
-    try {
-      await client.setEx(key, ttl, strData);
-    } catch (err) {
-      logger.warn('⚠️ Redis set failed:', err);
-    }
-  }
-
-  // private async getData(key: string) {
+  // private async setData(key: string, ttl: number, data: unknown) {
   //   const client = this.getClient();
+
+  //   if (!client) return;
+
+  //   const strData = typeof data === 'string' ? data : stringifyData(data);
+
+  //   try {
+  //     await client.setEx(key, ttl, strData);
+  //   } catch (err) {
+  //     logger.warn('⚠️ Redis set failed:', err);
+  //   }
+  // }
+
+  // private async getData<T>(key: string): Promise<T | null> {
+  //   const client = this.getClient();
+
   //   if (!client) return null;
 
   //   try {
   //     const data = await client.get(key);
-  //     return data ? parseData(data) : null;
+
+  //     return data ? (parseData(data) as T) : null;
   //   } catch (err) {
   //     logger.warn('⚠️ Redis get failed:', err);
+
   //     return null;
   //   }
   // }
 
-  // private async deleteData(key: string) {
-  //   const client = this.getClient();
-  //   if (!client) return;
+  private async deleteData(key: string) {
+    const client = this.getClient();
 
-  //   try {
-  //     await client.del(key);
-  //   } catch (err) {
-  //     logger.warn('⚠️ Redis delete failed:', err);
-  //   }
-  // }
+    if (!client) return;
+
+    try {
+      await client.del(key);
+    } catch (err) {
+      logger.warn('⚠️ Redis delete failed:', err);
+    }
+  }
 
   private async setHashData(key: string, field: string, data: unknown) {
     const client = this.getClient();
@@ -142,7 +154,7 @@ class RedisCache {
     try {
       await client.hSet(key, field, stringifyData(data));
 
-      await client.expire(key, this.CATEGORY_TTL);
+      await client.expire(key, this.ONE_DAY_TTL);
     } catch (err) {
       logger.warn('⚠️ Redis hSet failed:', err);
     }
@@ -176,23 +188,148 @@ class RedisCache {
     }
   }
 
+  private async exists(key: string): Promise<boolean> {
+    const client = this.getClient();
+
+    if (!client) return false;
+
+    try {
+      return (await client.exists(key)) === 1;
+    } catch (err) {
+      logger.warn('⚠️ Redis exists failed:', err);
+
+      return false;
+    }
+  }
+
   /* ================= KEY HELPERS ================= */
 
   private getCategoriesKey() {
     return this.KEY_PREFIX.CATEGORIES;
   }
 
-  private getDraftProductKey(userId: string, draftId: string) {
-    return `${this.KEY_PREFIX.DRAFT_PRODUCT}:${userId}:${draftId}`;
+  private getDraftProductKey(userId: string) {
+    return `${this.KEY_PREFIX.DRAFT_PRODUCT}:${userId}`;
   }
 
   /* ================= DRAFT PRODUCT ================= */
 
-  public setDraftProduct(userId: string, draftId: string, ttl: number, data: TDraftProduct) {
-    const key = this.getDraftProductKey(userId, draftId);
+  private async getDraftHashData(key: string): Promise<Partial<TDraftProduct> | null> {
+    const client = this.getClient();
 
-    return this.setData(key, ttl, data);
+    if (!client) return null;
+
+    try {
+      const data: Partial<Record<keyof TDraftProduct, string>> = await client.hGetAll(key);
+
+      if (Object.keys(data).length === 0) {
+        return null;
+      }
+
+      return {
+        basicInfo: data.basicInfo ? parseData(data.basicInfo) : undefined,
+
+        mediaAndGallery: data.mediaAndGallery ? parseData(data.mediaAndGallery) : undefined,
+
+        descriptionAndContent: data.descriptionAndContent
+          ? parseData(data.descriptionAndContent)
+          : undefined,
+
+        stockAndVariants: data.stockAndVariants ? parseData(data.stockAndVariants) : undefined,
+
+        tryOnConfiguration: data.tryOnConfiguration
+          ? parseData(data.tryOnConfiguration)
+          : undefined,
+      };
+    } catch (err) {
+      logger.warn('⚠️ Redis draft hGetAll failed:', err);
+
+      return null;
+    }
   }
+
+  /* ================= DRAFT PRODUCT ================= */
+
+  public async getDraftProduct(userId: string) {
+    const key = this.getDraftProductKey(userId);
+
+    return this.getDraftHashData(key);
+  }
+
+  public async saveDraftProductStep(
+    userId: string,
+    stepData:
+      | TProductBasicInfo
+      | TProductMediaAndGallery
+      | TProductDescriptionAndContent
+      | TProductStockAndVariants
+      | TProductTryOnConfiguration,
+  ) {
+    const client = this.getClient();
+
+    if (!client) return null;
+
+    const key = this.getDraftProductKey(userId);
+
+    const isNewDraft = !(await this.exists(key));
+
+    const { step: _, ...data } = stepData;
+
+    let field: keyof TDraftProduct;
+
+    switch (stepData.step) {
+      case 0:
+        field = 'basicInfo';
+        break;
+
+      case 1:
+        field = 'mediaAndGallery';
+        break;
+
+      case 2:
+        field = 'descriptionAndContent';
+        break;
+
+      case 3:
+        field = 'stockAndVariants';
+        break;
+
+      case 4:
+        field = 'tryOnConfiguration';
+        break;
+
+      default:
+        return null;
+    }
+
+    try {
+      await client.hSet(key, field, stringifyData(data));
+
+      if (isNewDraft) {
+        await client.expire(key, this.ONE_DAY_TTL);
+      }
+
+      return this.getDraftHashData(key);
+    } catch (err) {
+      logger.warn('⚠️ Redis draft save failed:', err);
+
+      return null;
+    }
+  }
+
+  public async deleteDraftProduct(userId: string) {
+    const key = this.getDraftProductKey(userId);
+
+    await this.deleteData(key);
+  }
+
+  public async hasDraftProduct(userId: string) {
+    const key = this.getDraftProductKey(userId);
+
+    return this.exists(key);
+  }
+
+
 
   /* ================= CATEGORY ================= */
 
