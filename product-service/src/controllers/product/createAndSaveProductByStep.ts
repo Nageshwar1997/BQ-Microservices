@@ -101,7 +101,7 @@ export interface TDraftProduct {
   tryOnConfiguration?: TProductTryOnConfiguration;
 }
 
-export const createAndSaveProductByStep = async (req: Request, res: Response) => {
+export const saveProductAsDraftController = async (req: Request, res: Response) => {
   const { _id: userId } = getUser(req);
   const body = req.body as TBody;
 

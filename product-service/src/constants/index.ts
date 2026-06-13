@@ -34,7 +34,6 @@ export const METHODS_AND_PATHS = {
       remove: { method: METHOD_MAP.DELETE, path: '/' }, // For remove existing draft
       update: { method: METHOD_MAP.POST, path: '/renew' }, // For already published product and seller again made some changes
     },
-    createDraft: { method: METHOD_MAP.POST, path: '/create-draft' },
   },
 } as const;
 
