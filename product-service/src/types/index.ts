@@ -38,7 +38,7 @@ export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
 export type TTryOn = typeof TRY_ON_MAP;
 export type TTryOnKey = keyof TTryOn;
 
-type TTryOnCategoryMap = {
+export type TTryOnCategoryMap = {
   [K in TTryOnKey]: { category: K; subCategory: TTryOn[K][number] };
 }[TTryOnKey];
 

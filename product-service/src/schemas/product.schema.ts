@@ -143,6 +143,8 @@ export const productSchema = new Schema(
     content: contentSchema,
     slug: { type: String, required: true, trim: true, lowercase: true, unique: true, index: true },
     images: { type: [String], required: true },
+    thumbnail: { type: String, required: true },
+    video: { type: String },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true }, // Always deepest category (Level 3)
     seller: { type: Schema.Types.ObjectId, required: true, index: true },
     saleCount: { type: Number, default: 0, min: 0 },
