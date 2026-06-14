@@ -12,7 +12,7 @@ export const pendingDraftProduct = async (req: Request, _res: Response, next: Ne
     throw new AppError({ message: 'Draft expired', code: 'NOT_FOUND' });
   }
 
-  if (!draft?.basicInfo) {
+  if (!draft.basicInfo) {
     throw new AppError({ message: 'Basic info is missing', code: 'PRECONDITION_FAILED' });
   }
 

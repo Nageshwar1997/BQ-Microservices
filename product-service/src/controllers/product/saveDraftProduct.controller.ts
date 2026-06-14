@@ -71,11 +71,11 @@ type TBody =
   | TProductTryOnConfiguration;
 
 export interface TDraftProduct {
-  basicInfo?: TProductBasicInfo;
-  mediaAndGallery?: TProductMediaAndGallery;
-  descriptionAndContent?: TProductDescriptionAndContent;
-  stockAndVariants?: TProductStockAndVariants;
-  tryOnConfiguration?: TProductTryOnConfiguration;
+  basicInfo: TProductBasicInfo;
+  mediaAndGallery: TProductMediaAndGallery;
+  descriptionAndContent: TProductDescriptionAndContent;
+  stockAndVariants: TProductStockAndVariants;
+  tryOnConfiguration: TProductTryOnConfiguration;
 }
 
 export const saveDraftProductController = async (req: Request, res: Response) => {
