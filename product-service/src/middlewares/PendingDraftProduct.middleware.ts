@@ -2,7 +2,7 @@ import { AppError } from '@beautinique/be-classes';
 import type { NextFunction, Request, Response } from 'express';
 import { redisCache } from '../classes';
 import type { TCreateProductPayload } from '../types';
-import { generateSlug, getObjId, getUser } from '../utils';
+import { generateSku, generateSlug, getObjId, getUser } from '../utils';
 
 export const pendingDraftProduct = async (req: Request, _res: Response, next: NextFunction) => {
   const user = getUser(req);
@@ -44,8 +44,17 @@ export const pendingDraftProduct = async (req: Request, _res: Response, next: Ne
     });
   }
 
+  const productSku = generateSku({data:{
+    title: draft.basicInfo.title,
+    brand: draft.basicInfo.brand,
+    l1Cat: draft.basicInfo.l1Category.name,
+    l2Cat: draft.basicInfo.l2Category.name,
+    l3Cat: draft.basicInfo.l3Category.name,
+  }});
+
   const body: TCreateProductPayload = {
     seller: user._id,
+    sku: productSku,
 
     // BASIC INFO
     title: draft.basicInfo.title,
@@ -71,7 +80,13 @@ export const pendingDraftProduct = async (req: Request, _res: Response, next: Ne
 
     // STOCK AND VARIANTS
     hasVariants: draft.stockAndVariants.hasVariants,
-    variants: 'variants' in draft.stockAndVariants ? draft.stockAndVariants.variants : [],
+    variants:
+      'variants' in draft.stockAndVariants
+        ? draft.stockAndVariants.variants.map((v) => ({
+            ...v,
+            sku: generateSku({ data: { label: v.label }, prefix: productSku, unique: false }),
+          }))
+        : [],
     stock: 'stock' in draft.stockAndVariants ? draft.stockAndVariants.stock : 0,
     stockThreshold:
       'stockThreshold' in draft.stockAndVariants ? draft.stockAndVariants.stockThreshold : 0,

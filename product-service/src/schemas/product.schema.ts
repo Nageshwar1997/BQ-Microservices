@@ -11,6 +11,7 @@ import type { ITryOn, TTryOn, TTryOnKey } from '../types';
 
 export const variantSchema = new Schema(
   {
+    sku: { type: String, required: true, trim: true, uppercase: true },
     type: { type: String, enum: ['Color', 'Text'], required: true },
     label: { type: String, required: true, trim: true },
     value: { type: String, required: true, trim: true },
@@ -133,6 +134,7 @@ tryOnSchema.pre('validate', function () {
 export const productSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, minlength: 2, maxlength: 200 },
+    sku: { type: String, required: true, trim: true, uppercase: true, unique: true, index: true },
     brand: { type: String, required: true, trim: true, minlength: 2, maxlength: 100 },
     originalPrice: { type: Number, required: true, min: 0 },
     sellingPrice: { type: Number, required: true, min: 0 },
@@ -169,6 +171,9 @@ export const productSchema = new Schema(
 
 // TEXT SEARCH
 productSchema.index({ title: 'text', brand: 'text', description: 'text' });
+
+// SKU
+productSchema.index({ sku: 1 }, { unique: true });
 
 // CATEGORY LISTING
 productSchema.index({ category: 1, status: 1 });
@@ -216,6 +221,35 @@ productSchema.pre('validate', function () {
         originalPrice: ['Original price must be greater than zero'],
       },
     });
+  }
+
+  if (this.hasVariants) {
+    if (!this.variants.length) {
+      throw new AppError({
+        message: 'At least one variant is required',
+        code: 'UNPROCESSABLE_ENTITY',
+      });
+    }
+
+    const skus = new Set<string>();
+
+    for (const variant of this.variants) {
+      if (!variant.sku) {
+        throw new AppError({
+          message: 'Variant SKU is required',
+          code: 'UNPROCESSABLE_ENTITY',
+        });
+      }
+
+      if (skus.has(variant.sku)) {
+        throw new AppError({
+          message: 'Duplicate variant SKU found',
+          code: 'UNPROCESSABLE_ENTITY',
+        });
+      }
+
+      skus.add(variant.sku);
+    }
   }
 
   if (this.sellingPrice > this.originalPrice) {

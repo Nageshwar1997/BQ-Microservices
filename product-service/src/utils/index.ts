@@ -1,8 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
 import type { Request } from 'express';
 import { Types } from 'mongoose';
+import { randomInt } from 'node:crypto';
 import slugify from 'slugify';
-import type { ICategory, TCacheCategory, TId } from '../types';
+import type { ICategory, IGenerateSku, TCacheCategory, TId } from '../types';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -60,4 +61,26 @@ export const getMinimalCategory = (category: ICategory): TCacheCategory => {
       return { ...base, level, description: undefined, parent: undefined };
     }
   }
+};
+
+export const generateSku = ({ data, prefix, unique = true }: IGenerateSku) => {
+  const sku = Object.values(data)
+    .map((value) =>
+      value
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .slice(0, 3)
+        .toUpperCase(),
+    )
+    .filter(Boolean)
+    .join('-');
+
+  const finalSku = prefix ? `${prefix}-${sku}` : sku;
+
+  if (!unique) {
+    return finalSku;
+  }
+
+  const randomPart = randomInt(1, 1_000_000).toString().padStart(6, '0');
+
+  return `${finalSku}-${randomPart}`;
 };

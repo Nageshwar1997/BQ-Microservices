@@ -66,3 +66,9 @@ type TTryOnDisabled =
 type TTryOnEnabled = { enabled: true; configured: boolean } & TTryOnCategoryMap;
 
 export type ITryOn = TTryOnDisabled | TTryOnEnabled;
+
+export interface IGenerateSku {
+  data: Record<string, string>;
+  prefix?: string;
+  unique?: boolean;
+}
