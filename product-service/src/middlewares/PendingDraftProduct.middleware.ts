@@ -44,13 +44,15 @@ export const pendingDraftProduct = async (req: Request, _res: Response, next: Ne
     });
   }
 
-  const productSku = generateSku({data:{
-    title: draft.basicInfo.title,
-    brand: draft.basicInfo.brand,
-    l1Cat: draft.basicInfo.l1Category.name,
-    l2Cat: draft.basicInfo.l2Category.name,
-    l3Cat: draft.basicInfo.l3Category.name,
-  }});
+  const productSku = generateSku({
+    data: {
+      title: draft.basicInfo.title,
+      brand: draft.basicInfo.brand,
+      l1Cat: draft.basicInfo.l1Category.name,
+      l2Cat: draft.basicInfo.l2Category.name,
+      l3Cat: draft.basicInfo.l3Category.name,
+    },
+  });
 
   const body: TCreateProductPayload = {
     seller: user._id,
@@ -65,13 +67,11 @@ export const pendingDraftProduct = async (req: Request, _res: Response, next: Ne
     slug: generateSlug(`${draft.basicInfo.title} ${draft.basicInfo.l3Category.name}`),
 
     // DESCRIPTION AND CONTENT
-    description: draft.descriptionAndContent.shortDescription,
-    content: {
-      description: draft.descriptionAndContent.description,
-      ingredients: draft.descriptionAndContent.ingredients,
-      instructions: draft.descriptionAndContent.instructions,
-      other: draft.descriptionAndContent.additional,
-    },
+    shortDescription: draft.descriptionAndContent.shortDescription,
+    description: draft.descriptionAndContent.description,
+    ingredients: draft.descriptionAndContent.ingredients,
+    instructions: draft.descriptionAndContent.instructions,
+    additional: draft.descriptionAndContent.additional,
 
     // MEDIA AND GALLERY
     thumbnail: draft.mediaAndGallery.thumbnail,

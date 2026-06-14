@@ -50,16 +50,6 @@ variantSchema.pre('validate', function () {
   this.discount = Math.round(((this.originalPrice - this.sellingPrice) / this.originalPrice) * 100);
 });
 
-const contentSchema = new Schema(
-  {
-    description: { type: String, trim: true, required: true, minlength: 107 },
-    ingredients: { type: String, trim: true, minlength: 20 },
-    instructions: { type: String, trim: true, minlength: 20 },
-    other: { type: String, trim: true, minlength: 20 },
-  },
-  { _id: false, versionKey: false },
-);
-
 const historySchema = new Schema(
   {
     approvedBy: { type: Schema.Types.ObjectId },
@@ -141,8 +131,11 @@ export const productSchema = new Schema(
     discount: { type: Number, min: 0, max: 100, default: 0 },
     stock: { type: Number, min: 0 },
     stockThreshold: { type: Number, min: 0 },
-    description: { type: String, required: true, trim: true, minlength: 10, maxlength: 300 },
-    content: contentSchema,
+    shortDescription: { type: String, required: true, trim: true, minlength: 10, maxlength: 300 },
+    description: { type: String, trim: true, required: true, minlength: 107 },
+    instructions: { type: String, trim: true, minlength: 20 },
+    ingredients: { type: String, trim: true, minlength: 20 },
+    additional: { type: String, trim: true, minlength: 20 },
     slug: { type: String, required: true, trim: true, lowercase: true, unique: true, index: true },
     images: { type: [String], required: true },
     thumbnail: { type: String, required: true },
@@ -170,7 +163,7 @@ export const productSchema = new Schema(
 );
 
 // TEXT SEARCH
-productSchema.index({ title: 'text', brand: 'text', description: 'text' });
+productSchema.index({ title: 'text', brand: 'text', shortDescription: 'text' });
 
 // SKU
 productSchema.index({ sku: 1 }, { unique: true });

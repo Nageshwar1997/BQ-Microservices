@@ -54,11 +54,11 @@ export const getMinimalCategory = (category: ICategory): TCacheCategory => {
       return { ...base, level, parent: parent?.toString() || '', description: description || '' };
     }
     case 2: {
-      return { ...base, level, parent: parent?.toString() || '', description: undefined };
+      return { ...base, level, parent: parent?.toString() || '' };
     }
     case 1:
     default: {
-      return { ...base, level, description: undefined, parent: undefined };
+      return { ...base, level };
     }
   }
 };
