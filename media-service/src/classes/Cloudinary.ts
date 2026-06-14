@@ -216,22 +216,6 @@ class Cloudinary {
     });
   }
 
-  public getCloudinaryPublicId(url: string): string {
-    try {
-      const { pathname } = new URL(url);
-
-      const match = pathname.match(/\/upload\/(?:[^/]+\/)*(?:v\d+\/)?(.+)$/);
-
-      if (!match) {
-        throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
-      }
-
-      return match[1]?.replace(/\.[^/.]+$/, '');
-    } catch {
-      throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
-    }
-  }
-
   /* ========== REMOVE SINGLE WITH RETRY ========== */
   public async removeSingle({ retryCount = 0, ...data }: ISingleRemover & { retryCount?: number }) {
     try {

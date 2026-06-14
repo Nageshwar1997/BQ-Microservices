@@ -84,3 +84,23 @@ export const generateSku = ({ data, prefix, unique = true }: IGenerateSku) => {
 
   return `${finalSku}-${randomPart}`;
 };
+
+export const getCloudinaryPublicIdFromUrl = (url: string): string => {
+  try {
+    const { pathname } = new URL(url);
+
+    const match = pathname.match(/\/upload\/(?:[^/]+\/)*(?:v\d+\/)?(.+)$/);
+
+    if (!match) {
+      throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
+    }
+
+    return match[1]?.replace(/\.[^/.]+$/, '');
+  } catch {
+    throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
+  }
+};
+
+export const extractImageUrlsFromHtml = (html: string): string[] => {
+  return [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)].map((match) => match[1]);
+};

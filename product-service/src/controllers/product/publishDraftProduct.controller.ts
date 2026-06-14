@@ -1,10 +1,18 @@
+import { bullQueue } from '@beautinique/be-jobs';
 import type { Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 import { redisCache } from '../../classes';
 import { ROLES_MAP } from '../../constants';
 import { Product } from '../../models';
 import type { TCreateProductPayload } from '../../types';
-import { generateSku, generateSlug, getObjId, getUser } from '../../utils';
+import {
+  extractImageUrlsFromHtml,
+  generateSku,
+  generateSlug,
+  getCloudinaryPublicIdFromUrl,
+  getObjId,
+  getUser,
+} from '../../utils';
 import type { TDraftProduct } from './saveDraftProduct.controller';
 
 export const publishDraftProductController = async (
@@ -14,6 +22,8 @@ export const publishDraftProductController = async (
 ) => {
   const user = getUser(req);
   const draft = req.body as TDraftProduct;
+
+  const isAdmin = [ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role as never);
 
   const productSku = generateSku({
     data: {
@@ -28,12 +38,10 @@ export const publishDraftProductController = async (
   const payload: TCreateProductPayload = {
     seller: user._id,
     sku: productSku,
-    status: [ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role as never)
-      ? 'PUBLISHED'
-      : 'PENDING',
-    ...([ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role as never) && {
-      history: { approvedAt: new Date(), approvedBy: user._id },
-    }),
+
+    status: isAdmin ? 'PUBLISHED' : 'PENDING',
+
+    ...(isAdmin && { history: { approvedAt: new Date(), approvedBy: user._id } }),
 
     // BASIC INFO
     title: draft.basicInfo.title,
@@ -57,17 +65,21 @@ export const publishDraftProductController = async (
 
     // STOCK AND VARIANTS
     hasVariants: draft.stockAndVariants.hasVariants,
+
     variants:
       'variants' in draft.stockAndVariants
-        ? draft.stockAndVariants.variants.map((v) => ({
-            ...v,
-            sku: generateSku({ data: { label: v.label }, prefix: productSku, unique: false }),
+        ? draft.stockAndVariants.variants.map((variant) => ({
+            ...variant,
+            sku: generateSku({ data: { label: variant.label }, prefix: productSku }),
           }))
         : [],
-    stock: 'stock' in draft.stockAndVariants ? draft.stockAndVariants.stock : 0,
+
+    stock: 'stock' in draft.stockAndVariants ? draft.stockAndVariants.stock : null,
+
     stockThreshold:
-      'stockThreshold' in draft.stockAndVariants ? draft.stockAndVariants.stockThreshold : 0,
-    // TRYON CONFIGURATION
+      'stockThreshold' in draft.stockAndVariants ? draft.stockAndVariants.stockThreshold : null,
+
+    // TRY-ON CONFIGURATION
     tryOn:
       'tryon' in draft.tryOnConfiguration
         ? {
@@ -85,7 +97,40 @@ export const publishDraftProductController = async (
 
   await product.save({ session });
 
-  await redisCache.deleteDraftProduct(user._id.toString());
+  const publicIds = [
+    ...product.images,
+
+    product.thumbnail,
+
+    product.video,
+
+    ...(product.hasVariants
+      ? product.variants.flatMap((variant) => [...variant.images, variant.thumbnail])
+      : []),
+
+    ...extractImageUrlsFromHtml(product.description),
+
+    ...(product.ingredients ? extractImageUrlsFromHtml(product.ingredients) : []),
+
+    ...(product.instructions ? extractImageUrlsFromHtml(product.instructions) : []),
+
+    ...(product.additional ? extractImageUrlsFromHtml(product.additional) : []),
+  ]
+    .filter((url): url is string => Boolean(url))
+    .map(getCloudinaryPublicIdFromUrl)
+    .filter((id): id is string => Boolean(id));
+
+  const uniquePublicIds = [...new Set(publicIds)];
+
+  await bullQueue.addJob({
+    queueName: 'media-queue',
+    jobName: 'delete-multiple-media',
+    data: { publicIds: uniquePublicIds },
+  });
+
+  res.locals.afterCommit.push(async () => {
+    await redisCache.deleteDraftProduct(user._id.toString());
+  });
 
   res.success(201, 'Product sent for review', { product: product.toObject() });
 };
