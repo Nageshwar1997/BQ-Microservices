@@ -30,11 +30,13 @@ export const METHODS_AND_PATHS = {
     base: '/product',
     draft: {
       base: '/draft',
+      publish: { method: METHOD_MAP.PATCH, path: '/publish' }, // For publish existing draft
       save: { method: METHOD_MAP.POST, path: '/' }, // For upload new Product as draft
       get: { method: METHOD_MAP.GET, path: '/' }, // For get existing draft Product
       remove: { method: METHOD_MAP.DELETE, path: '/' }, // For remove existing draft
       update: { method: METHOD_MAP.PATCH, path: '/' }, // For already published product and seller again made some changes
     },
+    publish: { method: METHOD_MAP.PATCH, path: '/publish' }, // For publish existing Product
   },
 } as const;
 
