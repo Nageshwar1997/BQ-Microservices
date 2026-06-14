@@ -37,12 +37,10 @@ export type TCreateProductPayload = Omit<
   | 'createdAt'
   | 'updatedAt'
   | 'discount'
-  | 'history'
   | 'returnCount'
   | 'reviews'
   | 'totalReviews'
   | 'totalRating'
-  | 'status'
   | 'saleCount'
 > & { variants: Omit<TVariant, '_id' | 'discount'>[] };
 

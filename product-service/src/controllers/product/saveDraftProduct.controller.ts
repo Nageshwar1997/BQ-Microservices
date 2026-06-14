@@ -4,7 +4,6 @@ import type { TTryOnCategoryMap } from '../../types';
 import { getUser } from '../../utils';
 
 export interface TProductBasicInfo {
-  step: 0;
   title: string;
   brand: string;
   originalPrice: number;
@@ -15,14 +14,12 @@ export interface TProductBasicInfo {
 }
 
 export interface TProductMediaAndGallery {
-  step: 1;
   thumbnail: string;
   images: string[];
   video?: string;
 }
 
 export interface TProductDescriptionAndContent {
-  step: 2;
   shortDescription: string;
   description: string;
   instructions?: string;
@@ -51,24 +48,23 @@ export interface TProductWithVariant {
   }[];
 }
 
-export type TProductStockAndVariants = (TProductWithoutVariant | TProductWithVariant) & { step: 3 };
+export type TProductStockAndVariants = TProductWithoutVariant | TProductWithVariant;
 
-export type TProductTryOnConfiguration = (
+export type TProductTryOnConfiguration =
   | {
       enabled: false;
     }
   | {
       enabled: true;
       tryon: TTryOnCategoryMap;
-    }
-) & { step: 4 };
+    };
 
-type TBody =
-  | TProductBasicInfo
-  | TProductMediaAndGallery
-  | TProductDescriptionAndContent
-  | TProductStockAndVariants
-  | TProductTryOnConfiguration;
+export type TBody =
+  | (TProductBasicInfo & { step: 0 })
+  | (TProductMediaAndGallery & { step: 1 })
+  | (TProductDescriptionAndContent & { step: 2 })
+  | (TProductStockAndVariants & { step: 3 })
+  | (TProductTryOnConfiguration & { step: 4 });
 
 export interface TDraftProduct {
   basicInfo: TProductBasicInfo;

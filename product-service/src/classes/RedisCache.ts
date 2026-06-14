@@ -1,14 +1,7 @@
 import { parseData, stringifyData } from '@beautinique/be-utils';
 import { type RedisClientType, createClient } from 'redis';
 import { logger } from '../configs';
-import type {
-  TDraftProduct,
-  TProductBasicInfo,
-  TProductDescriptionAndContent,
-  TProductMediaAndGallery,
-  TProductStockAndVariants,
-  TProductTryOnConfiguration,
-} from '../controllers/product/saveDraftProduct.controller';
+import type { TBody, TDraftProduct } from '../controllers/product/saveDraftProduct.controller';
 import { envs } from '../envs';
 import { Category } from '../models';
 import type { ICategory, TCacheCategory } from '../types';
@@ -256,15 +249,7 @@ class RedisCache {
     return this.getDraftHashData(key);
   }
 
-  public async saveDraftProductStep(
-    userId: string,
-    stepData:
-      | TProductBasicInfo
-      | TProductMediaAndGallery
-      | TProductDescriptionAndContent
-      | TProductStockAndVariants
-      | TProductTryOnConfiguration,
-  ) {
+  public async saveDraftProductStep(userId: string, stepData: TBody) {
     const client = this.getClient();
 
     if (!client) return null;
@@ -273,11 +258,11 @@ class RedisCache {
 
     const isNewDraft = !(await this.exists(key));
 
-    const { step: _, ...data } = stepData;
+    const { step, ...data } = stepData;
 
     let field: keyof TDraftProduct;
 
-    switch (stepData.step) {
+    switch (step) {
       case 0:
         field = 'basicInfo';
         break;

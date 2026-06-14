@@ -1,8 +1,12 @@
-import { checkEmptyRequest, tryCatchResponse } from '@beautinique/be-middlewares';
+import {
+  checkEmptyRequest,
+  tryCatchResponse,
+  tryCatchSessionResponse,
+} from '@beautinique/be-middlewares';
 import { Router } from 'express';
 import { METHODS_AND_PATHS } from '../constants';
-import { saveDraftProductController } from '../controllers';
-import { authorize } from '../middlewares';
+import { publishDraftProductController, saveDraftProductController } from '../controllers';
+import { authorize, createPendingProductPayload } from '../middlewares';
 
 export const productRouter = Router();
 const draftRouter = Router();
@@ -13,6 +17,14 @@ draftRouter[draft.save.method](
   authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ body: true }),
   tryCatchResponse(saveDraftProductController),
+);
+
+draftRouter[draft.publish.method](
+  draft.publish.path,
+  authorize(['ADMIN', 'MASTER']),
+  checkEmptyRequest({ body: true }),
+  createPendingProductPayload,
+  tryCatchSessionResponse(publishDraftProductController),
 );
 
 productRouter.use(draft.base, draftRouter);

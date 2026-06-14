@@ -1,9 +1,6 @@
 import { ROLES } from '@beautinique/be-constants';
 import type { TTryOn, TTryOnKey } from '../types';
 
-export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
-export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
-
 export const METHOD_MAP = {
   GET: 'get',
   POST: 'post',
@@ -40,7 +37,7 @@ export const METHODS_AND_PATHS = {
   },
 } as const;
 
-export const PRODUCT_STATUSES = ['DELETED', 'PENDING', 'APPROVED', 'REJECTED', 'BLOCKED'] as const;
+export const PRODUCT_STATUSES = ['DELETED', 'PENDING', 'PUBLISHED', 'REJECTED', 'BLOCKED'] as const;
 
 export const PRODUCT_STATUS_MAP = Object.fromEntries(
   PRODUCT_STATUSES.map((status) => [status, status]),
@@ -61,7 +58,7 @@ export const TRY_ON_MAP = {
   SKIN: ['MOISTURIZER', 'SERUM', 'TONER', 'CLEANSER'],
 } as const;
 
-export const TRY_ON_CATEGORIES = Object.keys(TRY_ON_MAP) as (TTryOnKey)[];
+export const TRY_ON_CATEGORIES = Object.keys(TRY_ON_MAP) as TTryOnKey[];
 
 export const TRY_ON_SUBCATEGORIES = Object.values(TRY_ON_MAP).flat() as TTryOn[TTryOnKey][number][];
 
