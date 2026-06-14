@@ -1,7 +1,7 @@
 import { AppError } from '@beautinique/be-classes';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
 import { redisCache } from '../../classes';
@@ -11,6 +11,7 @@ import { generateSlug, getObjId, getUser } from '../../utils';
 export const addCategoryController = async (
   req: Request,
   res: Response,
+  _next: NextFunction,
   session: ClientSession,
 ) => {
   const { _id: userId } = getUser(req);

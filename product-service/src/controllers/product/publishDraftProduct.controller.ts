@@ -1,5 +1,5 @@
 import { bullQueue } from '@beautinique/be-jobs';
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 import { redisCache } from '../../classes';
 import { ROLES_MAP } from '../../constants';
@@ -18,6 +18,7 @@ import type { TDraftProduct } from './saveDraftProduct.controller';
 export const publishDraftProductController = async (
   req: Request,
   res: Response,
+  _next: NextFunction,
   session: ClientSession,
 ) => {
   const user = getUser(req);
