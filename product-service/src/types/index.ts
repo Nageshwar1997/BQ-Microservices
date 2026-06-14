@@ -29,6 +29,23 @@ export type TVariant = InferSchemaType<typeof variantSchema> & IId;
 
 export type TProduct = InferSchemaType<typeof productSchema> & IId;
 
+export type TCreateProductPayload = Omit<
+  TProduct,
+  | '_id'
+  | 'variants'
+  | 'averageRating'
+  | 'createdAt'
+  | 'updatedAt'
+  | 'discount'
+  | 'history'
+  | 'returnCount'
+  | 'reviews'
+  | 'totalReviews'
+  | 'totalRating'
+  | 'status'
+  | 'saleCount'
+> & { variants: Omit<TVariant, '_id' | 'discount'>[] };
+
 export interface IUser extends IId {
   role: TRole;
 }

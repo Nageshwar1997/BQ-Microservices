@@ -1,10 +1,10 @@
 import { AppError } from '@beautinique/be-classes';
 import type { NextFunction, Request, Response } from 'express';
 import { redisCache } from '../classes';
-import type { TProduct } from '../types';
+import type { TCreateProductPayload } from '../types';
 import { generateSlug, getObjId, getUser } from '../utils';
 
-export const pendingDraftProduct = async (req: Request, res: Response, next: NextFunction) => {
+export const pendingDraftProduct = async (req: Request, _res: Response, next: NextFunction) => {
   const user = getUser(req);
   const draft = await redisCache.getDraftProduct(user._id.toString());
 
@@ -43,7 +43,8 @@ export const pendingDraftProduct = async (req: Request, res: Response, next: Nex
       code: 'PRECONDITION_FAILED',
     });
   }
-  const body: TProduct = {
+
+  const body: TCreateProductPayload = {
     seller: user._id,
 
     // BASIC INFO
@@ -74,16 +75,16 @@ export const pendingDraftProduct = async (req: Request, res: Response, next: Nex
     stock: 'stock' in draft.stockAndVariants ? draft.stockAndVariants.stock : 0,
     stockThreshold:
       'stockThreshold' in draft.stockAndVariants ? draft.stockAndVariants.stockThreshold : 0,
-
-    status: 'PENDING',
-    tryOn: {
-      enabled: draft.tryOnConfiguration.enabled,
-      configured: 'tryon' in draft.tryOnConfiguration,
-      ...('tryon' in draft.tryOnConfiguration && {
-        category: draft.tryOnConfiguration.tryon.category,
-        subCategory: draft.tryOnConfiguration.tryon.subCategory,
-      }),
-    },
+    // TRYON CONFIGURATION
+    tryOn:
+      'tryon' in draft.tryOnConfiguration
+        ? {
+            enabled: true,
+            configured: true,
+            category: draft.tryOnConfiguration.tryon.category,
+            subCategory: draft.tryOnConfiguration.tryon.subCategory as never,
+          }
+        : { enabled: false, configured: false },
   };
 
   req.body = body;
