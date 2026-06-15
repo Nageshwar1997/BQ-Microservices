@@ -53,10 +53,10 @@ app.use(checkDbConnection(isDbConnected));
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-router.get('/', (_, res) => res.success(200, 'Welcome to the User Service API'));
+app.get('/', (_, res) => res.success(200, 'Welcome to the User Service API'));
 
 // Health Route
-router.get('/health', (_, res) => res.success(200, 'User Service is healthy'));
+app.get('/health', (_, res) => res.success(200, 'User Service is healthy'));
 
 // Api Routes
 app.use(
