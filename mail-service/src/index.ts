@@ -11,10 +11,7 @@ import path from 'path';
 import { parse } from 'qs';
 import { transporter, workerManager } from './classes';
 import { errorLogs, logger, requestLogs } from './configs';
-import { METHODS_AND_PATHS } from './constants';
 import { envs } from './envs';
-
-const { health, home } = METHODS_AND_PATHS;
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -47,10 +44,10 @@ app.use(successResponse);
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app[home.method](home.path, (_, res) => res.success(200, 'Welcome to the Mail Service API'));
+app.get('/', (_, res) => res.success(200, 'Welcome to the Mail Service API'));
 
 // Health Route
-app[health.method](health.path, (_, res) => res.success(200, 'Mail Service is healthy'));
+app.get('/health', (_, res) => res.success(200, 'Mail Service is healthy'));
 
 /* ---------------- ERROR HANDLING ---------------- */
 

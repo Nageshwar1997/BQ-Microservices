@@ -11,8 +11,6 @@ export const METHOD_MAP = {
 
 export const METHODS_AND_PATHS = {
   base: '/api/v1',
-  home: { method: METHOD_MAP.GET, path: '/' },
-  health: { method: METHOD_MAP.GET, path: '/health' },
   category: {
     base: '/category',
     add: { method: METHOD_MAP.POST, path: '/' },
