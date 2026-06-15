@@ -124,7 +124,7 @@ tryOnSchema.pre('validate', function () {
 export const productSchema = new Schema(
   {
     title: { type: String, required: true, trim: true, minlength: 2, maxlength: 200 },
-    sku: { type: String, required: true, trim: true, uppercase: true, unique: true, index: true },
+    sku: { type: String, required: true, trim: true, uppercase: true },
     brand: { type: String, required: true, trim: true, minlength: 2, maxlength: 100 },
     originalPrice: { type: Number, required: true, min: 0 },
     sellingPrice: { type: Number, required: true, min: 0 },
