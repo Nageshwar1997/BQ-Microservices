@@ -1,1 +1,0 @@
-Add Media Uploader utility function in getProfilePic => path: user-service > utils
