@@ -115,8 +115,7 @@ All environment variables are loaded via `dotenv` and normalized in `src/envs/in
 
 | Variable             | Description                              |
 |----------------------|------------------------------------------|
-| `MONGODB_DEV_URI`    | MongoDB connection string (dev)          |
-| `MONGODB_PROD_URI`   | MongoDB connection string (production)   |
+| `MONGODB_URI`    | MongoDB connection string          |
 
 ### 4.3 Redis — Cache
 

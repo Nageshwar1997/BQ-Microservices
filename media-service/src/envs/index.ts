@@ -39,8 +39,7 @@ const {
   MEDIA_SERVICE_DEV_URL,
   MEDIA_SERVICE_PROD_URL,
 
-  MONGODB_PROD_URI,
-  MONGODB_DEV_URI,
+  MONGODB_URI,
 
   // N
   // O
@@ -99,7 +98,7 @@ export const envs = {
   // L
   // M
 
-  mongo_uri: is_dev ? MONGODB_DEV_URI : MONGODB_PROD_URI,
+  mongo_uri: MONGODB_URI,
 
   // N
   // O
