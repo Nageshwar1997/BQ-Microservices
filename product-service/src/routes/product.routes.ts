@@ -14,17 +14,15 @@ const { draft } = METHODS_AND_PATHS.product;
 
 draftRouter[draft.save.method](
   draft.save.path,
-  authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ body: true }),
   tryCatchResponse(saveDraftProductController),
 );
 
 draftRouter[draft.publish.method](
   draft.publish.path,
-  authorize(['ADMIN', 'MASTER']),
-  checkEmptyRequest({ body: true }),
   createPendingProductPayload,
+  checkEmptyRequest({ body: true }),
   tryCatchSessionResponse(publishDraftProductController),
 );
 
-productRouter.use(draft.base, draftRouter);
+productRouter.use(draft.base, authorize(['ADMIN', 'SELLER', 'MASTER']), draftRouter);
