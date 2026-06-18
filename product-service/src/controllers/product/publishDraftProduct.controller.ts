@@ -123,13 +123,16 @@ export const publishDraftProductController = async (
 
   const uniquePublicIds = [...new Set(publicIds)];
 
-  await bullQueue.addJob({
-    queueName: 'media-queue',
-    jobName: 'delete-multiple-media',
-    data: { publicIds: uniquePublicIds },
-  });
+  res.locals.afterCommit?.push(async () => {
+    if (uniquePublicIds.length > 0) {
+      await bullQueue.addJob({
+        queueName: 'media-queue',
+        jobName: 'mark-multiple-media-as-used',
+        data: { publicIds: uniquePublicIds },
+        options: { attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
+      });
+    }
 
-  res.locals.afterCommit.push(async () => {
     await redisCache.deleteDraftProduct(user._id.toString());
   });
 
