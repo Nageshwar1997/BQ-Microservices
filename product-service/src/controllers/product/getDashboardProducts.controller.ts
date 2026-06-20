@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
 import { redisCache } from '../../classes';
-import { PRODUCT_STATUS_MAP } from '../../constants';
+import { PRODUCT_STATUS_MAP, ROLES_MAP } from '../../constants';
 import { Product } from '../../models';
 import type { TProductStatus } from '../../types';
 import { getObjId, getUser } from '../../utils';
@@ -33,9 +33,16 @@ export const getDashboardProductsController = async (req: Request, res: Response
   const filter: {
     status?: TProductStatus;
     category?: Types.ObjectId;
-    seller: Types.ObjectId;
+    seller?: Types.ObjectId;
     $text?: { $search: string };
-  } = { seller: user._id };
+  } = {};
+
+  const statusMatch: { seller?: Types.ObjectId } = {};
+
+  if (user.role === ROLES_MAP.SELLER) {
+    filter.seller = user._id;
+    statusMatch.seller = user._id;
+  }
 
   if (status) {
     filter.status = status;
@@ -58,15 +65,27 @@ export const getDashboardProductsController = async (req: Request, res: Response
   }
 
   const [products, total, statusCounts] = await Promise.all([
-    Product.find(
-      filter,
-      search
-        ? {
-            score: { $meta: 'textScore' },
-          }
-        : undefined,
-    )
-      .populate('category', 'name slug')
+    Product.find(filter, search ? { score: { $meta: 'textScore' } } : undefined)
+      .populate('category', 'name -_id')
+      .select(
+        {
+          title: 1,
+          sku: 1,
+          brand: 1,
+          originalPrice: 1,
+          sellingPrice: 1,
+          stock: 1,
+          slug: 1,
+          thumbnail: 1,
+          returnCount: 1,
+          averageRating: 1,
+          status: 1,
+          tryOn: 1,
+          soldCount: 1,
+          hasVariants: 1,
+          'variants.stock': 1,
+        },
+      )
       .sort(sort)
       .skip((currentPage - 1) * pageSize)
       .limit(pageSize)
@@ -75,7 +94,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
     Product.countDocuments(filter),
 
     Product.aggregate([
-      { $match: { seller: user._id } },
+      { $match: statusMatch },
       { $group: { _id: '$status', count: { $sum: 1 } } },
     ]),
   ]);
