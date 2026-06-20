@@ -51,13 +51,8 @@ export interface TProductWithVariant {
 export type TProductStockAndVariants = TProductWithoutVariant | TProductWithVariant;
 
 export type TProductTryOnConfiguration =
-  | {
-      enabled: false;
-    }
-  | {
-      enabled: true;
-      tryon: TTryOnCategoryMap;
-    };
+  | { enabled: false }
+  | { enabled: true; tryOn: TTryOnCategoryMap };
 
 export type TBody =
   | (TProductBasicInfo & { step: 0 })

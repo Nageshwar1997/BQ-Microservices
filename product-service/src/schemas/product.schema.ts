@@ -142,7 +142,7 @@ export const productSchema = new Schema(
     video: { type: String },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true }, // Always deepest category (Level 3)
     seller: { type: Schema.Types.ObjectId, required: true, index: true },
-    saleCount: { type: Number, default: 0, min: 0 },
+    soldCount: { type: Number, default: 0, min: 0 },
     returnCount: { type: Number, default: 0, min: 0 },
     reviews: { type: [{ type: Schema.Types.ObjectId, ref: 'Review' }], default: [] },
     totalReviews: { type: Number, default: 0, min: 0 },
@@ -178,7 +178,7 @@ productSchema.index({ seller: 1, status: 1, createdAt: -1 });
 productSchema.index({ sellingPrice: 1 });
 
 // BEST SELLING
-productSchema.index({ saleCount: -1 });
+productSchema.index({ soldCount: -1 });
 
 // TOP RATED
 productSchema.index({ averageRating: -1 });
@@ -199,7 +199,7 @@ productSchema.index({ category: 1, status: 1, sellingPrice: 1 });
 productSchema.index({ category: 1, status: 1, averageRating: -1 });
 
 // CATEGORY + SALES SORT
-productSchema.index({ category: 1, status: 1, saleCount: -1 });
+productSchema.index({ category: 1, status: 1, soldCount: -1 });
 
 // VALIDATIONS
 productSchema.pre('validate', function () {

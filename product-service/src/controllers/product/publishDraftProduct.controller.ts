@@ -82,12 +82,12 @@ export const publishDraftProductController = async (
 
     // TRY-ON CONFIGURATION
     tryOn:
-      'tryon' in draft.tryOnConfiguration
+      'tryOn' in draft.tryOnConfiguration
         ? {
             enabled: true,
             configured: true,
-            category: draft.tryOnConfiguration.tryon.category,
-            subCategory: draft.tryOnConfiguration.tryon.subCategory as never,
+            category: draft.tryOnConfiguration.tryOn.category,
+            subCategory: draft.tryOnConfiguration.tryOn.subCategory as never,
           }
         : { enabled: false, configured: false },
   };

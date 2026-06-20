@@ -41,7 +41,7 @@ export type TCreateProductPayload = Omit<
   | 'reviews'
   | 'totalReviews'
   | 'totalRating'
-  | 'saleCount'
+  | 'soldCount'
 > & { variants: Omit<TVariant, '_id' | 'discount'>[] };
 
 export interface IUser extends IId {
