@@ -1,5 +1,5 @@
 import { ROLES } from '@beautinique/be-constants';
-import type { TTryOn, TTryOnKey } from '../types';
+import type { TSort, TTryOn, TTryOnKey } from '../types';
 
 export const METHOD_MAP = {
   GET: 'get',
@@ -75,3 +75,9 @@ export const HEADERS_KEYS = {
   userId: 'X-User-Id',
   userRole: 'X-User-Role',
 } as const;
+
+export const SORT = ['asc', 'desc'] as const;
+
+export const SORT_MAP = Object.fromEntries(SORT.map((sort) => [sort, sort])) as {
+  [K in TSort]: K;
+};

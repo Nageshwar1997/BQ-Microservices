@@ -149,7 +149,7 @@ export const getProductSuggestionsPipeline = ({
   ];
 
   return [
-    { $search: { index: 'search-suggestions', compound: { must, should } } },
+    { $search: { index: 'product-search', compound: { must, should } } },
     ...(sellerId ? [{ $match: { seller: sellerId } }] : []),
     ...(publishedOnly ? [{ $match: { status: PRODUCT_STATUS_MAP.PUBLISHED } }] : []),
     { $project: { _id: 1, title: 1, slug: 1, thumbnail: 1, brand: 1 } },

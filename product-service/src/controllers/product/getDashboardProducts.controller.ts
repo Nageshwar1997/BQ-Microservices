@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
-import { PRODUCT_STATUS_MAP, ROLES_MAP } from '../../constants';
+import { PRODUCT_STATUS_MAP, ROLES_MAP, SORT_MAP } from '../../constants';
 import { Product } from '../../models';
-import type { TProductStatus } from '../../types';
+import type { TProductSortBy, TProductStatus, TSort } from '../../types';
 import { getObjId, getUser } from '../../utils';
 
 export const getDashboardProductsController = async (req: Request, res: Response) => {
@@ -22,8 +22,8 @@ export const getDashboardProductsController = async (req: Request, res: Response
     search?: string;
     status?: TProductStatus;
     category?: string;
-    sortBy?: 'createdAt' | 'updatedAt';
-    sortOrder?: 'asc' | 'desc';
+    sortBy?: TProductSortBy;
+    sortOrder?: TSort;
   };
 
   const currentPage = Math.max(Number(page), 1);
@@ -60,7 +60,21 @@ export const getDashboardProductsController = async (req: Request, res: Response
   if (search) {
     sort.score = { $meta: 'textScore' };
   } else {
-    sort[String(sortBy)] = sortOrder === 'asc' ? 1 : -1;
+    const direction = sortOrder === SORT_MAP.asc ? 1 : -1;
+
+    switch (sortBy) {
+      case 'title':
+        sort.title = direction;
+        break;
+
+      case 'updatedAt':
+        sort.updatedAt = direction;
+        break;
+
+      default:
+        sort.createdAt = direction;
+        break;
+    }
   }
 
   const [products, total, statusCounts] = await Promise.all([

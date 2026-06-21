@@ -1,7 +1,7 @@
 import type { TRole } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { PRODUCT_STATUSES, TRY_ON_MAP } from '../constants';
+import type { PRODUCT_STATUSES, SORT, TRY_ON_MAP } from '../constants';
 import type { categorySchema, productSchema, variantSchema } from '../schemas';
 
 export type TId = Types.ObjectId;
@@ -97,3 +97,7 @@ export interface IGetProductSuggestionsPipelineOptions {
   sellerId?: Types.ObjectId;
   includeShortDescription?: boolean;
 }
+
+export type TProductSortBy = keyof Pick<TProduct, "createdAt" | "updatedAt" | "title" | "stock" | "sellingPrice" | "soldCount">;
+
+export type TSort = typeof SORT[number];
