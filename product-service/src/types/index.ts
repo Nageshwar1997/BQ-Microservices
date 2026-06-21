@@ -87,7 +87,6 @@ export interface ITextSearchOperator<TPath extends string> {
   text: TSearchOperatorBase<TPath>;
 }
 
-
 export type TSort = (typeof SORT)[number];
 
 export type TDashboardProduct = Pick<
@@ -117,9 +116,6 @@ export interface IGetDashboardProductsQuery {
   search?: string;
   status?: TProductStatus;
   category?: string;
-  sortBy?: keyof Pick<
-    TProduct,
-    'createdAt' | 'updatedAt' | 'title' | 'stock' | 'sellingPrice' | 'soldCount'
-  >;
+  sortBy?: keyof Pick<TProduct, 'createdAt' | 'updatedAt' | 'title' | 'sellingPrice' | 'soldCount'>;
   sortOrder?: TSort;
 }
