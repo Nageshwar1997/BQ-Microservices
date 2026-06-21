@@ -142,24 +142,17 @@ export const getProductSuggestionsPipeline = ({
         query,
         path: 'title',
         tokenOrder: 'sequential',
-        fuzzy: { maxEdits: 1},
+        fuzzy: { maxEdits: 1 },
         score: { boost: { value: 10 } },
       },
     },
   ];
 
   return [
-    {
-      $search: {
-        index: 'product-search',
-        compound: { must, should },
-      },
-    },
+    { $search: { index: 'search-suggestions', compound: { must, should } } },
     ...(sellerId ? [{ $match: { seller: sellerId } }] : []),
     ...(publishedOnly ? [{ $match: { status: PRODUCT_STATUS_MAP.PUBLISHED } }] : []),
-    {
-      $project: { _id: 1, title: 1, slug: 1, thumbnail: 1, brand: 1 },
-    },
+    { $project: { _id: 1, title: 1, slug: 1, thumbnail: 1, brand: 1 } },
     { $limit: 5 },
   ];
 };
