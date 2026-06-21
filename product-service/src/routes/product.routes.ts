@@ -8,6 +8,7 @@ import { METHODS_AND_PATHS } from '../constants';
 import { publishDraftProductController, saveDraftProductController } from '../controllers';
 import { getDashboardProductsController } from '../controllers/product/getDashboardProducts.controller';
 import { getDraftProductController } from '../controllers/product/getDraftProduct.controller';
+import { getProductsSuggestionsController } from '../controllers/product/getProductsSuggestions.controller';
 import { authorize, createPendingProductPayload } from '../middlewares';
 
 export const productRouter = Router();
@@ -36,4 +37,10 @@ productRouter[get.dashboard.method](
   authorize(['ADMIN', 'SELLER', 'MASTER']),
   checkEmptyRequest({ query: true }),
   tryCatchResponse(getDashboardProductsController),
+);
+
+productRouter[get.suggestions.method](
+  get.suggestions.path,
+  checkEmptyRequest({ query: true }),
+  tryCatchResponse(getProductsSuggestionsController),
 );

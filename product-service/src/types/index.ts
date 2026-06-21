@@ -70,3 +70,22 @@ export interface IGenerateSku {
   prefix?: string;
   unique?: boolean;
 }
+
+interface TSearchOperatorBase<TPath extends string> {
+  query: string;
+  path: TPath;
+  fuzzy?: { maxEdits: number };
+  score?: { boost: { value: number } };
+}
+
+export interface IAutocompleteSearchOperator<TPath extends string> {
+  autocomplete: TSearchOperatorBase<TPath>;
+}
+
+export interface ITextSearchOperator<TPath extends string> {
+  text: TSearchOperatorBase<TPath>;
+}
+
+export type TProductSearchOperator =
+  | IAutocompleteSearchOperator<keyof Pick<TProduct, 'title' | 'brand' | 'slug'>>
+  | ITextSearchOperator<keyof Pick<TProduct, 'shortDescription'>>;
