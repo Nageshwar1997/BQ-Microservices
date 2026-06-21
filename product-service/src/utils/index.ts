@@ -4,12 +4,14 @@ import { Types } from 'mongoose';
 import { randomInt } from 'node:crypto';
 import slugify from 'slugify';
 import type {
+  IAutocompleteSearchOperator,
   ICategory,
   IGenerateSku,
-  IGetProductSuggestionsPipelineOptions,
+  ITextSearchOperator,
   TCacheCategory,
   TId,
-  TProductSearchOperator,
+  TProduct,
+  TProductStatus,
 } from '../types';
 
 /* ========== NULL CHECK FUNCTION ========== */
@@ -112,31 +114,26 @@ export const extractImageUrlsFromHtml = (html: string): string[] => {
   return [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)].map((match) => match[1]);
 };
 
-import { PRODUCT_STATUS_MAP } from '../constants';
+import { PRODUCT_STATUSES, PRODUCT_STATUS_MAP } from '../constants';
 
-export const getProductSuggestionsPipeline = ({
-  query,
-  publishedOnly = false,
-  includeShortDescription = false,
-  sellerId,
-}: IGetProductSuggestionsPipelineOptions) => {
-  const should: TProductSearchOperator[] = [
+export const getProductSuggestionsPipeline = (query: string) => {
+  const should: (
+    | IAutocompleteSearchOperator<keyof Pick<TProduct, 'title' | 'brand' | 'slug'>>
+    | ITextSearchOperator<keyof Pick<TProduct, 'shortDescription'>>
+  )[] = [
     { autocomplete: { query, path: 'brand', score: { boost: { value: 5 } } } },
     { autocomplete: { query, path: 'slug', score: { boost: { value: 2 } } } },
-  ];
-
-  if (includeShortDescription) {
-    should.push({
+    {
       text: {
         query,
         path: 'shortDescription',
         fuzzy: { maxEdits: 1 },
         score: { boost: { value: 1 } },
       },
-    });
-  }
+    },
+  ];
 
-  const must: TProductSearchOperator[] = [
+  const must: IAutocompleteSearchOperator<keyof Pick<TProduct, 'title'>>[] = [
     {
       autocomplete: {
         query,
@@ -150,9 +147,29 @@ export const getProductSuggestionsPipeline = ({
 
   return [
     { $search: { index: 'product-search', compound: { must, should } } },
-    ...(sellerId ? [{ $match: { seller: sellerId } }] : []),
-    ...(publishedOnly ? [{ $match: { status: PRODUCT_STATUS_MAP.PUBLISHED } }] : []),
+    { $match: { status: PRODUCT_STATUS_MAP.PUBLISHED } },
     { $project: { _id: 1, title: 1, slug: 1, thumbnail: 1, brand: 1 } },
     { $limit: 5 },
   ];
+};
+
+export const getInitialProductCountsByStatus = (): Record<TProductStatus | 'ALL', number> =>
+  [...PRODUCT_STATUSES, 'ALL'].reduce<Record<TProductStatus | 'ALL', number>>(
+    (acc, status) => {
+      acc[status as TProductStatus | 'ALL'] = 0;
+      return acc;
+    },
+    {} as Record<TProductStatus | 'ALL', number>,
+  );
+
+export const populateProductCountsByStatus = (
+  counts: Record<TProductStatus | 'ALL', number>,
+  statusCounts: { _id: TProductStatus; count: number }[],
+): Record<TProductStatus | 'ALL', number> => {
+  for (const item of statusCounts) {
+    counts.ALL += item.count;
+    counts[item._id] = item.count;
+  }
+
+  return counts;
 };

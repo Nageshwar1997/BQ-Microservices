@@ -1,5 +1,5 @@
 import { ROLES } from '@beautinique/be-constants';
-import type { TSort, TTryOn, TTryOnKey } from '../types';
+import type { TDashboardProduct, TProduct, TSort, TTryOn, TTryOnKey } from '../types';
 
 export const METHOD_MAP = {
   GET: 'get',
@@ -36,7 +36,6 @@ export const METHODS_AND_PATHS = {
       dashboard: {
         base: '/dashboard',
         products: { method: METHOD_MAP.GET, path: '/products' },
-        suggestions: { method: METHOD_MAP.GET, path: '/suggestions' },
       },
       suggestions: { method: METHOD_MAP.GET, path: '/suggestions' },
       products: { method: METHOD_MAP.GET, path: '/products' },
@@ -80,4 +79,30 @@ export const SORT = ['asc', 'desc'] as const;
 
 export const SORT_MAP = Object.fromEntries(SORT.map((sort) => [sort, sort])) as {
   [K in TSort]: K;
+};
+
+export type TProductFilter = Pick<TProduct, 'seller' | 'status' | 'category'>;
+
+export const PRODUCT_DASHBOARD_PROJECTION: Record<
+  keyof Omit<TDashboardProduct, 'variants'> | `${keyof Pick<TDashboardProduct, 'variants'>}.stock`,
+  1
+> = {
+  title: 1,
+  sku: 1,
+  brand: 1,
+  originalPrice: 1,
+  sellingPrice: 1,
+  stock: 1,
+  slug: 1,
+  thumbnail: 1,
+  returnCount: 1,
+  averageRating: 1,
+  status: 1,
+  tryOn: 1,
+  soldCount: 1,
+  hasVariants: 1,
+  category: 1,
+  createdAt: 1,
+  updatedAt: 1,
+  'variants.stock': 1,
 };

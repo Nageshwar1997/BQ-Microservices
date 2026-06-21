@@ -87,17 +87,39 @@ export interface ITextSearchOperator<TPath extends string> {
   text: TSearchOperatorBase<TPath>;
 }
 
-export type TProductSearchOperator =
-  | IAutocompleteSearchOperator<keyof Pick<TProduct, 'title' | 'brand' | 'slug'>>
-  | ITextSearchOperator<keyof Pick<TProduct, 'shortDescription'>>;
 
-export interface IGetProductSuggestionsPipelineOptions {
-  query: string;
-  publishedOnly?: boolean;
-  sellerId?: Types.ObjectId;
-  includeShortDescription?: boolean;
+export type TSort = (typeof SORT)[number];
+
+export type TDashboardProduct = Pick<
+  TProduct,
+  | 'title'
+  | 'sku'
+  | 'brand'
+  | 'originalPrice'
+  | 'sellingPrice'
+  | 'stock'
+  | 'slug'
+  | 'thumbnail'
+  | 'returnCount'
+  | 'averageRating'
+  | 'status'
+  | 'tryOn'
+  | 'soldCount'
+  | 'hasVariants'
+  | 'variants'
+  | 'createdAt'
+  | 'updatedAt'
+> & { category?: Pick<ICategory, 'name'> };
+
+export interface IGetDashboardProductsQuery {
+  page?: string;
+  limit?: string;
+  search?: string;
+  status?: TProductStatus;
+  category?: string;
+  sortBy?: keyof Pick<
+    TProduct,
+    'createdAt' | 'updatedAt' | 'title' | 'stock' | 'sellingPrice' | 'soldCount'
+  >;
+  sortOrder?: TSort;
 }
-
-export type TProductSortBy = keyof Pick<TProduct, "createdAt" | "updatedAt" | "title" | "stock" | "sellingPrice" | "soldCount">;
-
-export type TSort = typeof SORT[number];
