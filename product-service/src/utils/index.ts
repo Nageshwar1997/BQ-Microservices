@@ -3,7 +3,14 @@ import type { Request } from 'express';
 import { Types } from 'mongoose';
 import { randomInt } from 'node:crypto';
 import slugify from 'slugify';
-import type { ICategory, IGenerateSku, TCacheCategory, TId } from '../types';
+import type {
+  ICategory,
+  IGenerateSku,
+  IGetProductSuggestionsPipelineOptions,
+  TCacheCategory,
+  TId,
+  TProductSearchOperator,
+} from '../types';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -103,4 +110,70 @@ export const getCloudinaryPublicIdFromUrl = (url: string): string => {
 
 export const extractImageUrlsFromHtml = (html: string): string[] => {
   return [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)].map((match) => match[1]);
+};
+
+import { PRODUCT_STATUS_MAP } from '../constants';
+
+export const getProductSuggestionsPipeline = ({
+  query,
+  publishedOnly = false,
+  includeShortDescription = false,
+  sellerId,
+}: IGetProductSuggestionsPipelineOptions) => {
+  const should: TProductSearchOperator[] = [
+    {
+      autocomplete: {
+        query,
+        path: 'title',
+        fuzzy: { maxEdits: 1 },
+        score: { boost: { value: 10 } },
+      },
+    },
+    {
+      autocomplete: {
+        query,
+        path: 'brand',
+        fuzzy: { maxEdits: 1 },
+        score: { boost: { value: 5 } },
+      },
+    },
+    {
+      autocomplete: {
+        query,
+        path: 'slug',
+        fuzzy: { maxEdits: 1 },
+        score: { boost: { value: 2 } },
+      },
+    },
+  ];
+
+  if (includeShortDescription) {
+    should.push({
+      text: {
+        query,
+        path: 'shortDescription',
+        fuzzy: { maxEdits: 1 },
+        score: { boost: { value: 1 } },
+      },
+    });
+  }
+
+  return [
+    { $search: { index: 'product-search', compound: { should, minimumShouldMatch: 1 } } },
+    ...(sellerId ? [{ $match: { seller: sellerId } }] : []),
+    ...(publishedOnly ? [{ $match: { status: PRODUCT_STATUS_MAP.PUBLISHED } }] : []),
+    {
+      $project: {
+        _id: 1,
+        title: 1,
+        slug: 1,
+        thumbnail: 1,
+        brand: 1,
+        status: 1,
+        score: { $meta: 'searchScore' },
+      },
+    },
+    { $sort: { score: -1 as const } },
+    { $limit: 5 },
+  ];
 };

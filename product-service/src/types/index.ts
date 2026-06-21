@@ -89,3 +89,10 @@ export interface ITextSearchOperator<TPath extends string> {
 export type TProductSearchOperator =
   | IAutocompleteSearchOperator<keyof Pick<TProduct, 'title' | 'brand' | 'slug'>>
   | ITextSearchOperator<keyof Pick<TProduct, 'shortDescription'>>;
+
+export interface IGetProductSuggestionsPipelineOptions {
+  query: string;
+  publishedOnly?: boolean;
+  sellerId?: Types.ObjectId;
+  includeShortDescription?: boolean;
+}
