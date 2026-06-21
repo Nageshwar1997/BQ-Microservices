@@ -142,7 +142,7 @@ export const getProductSuggestionsPipeline = ({
         query,
         path: 'title',
         tokenOrder: 'sequential',
-        fuzzy: { maxEdits: 1, prefixLength: 3 },
+        fuzzy: { maxEdits: 1},
         score: { boost: { value: 10 } },
       },
     },

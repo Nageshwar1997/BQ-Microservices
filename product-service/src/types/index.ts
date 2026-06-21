@@ -75,7 +75,7 @@ interface TSearchOperatorBase<TPath extends string> {
   query: string;
   path: TPath;
   tokenOrder?: 'any' | 'sequential';
-  fuzzy?: { maxEdits: number; prefixLength?: number };
+  fuzzy?: { maxEdits: number };
   score?: { boost: { value: number } };
 }
 
