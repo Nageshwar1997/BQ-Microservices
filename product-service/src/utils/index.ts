@@ -169,8 +169,6 @@ export const getProductSuggestionsPipeline = ({
         slug: 1,
         thumbnail: 1,
         brand: 1,
-        status: 1,
-        score: { $meta: 'searchScore' },
       },
     },
     { $sort: { score: -1 as const } },
