@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
 import type { Types } from 'mongoose';
-import { redisCache } from '../../classes';
 import { PRODUCT_STATUS_MAP, ROLES_MAP } from '../../constants';
 import { Product } from '../../models';
 import type { TProductStatus } from '../../types';
@@ -67,25 +66,23 @@ export const getDashboardProductsController = async (req: Request, res: Response
   const [products, total, statusCounts] = await Promise.all([
     Product.find(filter, search ? { score: { $meta: 'textScore' } } : undefined)
       .populate('category', 'name -_id')
-      .select(
-        {
-          title: 1,
-          sku: 1,
-          brand: 1,
-          originalPrice: 1,
-          sellingPrice: 1,
-          stock: 1,
-          slug: 1,
-          thumbnail: 1,
-          returnCount: 1,
-          averageRating: 1,
-          status: 1,
-          tryOn: 1,
-          soldCount: 1,
-          hasVariants: 1,
-          'variants.stock': 1,
-        },
-      )
+      .select({
+        title: 1,
+        sku: 1,
+        brand: 1,
+        originalPrice: 1,
+        sellingPrice: 1,
+        stock: 1,
+        slug: 1,
+        thumbnail: 1,
+        returnCount: 1,
+        averageRating: 1,
+        status: 1,
+        tryOn: 1,
+        soldCount: 1,
+        hasVariants: 1,
+        'variants.stock': 1,
+      })
       .sort(sort)
       .skip((currentPage - 1) * pageSize)
       .limit(pageSize)
@@ -134,8 +131,6 @@ export const getDashboardProductsController = async (req: Request, res: Response
     }
   }
 
-  const draft = await redisCache.getDraftProduct(user._id.toString());
-
   res.success(200, 'Products fetched successfully', {
     data: {
       products,
@@ -146,7 +141,6 @@ export const getDashboardProductsController = async (req: Request, res: Response
         totalPages: Math.ceil(total / pageSize),
       },
       counts,
-      draft,
     },
   });
 };
