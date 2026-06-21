@@ -74,7 +74,8 @@ export interface IGenerateSku {
 interface TSearchOperatorBase<TPath extends string> {
   query: string;
   path: TPath;
-  fuzzy?: { maxEdits: number };
+  tokenOrder?: 'any' | 'sequential';
+  fuzzy?: { maxEdits: number; prefixLength?: number };
   score?: { boost: { value: number } };
 }
 

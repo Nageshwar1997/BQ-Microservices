@@ -121,30 +121,8 @@ export const getProductSuggestionsPipeline = ({
   sellerId,
 }: IGetProductSuggestionsPipelineOptions) => {
   const should: TProductSearchOperator[] = [
-    {
-      autocomplete: {
-        query,
-        path: 'title',
-        fuzzy: { maxEdits: 1 },
-        score: { boost: { value: 10 } },
-      },
-    },
-    {
-      autocomplete: {
-        query,
-        path: 'brand',
-        fuzzy: { maxEdits: 1 },
-        score: { boost: { value: 5 } },
-      },
-    },
-    {
-      autocomplete: {
-        query,
-        path: 'slug',
-        fuzzy: { maxEdits: 1 },
-        score: { boost: { value: 2 } },
-      },
-    },
+    { autocomplete: { query, path: 'brand', score: { boost: { value: 5 } } } },
+    { autocomplete: { query, path: 'slug', score: { boost: { value: 2 } } } },
   ];
 
   if (includeShortDescription) {
@@ -158,20 +136,30 @@ export const getProductSuggestionsPipeline = ({
     });
   }
 
+  const must: TProductSearchOperator[] = [
+    {
+      autocomplete: {
+        query,
+        path: 'title',
+        tokenOrder: 'sequential',
+        fuzzy: { maxEdits: 1, prefixLength: 3 },
+        score: { boost: { value: 10 } },
+      },
+    },
+  ];
+
   return [
-    { $search: { index: 'product-search', compound: { should, minimumShouldMatch: 1 } } },
+    {
+      $search: {
+        index: 'product-search',
+        compound: { must, should },
+      },
+    },
     ...(sellerId ? [{ $match: { seller: sellerId } }] : []),
     ...(publishedOnly ? [{ $match: { status: PRODUCT_STATUS_MAP.PUBLISHED } }] : []),
     {
-      $project: {
-        _id: 1,
-        title: 1,
-        slug: 1,
-        thumbnail: 1,
-        brand: 1,
-      },
+      $project: { _id: 1, title: 1, slug: 1, thumbnail: 1, brand: 1 },
     },
-    { $sort: { score: -1 as const } },
     { $limit: 5 },
   ];
 };
