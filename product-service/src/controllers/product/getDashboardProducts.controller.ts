@@ -11,7 +11,6 @@ import type {
   IGetDashboardProductsQuery,
   TDashboardProduct,
   TId,
-  TProduct,
   TProductStatus,
 } from '../../types';
 import {
@@ -39,10 +38,14 @@ export const getDashboardProductsController = async (req: Request, res: Response
 
   const direction = sortOrder === SORT_MAP.asc ? 1 : -1;
 
-  const statusMatch: Partial<Pick<TProduct, 'seller'>> = {};
+  const statusMatch: Partial<Omit<TProductFilter, "status">> = {};
 
   if (user.role === ROLES_MAP.SELLER) {
     statusMatch.seller = user._id;
+  }
+
+  if (category) {
+    statusMatch.category = getObjId(category);
   }
 
   const searchFilters: { equals: { path: keyof TProductFilter; value: TId | TProductStatus } }[] =
