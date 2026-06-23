@@ -116,6 +116,9 @@ export interface IGetDashboardProductsQuery {
   search?: string;
   status?: TProductStatus;
   category?: string;
-  sortBy?: keyof Pick<TProduct, 'createdAt' | 'updatedAt' | 'title' | 'sellingPrice' | 'soldCount'>;
+  sortBy?: keyof Pick<
+    TProduct,
+    'createdAt' | 'updatedAt' | 'title' | 'sellingPrice' | 'originalPrice' | 'soldCount'
+  >;
   sortOrder?: TSort;
 }
