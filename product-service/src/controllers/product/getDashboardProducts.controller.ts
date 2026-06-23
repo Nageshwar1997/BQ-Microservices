@@ -110,16 +110,6 @@ export const getDashboardProductsController = async (req: Request, res: Response
         $facet: {
           products: [
             { $sort: sortStage },
-            {
-              $lookup: {
-                from: 'categories',
-                localField: 'category',
-                foreignField: '_id',
-                as: 'category',
-                pipeline: [{ $project: { _id: 0, name: 1 } }],
-              },
-            },
-            { $unwind: { path: '$category', preserveNullAndEmptyArrays: true } },
             { $project: PRODUCT_DASHBOARD_PROJECTION },
             { $skip: (currentPage - 1) * pageSize },
             { $limit: pageSize },
@@ -141,7 +131,6 @@ export const getDashboardProductsController = async (req: Request, res: Response
   } else {
     const [productDocs, total, statusCounts] = await Promise.all([
       Product.find(matchStage)
-        .populate('category', 'name -_id')
         .select(PRODUCT_DASHBOARD_PROJECTION)
         .sort(sortStage)
         .skip((currentPage - 1) * pageSize)

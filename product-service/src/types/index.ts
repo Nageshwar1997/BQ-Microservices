@@ -108,7 +108,7 @@ export type TDashboardProduct = Pick<
   | 'variants'
   | 'createdAt'
   | 'updatedAt'
-> & { category?: Pick<ICategory, 'name'> };
+>;
 
 export interface IGetDashboardProductsQuery {
   page?: string;

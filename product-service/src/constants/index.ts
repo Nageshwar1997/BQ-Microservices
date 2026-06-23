@@ -101,7 +101,6 @@ export const PRODUCT_DASHBOARD_PROJECTION: Record<
   tryOn: 1,
   soldCount: 1,
   hasVariants: 1,
-  category: 1,
   createdAt: 1,
   updatedAt: 1,
   'variants.stock': 1,
