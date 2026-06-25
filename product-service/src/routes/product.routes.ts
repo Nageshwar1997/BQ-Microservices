@@ -8,6 +8,7 @@ import { METHODS_AND_PATHS } from '../constants';
 import {
   getDashboardProductsController,
   getDraftProductController,
+  getProductBySlugController,
   getProductsSuggestionsController,
   publishDraftProductController,
   saveDraftProductController,
@@ -47,6 +48,8 @@ dashboardRouter[get.dashboard.products.method](
 
 productRouter.use(draft.base, authorize(['ADMIN', 'SELLER', 'MASTER']), draftRouter);
 productRouter.use(get.dashboard.base, authorize(['ADMIN', 'SELLER', 'MASTER']), dashboardRouter);
+
+productRouter[get.bySlug.method](get.bySlug.path, getProductBySlugController);
 
 productRouter[get.suggestions.method](
   get.suggestions.path,
