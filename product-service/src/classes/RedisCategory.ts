@@ -9,7 +9,7 @@ export class RedisCategory extends RedisHelper {
 
   public async getAllCategories(): Promise<TCacheCategory[]> {
     // 1. Try Redis
-    const categories = await this.getHashData<TCacheCategory>(this.KEY);
+    const categories = Object.values(await this.getAllHashFields<TCacheCategory>(this.KEY));
 
     if (categories.length > 0) {
       return categories;

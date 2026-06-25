@@ -71,22 +71,6 @@ export class RedisHelper {
     }
   }
 
-  protected async getHashData<T>(key: string): Promise<T[]> {
-    const client = this.getClient();
-
-    if (!client) return [];
-
-    try {
-      const data = await client.hGetAll(key);
-
-      return Object.values(data).map((item) => parseData(item) as T);
-    } catch (err) {
-      logger.warn('⚠️ Redis hGetAll failed:', err);
-
-      return [];
-    }
-  }
-
   protected async getHashField<T>(key: string, field: string): Promise<T | null> {
     const client = this.getClient();
 
@@ -103,7 +87,7 @@ export class RedisHelper {
     }
   }
 
-  protected async getAllHashFields<T>(key: string): Promise<Partial<Record<string, T>>> {
+  protected async getAllHashFields<T>(key: string): Promise<Record<string, T>> {
     const client = this.getClient();
 
     if (!client) return {};
@@ -133,7 +117,7 @@ export class RedisHelper {
     }
   }
 
-  protected async deleteHash(key: string) {
+  protected async deleteHashData(key: string) {
     const client = this.getClient();
 
     if (!client) return;
@@ -156,6 +140,20 @@ export class RedisHelper {
       return (await client.exists(key)) === 1;
     } catch (err) {
       logger.warn('⚠️ Redis exists failed:', err);
+
+      return false;
+    }
+  }
+
+  protected async hasHashField(key: string, field: string): Promise<boolean> {
+    const client = this.getClient();
+
+    if (!client) return false;
+
+    try {
+      return (await client.hExists(key, field)) === 1;
+    } catch (err) {
+      logger.warn('⚠️ Redis hExists failed:', err);
 
       return false;
     }
