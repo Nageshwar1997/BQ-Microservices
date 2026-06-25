@@ -1,7 +1,7 @@
 import type { TRole } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { PRODUCT_STATUSES, SORT, TRY_ON_MAP } from '../constants';
+import type { DRAFT_PRODUCT_STEP_MAP, PRODUCT_STATUSES, SORT, TRY_ON_MAP } from '../constants';
 import type { categorySchema, productSchema, variantSchema } from '../schemas';
 
 export type TId = Types.ObjectId;
@@ -47,6 +47,8 @@ export type TCreateProductPayload = Omit<
 export interface IUser extends IId {
   role: TRole;
 }
+
+export type TDraftProductStep = keyof typeof DRAFT_PRODUCT_STEP_MAP;
 
 export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
 
