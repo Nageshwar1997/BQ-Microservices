@@ -36,6 +36,7 @@ export const METHODS_AND_PATHS = {
       dashboard: {
         base: '/dashboard',
         products: { method: METHOD_MAP.GET, path: '/products' },
+        bySlug: { method: METHOD_MAP.GET, path: '/:slug' },
       },
       suggestions: { method: METHOD_MAP.GET, path: '/suggestions' },
       products: { method: METHOD_MAP.GET, path: '/products' },

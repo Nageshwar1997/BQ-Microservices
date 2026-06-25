@@ -6,6 +6,7 @@ import {
 import { Router } from 'express';
 import { METHODS_AND_PATHS } from '../constants';
 import {
+  getDashboardProductBySlugController,
   getDashboardProductsController,
   getDraftProductController,
   getProductBySlugController,
@@ -42,6 +43,11 @@ draftRouter[draft.get.method](draft.get.path, tryCatchResponse(getDraftProductCo
 dashboardRouter[get.dashboard.products.method](
   get.dashboard.products.path,
   tryCatchResponse(getDashboardProductsController),
+);
+
+dashboardRouter[get.dashboard.bySlug.method](
+  get.dashboard.bySlug.path,
+  tryCatchResponse(getDashboardProductBySlugController),
 );
 
 /* ================== PRODUCTS ROUTES ================ */

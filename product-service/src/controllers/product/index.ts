@@ -1,3 +1,4 @@
+export * from './getDashboardProductBySlug.controller';
 export * from './getDashboardProducts.controller';
 export * from './getDraftProduct.controller';
 export * from './getProductBySlug.controller';
