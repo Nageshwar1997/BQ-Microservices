@@ -5,13 +5,23 @@ import { RedisHelper } from './RedisHelper';
 
 export class RedisDashboard extends RedisHelper {
   private readonly ONE_DAY_TTL = 60 * 60 * 24;
+
   private readonly KEY_PREFIX = {
     DRAFT_PRODUCT: 'bq:draft-product',
+    PRODUCT: 'bq:dashboard:product',
   };
+
+  /* ================= KEYS ================= */
 
   private getDraftProductKey(userId: string) {
     return `${this.KEY_PREFIX.DRAFT_PRODUCT}:${userId}`;
   }
+
+  private getProductKey(slug: string) {
+    return `${this.KEY_PREFIX.PRODUCT}:${slug}`;
+  }
+
+  /* ================= DRAFT PRODUCT ================= */
 
   private async getDraftHashData(key: string): Promise<Partial<TDraftProduct> | null> {
     const data = await this.getAllHashFields<string>(key);
@@ -55,5 +65,23 @@ export class RedisDashboard extends RedisHelper {
 
   public async hasDraftProduct(userId: string) {
     return this.exists(this.getDraftProductKey(userId));
+  }
+
+  /* ================= PRODUCT ================= */
+
+  public async getProductBySlug<T>(slug: string) {
+    return this.getData<T>(this.getProductKey(slug));
+  }
+
+  public async setProductBySlug(slug: string, product: unknown) {
+    await this.setData(this.getProductKey(slug), this.ONE_DAY_TTL, product);
+  }
+
+  public async deleteProductBySlug(slug: string) {
+    await this.deleteData(this.getProductKey(slug));
+  }
+
+  public async hasProductBySlug(slug: string) {
+    return this.exists(this.getProductKey(slug));
   }
 }
