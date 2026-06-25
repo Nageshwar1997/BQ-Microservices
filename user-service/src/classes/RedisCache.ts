@@ -41,7 +41,7 @@ class RedisCache {
   private client: RedisClientType;
   private isReady = false;
 
-  private KEY_PREFIX = { USER: 'bq:user', TOKEN: 'bq:token' };
+  private KEY_PREFIX = { USER: 'bq:user-service:users', TOKEN: 'bq:user-service:tokens' };
 
   constructor() {
     this.client = client;
