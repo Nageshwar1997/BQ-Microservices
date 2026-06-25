@@ -1,6 +1,5 @@
 import { model } from 'mongoose';
-import { categorySchema, productSchema, variantSchema } from '../schemas';
+import { categorySchema, productSchema } from '../schemas';
 
 export const Category = model('Category', categorySchema);
 export const Product = model('Product', productSchema);
-export const Variant = model('Variant', variantSchema);

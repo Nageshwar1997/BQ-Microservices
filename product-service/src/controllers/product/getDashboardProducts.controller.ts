@@ -9,7 +9,7 @@ import {
 import { Product } from '../../models';
 import type {
   IGetDashboardProductsQuery,
-  TDashboardProduct,
+  TDashboardListProduct,
   TId,
   TProductStatus,
 } from '../../types';
@@ -38,7 +38,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
 
   const direction = sortOrder === SORT_MAP.asc ? 1 : -1;
 
-  const statusMatch: Partial<Omit<TProductFilter, "status">> = {};
+  const statusMatch: Partial<Omit<TProductFilter, 'status'>> = {};
 
   if (user.role === ROLES_MAP.SELLER) {
     statusMatch.seller = user._id;
@@ -77,7 +77,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
     matchStage.category = getObjId(category);
   }
 
-  let products: TDashboardProduct[];
+  let products: TDashboardListProduct[];
   let totalCount: number;
 
   let counts = getInitialProductCountsByStatus();
@@ -123,7 +123,9 @@ export const getDashboardProductsController = async (req: Request, res: Response
     ];
 
     const [productsResult, statusCounts] = await Promise.all([
-      Product.aggregate<{ products: TDashboardProduct[]; total: { count: number }[] }>(pipeline),
+      Product.aggregate<{ products: TDashboardListProduct[]; total: { count: number }[] }>(
+        pipeline,
+      ),
       statusCountsPromise,
     ]);
 
@@ -138,7 +140,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
         .sort(sortStage)
         .skip((currentPage - 1) * pageSize)
         .limit(pageSize)
-        .lean<TDashboardProduct[]>(),
+        .lean<TDashboardListProduct[]>(),
 
       Product.countDocuments(matchStage),
 

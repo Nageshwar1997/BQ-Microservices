@@ -1,5 +1,5 @@
 import { ROLES } from '@beautinique/be-constants';
-import type { TDashboardProduct, TProduct, TSort, TTryOn, TTryOnKey } from '../types';
+import type { TDashboardListProduct, TProduct, TSort, TTryOn, TTryOnKey } from '../types';
 
 export const METHOD_MAP = {
   GET: 'get',
@@ -85,7 +85,7 @@ export const SORT_MAP = Object.fromEntries(SORT.map((sort) => [sort, sort])) as 
 export type TProductFilter = Pick<TProduct, 'seller' | 'status' | 'category'>;
 
 export const PRODUCT_DASHBOARD_PROJECTION: Record<
-  keyof Omit<TDashboardProduct, 'variants'> | `${keyof Pick<TDashboardProduct, 'variants'>}.stock`,
+  keyof Omit<TDashboardListProduct, 'variants'> | `${keyof Pick<TDashboardListProduct, 'variants'>}.stock`,
   1
 > = {
   title: 1,

@@ -2,7 +2,7 @@ import type { TRole } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
 import type { DRAFT_PRODUCT_STEP_MAP, PRODUCT_STATUSES, SORT, TRY_ON_MAP } from '../constants';
-import type { categorySchema, productSchema, variantSchema } from '../schemas';
+import type { categorySchema, productSchema, variantSchema,  } from '../schemas';
 
 export type TId = Types.ObjectId;
 export type TStrId = string;
@@ -91,7 +91,7 @@ export interface ITextSearchOperator<TPath extends string> {
 
 export type TSort = (typeof SORT)[number];
 
-export type TDashboardProduct = Pick<
+export type TDashboardListProduct = Pick<
   TProduct,
   | 'title'
   | 'sku'
@@ -124,3 +124,8 @@ export interface IGetDashboardProductsQuery {
   >;
   sortOrder?: TSort;
 }
+
+export type DashboardCacheProduct = Omit<TProduct, 'category' | 'variants'> & {
+  category: Pick<ICategory, 'name'>;
+  variants: Omit<TVariant, 'stockThreshold'>[];
+};

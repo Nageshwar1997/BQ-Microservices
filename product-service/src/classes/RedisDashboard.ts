@@ -2,6 +2,7 @@ import { parseData } from '@beautinique/be-utils';
 import { DRAFT_PRODUCT_STEP_MAP } from '../constants';
 import type { TBody, TDraftProduct } from '../controllers/product/saveDraftProduct.controller';
 import { RedisHelper } from './RedisHelper';
+import type { DashboardCacheProduct } from '../types';
 
 export class RedisDashboard extends RedisHelper {
   private readonly ONE_DAY_TTL = 60 * 60 * 24;
@@ -69,11 +70,11 @@ export class RedisDashboard extends RedisHelper {
 
   /* ================= PRODUCT ================= */
 
-  public async getProductBySlug<T>(slug: string) {
-    return this.getData<T>(this.getProductKey(slug));
+  public async getProductBySlug(slug: string) {
+    return this.getData<DashboardCacheProduct>(this.getProductKey(slug));
   }
 
-  public async setProductBySlug(slug: string, product: unknown) {
+  public async setProductBySlug(slug: string, product: DashboardCacheProduct) {
     await this.setData(this.getProductKey(slug), this.ONE_DAY_TTL, product);
   }
 
