@@ -5,7 +5,7 @@ import { getMinimalCategory } from '../utils';
 import { RedisHelper } from './RedisHelper';
 
 export class RedisCategory extends RedisHelper {
-  private readonly KEY = 'bq:categories';
+  private readonly KEY = 'bq:products:categories';
 
   public async getAllCategories(): Promise<TCacheCategory[]> {
     // 1. Try Redis

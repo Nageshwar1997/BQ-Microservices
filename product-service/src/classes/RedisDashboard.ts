@@ -8,8 +8,8 @@ export class RedisDashboard extends RedisHelper {
   private readonly ONE_DAY_TTL = 60 * 60 * 24;
 
   private readonly KEY_PREFIX = {
-    DRAFT_PRODUCT: 'bq:draft-product',
-    PRODUCT: 'bq:dashboard:product',
+    DRAFT_PRODUCT: 'bq:products:draft',
+    PRODUCT: 'bq:products:dashboard:product',
   };
 
   /* ================= KEYS ================= */
