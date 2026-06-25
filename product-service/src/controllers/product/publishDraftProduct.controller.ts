@@ -49,7 +49,7 @@ export const publishDraftProductController = async (
     brand: draft.basicInfo.brand,
     originalPrice: draft.basicInfo.originalPrice,
     sellingPrice: draft.basicInfo.sellingPrice,
-    category: getObjId(draft.basicInfo.l3Category.id),
+    category: getObjId(draft.basicInfo.l3Category._id),
     slug: generateSlug(`${draft.basicInfo.title} ${draft.basicInfo.l3Category.name}`),
 
     // DESCRIPTION AND CONTENT

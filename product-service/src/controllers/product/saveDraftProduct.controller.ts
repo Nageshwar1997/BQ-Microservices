@@ -8,9 +8,9 @@ export interface TProductBasicInfo {
   brand: string;
   originalPrice: number;
   sellingPrice: number;
-  l1Category: { id: string; name: string };
-  l2Category: { id: string; name: string };
-  l3Category: { id: string; name: string };
+  l1Category: { _id: string; name: string };
+  l2Category: { _id: string; name: string };
+  l3Category: { _id: string; name: string };
 }
 
 export interface TProductMediaAndGallery {
