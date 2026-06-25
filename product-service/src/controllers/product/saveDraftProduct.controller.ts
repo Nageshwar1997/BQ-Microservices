@@ -73,7 +73,7 @@ export const saveDraftProductController = async (req: Request, res: Response) =>
   const { _id: userId } = getUser(req);
   const body = req.body as TBody;
 
-  const draft = await redisCache.saveDraftProductStep(userId.toString(), body);
+  const draft = await redisCache.dashboard.saveDraftProductStep(userId.toString(), body);
 
   return res.success(201, 'Product details saved in draft', { draft });
 };

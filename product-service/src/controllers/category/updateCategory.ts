@@ -188,7 +188,7 @@ export const updateCategoryController = async (
   /* ---------------- REDIS ---------------- */
 
   if (updatedCategory) {
-    await redisCache.setCategory(updatedCategory);
+    await redisCache.category.setCategory(updatedCategory);
   }
 
   res.success(200, 'Category updated successfully');

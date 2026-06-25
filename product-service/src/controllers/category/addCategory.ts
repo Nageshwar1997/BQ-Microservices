@@ -86,7 +86,7 @@ export const addCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.setCategory(category);
+  await redisCache.category.setCategory(category);
 
   res.success(201, 'Category created successfully');
 };

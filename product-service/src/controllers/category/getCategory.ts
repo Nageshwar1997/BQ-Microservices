@@ -8,7 +8,7 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
   const parentId = req.query.parent?.toString() as TCategory['parent'] | undefined;
   const level = Number(req.query.level) as TCategory['level'] | undefined;
 
-  const allCategories = await redisCache.getAllCategories();
+  const allCategories = await redisCache.category.getAllCategories();
 
   const categories = allCategories.filter((category) => {
     // If level is not provided → return all categories
@@ -28,7 +28,7 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
 };
 
 export const getCategoriesByHierarchy = async (_req: Request, res: Response) => {
-  const allCategories = await redisCache.getAllCategories();
+  const allCategories = await redisCache.category.getAllCategories();
 
   // Parent wise map
   const parentMap = new Map<string, TCategoryHierarchy[]>();

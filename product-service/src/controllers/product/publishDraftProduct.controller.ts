@@ -133,7 +133,7 @@ export const publishDraftProductController = async (
       });
     }
 
-    await redisCache.deleteDraftProduct(user._id.toString());
+    await redisCache.dashboard.deleteDraftProduct(user._id.toString());
   });
 
   res.success(201, 'Product sent for review', { product: product.toObject() });

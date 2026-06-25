@@ -10,7 +10,7 @@ export const createPendingProductPayload = async (
   next: NextFunction,
 ) => {
   const user = getUser(req);
-  const draft = await redisCache.getDraftProduct(user._id.toString());
+  const draft = await redisCache.dashboard.getDraftProduct(user._id.toString());
 
   if (!draft) {
     throw new AppError({ message: 'Draft expired', code: 'NOT_FOUND' });
