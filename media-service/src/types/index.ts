@@ -1,12 +1,15 @@
 import type { TMediaUpload } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
 
+import type { MEDIA_RESOURCES } from '../constants/index.js';
 import type { mediaSchema } from '../models/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
 }
+
+export type TMediaResource = (typeof MEDIA_RESOURCES)[number];
 
 export interface ITimestamp {
   createdAt: Date;

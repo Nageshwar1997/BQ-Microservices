@@ -1,13 +1,19 @@
 import { AppError } from '@beautinique/be-classes';
-import { type TMediaResource } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
 import type { TMediaUpload } from '@beautinique/be-zod';
+import {
+  IMAGE_FORMATS,
+  IMAGE_MIMES,
+  VIDEO_FORMATS,
+  VIDEO_MIMES,
+} from '@beautinique/shared-constants';
+import type { TImageFormat, TImageMime, TVideoFormat, TVideoMime } from '@beautinique/shared-types';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { createHash, randomUUID } from 'crypto';
 import pLimit from 'p-limit';
 
 import { logger } from '../configs/index.js';
-import { FILE_EXTENSIONS, FILE_MIME } from '../constants/index.js';
+import { MEDIA_RESOURCE_MAP } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 import type {
   IMedia,
@@ -17,6 +23,7 @@ import type {
   ISingleRemover,
   ISingleUploader,
   IUploader,
+  TMediaResource,
 } from '../types/index.js';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
@@ -41,14 +48,14 @@ class Cloudinary {
 
   private getResourceTypeFromPublicId(publicId: string): TMediaResource {
     if (publicId.includes('Beautinique/Images/')) {
-      return 'image';
+      return MEDIA_RESOURCE_MAP.image;
     }
 
     if (publicId.includes('Beautinique/Videos/')) {
-      return 'video';
+      return MEDIA_RESOURCE_MAP.video;
     }
 
-    return 'image';
+    return MEDIA_RESOURCE_MAP.image;
   }
 
   /* ========== GENERATE SAFE FOLDER PATH ========== */
@@ -58,7 +65,7 @@ class Cloudinary {
   }: TMediaUpload & Pick<IMedia, 'resourceType'>) {
     // Replace unsafe characters with underscore
     const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
-    const mediaType = resourceType === 'image' ? 'Images' : 'Videos';
+    const mediaType = resourceType === MEDIA_RESOURCE_MAP.image ? 'Images' : 'Videos';
     // Normalize folder name (trim + replace spaces)
     const subfolder = sanitize((folder || DEFAULT_FOLDER_NAME).trim().replace(/\s+/g, '_'));
 
@@ -108,32 +115,36 @@ class Cloudinary {
   private getResourceType(file: Express.Multer.File): TMediaResource {
     const mimeType = file.mimetype.toLowerCase();
 
-    if (FILE_MIME.image.includes(mimeType as never)) {
-      return 'image';
+    // const imgMimes = IMAGE_MIMES as unknown as string[];
+
+    if (IMAGE_MIMES.includes(mimeType as TImageMime)) {
+      return MEDIA_RESOURCE_MAP.image;
     }
 
-    if (FILE_MIME.video.includes(mimeType as never)) {
-      return 'video';
+    if (VIDEO_MIMES.includes(mimeType as TVideoMime)) {
+      return MEDIA_RESOURCE_MAP.video;
     }
 
     const extension = file.originalname.split('.').pop()?.toLowerCase();
 
     if (extension) {
-      if (FILE_EXTENSIONS.image.includes(extension as never)) {
-        return 'image';
+      if (IMAGE_FORMATS.includes(extension as TImageFormat)) {
+        return MEDIA_RESOURCE_MAP.image;
       }
 
-      if (FILE_EXTENSIONS.video.includes(extension as never)) {
-        return 'video';
+      if (VIDEO_FORMATS.includes(extension as TVideoFormat)) {
+        return MEDIA_RESOURCE_MAP.video;
       }
     }
 
-    return 'image';
+    return MEDIA_RESOURCE_MAP.image;
   }
 
   /* ========== INTERNAL UPLOAD HANDLER (STREAM) ========== */
   private uploader({ file, folder }: IUploader) {
     const resourceType = this.getResourceType(file);
+    const allowed_formats =
+      resourceType === MEDIA_RESOURCE_MAP.image ? IMAGE_FORMATS : VIDEO_FORMATS;
     return new Promise<UploadApiResponse>((resolve, reject) => {
       // Upload using stream (efficient for large files like images or videos)
       const stream = this.cloudinary.uploader.upload_stream(
@@ -141,8 +152,8 @@ class Cloudinary {
           folder: this.generateFolderName({ folder, resourceType }),
           public_id: this.generatePublicId(),
           resource_type: resourceType,
-          allowed_formats: [...FILE_EXTENSIONS[resourceType]],
-          ...(resourceType === 'video' && {
+          allowed_formats: [...allowed_formats],
+          ...(resourceType === MEDIA_RESOURCE_MAP.video && {
             chunk_size: 5000000, // Upload in chunks (~5MB)
           }),
         },
@@ -161,12 +172,12 @@ class Cloudinary {
           let optimizedUrl = result.secure_url;
 
           // IMAGE → f_auto,q_auto
-          if (result.resource_type === 'image') {
+          if (result.resource_type === MEDIA_RESOURCE_MAP.image) {
             optimizedUrl = result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
           }
 
           // VIDEO → use playback_url
-          else if (result.resource_type === 'video') {
+          else if (result.resource_type === MEDIA_RESOURCE_MAP.video) {
             optimizedUrl = (result.playback_url ??
               result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/')) as string;
           }

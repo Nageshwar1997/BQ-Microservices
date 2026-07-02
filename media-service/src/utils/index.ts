@@ -1,10 +1,9 @@
 import { AppError } from '@beautinique/be-classes';
-import type { TMediaResource } from '@beautinique/be-constants';
 import type { UploadApiResponse } from 'cloudinary';
 import type { Request } from 'express';
 import { Types } from 'mongoose';
 
-import type { TId } from '../types/index.js';
+import type { TId, TMediaResource } from '../types/index.js';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
