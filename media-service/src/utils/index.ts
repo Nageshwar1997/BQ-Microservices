@@ -3,7 +3,8 @@ import type { TMediaResource } from '@beautinique/be-constants';
 import type { UploadApiResponse } from 'cloudinary';
 import type { Request } from 'express';
 import { Types } from 'mongoose';
-import type { TId } from '../types';
+
+import type { TId } from '../types/index.js';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -50,7 +51,7 @@ export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: str
       height: data.height,
       format: data.format,
       size: data.bytes,
-      folder: data.asset_folder,
+      folder: (data.asset_folder ?? '') as string,
     },
   };
 };

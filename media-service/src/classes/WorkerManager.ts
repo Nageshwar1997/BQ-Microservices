@@ -1,11 +1,11 @@
+import { MEDIA_STATUS_MAP } from '@beautinique/be-constants';
 import { bullWorker } from '@beautinique/be-jobs';
 
-import { MEDIA_STATUS_MAP } from '@beautinique/be-constants';
-import { logger } from '../configs';
-import { CLEANUP_DELAY } from '../constants';
-import { envs } from '../envs';
-import { Media } from '../models';
-import { cloudinary } from './Cloudinary';
+import { logger } from '../configs/index.js';
+import { CLEANUP_DELAY } from '../constants/index.js';
+import { envs } from '../envs/index.js';
+import { Media } from '../models/index.js';
+import { cloudinary } from './Cloudinary.js';
 
 class WorkerManager {
   /* ---------------- CONNECT ---------------- */
@@ -238,10 +238,6 @@ class WorkerManager {
           /* ---------------- GROUP BY RESOURCE TYPE ---------------- */
 
           const groupedMedia = medias.reduce<Record<string, string[]>>((acc, media) => {
-            if (!acc[media.resourceType]) {
-              acc[media.resourceType] = [];
-            }
-
             acc[media.resourceType].push(media.publicId);
 
             return acc;

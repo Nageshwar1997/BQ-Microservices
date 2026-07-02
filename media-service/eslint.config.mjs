@@ -1,52 +1,77 @@
 import js from '@eslint/js';
 import prettier from 'eslint-config-prettier';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import tseslint from 'typescript-eslint';
 
-export default [
-  // Base JS rules
+export default tseslint.config(
+  /* Global configuration */
+  {
+    ignores: [
+      'node_modules',
+      'dist',
+      'dist-ssr',
+      'coverage',
+      '*.d.ts',
+      '*.min.js',
+      '*.tsbuildinfo',
+    ],
+  },
+
+  /* JavaScript recommended rules */
   js.configs.recommended,
 
-  // TypeScript rules (modern setup)
+  /* TypeScript recommended rules */
   ...tseslint.configs.recommended,
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
 
+  /* Type-aware TypeScript rules */
   {
-    files: ['**/*.ts'],
-    languageOptions: {
-      parser: tseslint.parser,
-      parserOptions: {
-        project: true, // uses tsconfig.json automatically
-      },
-    },
+    files: ['**/*.{ts,mts,cts}'],
+
+    languageOptions: { parserOptions: { projectService: true } },
+
+    extends: [
+      ...tseslint.configs.recommendedTypeChecked,
+      ...tseslint.configs.strictTypeChecked,
+      ...tseslint.configs.stylisticTypeChecked,
+    ],
+
+    plugins: { 'simple-import-sort': simpleImportSort },
 
     rules: {
-      // 🔥 Important rules (production level)
-      '@typescript-eslint/no-unused-vars': [
-        'warn',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
-      ],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      /* Import & Export sorting */
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
+      'sort-imports': 'off',
+
+      /* TypeScript */
       '@typescript-eslint/consistent-type-imports': 'error',
 
-      // Code quality
-      'no-console': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+
+      '@typescript-eslint/no-explicit-any': 'warn',
+
+      /* Async */
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/require-await': 'error',
+
+      /* JavaScript */
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+
       'no-debugger': 'error',
 
-      // Best practices
+      /* Best Practices */
       eqeqeq: ['error', 'always'],
       curly: ['error', 'all'],
-
-      // Imports cleanliness
-      'sort-imports': [
-        'warn',
-        {
-          ignoreDeclarationSort: true,
-        },
-      ],
     },
   },
 
-  // ❌ Disable formatting conflicts (Prettier handles formatting)
+  /* Disable formatting rules handled by Prettier */
   prettier,
-];
+);

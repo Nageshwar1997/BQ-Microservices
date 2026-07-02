@@ -6,9 +6,13 @@ import {
 } from '@beautinique/be-middlewares';
 import { mediaUploadSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../constants';
-import { multipleMediaUploadController, singleMediaUploadController } from '../controllers';
-import { envs } from '../envs';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
+import {
+  multipleMediaUploadController,
+  singleMediaUploadController,
+} from '../controllers/index.js';
+import { envs } from '../envs/index.js';
 
 export const uploadRouter = Router();
 

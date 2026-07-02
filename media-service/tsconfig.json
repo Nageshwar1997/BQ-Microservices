@@ -1,26 +1,44 @@
 {
   "compilerOptions": {
-    "target": "es2025",
-    "module": "node16",
-    "moduleResolution": "node16",
+    /* Language */
+    "target": "ES2025",
 
+    /* Modules */
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+
+    /* Project Structure */
     "rootDir": "./src",
     "outDir": "./dist",
 
+    /* Environment */
     "types": ["node"],
+    "resolveJsonModule": true,
 
+    /* Type Checking */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
 
-    "sourceMap": true,
-    "declaration": true,
+    /* Build */
+    "isolatedModules": true,
 
+    /* Interop */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
+    /* Output */
+    "sourceMap": true,
+
+    /* Consistency */
+    "forceConsistentCasingInFileNames": true,
+
+    /* Performance */
     "skipLibCheck": true
-  }
+  },
+  "include": ["src"]
 }

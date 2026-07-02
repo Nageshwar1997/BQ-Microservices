@@ -1,6 +1,7 @@
-import type { InferSchemaType, Types } from 'mongoose';
-import type { mediaSchema } from '../models';
 import type { TMediaUpload } from '@beautinique/be-zod';
+import type { InferSchemaType, Types } from 'mongoose';
+
+import type { mediaSchema } from '../models/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -15,8 +16,6 @@ export interface ITimestamp {
 type TMedia = InferSchemaType<typeof mediaSchema>;
 
 export interface IMedia extends TMedia, IId {}
-
-
 
 export interface IUploader extends TMediaUpload {
   file: Express.Multer.File;

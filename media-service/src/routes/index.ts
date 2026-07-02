@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../constants';
-import { authenticate } from '../middlewares';
-import { uploadRouter } from './upload.route';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
+import { authenticate } from '../middlewares/index.js';
+import { uploadRouter } from './upload.route.js';
 
 export const router = Router();
 

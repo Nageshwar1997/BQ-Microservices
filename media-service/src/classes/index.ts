@@ -1,2 +1,2 @@
-export * from './Cloudinary';
-export * from './WorkerManager';
+export * from './Cloudinary.js';
+export * from './WorkerManager.js';

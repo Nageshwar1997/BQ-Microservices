@@ -2,10 +2,11 @@ import { bullQueue } from '@beautinique/be-jobs';
 import type { TMediaUpload } from '@beautinique/be-zod';
 import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
-import { cloudinary } from '../classes';
-import { logger } from '../configs';
-import { CLEANUP_DELAY } from '../constants';
-import { generateBaseMediaPayload, getUser } from '../utils';
+
+import { cloudinary } from '../classes/index.js';
+import { logger } from '../configs/index.js';
+import { CLEANUP_DELAY } from '../constants/index.js';
+import { generateBaseMediaPayload, getUser } from '../utils/index.js';
 
 export const singleMediaUploadController = async (req: Request, res: Response) => {
   const { _id: userId } = getUser(req);
@@ -122,7 +123,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
     throw error;
   }
 
-  return res.success(200, 'Files uploaded successfully', {
+  res.success(200, 'Files uploaded successfully', {
     urls: uploadedMedia.map(({ secure_url }) => secure_url),
   });
 };

@@ -1,10 +1,10 @@
 import {
   MEDIA_RESOURCES,
-  MEDIA_STATUSES,
   MEDIA_STATUS_MAP,
+  MEDIA_STATUSES,
   SERVICES,
 } from '@beautinique/be-constants';
-import { Schema, model } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
 export const mediaSchema = new Schema(
   {

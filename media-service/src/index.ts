@@ -1,3 +1,7 @@
+import 'dotenv/config';
+
+import type { Socket } from 'node:net';
+
 import { connectToDB } from '@beautinique/be-configs';
 import { bullQueue } from '@beautinique/be-jobs';
 import {
@@ -8,15 +12,14 @@ import {
   setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
-import 'dotenv/config';
 import express from 'express';
-import type { Socket } from 'node:net';
 import path from 'path';
-import { workerManager } from './classes';
-import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs';
-import { HEADERS_KEYS, METHODS_AND_PATHS } from './constants';
-import { envs } from './envs';
-import { router } from './routes';
+
+import { workerManager } from './classes/index.js';
+import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs/index.js';
+import { HEADERS_KEYS, METHODS_AND_PATHS } from './constants/index.js';
+import { envs } from './envs/index.js';
+import { router } from './routes/index.js';
 
 const { base } = METHODS_AND_PATHS;
 
@@ -50,10 +53,14 @@ app.use(checkDbConnection(isDbConnected));
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/', (_, res) => res.success(200, 'Welcome to the Media Service API'));
+app.get('/', (_, res) => {
+  res.success(200, 'Welcome to the Media Service API');
+});
 
 // Health Route
-app.get('/health', (_, res) => res.success(200, 'Media Service is healthy'));
+app.get('/health', (_, res) => {
+  res.success(200, 'Media Service is healthy');
+});
 
 // Api Routes
 app.use(
@@ -81,7 +88,7 @@ async function start() {
       const httpServer = app.listen(envs.port, () => {
         httpServer.off('error', onError);
 
-        logger.info(`🚀 Server running on port: ${envs.port}`);
+        logger.info(`🚀 Server running on port: ${String(envs.port)}`);
 
         resolve();
       });
@@ -115,11 +122,10 @@ async function start() {
     httpServer.headersTimeout = 66_000;
 
     // 🔥 Start DB + Queue + Workers AFTER server starts
-    await Promise.all([
-      connectToDB(databaseConfigs),
-      bullQueue.connect(envs.redis.job),
-      workerManager.start(),
-    ]);
+    await Promise.all([connectToDB(databaseConfigs)]);
+
+    workerManager.start();
+    bullQueue.connect(envs.redis.job);
 
     logger.info('✅ Media service initialized');
   } catch (err) {
@@ -140,7 +146,7 @@ async function shutdown(signal: string) {
 
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        logger.error(`❌ Service ${index} failed to close:`, result.reason);
+        logger.error(`❌ Service ${String(index)} failed to close:`, result.reason);
       }
     });
 
@@ -161,7 +167,10 @@ async function shutdown(signal: string) {
         server?.close((err) => {
           clearTimeout(forceCloseTimer);
 
-          if (err) return reject(err);
+          if (err) {
+            reject(err);
+            return;
+          }
 
           logger.info('🌐 HTTP server closed');
 
@@ -182,8 +191,8 @@ async function shutdown(signal: string) {
 
 /* ---------------- PROCESS SIGNALS ---------------- */
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
 /* ---------------- BOOTSTRAP ---------------- */
 

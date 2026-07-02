@@ -1,14 +1,14 @@
 import { AppError } from '@beautinique/be-classes';
 import { type TMediaResource } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
+import type { TMediaUpload } from '@beautinique/be-zod';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { createHash, randomUUID } from 'crypto';
 import pLimit from 'p-limit';
-import { logger } from '../configs';
-import { FILE_EXTENSIONS, FILE_MIME } from '../constants';
-import { envs } from '../envs';
 
-import type { TMediaUpload } from '@beautinique/be-zod';
+import { logger } from '../configs/index.js';
+import { FILE_EXTENSIONS, FILE_MIME } from '../constants/index.js';
+import { envs } from '../envs/index.js';
 import type {
   IMedia,
   IMultipleRemover,
@@ -17,7 +17,7 @@ import type {
   ISingleRemover,
   ISingleUploader,
   IUploader,
-} from '../types';
+} from '../types/index.js';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
 const FOLDER_SANITIZE_REGEX = /[&|/\\#?%]/g;
@@ -75,7 +75,7 @@ class Cloudinary {
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
 
-    return `${year}/${month}/${day}/${randomUUID()}`;
+    return `${String(year)}/${month}/${day}/${randomUUID()}`;
   }
 
   /* ========== EXTRACT FAILED IDS FROM RESULTS ========== */
@@ -100,7 +100,7 @@ class Cloudinary {
     await bullQueue.addJob({
       queueName: 'media-queue',
       jobName: 'remove-multiple-media-directly',
-      data: { publicIds: failedIds, ...(retryCount !== undefined && { retryCount }) },
+      data: { publicIds: failedIds, retryCount },
       options: { jobId: `remove-multiple-directly-${batchId}` },
     });
   }
@@ -148,12 +148,13 @@ class Cloudinary {
         },
         (error, result) => {
           if (error || !result) {
-            return reject(
+            reject(
               new AppError({
-                message: error?.message || 'Failed to upload media',
+                message: error?.message ?? 'Failed to upload media',
                 code: 'UNPROCESSABLE_ENTITY',
               }),
             );
+            return;
           }
 
           // Successfully uploaded
@@ -166,9 +167,8 @@ class Cloudinary {
 
           // VIDEO → use playback_url
           else if (result.resource_type === 'video') {
-            optimizedUrl = result.playback_url
-              ? result.playback_url
-              : result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
+            optimizedUrl = (result.playback_url ??
+              result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/')) as string;
           }
 
           resolve({ ...result, secure_url: optimizedUrl });
@@ -181,39 +181,33 @@ class Cloudinary {
   }
 
   /* ========== INTERNAL DELETE HANDLER ========== */
-  private remover({ publicId }: IRemover) {
-    const resource_type = this.getResourceTypeFromPublicId(publicId) ?? 'raw';
-    return new Promise<DeleteApiResponse>((resolve, reject) => {
-      // Delete asset from Cloudinary
-      this.cloudinary.uploader.destroy(
-        publicId,
-        { resource_type, invalidate: true },
-        (error, result) => {
-          if (error || !result) {
-            logger.error('Cloudinary delete failed', error);
+  private async remover({ publicId }: IRemover): Promise<DeleteApiResponse> {
+    const resource_type = this.getResourceTypeFromPublicId(publicId);
 
-            return reject(
-              new AppError({
-                message: error?.message || 'Failed to delete media',
-                code: 'UNPROCESSABLE_ENTITY',
-              }),
-            );
-          }
+    try {
+      const result = (await this.cloudinary.uploader.destroy(publicId, {
+        resource_type,
+        invalidate: true,
+      })) as { result: string } & DeleteApiResponse;
 
-          if (result.result !== 'ok' && result.result !== 'not found') {
-            return reject(
-              new AppError({
-                message: `Unexpected delete result: ${result.result}`,
-                code: 'UNPROCESSABLE_ENTITY',
-              }),
-            );
-          }
+      if (result.result !== 'ok' && result.result !== 'not found') {
+        throw new AppError({
+          message: result.message || `Unexpected delete result: ${result.result}`,
+          code: 'UNPROCESSABLE_ENTITY',
+        });
+      }
 
-          logger.info('Cloudinary delete success', result);
-          resolve(result);
-        },
-      );
-    });
+      logger.info('Cloudinary delete success', result);
+
+      return result;
+    } catch (error) {
+      logger.error('Cloudinary delete failed', error);
+
+      throw new AppError({
+        message: error instanceof Error ? error.message : 'Failed to delete media',
+        code: 'UNPROCESSABLE_ENTITY',
+      });
+    }
   }
 
   /* ========== REMOVE SINGLE WITH RETRY ========== */
