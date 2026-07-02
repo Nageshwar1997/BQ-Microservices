@@ -20,16 +20,18 @@ type TMedia = InferSchemaType<typeof mediaSchema>;
 
 export interface IMedia extends TMedia, IId {}
 
+export type TFile = Express.Multer.File;
+
 export interface IUploader extends TMediaUpload {
-  file: Express.Multer.File;
+  file: TFile;
 }
 
 export interface ISingleUploader extends TMediaUpload {
-  file: Express.Multer.File;
+  file: TFile;
 }
 
 export interface IMultipleUploader extends TMediaUpload {
-  files: Express.Multer.File[];
+  files: TFile[];
 }
 
 export interface IRemover {

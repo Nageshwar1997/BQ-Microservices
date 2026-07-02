@@ -6,6 +6,7 @@ import type { Request, Response } from 'express';
 import { cloudinary } from '../classes/index.js';
 import { logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';
+import type { TFile } from '../types/index.js';
 import { generateBaseMediaPayload, getUser } from '../utils/index.js';
 
 export const singleMediaUploadController = async (req: Request, res: Response) => {
@@ -14,7 +15,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
   const {
     body: { folder },
     file,
-  } = req as { file: Express.Multer.File; body: TMediaUpload };
+  } = req as { file: TFile; body: TMediaUpload };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
@@ -70,7 +71,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
   const {
     body: { folder },
     files,
-  } = req as { files: Express.Multer.File[]; body: TMediaUpload };
+  } = req as { files: TFile[]; body: TMediaUpload };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
