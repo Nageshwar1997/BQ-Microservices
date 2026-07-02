@@ -18,6 +18,7 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
+    "@beautinique/shared-types": "^1.0.0",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.1.0",
@@ -38,6 +39,7 @@
     "@beautinique/be-jobs": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.21",
     "@beautinique/be-zod": "^1.0.23",
+    "@beautinique/shared-constants": "^1.0.3",
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
