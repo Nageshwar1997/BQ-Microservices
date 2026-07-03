@@ -12,12 +12,13 @@ import {
   setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
+import { HEADERS_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
 
 import { workerManager } from './classes/index.js';
 import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs/index.js';
-import { HEADERS_KEYS, METHODS_AND_PATHS } from './constants/index.js';
+import { METHODS_AND_PATHS } from './constants/index.js';
 import { envs } from './envs/index.js';
 import { router } from './routes/index.js';
 
@@ -65,7 +66,7 @@ app.get('/health', (_, res) => {
 // Api Routes
 app.use(
   base,
-  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),
+  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_MAP.serviceSecret }),
   router,
 );
 

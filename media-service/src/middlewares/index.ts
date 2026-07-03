@@ -1,13 +1,11 @@
 import { AppError } from '@beautinique/be-classes';
-import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import { HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { TUserRole } from '@beautinique/shared-types';
 import type { NextFunction, Request, Response } from 'express';
 
-import { HEADERS_KEYS } from '../constants/index.js';
-
 export const authenticate = (req: Request, _res: Response, next: NextFunction) => {
-  const userId = req.get(HEADERS_KEYS.userId) ?? '';
-  const userRole = (req.get(HEADERS_KEYS.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
+  const userId = req.get(HEADERS_MAP.userId) ?? '';
+  const userRole = (req.get(HEADERS_MAP.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
 
   if (!userId) {
     throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
@@ -20,13 +18,13 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction) =
 
 export const authorize =
   (allowedRoles: TUserRole[]) => (req: Request, _res: Response, next: NextFunction) => {
-    const userId = req.get(HEADERS_KEYS.userId) ?? '';
+    const userId = req.get(HEADERS_MAP.userId) ?? '';
 
     if (!userId) {
       throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
     }
 
-    const userRole = (req.get(HEADERS_KEYS.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
+    const userRole = (req.get(HEADERS_MAP.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
 
     if (!allowedRoles.includes(userRole)) {
       throw new AppError({

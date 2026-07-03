@@ -1,5 +1,5 @@
-import { MEDIA_STATUS_MAP } from '@beautinique/be-constants';
 import { bullWorker } from '@beautinique/be-jobs';
+import { MEDIA_STATUS_MAP } from '@beautinique/shared-constants';
 
 import { logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';

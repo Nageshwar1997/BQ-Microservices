@@ -2,8 +2,8 @@ import {
   MEDIA_RESOURCES,
   MEDIA_STATUS_MAP,
   MEDIA_STATUSES,
-  SERVICES,
-} from '@beautinique/be-constants';
+  SERVICE_NAMES,
+} from '@beautinique/shared-constants';
 import { model, Schema } from 'mongoose';
 
 export const mediaSchema = new Schema(
@@ -12,7 +12,7 @@ export const mediaSchema = new Schema(
     url: { type: String, required: true, unique: true },
     resourceType: { type: String, enum: MEDIA_RESOURCES, required: true, index: true },
     userId: { type: Schema.Types.ObjectId, required: true },
-    relatedTo: { service: { type: String, enum: SERVICES }, entity: { type: String } },
+    relatedTo: { service: { type: String, enum: SERVICE_NAMES }, entity: { type: String } },
     expiresAt: { type: Date },
     deletedAt: { type: Date, index: true },
     status: { type: String, enum: MEDIA_STATUSES, default: MEDIA_STATUS_MAP.UNUSED, index: true },
