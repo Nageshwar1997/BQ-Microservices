@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { AuthenticationError, ValidationError } from '@beautinique/backend-classes';
 import type { TMediaResource } from '@beautinique/shared-types';
 import type { UploadApiResponse } from 'cloudinary';
 import type { Request } from 'express';
@@ -19,7 +19,7 @@ export const isNullOrUndefined = (value: unknown): value is null | undefined => 
 
 export const toObjectId = (id: string): TId => {
   if (!Types.ObjectId.isValid(id)) {
-    throw new AppError({ message: 'Invalid object id', code: 'UNPROCESSABLE_ENTITY' });
+    throw new ValidationError('Invalid ObjectId.');
   }
 
   return new Types.ObjectId(id);
@@ -33,7 +33,7 @@ export const getObjId = (id: string | TId): TId => {
 export const getUser = (req: Request) => {
   const user = req.user;
 
-  if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+  if (!user) throw new AuthenticationError('You are not logged in');
 
   return user;
 };

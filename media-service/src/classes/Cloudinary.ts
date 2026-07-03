@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { ExternalServiceError } from '@beautinique/backend-classes';
 import { bullQueue } from '@beautinique/be-jobs';
 import type { TMediaUpload } from '@beautinique/be-zod';
 import {
@@ -165,9 +165,8 @@ class Cloudinary {
         (error, result) => {
           if (error || !result) {
             reject(
-              new AppError({
-                message: error?.message ?? 'Failed to upload media',
-                code: 'UNPROCESSABLE_ENTITY',
+              new ExternalServiceError(error?.message ?? 'Failed to upload media', {
+                cause: error,
               }),
             );
             return;
@@ -207,10 +206,9 @@ class Cloudinary {
       })) as { result: string } & DeleteApiResponse;
 
       if (result.result !== 'ok' && result.result !== 'not found') {
-        throw new AppError({
-          message: result.message || `Unexpected delete result: ${result.result}`,
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new ExternalServiceError(
+          result.message || `Unexpected Cloudinary response: ${result.result}.`,
+        );
       }
 
       logger.info('Cloudinary delete success', result);
@@ -219,10 +217,12 @@ class Cloudinary {
     } catch (error) {
       logger.error('Cloudinary delete failed', error);
 
-      throw new AppError({
-        message: error instanceof Error ? error.message : 'Failed to delete media',
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new ExternalServiceError(
+        error instanceof Error ? error.message : 'Failed to delete media.',
+        {
+          cause: error,
+        },
+      );
     }
   }
 
@@ -308,10 +308,9 @@ class Cloudinary {
       // Retry failed cleanup via queue
       await this.queueFailedRemovals(failedIds);
 
-      throw new AppError({
-        message: 'Some uploads failed and rollback executed',
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new ExternalServiceError(
+        'One or more uploads failed. Successfully uploaded files were rolled back.',
+      );
     }
 
     return successfulUploads;
