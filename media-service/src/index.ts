@@ -30,15 +30,18 @@ import { router } from './routes/index.js';
 
 const { base } = METHODS_AND_PATHS;
 
-/* ---------------- APP SETUP ---------------- */
+/* ---------------- APP ---------------- */
 
 const app = express();
 
 let server: ReturnType<typeof app.listen> | null = null;
+let isShuttingDown = false;
 
-/* ---------------- CONNECTION TRACKING ---------------- */
+/* ---------------- CONNECTIONS ---------------- */
 
 const connections = new Set<Socket>();
+
+/* ---------------- DATABASE EVENTS ---------------- */
 
 mongoEvents
   .on('connecting', () => {
@@ -72,6 +75,8 @@ app.use(requestLogs);
 
 // 4. Custom middlewares
 app.use(successResponse);
+
+// 5. Check DB connection
 app.use(checkDbConnection(connectionState.isConnected));
 
 /* ---------------- ROUTES ---------------- */
@@ -83,13 +88,19 @@ app.get('/', (_, res) => {
 
 // Health Route
 app.get('/health', (_, res) => {
-  res.success(200, 'Media Service is healthy', { database: getConnectionHealth() });
+  res.success(200, 'Media Service is healthy', {
+    database: getConnectionHealth(),
+    connected: connectionState.isConnected(),
+  });
 });
 
 // Api Routes
 app.use(
   base,
-  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_MAP.serviceSecret }),
+  serviceAccess({
+    secret: envs.service_secret,
+    headerName: HEADERS_MAP.serviceSecret,
+  }),
   router,
 );
 
@@ -101,39 +112,47 @@ app.use(errorResponse({ isDev: envs.is_dev }));
 
 /* ---------------- START ---------------- */
 
-async function start() {
+async function start(): Promise<void> {
   try {
-    // 🌐 Start server
+    // Connect MongoDB first
+    await connectDb(databaseConfigs);
+
+    // Start HTTP server
     await new Promise<void>((resolve, reject) => {
-      const onError = (err: Error) => {
-        reject(err);
+      const httpServer = app.listen(envs.port);
+
+      const onError = (error: Error) => {
+        httpServer.off('listening', onListening);
+        reject(error);
       };
 
-      const httpServer = app.listen(envs.port, () => {
+      const onListening = () => {
         httpServer.off('error', onError);
 
         logger.info(`🚀 Server running on port: ${String(envs.port)}`);
 
         resolve();
-      });
-
-      server = httpServer;
+      };
 
       httpServer.once('error', onError);
+      httpServer.once('listening', onListening);
+
+      server = httpServer;
     });
 
-    const httpServer = server;
-
-    if (!httpServer) {
-      throw new Error('HTTP server did not initialize');
+    if (!server) {
+      throw new Error('Failed to initialize HTTP server.');
     }
 
-    httpServer.on('error', (err) => {
-      logger.error('❌ HTTP server error:', err);
+    server.on('error', (error) => {
+      logger.error('❌ HTTP server error:', error);
     });
 
-    // Track active connections
-    httpServer.on('connection', (socket: Socket) => {
+    server.on('close', () => {
+      logger.info('🌐 HTTP server closed');
+    });
+
+    server.on('connection', (socket: Socket) => {
       connections.add(socket);
 
       socket.on('close', () => {
@@ -141,18 +160,16 @@ async function start() {
       });
     });
 
-    // Optional hard timeouts
-    httpServer.keepAliveTimeout = 65_000;
-    httpServer.headersTimeout = 66_000;
+    server.keepAliveTimeout = 65_000;
+    server.headersTimeout = 66_000;
 
-    await connectDb(databaseConfigs);
-
-    workerManager.start();
     bullQueue.connect(envs.redis.job);
 
+    workerManager.start();
+
     logger.info('✅ Media service initialized');
-  } catch (err) {
-    logger.error('❌ Failed to start server:', err);
+  } catch (error) {
+    logger.error('❌ Failed to start media service:', error);
 
     process.exit(1);
   }
@@ -160,26 +177,17 @@ async function start() {
 
 /* ---------------- SHUTDOWN ---------------- */
 
-async function shutdown(signal: string) {
+async function shutdown(signal: NodeJS.Signals): Promise<void> {
+  if (isShuttingDown) {
+    return;
+  }
+
+  isShuttingDown = true;
+
   logger.warn(`🛑 Received ${signal}. Starting graceful shutdown...`);
 
   try {
-    // 🔥 Stop queue + workers first
-    const results = await Promise.allSettled([
-      disconnectDB(),
-      bullQueue.close(),
-      workerManager.stop(),
-    ]);
-
-    results.forEach((result, index) => {
-      if (result.status === 'rejected') {
-        logger.error(`❌ Service ${String(index)} failed to close:`, result.reason);
-      }
-    });
-
-    logger.info('📦 Queue and workers stopped');
-
-    if (server) {
+    if (server?.listening) {
       // Force close hanging sockets after timeout
       const forceCloseTimer = setTimeout(() => {
         logger.warn('⚠️ Force closing hanging connections...');
@@ -189,37 +197,60 @@ async function shutdown(signal: string) {
         }
       }, 10_000);
 
-      // Stop accepting new connections
-      await new Promise<void>((resolve, reject) => {
-        server?.close((err) => {
-          clearTimeout(forceCloseTimer);
+      try {
+        // Stop accepting new connections
+        await new Promise<void>((resolve, reject) => {
+          server?.close((error) => {
+            if (error) {
+              reject(error);
+              return;
+            }
 
-          if (err) {
-            reject(err);
-            return;
-          }
-
-          logger.info('🌐 HTTP server closed');
-
-          resolve();
+            resolve();
+          });
         });
-      });
+      } finally {
+        clearTimeout(forceCloseTimer);
+      }
     }
 
-    logger.info('✅ Shutdown complete');
+    const shutdownResults = await Promise.allSettled([
+      workerManager.stop(),
+      bullQueue.close(),
+      disconnectDB(),
+    ]);
 
-    process.exit(0);
-  } catch (err) {
-    logger.error('❌ Shutdown error:', err);
+    const services = ['Worker Manager', 'Bull Queue', 'MongoDB'];
 
-    process.exit(1);
+    shutdownResults.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        logger.info(`✅ ${services[index]} stopped`);
+      } else {
+        logger.error(`❌ Failed to stop ${services[index]}:`, result.reason);
+      }
+    });
+
+    logger.info('✅ Graceful shutdown completed');
+
+    process.exitCode = 0;
+  } catch (error) {
+    logger.error('❌ Shutdown failed:', error);
+
+    process.exitCode = 1;
+  } finally {
+    process.exit();
   }
 }
 
 /* ---------------- PROCESS SIGNALS ---------------- */
 
-process.on('SIGINT', () => void shutdown('SIGINT'));
-process.on('SIGTERM', () => void shutdown('SIGTERM'));
+process.on('SIGINT', () => {
+  void shutdown('SIGINT');
+});
+
+process.on('SIGTERM', () => {
+  void shutdown('SIGTERM');
+});
 
 /* ---------------- BOOTSTRAP ---------------- */
 
