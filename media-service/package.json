@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@beautinique/backend-classes": "^1.0.0",
+    "@beautinique/backend-mongoose": "^1.0.2",
     "@beautinique/be-configs": "^1.0.5",
     "@beautinique/be-jobs": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.22",

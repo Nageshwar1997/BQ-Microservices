@@ -2,7 +2,13 @@ import 'dotenv/config';
 
 import type { Socket } from 'node:net';
 
-import { connectToDB } from '@beautinique/be-configs';
+import {
+  connectDb,
+  connectionState,
+  disconnectDB,
+  getConnectionHealth,
+  mongoEvents,
+} from '@beautinique/backend-mongoose';
 import { bullQueue } from '@beautinique/be-jobs';
 import {
   checkDbConnection,
@@ -17,7 +23,7 @@ import express from 'express';
 import path from 'path';
 
 import { workerManager } from './classes/index.js';
-import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs/index.js';
+import { databaseConfigs, errorLogs, logger, requestLogs } from './configs/index.js';
 import { METHODS_AND_PATHS } from './constants/index.js';
 import { envs } from './envs/index.js';
 import { router } from './routes/index.js';
@@ -34,6 +40,23 @@ let server: ReturnType<typeof app.listen> | null = null;
 
 const connections = new Set<Socket>();
 
+mongoEvents
+  .on('connecting', () => {
+    logger.info('🔌 Connecting to MongoDB...');
+  })
+  .on('connected', () => {
+    logger.info('✅ MongoDB connected');
+  })
+  .on('disconnecting', () => {
+    logger.warn('⚠️ Disconnecting MongoDB...');
+  })
+  .on('disconnected', () => {
+    logger.warn('⚠️ MongoDB disconnected');
+  })
+  .on('error', (error) => {
+    logger.error('❌ MongoDB error:', error);
+  });
+
 /* ---------------- MIDDLEWARES ---------------- */
 
 // 1. Request ID
@@ -49,7 +72,7 @@ app.use(requestLogs);
 
 // 4. Custom middlewares
 app.use(successResponse);
-app.use(checkDbConnection(isDbConnected));
+app.use(checkDbConnection(connectionState.isConnected));
 
 /* ---------------- ROUTES ---------------- */
 
@@ -60,7 +83,7 @@ app.get('/', (_, res) => {
 
 // Health Route
 app.get('/health', (_, res) => {
-  res.success(200, 'Media Service is healthy');
+  res.success(200, 'Media Service is healthy', { database: getConnectionHealth() });
 });
 
 // Api Routes
@@ -122,8 +145,7 @@ async function start() {
     httpServer.keepAliveTimeout = 65_000;
     httpServer.headersTimeout = 66_000;
 
-    // 🔥 Start DB + Queue + Workers AFTER server starts
-    await Promise.all([connectToDB(databaseConfigs)]);
+    await connectDb(databaseConfigs);
 
     workerManager.start();
     bullQueue.connect(envs.redis.job);
@@ -143,7 +165,11 @@ async function shutdown(signal: string) {
 
   try {
     // 🔥 Stop queue + workers first
-    const results = await Promise.allSettled([bullQueue.close(), workerManager.stop()]);
+    const results = await Promise.allSettled([
+      disconnectDB(),
+      bullQueue.close(),
+      workerManager.stop(),
+    ]);
 
     results.forEach((result, index) => {
       if (result.status === 'rejected') {

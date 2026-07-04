@@ -1,16 +1,12 @@
+import type { MongoConnectOptions } from '@beautinique/backend-mongoose';
 import { winstonLogs } from '@beautinique/be-middlewares';
-import mongoose, { type ConnectOptions, STATES } from 'mongoose';
 
 import { envs } from '../envs/index.js';
 
-export const databaseConfigs = {
+export const databaseConfigs: MongoConnectOptions = {
   uri: envs.mongo_uri,
-  isDev: envs.is_dev,
-  options: { dbName: envs.database_name } as ConnectOptions,
-};
-
-export const isDbConnected = () => {
-  return mongoose.connection.readyState === STATES.connected;
+  enableGlobalCache: envs.is_dev,
+  options: { dbName: envs.database_name },
 };
 
 export const {
