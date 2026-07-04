@@ -89,10 +89,7 @@ app.get('/health', (_, res) => {
  */
 app.use(
   base,
-  serviceAccess({
-    secret: envs.service_secret,
-    headerName: HEADERS_MAP.serviceSecret,
-  }),
+  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_MAP.serviceSecret }),
   router,
 );
 
@@ -104,8 +101,4 @@ app.use(notFoundResponse);
 
 app.use(errorLogs);
 
-app.use(
-  errorResponse({
-    isDev: envs.is_dev,
-  }),
-);
+app.use(errorResponse({ isDev: envs.is_dev }));

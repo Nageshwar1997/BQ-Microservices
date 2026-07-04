@@ -10,6 +10,7 @@ import {
   setShuttingDown,
   stopHttpServer,
 } from './server.js';
+
 interface IShutdownTask {
   readonly name: string;
   readonly task: () => Promise<void>;
