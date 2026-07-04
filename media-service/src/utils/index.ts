@@ -10,8 +10,9 @@ import type { TImageMime, TMediaResource, TVideoMime } from '@beautinique/shared
 import type { UploadApiResponse } from 'cloudinary';
 import type { Request } from 'express';
 import { Types } from 'mongoose';
+import { MulterError } from 'multer';
 
-import type { IMulterCustomError, TId } from '../types/index.js';
+import type { IMulterCustomError, IMulterDefaultError, TId } from '../types/index.js';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -121,6 +122,92 @@ export const getCustomError = ({ files, format, size }: IMulterCustomError) => {
         'PAYLOAD_TOO_LARGE',
       );
     }
+  }
+
+  return errors.build();
+};
+
+export const getMulterDefaultError = ({
+  error,
+  fieldName = '',
+  maxCount,
+  isDev,
+}: IMulterDefaultError) => {
+  const errors = new ErrorBuilder();
+
+  if (!error) return errors.build();
+
+  const getCause = (cause?: unknown) => {
+    return cause && isDev ? ` (cause: ${JSON.stringify(cause)})` : '';
+  };
+
+  if (error instanceof MulterError) {
+    const field = (error.field ?? fieldName) || '';
+
+    switch (error.code) {
+      case 'LIMIT_UNEXPECTED_FILE': {
+        const base = error.field ? `Unexpected file '${field}'.` : `Unexpected file upload.`;
+
+        const msg =
+          fieldName && maxCount
+            ? `${base} Expected '${fieldName}', max ${String(maxCount)} file${maxCount > 1 ? 's' : ''}.`
+            : base;
+        errors.addField(field, `${msg}${getCause(error.cause)}`, 'BAD_REQUEST');
+        break;
+      }
+
+      case 'LIMIT_FILE_COUNT': {
+        errors.addField(
+          field,
+          `Too many files uploaded. Allowed: ${String(maxCount ?? 'limited')}${getCause(error.cause)}`,
+          'BAD_REQUEST',
+        );
+        break;
+      }
+
+      case 'LIMIT_FILE_SIZE': {
+        errors.addField(
+          field,
+          `File too large '${field}'.` + getCause(error.cause),
+          'PAYLOAD_TOO_LARGE',
+        );
+        break;
+      }
+
+      case 'LIMIT_FIELD_COUNT': {
+        errors.addField(
+          field,
+          `Too many fields in request.${getCause(error.cause)}`,
+          'BAD_REQUEST',
+        );
+        break;
+      }
+
+      case 'LIMIT_FIELD_KEY': {
+        errors.addField(field, `Invalid field key.${getCause(error)}`, 'BAD_REQUEST');
+        break;
+      }
+
+      case 'LIMIT_FIELD_VALUE': {
+        errors.addField(field, `Field value too large.${getCause(error)}`, 'BAD_REQUEST');
+        break;
+      }
+
+      case 'LIMIT_PART_COUNT':
+      case 'MISSING_FIELD_NAME': {
+        errors.addField(field, `Malformed multipart request.${getCause(error)}`, 'BAD_REQUEST');
+        break;
+      }
+
+      default:
+        errors.addField(
+          field,
+          `Upload error (${String(error.code)}).${getCause(error)}`,
+          'BAD_REQUEST',
+        );
+    }
+  } else {
+    errors.addGlobal(`Upload failed: ${error.message}.${getCause(error.cause)}`);
   }
 
   return errors.build();
