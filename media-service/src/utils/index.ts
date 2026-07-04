@@ -67,12 +67,12 @@ export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: str
 export const getCustomError = ({ files, format, size }: IMulterCustomError) => {
   const errors = new ErrorBuilder();
 
-  // Allowed size limits
+  // ===== Allowed Size Limits =====
   const imageSizeLimit = size?.IMAGE ?? MAX_IMAGE_SIZE;
   const videoSizeLimit = size?.VIDEO ?? MAX_VIDEO_SIZE;
   const otherSizeLimit = size?.OTHER ?? 2 * MB;
 
-  // Allowed MIME types
+  // ===== Allowed MIME Types =====
   const allowedImageTypes = format?.IMAGE ?? IMAGE_MIMES;
   const allowedVideoTypes = format?.VIDEO ?? VIDEO_MIMES;
   const allowedOtherTypes = format?.OTHER ?? [];
@@ -82,43 +82,41 @@ export const getCustomError = ({ files, format, size }: IMulterCustomError) => {
     .join(', ');
 
   for (const file of files) {
-    const { originalname, fieldname, size, mimetype } = file;
+    const { originalname, fieldname, mimetype, size: fileSize } = file;
 
     const isImage = allowedImageTypes.includes(mimetype as TImageMime);
     const isVideo = allowedVideoTypes.includes(mimetype as TVideoMime);
     const isOther = allowedOtherTypes.includes(mimetype);
 
-    const fileSizeMB = (size / MB).toFixed(2);
-
-    let maxSize = otherSizeLimit;
-    let mediaType = 'File';
-
-    if (isImage) {
-      maxSize = imageSizeLimit;
-      mediaType = 'Image';
-    } else if (isVideo) {
-      maxSize = videoSizeLimit;
-      mediaType = 'Video';
-    }
-
-    // Unsupported type
+    // ===== Unsupported Media Type =====
     if (!isImage && !isVideo && !isOther) {
       errors.addField(
         fieldname,
-        `File '${originalname}' has unsupported media type '${mimetype}'. Allowed: [${allowedTypes}].`,
+        `File '${originalname}' has an unsupported media type '${mimetype}'. Allowed types: ${allowedTypes}.`,
         'UNSUPPORTED_MEDIA_TYPE',
       );
 
       continue;
     }
 
-    // Size validation
-    if (size > maxSize) {
+    let maxAllowedSize = otherSizeLimit;
+    let mediaType = 'File';
+
+    if (isImage) {
+      maxAllowedSize = imageSizeLimit;
+      mediaType = 'Image';
+    } else if (isVideo) {
+      maxAllowedSize = videoSizeLimit;
+      mediaType = 'Video';
+    }
+
+    // ===== File Size Validation =====
+    if (fileSize > maxAllowedSize) {
       errors.addField(
         fieldname,
-        `${mediaType} '${originalname}' exceeds the maximum allowed size (${(maxSize / MB).toFixed(
-          2,
-        )}MB). Received: ${fileSizeMB}MB.`,
+        `${mediaType} '${originalname}' exceeds the maximum allowed size (${(
+          maxAllowedSize / MB
+        ).toFixed(2)} MB). Received: ${(fileSize / MB).toFixed(2)} MB.`,
         'PAYLOAD_TOO_LARGE',
       );
     }
@@ -139,27 +137,32 @@ export const getMulterDefaultError = ({
     return errors.build();
   }
 
-  const getCause = (cause?: unknown) => {
-    return cause && isDev ? ` (cause: ${JSON.stringify(cause)})` : '';
-  };
+  const getCause = (cause?: unknown) =>
+    cause && isDev ? ` (cause: ${JSON.stringify(cause)})` : '';
 
+  // ===== Non-Multer Errors =====
   if (!(error instanceof MulterError)) {
-    errors.addGlobal(`Upload failed: ${error.message}.${getCause(error.cause)}`, 'BAD_REQUEST');
+    if (error instanceof Error) {
+      errors.addGlobal(`Upload failed: ${error.message}.${getCause(error.cause)}`, 'BAD_REQUEST');
+    } else {
+      errors.addGlobal('Upload failed.', 'BAD_REQUEST');
+    }
 
     return errors.build();
   }
 
-  const field = (error.field ?? fieldName) || '';
+  const field = (error.field ?? fieldName) || 'field';
 
   switch (error.code) {
     case 'LIMIT_UNEXPECTED_FILE': {
-      const message = error.field ? `Unexpected file '${field}'.` : 'Unexpected file upload.';
+      const expected =
+        fieldName && maxCount
+          ? ` Expected '${fieldName}' with a maximum of ${String(maxCount)} file${maxCount > 1 ? 's' : ''}.`
+          : '';
 
       errors.addField(
         field,
-        fieldName && maxCount
-          ? `${message} Expected '${fieldName}', maximum ${String(maxCount)} file${maxCount > 1 ? 's' : ''}.${getCause(error.cause)}`
-          : `${message}${getCause(error.cause)}`,
+        `${error.field ? `Unexpected file '${field}'.` : 'Unexpected file upload.'}${expected}${getCause(error.cause)}`,
         'BAD_REQUEST',
       );
 
@@ -169,7 +172,9 @@ export const getMulterDefaultError = ({
     case 'LIMIT_FILE_COUNT':
       errors.addField(
         field,
-        `Too many files uploaded. Maximum allowed: ${String(maxCount ?? 'limited')}.${getCause(error.cause)}`,
+        `Too many files uploaded. Maximum allowed: ${String(maxCount ?? 'limited')}.${getCause(
+          error.cause,
+        )}`,
         'BAD_REQUEST',
       );
       break;
@@ -191,18 +196,33 @@ export const getMulterDefaultError = ({
       break;
 
     case 'LIMIT_FIELD_KEY':
-      errors.addField(field, `Field name is too long.${getCause(error.cause)}`, 'BAD_REQUEST');
+      errors.addField(
+        field,
+        `Form field name exceeds the allowed length.${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
       break;
 
     case 'LIMIT_FIELD_VALUE':
-      errors.addField(field, `Field value is too large.${getCause(error.cause)}`, 'BAD_REQUEST');
+      errors.addField(
+        field,
+        `Form field value exceeds the allowed size.${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
       break;
 
     case 'LIMIT_PART_COUNT':
+      errors.addField(
+        field,
+        `Too many multipart form sections were submitted.${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
+      break;
+
     case 'MISSING_FIELD_NAME':
       errors.addField(
         field,
-        `Malformed multipart/form-data request.${getCause(error.cause)}`,
+        `Multipart request contains a field without a name.${getCause(error.cause)}`,
         'BAD_REQUEST',
       );
       break;
@@ -210,7 +230,7 @@ export const getMulterDefaultError = ({
     default:
       errors.addField(
         field,
-        `Upload failed (${String(error.code)}).${getCause(error.cause)}`,
+        `Upload failed with Multer error '${String(error.code)}'.${getCause(error.cause)}`,
         'BAD_REQUEST',
       );
   }

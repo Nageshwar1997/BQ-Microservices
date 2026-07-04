@@ -1,6 +1,6 @@
 import type { TMediaUpload } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { MulterError, Options } from 'multer';
+import type { Options } from 'multer';
 
 import type { mediaSchema } from '../models/index.js';
 
@@ -66,5 +66,5 @@ export interface IMulterCustomError extends ICommonMulterFileConfigs {
 }
 export interface IMulterDefaultError extends Pick<IMulterValidation, 'fieldName' | 'maxCount'> {
   isDev: boolean;
-  error?: MulterError | Error;
+  error?: unknown;
 }
