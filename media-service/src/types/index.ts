@@ -1,5 +1,6 @@
 import type { TMediaUpload } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
+import type { MulterError, Options } from 'multer';
 
 import type { mediaSchema } from '../models/index.js';
 
@@ -42,4 +43,28 @@ export interface ISingleRemover {
 export interface IMultipleRemover {
   publicIds: string[];
   retryCount?: number;
+}
+
+type TMediaKey = 'IMAGE' | 'VIDEO' | 'OTHER';
+
+interface ICommonMulterFileConfigs {
+  format?: Partial<Record<TMediaKey, string[]>>;
+  size?: Partial<Record<TMediaKey, number>>;
+}
+
+export interface IMulterValidation extends ICommonMulterFileConfigs {
+  type: 'single' | 'array' | 'any' | 'fields' | 'none';
+  fieldName?: string;
+  maxCount?: number;
+  fieldsConfig?: { name: string; maxCount: number }[];
+  limits?: Options['limits'];
+  isDev?: boolean;
+}
+
+export interface IMulterCustomError extends ICommonMulterFileConfigs {
+  files: Express.Multer.File[];
+}
+export interface IMulterDefaultError extends Pick<IMulterValidation, 'fieldName' | 'maxCount'> {
+  isDev: boolean;
+  error?: MulterError | Error;
 }

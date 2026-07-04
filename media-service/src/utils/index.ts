@@ -1,10 +1,17 @@
-import { AuthenticationError, ValidationError } from '@beautinique/backend-classes';
-import type { TMediaResource } from '@beautinique/shared-types';
+import { AuthenticationError, ErrorBuilder, ValidationError } from '@beautinique/backend-classes';
+import {
+  IMAGE_MIMES,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+  MB,
+  VIDEO_MIMES,
+} from '@beautinique/shared-constants';
+import type { TImageMime, TMediaResource, TVideoMime } from '@beautinique/shared-types';
 import type { UploadApiResponse } from 'cloudinary';
 import type { Request } from 'express';
 import { Types } from 'mongoose';
 
-import type { TId } from '../types/index.js';
+import type { IMulterCustomError, TId } from '../types/index.js';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -54,4 +61,67 @@ export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: str
       folder: (data.asset_folder ?? '') as string,
     },
   };
+};
+
+export const getCustomError = ({ files, format, size }: IMulterCustomError) => {
+  const errors = new ErrorBuilder();
+
+  // Allowed size limits
+  const imageSizeLimit = size?.IMAGE ?? MAX_IMAGE_SIZE;
+  const videoSizeLimit = size?.VIDEO ?? MAX_VIDEO_SIZE;
+  const otherSizeLimit = size?.OTHER ?? 2 * MB;
+
+  // Allowed MIME types
+  const allowedImageTypes = format?.IMAGE ?? IMAGE_MIMES;
+  const allowedVideoTypes = format?.VIDEO ?? VIDEO_MIMES;
+  const allowedOtherTypes = format?.OTHER ?? [];
+
+  const allowedTypes = [...allowedImageTypes, ...allowedVideoTypes, ...allowedOtherTypes]
+    .map((type) => type.split('/')[1])
+    .join(', ');
+
+  for (const file of files) {
+    const { originalname, fieldname, size, mimetype } = file;
+
+    const isImage = allowedImageTypes.includes(mimetype as TImageMime);
+    const isVideo = allowedVideoTypes.includes(mimetype as TVideoMime);
+    const isOther = allowedOtherTypes.includes(mimetype);
+
+    const fileSizeMB = (size / MB).toFixed(2);
+
+    let maxSize = otherSizeLimit;
+    let mediaType = 'File';
+
+    if (isImage) {
+      maxSize = imageSizeLimit;
+      mediaType = 'Image';
+    } else if (isVideo) {
+      maxSize = videoSizeLimit;
+      mediaType = 'Video';
+    }
+
+    // Unsupported type
+    if (!isImage && !isVideo && !isOther) {
+      errors.addField(
+        fieldname,
+        `File '${originalname}' has unsupported media type '${mimetype}'. Allowed: [${allowedTypes}].`,
+        'UNSUPPORTED_MEDIA_TYPE',
+      );
+
+      continue;
+    }
+
+    // Size validation
+    if (size > maxSize) {
+      errors.addField(
+        fieldname,
+        `${mediaType} '${originalname}' exceeds the maximum allowed size (${(maxSize / MB).toFixed(
+          2,
+        )}MB). Received: ${fileSizeMB}MB.`,
+        'PAYLOAD_TOO_LARGE',
+      );
+    }
+  }
+
+  return errors.build();
 };
