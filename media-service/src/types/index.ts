@@ -58,13 +58,11 @@ export interface IMulterValidation extends ICommonMulterFileConfigs {
   maxCount?: number;
   fieldsConfig?: { name: string; maxCount: number }[];
   limits?: Options['limits'];
-  isDev?: boolean;
 }
 
-export interface IMulterCustomError extends ICommonMulterFileConfigs {
+export interface ICollectCustomError extends ICommonMulterFileConfigs {
   files: Express.Multer.File[];
 }
-export interface IMulterDefaultError extends Pick<IMulterValidation, 'fieldName' | 'maxCount'> {
-  isDev: boolean;
+export interface ICollectMulterError extends Pick<IMulterValidation, 'fieldName' | 'maxCount'> {
   error?: unknown;
 }
