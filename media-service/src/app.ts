@@ -7,7 +7,7 @@ import {
   setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
-import { HEADERS_MAP } from '@beautinique/shared-constants';
+import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
 
@@ -46,7 +46,7 @@ app.use(express.urlencoded({ extended: true }));
 /**
  * Serves static assets.
  */
-app.use(express.static(path.resolve('public')));
+app.use(express.static(path.resolve('public'), { fallthrough: false, index: false }));
 
 /**
  * Logs every incoming request.
@@ -68,7 +68,7 @@ app.use(checkDbConnection(connectionState.isConnected));
 /* -------------------------------------------------------------------------- */
 
 /**
- * Root endpoint.
+ * Service information endpoint.
  */
 app.get('/', (_, res) => {
   res.success(200, 'Welcome to the Media Service API');
@@ -80,12 +80,12 @@ app.get('/', (_, res) => {
 app.get('/health', (_, res) => {
   res.success(200, 'Media Service is healthy', {
     database: getConnectionHealth(),
-    connected: connectionState.isConnected(),
+    service: SERVICE_NAMES_MAP.media,
   });
 });
 
 /**
- * Protected API routes.
+ * Liveness and database health endpoint.
  */
 app.use(
   base,

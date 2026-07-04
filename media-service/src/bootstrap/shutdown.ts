@@ -3,7 +3,13 @@ import { bullQueue } from '@beautinique/be-jobs';
 
 import { workerManager } from '../classes/index.js';
 import { logger } from '../configs/index.js';
-import { destroyConnections, isServerRunning, setShuttingDown, stopHttpServer } from './server.js';
+import {
+  destroyConnections,
+  isServerRunning,
+  resetStarted,
+  setShuttingDown,
+  stopHttpServer,
+} from './server.js';
 interface IShutdownTask {
   readonly name: string;
   readonly task: () => Promise<void>;
@@ -65,6 +71,8 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
 
     process.exitCode = 1;
   } finally {
+    resetStarted();
+
     process.exit(process.exitCode);
   }
 };
