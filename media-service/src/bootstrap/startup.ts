@@ -39,9 +39,9 @@ export const startup = async (): Promise<void> => {
 
     workerManager.start();
 
-    resetShuttingDown();
-
     logger.info('✅ Media service initialized');
+
+    resetShuttingDown();
   } catch (error: unknown) {
     resetStarted();
 
