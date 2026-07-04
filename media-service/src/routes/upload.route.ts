@@ -1,9 +1,4 @@
-import {
-  checkEmptyRequest,
-  tryCatchResponse,
-  validateMulter,
-  zodValidator,
-} from '@beautinique/be-middlewares';
+import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
 import { mediaUploadSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
 
@@ -12,7 +7,7 @@ import {
   multipleMediaUploadController,
   singleMediaUploadController,
 } from '../controllers/index.js';
-import { envs } from '../envs/index.js';
+import { validateMulter } from '../middlewares/index.js';
 
 export const uploadRouter = Router();
 
@@ -20,7 +15,7 @@ const { multiple, single } = METHODS_AND_PATHS.upload;
 
 uploadRouter[single.method](
   single.path,
-  validateMulter({ type: 'single', fieldName: 'file', isDev: envs.is_dev }),
+  validateMulter({ type: 'single', fieldName: 'file' }),
   checkEmptyRequest({ body: true, file: true }),
   zodValidator(mediaUploadSchema),
   tryCatchResponse(singleMediaUploadController),
@@ -28,7 +23,7 @@ uploadRouter[single.method](
 
 uploadRouter[multiple.method](
   multiple.path,
-  validateMulter({ type: 'array', fieldName: 'files', isDev: envs.is_dev }),
+  validateMulter({ type: 'array', fieldName: 'files' }),
   checkEmptyRequest({ body: true, files: true }),
   zodValidator(mediaUploadSchema),
   tryCatchResponse(multipleMediaUploadController),
