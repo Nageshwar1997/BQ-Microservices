@@ -5,6 +5,13 @@ import { app } from '../app.js';
 import { logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 
+const KEEP_ALIVE_TIMEOUT = 65_000;
+
+const SERVER_TIMEOUTS = {
+  keepAlive: KEEP_ALIVE_TIMEOUT,
+  headers: KEEP_ALIVE_TIMEOUT + 1_000,
+} as const;
+
 /* -------------------------------------------------------------------------- */
 /*                               HTTP Server                                  */
 /* -------------------------------------------------------------------------- */
@@ -18,19 +25,15 @@ let server: Server | null = null;
  */
 const connections = new Set<Socket>();
 
+/**
+ * Tracks the current server lifecycle state.
+ */
+let started = false;
+let shuttingDown = false;
+
 /* -------------------------------------------------------------------------- */
 /*                              Public Helpers                                */
 /* -------------------------------------------------------------------------- */
-
-/**
- * Returns the current HTTP server instance.
- */
-export const getServer = (): Server | null => server;
-
-/**
- * Returns all active socket connections.
- */
-export const getConnections = (): Set<Socket> => connections;
 
 /**
  * Returns whether the HTTP server is currently listening.
@@ -54,6 +57,7 @@ export const startHttpServer = async (): Promise<void> => {
 
     const onListening = () => {
       httpServer.off('error', onError);
+      httpServer.off('listening', onListening);
 
       logger.info(`🚀 Server running on port: ${String(envs.port)}`);
 
@@ -62,6 +66,7 @@ export const startHttpServer = async (): Promise<void> => {
 
     const onError = (error: Error) => {
       httpServer.off('listening', onListening);
+      httpServer.off('error', onError);
 
       reject(error);
     };
@@ -76,8 +81,8 @@ export const startHttpServer = async (): Promise<void> => {
     throw new Error('Failed to initialize HTTP server.');
   }
 
-  server.keepAliveTimeout = 65_000;
-  server.headersTimeout = 66_000;
+  server.keepAliveTimeout = SERVER_TIMEOUTS.keepAlive;
+  server.headersTimeout = SERVER_TIMEOUTS.headers;
 
   server.on('error', (error) => {
     logger.error('❌ HTTP server error:', error);
@@ -101,9 +106,9 @@ export const startHttpServer = async (): Promise<void> => {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Stops accepting new requests.
+ * Stops the HTTP server from accepting new connections.
  *
- * Existing connections are allowed to finish.
+ * Existing requests are allowed to complete before the server is closed.
  */
 export const stopHttpServer = async (): Promise<void> => {
   if (!server?.listening) {
@@ -114,15 +119,15 @@ export const stopHttpServer = async (): Promise<void> => {
     server?.close((error) => {
       if (error) {
         reject(error);
-
         return;
       }
 
       resolve();
     });
   });
-};
 
+  server = null;
+};
 
 /**
  * Destroys all active socket connections.
@@ -131,8 +136,58 @@ export const stopHttpServer = async (): Promise<void> => {
  */
 export const destroyConnections = (): void => {
   for (const socket of connections) {
-    socket.destroy();
+    if (!socket.destroyed) {
+      socket.destroy();
+    }
   }
 
   connections.clear();
+};
+
+/* -------------------------------------------------------------------------- */
+/*                                Started State                               */
+/* -------------------------------------------------------------------------- */
+
+export const setStarted = (): boolean => {
+  if (started) {
+    return false;
+  }
+
+  started = true;
+
+  return true;
+};
+
+export const resetStarted = (): boolean => {
+  if (!started) {
+    return false;
+  }
+
+  started = false;
+
+  return true;
+};
+
+/* -------------------------------------------------------------------------- */
+/*                             Shutting Down State                            */
+/* -------------------------------------------------------------------------- */
+
+export const setShuttingDown = (): boolean => {
+  if (shuttingDown) {
+    return false;
+  }
+
+  shuttingDown = true;
+
+  return true;
+};
+
+export const resetShuttingDown = (): boolean => {
+  if (!shuttingDown) {
+    return false;
+  }
+
+  shuttingDown = false;
+
+  return true;
 };

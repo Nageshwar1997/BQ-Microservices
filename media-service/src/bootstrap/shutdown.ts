@@ -3,16 +3,26 @@ import { bullQueue } from '@beautinique/be-jobs';
 
 import { workerManager } from '../classes/index.js';
 import { logger } from '../configs/index.js';
-import { destroyConnections, isServerRunning, stopHttpServer } from './server.js';
+import { destroyConnections, isServerRunning, setShuttingDown, stopHttpServer } from './server.js';
+interface IShutdownTask {
+  readonly name: string;
+  readonly task: () => Promise<void>;
+}
+
+const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
+  { name: 'Worker Manager', task: workerManager.stop.bind(workerManager) },
+  { name: 'Bull Queue', task: bullQueue.close.bind(bullQueue) },
+  { name: 'MongoDB', task: disconnectDB },
+]);
 
 /* -------------------------------------------------------------------------- */
 /*                             Shutdown Sequence                              */
 /* -------------------------------------------------------------------------- */
 
-let isShuttingDown = false;
-
 /**
  * Gracefully shuts down the application.
+ *
+ * Safe to call multiple times.
  *
  * Shutdown order:
  * 1. Stop accepting HTTP requests.
@@ -23,11 +33,9 @@ let isShuttingDown = false;
  * 6. Exit process.
  */
 export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
-  if (isShuttingDown) {
+  if (!setShuttingDown()) {
     return;
   }
-
-  isShuttingDown = true;
 
   logger.warn(`🛑 Received ${signal}. Starting graceful shutdown...`);
 
@@ -36,19 +44,14 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
       await stopHttpServer();
     }
 
-    const shutdownResults = await Promise.allSettled([
-      workerManager.stop(),
-      bullQueue.close(),
-      disconnectDB(),
-    ]);
+    const results = await Promise.allSettled(shutdownTasks.map(({ task }) => task()));
 
-    const services = ['Worker Manager', 'Bull Queue', 'MongoDB'] as const;
-
-    shutdownResults.forEach((result, index) => {
+    results.forEach((result, index) => {
+      const { name } = shutdownTasks[index];
       if (result.status === 'fulfilled') {
-        logger.info(`✅ ${services[index]} stopped`);
+        logger.info(`✅ ${name} stopped successfully`);
       } else {
-        logger.error(`❌ Failed to stop ${services[index]}:`, result.reason);
+        logger.error(`❌ Failed to stop ${name}:`, result.reason);
       }
     });
 
@@ -62,6 +65,6 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
 
     process.exitCode = 1;
   } finally {
-    process.exit();
+    process.exit(process.exitCode);
   }
 };

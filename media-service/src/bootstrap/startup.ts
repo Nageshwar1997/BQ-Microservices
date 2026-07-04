@@ -5,30 +5,29 @@ import { workerManager } from '../classes/index.js';
 import { databaseConfigs, logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
-import { startHttpServer } from './server.js';
+import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './server.js';
 
 /* -------------------------------------------------------------------------- */
 /*                              Startup Sequence                              */
 /* -------------------------------------------------------------------------- */
 
-let started = false;
-
 /**
  * Starts the complete application.
  *
+ * Safe to call multiple times.
+ *
  * Startup order:
- * 1. Register database event listeners.
+ * 1. Register MongoDB event listeners.
  * 2. Connect MongoDB.
- * 3. Start HTTP server.
+ * 3. Start the HTTP server.
  * 4. Connect BullMQ.
- * 5. Start workers.
+ * 5. Start background workers.
  */
 export const startup = async (): Promise<void> => {
-  if (started) {
+  if (!setStarted()) {
     return;
   }
 
-  started = true;
   try {
     registerDatabaseEvents();
 
@@ -40,9 +39,13 @@ export const startup = async (): Promise<void> => {
 
     workerManager.start();
 
+    resetShuttingDown();
+
     logger.info('✅ Media service initialized');
-  } catch (error) {
-    started = false;
+  } catch (error: unknown) {
+    resetStarted();
+
+    resetShuttingDown();
 
     logger.error('❌ Failed to start media service:', error);
 
