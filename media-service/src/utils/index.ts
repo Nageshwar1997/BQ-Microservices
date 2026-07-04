@@ -135,79 +135,84 @@ export const getMulterDefaultError = ({
 }: IMulterDefaultError) => {
   const errors = new ErrorBuilder();
 
-  if (!error) return errors.build();
+  if (!error) {
+    return errors.build();
+  }
 
   const getCause = (cause?: unknown) => {
     return cause && isDev ? ` (cause: ${JSON.stringify(cause)})` : '';
   };
 
-  if (error instanceof MulterError) {
-    const field = (error.field ?? fieldName) || '';
+  if (!(error instanceof MulterError)) {
+    errors.addGlobal(`Upload failed: ${error.message}.${getCause(error.cause)}`, 'BAD_REQUEST');
 
-    switch (error.code) {
-      case 'LIMIT_UNEXPECTED_FILE': {
-        const base = error.field ? `Unexpected file '${field}'.` : `Unexpected file upload.`;
+    return errors.build();
+  }
 
-        const msg =
-          fieldName && maxCount
-            ? `${base} Expected '${fieldName}', max ${String(maxCount)} file${maxCount > 1 ? 's' : ''}.`
-            : base;
-        errors.addField(field, `${msg}${getCause(error.cause)}`, 'BAD_REQUEST');
-        break;
-      }
+  const field = (error.field ?? fieldName) || '';
 
-      case 'LIMIT_FILE_COUNT': {
-        errors.addField(
-          field,
-          `Too many files uploaded. Allowed: ${String(maxCount ?? 'limited')}${getCause(error.cause)}`,
-          'BAD_REQUEST',
-        );
-        break;
-      }
+  switch (error.code) {
+    case 'LIMIT_UNEXPECTED_FILE': {
+      const message = error.field ? `Unexpected file '${field}'.` : 'Unexpected file upload.';
 
-      case 'LIMIT_FILE_SIZE': {
-        errors.addField(
-          field,
-          `File too large '${field}'.` + getCause(error.cause),
-          'PAYLOAD_TOO_LARGE',
-        );
-        break;
-      }
+      errors.addField(
+        field,
+        fieldName && maxCount
+          ? `${message} Expected '${fieldName}', maximum ${String(maxCount)} file${maxCount > 1 ? 's' : ''}.${getCause(error.cause)}`
+          : `${message}${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
 
-      case 'LIMIT_FIELD_COUNT': {
-        errors.addField(
-          field,
-          `Too many fields in request.${getCause(error.cause)}`,
-          'BAD_REQUEST',
-        );
-        break;
-      }
-
-      case 'LIMIT_FIELD_KEY': {
-        errors.addField(field, `Invalid field key.${getCause(error)}`, 'BAD_REQUEST');
-        break;
-      }
-
-      case 'LIMIT_FIELD_VALUE': {
-        errors.addField(field, `Field value too large.${getCause(error)}`, 'BAD_REQUEST');
-        break;
-      }
-
-      case 'LIMIT_PART_COUNT':
-      case 'MISSING_FIELD_NAME': {
-        errors.addField(field, `Malformed multipart request.${getCause(error)}`, 'BAD_REQUEST');
-        break;
-      }
-
-      default:
-        errors.addField(
-          field,
-          `Upload error (${String(error.code)}).${getCause(error)}`,
-          'BAD_REQUEST',
-        );
+      break;
     }
-  } else {
-    errors.addGlobal(`Upload failed: ${error.message}.${getCause(error.cause)}`);
+
+    case 'LIMIT_FILE_COUNT':
+      errors.addField(
+        field,
+        `Too many files uploaded. Maximum allowed: ${String(maxCount ?? 'limited')}.${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
+      break;
+
+    case 'LIMIT_FILE_SIZE':
+      errors.addField(
+        field,
+        `File '${field}' exceeds the maximum allowed size.${getCause(error.cause)}`,
+        'PAYLOAD_TOO_LARGE',
+      );
+      break;
+
+    case 'LIMIT_FIELD_COUNT':
+      errors.addField(
+        field,
+        `Too many form fields were submitted.${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
+      break;
+
+    case 'LIMIT_FIELD_KEY':
+      errors.addField(field, `Field name is too long.${getCause(error.cause)}`, 'BAD_REQUEST');
+      break;
+
+    case 'LIMIT_FIELD_VALUE':
+      errors.addField(field, `Field value is too large.${getCause(error.cause)}`, 'BAD_REQUEST');
+      break;
+
+    case 'LIMIT_PART_COUNT':
+    case 'MISSING_FIELD_NAME':
+      errors.addField(
+        field,
+        `Malformed multipart/form-data request.${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
+      break;
+
+    default:
+      errors.addField(
+        field,
+        `Upload failed (${String(error.code)}).${getCause(error.cause)}`,
+        'BAD_REQUEST',
+      );
   }
 
   return errors.build();
