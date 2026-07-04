@@ -1,6 +1,6 @@
 import type { TMediaUpload } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { Options } from 'multer';
+import type { Multer, Options } from 'multer';
 
 import type { mediaSchema } from '../models/index.js';
 
@@ -53,7 +53,7 @@ interface ICommonMulterFileConfigs {
 }
 
 export interface IMulterValidation extends ICommonMulterFileConfigs {
-  type: 'single' | 'array' | 'any' | 'fields' | 'none';
+  type: keyof Multer;
   fieldName?: string;
   maxCount?: number;
   fieldsConfig?: { name: string; maxCount: number }[];
