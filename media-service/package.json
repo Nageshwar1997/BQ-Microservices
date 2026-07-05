@@ -18,6 +18,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
+    "@beautinique/backend-types": "^1.0.1",
     "@beautinique/shared-types": "^1.0.4",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
@@ -36,9 +37,9 @@
   "dependencies": {
     "@beautinique/backend-classes": "^1.0.0",
     "@beautinique/backend-mongoose": "^1.0.2",
+    "@beautinique/backend-zod": "^1.0.1",
     "@beautinique/be-jobs": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.22",
-    "@beautinique/be-zod": "^1.0.23",
     "@beautinique/shared-constants": "^1.0.6",
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
