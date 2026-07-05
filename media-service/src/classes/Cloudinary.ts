@@ -1,6 +1,6 @@
 import { ExternalServiceError } from '@beautinique/backend-classes';
+import type { TFolderZodSchema } from '@beautinique/backend-types';
 import { bullQueue } from '@beautinique/be-jobs';
-import type { TMediaUpload } from '@beautinique/be-zod';
 import {
   IMAGE_FORMATS,
   IMAGE_MIMES,
@@ -67,7 +67,7 @@ class Cloudinary {
   private generateFolderName({
     folder,
     resourceType,
-  }: TMediaUpload & Pick<IMedia, 'resourceType'>) {
+  }: TFolderZodSchema & Pick<IMedia, 'resourceType'>) {
     // Replace unsafe characters with underscore
     const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
     const mediaType = resourceType === MEDIA_RESOURCE_MAP.IMAGE ? 'Images' : 'Videos';

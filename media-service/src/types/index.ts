@@ -1,4 +1,4 @@
-import type { TMediaUpload } from '@beautinique/be-zod';
+import type { TFolderZodSchema } from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
 import type { Multer, Options } from 'multer';
 
@@ -20,15 +20,15 @@ export interface IMedia extends TMedia, IId {}
 
 export type TFile = Express.Multer.File;
 
-export interface IUploader extends TMediaUpload {
+export interface IUploader extends TFolderZodSchema {
   file: TFile;
 }
 
-export interface ISingleUploader extends TMediaUpload {
+export interface ISingleUploader extends TFolderZodSchema {
   file: TFile;
 }
 
-export interface IMultipleUploader extends TMediaUpload {
+export interface IMultipleUploader extends TFolderZodSchema {
   files: TFile[];
 }
 

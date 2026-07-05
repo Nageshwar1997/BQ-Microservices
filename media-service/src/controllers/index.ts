@@ -1,5 +1,5 @@
+import type { TFolderZodSchema } from '@beautinique/backend-types';
 import { bullQueue } from '@beautinique/be-jobs';
-import type { TMediaUpload } from '@beautinique/be-zod';
 import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
 
@@ -15,7 +15,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
   const {
     body: { folder },
     file,
-  } = req as { file: TFile; body: TMediaUpload };
+  } = req as { file: TFile; body: TFolderZodSchema };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
@@ -71,7 +71,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
   const {
     body: { folder },
     files,
-  } = req as { files: TFile[]; body: TMediaUpload };
+  } = req as { files: TFile[]; body: TFolderZodSchema };
 
   /* ---------------- CLOUDINARY UPLOAD ---------------- */
 
