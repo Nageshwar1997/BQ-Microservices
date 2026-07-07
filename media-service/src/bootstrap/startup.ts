@@ -47,7 +47,7 @@ export const startup = async (): Promise<void> => {
 
     resetShuttingDown();
 
-    logger.error('❌ Failed to start media service:', error);
+    logger.error(`❌ Failed to start media service: ${String(error)}`);
 
     process.exit(1);
   }

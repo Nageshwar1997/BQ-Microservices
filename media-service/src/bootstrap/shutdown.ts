@@ -58,7 +58,7 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
       if (result.status === 'fulfilled') {
         logger.info(`✅ ${name} stopped successfully`);
       } else {
-        logger.error(`❌ Failed to stop ${name}:`, result.reason);
+        logger.error(`❌ Failed to stop ${name}: ${String(result.reason)}`);
       }
     });
 
@@ -67,8 +67,8 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     logger.info('✅ Graceful shutdown completed');
 
     process.exitCode = 0;
-  } catch (error: unknown) {
-    logger.error('❌ Shutdown failed:', error);
+  } catch (error) {
+    logger.error(`❌ Shutdown failed: ${String(error)}`);
 
     process.exitCode = 1;
   } finally {

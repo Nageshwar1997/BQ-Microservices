@@ -1,18 +1,18 @@
+import { createHttpLogger } from '@beautinique/backend-logger';
 import { connectionState, getConnectionHealth } from '@beautinique/backend-mongoose';
 import {
   checkDbConnection,
   errorResponse,
   notFoundResponse,
   serviceAccess,
-  setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
 import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
 
-import { errorLogs, requestLogs } from './configs/index.js';
-import { METHODS_AND_PATHS } from './constants/index.js';
+import { logger } from './configs/index.js';
+import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
 import { envs } from './envs/index.js';
 import { router } from './routes/index.js';
 
@@ -31,7 +31,7 @@ export const app = express();
 /**
  * Adds a unique request id to every incoming request.
  */
-app.use(setRequestId);
+// app.use(setRequestId);
 
 /**
  * Parses incoming JSON payloads.
@@ -51,7 +51,7 @@ app.use(express.static(path.resolve('public'), { fallthrough: false, index: fals
 /**
  * Logs every incoming request.
  */
-app.use(requestLogs);
+app.use(createHttpLogger({ ...LOGGER_BASE_OPTIONS, logger }));
 
 /**
  * Adds success response helpers.
@@ -98,7 +98,5 @@ app.use(
 /* -------------------------------------------------------------------------- */
 
 app.use(notFoundResponse);
-
-app.use(errorLogs);
 
 app.use(errorResponse({ isDev: envs.is_dev }));

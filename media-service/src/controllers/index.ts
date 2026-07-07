@@ -56,7 +56,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
     try {
       await cloudinary.removeSingle({ publicId: payload.publicId });
     } catch (cleanupError) {
-      logger.error('Failed to rollback uploaded single media', cleanupError);
+      logger.error(`Failed to rollback uploaded single media ${JSON.stringify(cleanupError)}`);
     }
 
     throw error;
@@ -118,7 +118,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
     try {
       await cloudinary.removeMultiple({ publicIds });
     } catch (cleanupError) {
-      logger.error('Failed to rollback uploaded multiple media', cleanupError);
+      logger.error(`Failed to rollback uploaded multiple media ${JSON.stringify(cleanupError)}`);
     }
 
     throw error;

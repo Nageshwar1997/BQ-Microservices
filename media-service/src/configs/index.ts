@@ -1,6 +1,7 @@
+import { createLogger } from '@beautinique/backend-logger';
 import type { MongoConnectOptions } from '@beautinique/backend-mongoose';
-import { winstonLogs } from '@beautinique/be-middlewares';
 
+import { LOGGER_BASE_OPTIONS } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 
 export const databaseConfigs: MongoConnectOptions = {
@@ -9,12 +10,7 @@ export const databaseConfigs: MongoConnectOptions = {
   options: { dbName: envs.database_name },
 };
 
-export const {
-  error: errorLogs,
-  logger,
-  request: requestLogs,
-} = winstonLogs({
-  serviceName: envs.service_name,
-  logDir: 'logs',
-  level: envs.is_dev ? 'debug' : 'info',
+export const logger = createLogger({
+  ...LOGGER_BASE_OPTIONS,
+  service: envs.service_name,
 });

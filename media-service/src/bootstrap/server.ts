@@ -85,7 +85,7 @@ export const startHttpServer = async (): Promise<void> => {
   server.headersTimeout = SERVER_TIMEOUTS.headers;
 
   server.on('error', (error) => {
-    logger.error('❌ HTTP server error:', error);
+    logger.error(`❌ HTTP server error: ${error}`);
   });
 
   server.on('close', () => {
