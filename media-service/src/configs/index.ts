@@ -13,4 +13,5 @@ export const databaseConfigs: MongoConnectOptions = {
 export const logger = createLogger({
   ...LOGGER_BASE_OPTIONS,
   service: envs.service_name,
+  logsDir: 'logs',
 });

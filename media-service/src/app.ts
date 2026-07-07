@@ -46,7 +46,7 @@ app.use(express.urlencoded({ extended: true }));
 /**
  * Serves static assets.
  */
-app.use(express.static(path.resolve('public'), { fallthrough: false, index: false }));
+app.use(express.static(path.resolve('public'), { index: false }));
 
 /**
  * Logs every incoming request.
