@@ -37,7 +37,7 @@
   "dependencies": {
     "@beautinique/backend-classes": "^1.0.0",
     "@beautinique/backend-logger": "^1.0.2",
-    "@beautinique/backend-mongoose": "^1.0.3",
+    "@beautinique/backend-mongoose": "^1.0.4",
     "@beautinique/backend-multer": "^1.0.2",
     "@beautinique/backend-request": "^1.0.0",
     "@beautinique/backend-zod": "^1.0.1",
