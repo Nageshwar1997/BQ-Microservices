@@ -1,7 +1,6 @@
 import { createHttpLogger } from '@beautinique/backend-logger';
-import { connectionState, getConnectionHealth } from '@beautinique/backend-mongoose';
+import { checkDbConnection, getConnectionHealth } from '@beautinique/backend-mongoose';
 import {
-  checkDbConnection,
   errorResponse,
   notFoundResponse,
   serviceAccess,
@@ -27,11 +26,6 @@ export const app = express();
 /* -------------------------------------------------------------------------- */
 /*                                Middlewares                                 */
 /* -------------------------------------------------------------------------- */
-
-/**
- * Adds a unique request id to every incoming request.
- */
-// app.use(setRequestId);
 
 /**
  * Parses incoming JSON payloads.
@@ -61,7 +55,7 @@ app.use(successResponse);
 /**
  * Rejects requests while MongoDB is unavailable.
  */
-app.use(checkDbConnection(connectionState.isConnected));
+app.use(checkDbConnection({ message: 'Database is unavailable' }));
 
 /* -------------------------------------------------------------------------- */
 /*                                   Routes                                   */
