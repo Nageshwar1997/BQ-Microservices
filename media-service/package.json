@@ -38,6 +38,7 @@
     "@beautinique/backend-classes": "^1.0.0",
     "@beautinique/backend-logger": "^1.0.2",
     "@beautinique/backend-mongoose": "^1.0.2",
+    "@beautinique/backend-multer": "^1.0.1",
     "@beautinique/backend-zod": "^1.0.1",
     "@beautinique/be-jobs": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.22",
@@ -45,8 +46,7 @@
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongoose": "^9.7.3",
-    "multer": "^2.2.0"
+    "mongoose": "^9.7.3"
   },
   "repository": {
     "type": "git",

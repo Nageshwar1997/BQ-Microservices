@@ -1,6 +1,5 @@
 import type { TFolderZodSchema } from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { Multer, Options } from 'multer';
 
 import type { mediaSchema } from '../models/index.js';
 
@@ -43,26 +42,4 @@ export interface ISingleRemover {
 export interface IMultipleRemover {
   publicIds: string[];
   retryCount?: number;
-}
-
-type TMediaKey = 'IMAGE' | 'VIDEO' | 'OTHER';
-
-interface ICommonMulterFileConfigs {
-  format?: Partial<Record<TMediaKey, string[]>>;
-  size?: Partial<Record<TMediaKey, number>>;
-}
-
-export interface IMulterValidation extends ICommonMulterFileConfigs {
-  type: keyof Multer;
-  fieldName?: string;
-  maxCount?: number;
-  fieldsConfig?: { name: string; maxCount: number }[];
-  limits?: Options['limits'];
-}
-
-export interface ICollectCustomError extends ICommonMulterFileConfigs {
-  files: Express.Multer.File[];
-}
-export interface ICollectMulterError extends Pick<IMulterValidation, 'fieldName' | 'maxCount'> {
-  error?: unknown;
 }

@@ -29,6 +29,7 @@ import type {
   ISingleRemover,
   ISingleUploader,
   IUploader,
+  TFile,
 } from '../types/index.js';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
@@ -117,10 +118,8 @@ class Cloudinary {
     });
   }
 
-  private getResourceType(file: Express.Multer.File): TMediaResource {
+  private getResourceType(file: TFile): TMediaResource {
     const mimeType = file.mimetype.toLowerCase();
-
-    // const imgMimes = IMAGE_MIMES as unknown as string[];
 
     if (IMAGE_MIMES.includes(mimeType as TImageMime)) {
       return MEDIA_RESOURCE_MAP.IMAGE;

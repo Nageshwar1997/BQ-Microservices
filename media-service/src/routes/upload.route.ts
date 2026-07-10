@@ -1,3 +1,4 @@
+import { validateMulter } from '@beautinique/backend-multer';
 import { folderZodSchema } from '@beautinique/backend-zod';
 import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
 import { Router } from 'express';
@@ -7,7 +8,6 @@ import {
   multipleMediaUploadController,
   singleMediaUploadController,
 } from '../controllers/index.js';
-import { validateMulter } from '../middlewares/index.js';
 export const uploadRouter = Router();
 
 const { multiple, single } = METHODS_AND_PATHS.upload;
