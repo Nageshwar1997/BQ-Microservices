@@ -1,8 +1,6 @@
 import { disconnectDB } from '@beautinique/backend-mongoose';
-import { bullQueue } from '@beautinique/be-jobs';
 
-import { workerManager } from '../classes/index.js';
-import { logger } from '../configs/index.js';
+import { jobProducer, logger, workerManager } from '../configs/index.js';
 import {
   destroyConnections,
   isServerRunning,
@@ -18,7 +16,7 @@ interface IShutdownTask {
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
   { name: 'Worker Manager', task: workerManager.stop.bind(workerManager) },
-  { name: 'Bull Queue', task: bullQueue.close.bind(bullQueue) },
+  { name: 'Bull Queue', task: jobProducer.close.bind(jobProducer) },
   { name: 'MongoDB', task: disconnectDB },
 ]);
 

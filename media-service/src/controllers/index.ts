@@ -1,10 +1,9 @@
 import type { TFolderZodSchema } from '@beautinique/backend-types';
-import { bullQueue } from '@beautinique/be-jobs';
 import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
 
 import { cloudinary } from '../classes/index.js';
-import { logger } from '../configs/index.js';
+import { jobProducer, logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';
 import type { TFile } from '../types/index.js';
 import { generateBaseMediaPayload, getUser } from '../utils/index.js';
@@ -26,30 +25,25 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
   try {
     /* ---------------- CREATE UNUSED MEDIA ---------------- */
 
-    await bullQueue.addJob({
-      queueName: 'media-queue',
-      jobName: 'create-single-unused-media',
-      data: payload,
-      options: {
-        jobId: `create-single-unused-${payload.publicId}`,
-        attempts: 5,
-        backoff: { type: 'exponential', delay: 5000 },
-      },
+    await jobProducer.addJob('media-queue', 'create-single-unused-media', payload, {
+      jobId: `create-single-unused-${payload.publicId}`,
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 5000 },
     });
 
     /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
 
-    await bullQueue.addJob({
-      queueName: 'media-queue',
-      jobName: 'delete-single-media',
-      data: { publicId: payload.publicId },
-      options: {
+    await jobProducer.addJob(
+      'media-queue',
+      'delete-single-media',
+      { publicId: payload.publicId },
+      {
         delay: CLEANUP_DELAY,
         jobId: `delete-single-${payload.publicId}`,
         attempts: 5,
         backoff: { type: 'exponential', delay: 5000 },
       },
-    });
+    );
   } catch (error) {
     /* ---------------- ROLLBACK CLOUDINARY ---------------- */
 
@@ -88,30 +82,25 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
   try {
     /* ---------------- CREATE UNUSED MEDIA ---------------- */
 
-    await bullQueue.addJob({
-      queueName: 'media-queue',
-      jobName: 'create-multiple-unused-media',
-      data: payload,
-      options: {
-        jobId: `create-multiple-unused-${batchId}`,
-        attempts: 5,
-        backoff: { type: 'exponential', delay: 5000 },
-      },
+    await jobProducer.addJob('media-queue', 'create-multiple-unused-media', payload, {
+      jobId: `create-multiple-unused-${batchId}`,
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 5000 },
     });
 
     /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
 
-    await bullQueue.addJob({
-      queueName: 'media-queue',
-      jobName: 'delete-multiple-media',
-      data: { publicIds },
-      options: {
+    await jobProducer.addJob(
+      'media-queue',
+      'delete-multiple-media',
+      { publicIds },
+      {
         delay: CLEANUP_DELAY,
         jobId: `delete-multiple-${batchId}`,
         attempts: 5,
         backoff: { type: 'exponential', delay: 5000 },
       },
-    });
+    );
   } catch (error) {
     /* ---------------- ROLLBACK CLOUDINARY ---------------- */
 

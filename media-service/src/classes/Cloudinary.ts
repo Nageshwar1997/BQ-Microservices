@@ -1,6 +1,5 @@
 import { ExternalServiceError } from '@beautinique/backend-classes';
 import type { TFolderZodSchema } from '@beautinique/backend-types';
-import { bullQueue } from '@beautinique/be-jobs';
 import {
   IMAGE_FORMATS,
   IMAGE_MIMES,
@@ -19,7 +18,7 @@ import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { createHash, randomUUID } from 'crypto';
 import pLimit from 'p-limit';
 
-import { logger } from '../configs/index.js';
+import { jobProducer, logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import type {
   IMedia,
@@ -110,12 +109,12 @@ class Cloudinary {
     const batchId = createHash('md5').update(failedIds.sort().join('-')).digest('hex').slice(0, 12);
 
     // Push failed deletions into background job queue+
-    await bullQueue.addJob({
-      queueName: 'media-queue',
-      jobName: 'remove-multiple-media-directly',
-      data: { publicIds: failedIds, retryCount },
-      options: { jobId: `remove-multiple-directly-${batchId}` },
-    });
+    await jobProducer.addJob(
+      'media-queue',
+      'remove-multiple-media-directly',
+      { publicIds: failedIds, retryCount },
+      { jobId: `remove-multiple-directly-${batchId}` },
+    );
   }
 
   private getResourceType(file: TFile): TMediaResource {

@@ -35,6 +35,7 @@
     "typescript-eslint": "^8.62.1"
   },
   "dependencies": {
+    "@beautinique/backend-bullmq": "^1.0.0",
     "@beautinique/backend-classes": "^1.0.0",
     "@beautinique/backend-logger": "^1.0.2",
     "@beautinique/backend-mongoose": "^1.0.4",
@@ -42,7 +43,6 @@
     "@beautinique/backend-request": "^1.0.0",
     "@beautinique/backend-response": "^1.0.1",
     "@beautinique/backend-zod": "^1.0.4",
-    "@beautinique/be-jobs": "^1.0.6",
     "@beautinique/shared-constants": "^1.0.6",
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",

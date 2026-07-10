@@ -1,6 +1,8 @@
+import { JobProducer } from '@beautinique/backend-bullmq';
 import { createLogger } from '@beautinique/backend-logger';
 import type { MongoConnectOptions } from '@beautinique/backend-mongoose';
 
+import { WorkerManager } from '../classes/WorkerManager.js';
 import { LOGGER_BASE_OPTIONS } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 
@@ -15,3 +17,7 @@ export const logger = createLogger({
   service: envs.service_name,
   logsDir: 'logs',
 });
+
+export const jobProducer = new JobProducer({ connection: envs.redis.job, logger });
+
+export const workerManager = new WorkerManager();
