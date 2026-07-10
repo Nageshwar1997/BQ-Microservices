@@ -1,8 +1,7 @@
 import { validateMulter } from '@beautinique/backend-multer';
 import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
-import { folderZodSchema } from '@beautinique/backend-zod';
-import { zodValidator } from '@beautinique/be-middlewares';
+import { folderZodSchema, validateZod } from '@beautinique/backend-zod';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
@@ -18,7 +17,7 @@ uploadRouter[single.method](
   single.path,
   validateMulter({ type: 'single', fieldName: 'file' }),
   checkEmptyRequest({ body: true, file: true }),
-  zodValidator(folderZodSchema),
+  validateZod({ body: folderZodSchema }),
   tryCatchResponse(singleMediaUploadController),
 );
 
@@ -26,6 +25,6 @@ uploadRouter[multiple.method](
   multiple.path,
   validateMulter({ type: 'array', fieldName: 'files' }),
   checkEmptyRequest({ body: true, files: true }),
-  zodValidator(folderZodSchema),
+  validateZod({ body: folderZodSchema }),
   tryCatchResponse(multipleMediaUploadController),
 );
