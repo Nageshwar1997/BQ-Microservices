@@ -16,7 +16,7 @@ interface IShutdownTask {
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
   { name: 'Worker Manager', task: workerManager.stop.bind(workerManager) },
-  { name: 'Bull Queue', task: jobProducer.close.bind(jobProducer) },
+  { name: 'Job Producer', task: jobProducer.close.bind(jobProducer) },
   { name: 'MongoDB', task: disconnectDB },
 ]);
 
