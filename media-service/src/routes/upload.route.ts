@@ -1,7 +1,8 @@
 import { validateMulter } from '@beautinique/backend-multer';
 import { checkEmptyRequest } from '@beautinique/backend-request';
+import { tryCatchResponse } from '@beautinique/backend-response';
 import { folderZodSchema } from '@beautinique/backend-zod';
-import { tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
+import { zodValidator } from '@beautinique/be-middlewares';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';

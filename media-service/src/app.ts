@@ -1,7 +1,7 @@
 import { createHttpLogger } from '@beautinique/backend-logger';
 import { checkDbConnection, getConnectionHealth } from '@beautinique/backend-mongoose';
 import { checkServiceAccess } from '@beautinique/backend-request';
-import { errorResponse, notFoundResponse, successResponse } from '@beautinique/be-middlewares';
+import { errorResponse, notFoundResponse, successResponse } from '@beautinique/backend-response';
 import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
@@ -46,7 +46,7 @@ app.use(createHttpLogger({ ...LOGGER_BASE_OPTIONS, logger }));
 /**
  * Adds success response helpers.
  */
-app.use(successResponse);
+app.use(successResponse({ defaultMessage: 'Success.' }));
 
 /**
  * Rejects requests while MongoDB is unavailable.
@@ -87,6 +87,6 @@ app.use(
 /*                              Error Handlers                                */
 /* -------------------------------------------------------------------------- */
 
-app.use(notFoundResponse);
+app.use(notFoundResponse({ serveHtml: true }));
 
-app.use(errorResponse({ isDev: envs.is_dev }));
+app.use(errorResponse({ includeStack: envs.is_dev }));

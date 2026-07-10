@@ -40,6 +40,7 @@
     "@beautinique/backend-mongoose": "^1.0.4",
     "@beautinique/backend-multer": "^1.0.2",
     "@beautinique/backend-request": "^1.0.0",
+    "@beautinique/backend-response": "^1.0.1",
     "@beautinique/backend-zod": "^1.0.1",
     "@beautinique/be-jobs": "^1.0.6",
     "@beautinique/be-middlewares": "^1.0.22",
