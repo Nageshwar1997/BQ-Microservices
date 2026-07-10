@@ -1,11 +1,7 @@
 import { createHttpLogger } from '@beautinique/backend-logger';
 import { checkDbConnection, getConnectionHealth } from '@beautinique/backend-mongoose';
-import {
-  errorResponse,
-  notFoundResponse,
-  serviceAccess,
-  successResponse,
-} from '@beautinique/be-middlewares';
+import { checkServiceAccess } from '@beautinique/backend-request';
+import { errorResponse, notFoundResponse, successResponse } from '@beautinique/be-middlewares';
 import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
@@ -83,7 +79,7 @@ app.get('/health', (_, res) => {
  */
 app.use(
   base,
-  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_MAP.serviceSecret }),
+  checkServiceAccess({ secret: envs.service_secret, headerName: HEADERS_MAP.serviceSecret }),
   router,
 );
 
