@@ -245,7 +245,7 @@ existing shutdown orchestration of its own (e.g. a standalone worker script).
   silently dropped every custom message *and* the entire `data` payload -
   including the uploaded file's `url`/`urls` in the upload responses.
   Removed the bad local type and switched every call site to
-  `res.success?.({ statusCode, message, data })`.
+  `res.success({ statusCode, message, data })`.
 - `SERVICE_NAMES_MAP.media` doesn't exist (the map's keys are the full
   service names, e.g. `'media-service'`) - it silently evaluated to
   `undefined`, so `/health`'s response was missing its `service` field.

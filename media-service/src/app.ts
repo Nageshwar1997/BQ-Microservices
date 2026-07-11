@@ -56,14 +56,14 @@ app.use(successResponse({ defaultMessage: 'Success.' }));
  * Service information endpoint.
  */
 app.get('/', (_, res) => {
-  res.success?.({ message: 'Welcome to the Media Service API' });
+  res.success({ message: 'Welcome to the Media Service API' });
 });
 
 /**
  * Health endpoint.
  */
 app.get('/health', (_, res) => {
-  res.success?.({
+  res.success({
     message: 'Media Service is healthy',
     data: { database: getConnectionHealth(), service: SERVICE_NAMES_MAP['media-service'] },
   });
