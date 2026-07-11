@@ -22,39 +22,37 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
 
   const payload = generateBaseMediaPayload({ ...uploadedMedia, userId });
 
-  try {
-    /* ---------------- CREATE UNUSED MEDIA ---------------- */
+  /* ---------------- ROLLBACK CLOUDINARY (if anything below fails) ---------------- */
 
-    await jobProducer.addJob('media-queue', 'create-single-unused-media', payload, {
-      jobId: `create-single-unused-${payload.publicId}`,
-      attempts: 5,
-      backoff: { type: 'exponential', delay: 5000 },
-    });
-
-    /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
-
-    await jobProducer.addJob(
-      'media-queue',
-      'delete-single-media',
-      { publicId: payload.publicId },
-      {
-        delay: CLEANUP_DELAY,
-        jobId: `delete-single-${payload.publicId}`,
-        attempts: 5,
-        backoff: { type: 'exponential', delay: 5000 },
-      },
-    );
-  } catch (error) {
-    /* ---------------- ROLLBACK CLOUDINARY ---------------- */
-
+  res.locals.afterRollback?.push(async () => {
     try {
       await cloudinary.removeSingle({ publicId: payload.publicId });
     } catch (cleanupError) {
       logger.error(`Failed to rollback uploaded single media ${JSON.stringify(cleanupError)}`);
     }
+  });
 
-    throw error;
-  }
+  /* ---------------- CREATE UNUSED MEDIA ---------------- */
+
+  await jobProducer.addJob('media-queue', 'create-single-unused-media', payload, {
+    jobId: `create-single-unused-${payload.publicId}`,
+    attempts: 5,
+    backoff: { type: 'exponential', delay: 5000 },
+  });
+
+  /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
+
+  await jobProducer.addJob(
+    'media-queue',
+    'delete-single-media',
+    { publicId: payload.publicId },
+    {
+      delay: CLEANUP_DELAY,
+      jobId: `delete-single-${payload.publicId}`,
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 5000 },
+    },
+  );
 
   res.success?.({
     statusCode: 201,
@@ -83,39 +81,37 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
 
   const batchId = createHash('md5').update(publicIds.sort().join('-')).digest('hex').slice(0, 12);
 
-  try {
-    /* ---------------- CREATE UNUSED MEDIA ---------------- */
+  /* ---------------- ROLLBACK CLOUDINARY (if anything below fails) ---------------- */
 
-    await jobProducer.addJob('media-queue', 'create-multiple-unused-media', payload, {
-      jobId: `create-multiple-unused-${batchId}`,
-      attempts: 5,
-      backoff: { type: 'exponential', delay: 5000 },
-    });
-
-    /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
-
-    await jobProducer.addJob(
-      'media-queue',
-      'delete-multiple-media',
-      { publicIds },
-      {
-        delay: CLEANUP_DELAY,
-        jobId: `delete-multiple-${batchId}`,
-        attempts: 5,
-        backoff: { type: 'exponential', delay: 5000 },
-      },
-    );
-  } catch (error) {
-    /* ---------------- ROLLBACK CLOUDINARY ---------------- */
-
+  res.locals.afterRollback?.push(async () => {
     try {
       await cloudinary.removeMultiple({ publicIds });
     } catch (cleanupError) {
       logger.error(`Failed to rollback uploaded multiple media ${JSON.stringify(cleanupError)}`);
     }
+  });
 
-    throw error;
-  }
+  /* ---------------- CREATE UNUSED MEDIA ---------------- */
+
+  await jobProducer.addJob('media-queue', 'create-multiple-unused-media', payload, {
+    jobId: `create-multiple-unused-${batchId}`,
+    attempts: 5,
+    backoff: { type: 'exponential', delay: 5000 },
+  });
+
+  /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
+
+  await jobProducer.addJob(
+    'media-queue',
+    'delete-multiple-media',
+    { publicIds },
+    {
+      delay: CLEANUP_DELAY,
+      jobId: `delete-multiple-${batchId}`,
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 5000 },
+    },
+  );
 
   res.success?.({
     statusCode: 201,
