@@ -78,7 +78,8 @@ or a downstream dependency is down.
 
 | Method | Path | Auth | Purpose |
 | --- | --- | --- | --- |
-| GET | `/` | none | Liveness / welcome message |
+| GET | `/` | none | This README, rendered as HTML |
+| GET | `/docs` | none | Interactive API docs (Swagger UI, spec in [src/docs/openapi.ts](src/docs/openapi.ts)) |
 | GET | `/health` | none | Liveness + Mongo connection status (`{ data: { database, service } }`) |
 | POST | `/api/v1/upload/single` | service secret + user | Upload one file (field name `file`) |
 | POST | `/api/v1/upload/multiple` | service secret + user | Upload several files (field name `files`) |

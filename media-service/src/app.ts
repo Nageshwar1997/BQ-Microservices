@@ -5,9 +5,11 @@ import { errorResponse, notFoundResponse, successResponse } from '@beautinique/b
 import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
+import swaggerUi from 'swagger-ui-express';
 
 import { logger } from './configs/index.js';
 import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
+import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
 import { router } from './routes/index.js';
 
@@ -60,6 +62,12 @@ app.use(successResponse({ defaultMessage: 'Success.' }));
 app.get('/', (_, res) => {
   res.sendFile(path.resolve('public', 'index.html'));
 });
+
+/**
+ * Interactive API docs (OpenAPI/Swagger) - unauthenticated, same as `/`
+ * and `/health`, so it stays reachable without a service secret.
+ */
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 /**
  * Health endpoint.
