@@ -53,7 +53,9 @@ app.use(successResponse({ defaultMessage: 'Success.' }));
 /* -------------------------------------------------------------------------- */
 
 /**
- * Serves the landing page.
+ * Serves the README, pre-rendered to HTML at build time by
+ * `scripts/generate-readme.js` (see the "build"/"predev" scripts) -
+ * avoids re-parsing markdown on every request.
  */
 app.get('/', (_, res) => {
   res.sendFile(path.resolve('public', 'index.html'));

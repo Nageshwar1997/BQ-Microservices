@@ -4,6 +4,9 @@
   "description": "Media service for Beautinique project",
   "main": "dist/index.js",
   "scripts": {
+    "docs:build": "node scripts/generate-readme.js",
+    "predev": "npm run docs:build",
+    "prebuild": "npm run docs:build",
     "build": "tsc",
     "dev": "concurrently -n \"TS,APP\" -c \"yellow,cyan\" \"tsc --noEmit --watch\" \"nodemon --watch src --ext ts --exec tsx src/index.ts\"",
     "start": "node dist/index.js",
@@ -28,6 +31,7 @@
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-simple-import-sort": "^13.0.0",
+    "marked": "^18.0.6",
     "nodemon": "^3.1.14",
     "prettier": "^3.9.4",
     "tsx": "^4.22.5",
