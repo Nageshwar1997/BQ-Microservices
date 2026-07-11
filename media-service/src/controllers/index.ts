@@ -57,7 +57,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
   res.success({
     statusCode: 201,
     message: 'File uploaded successfully',
-    data: { url: uploadedMedia.secure_url },
+    data: uploadedMedia.secure_url,
   });
 };
 
@@ -116,6 +116,6 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
   res.success({
     statusCode: 201,
     message: 'Files uploaded successfully',
-    data: { urls: uploadedMedia.map(({ secure_url }) => secure_url) },
+    data: uploadedMedia.map(({ secure_url }) => secure_url),
   });
 };
