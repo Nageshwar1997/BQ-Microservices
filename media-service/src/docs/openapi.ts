@@ -25,23 +25,6 @@ const errorResponse = (description: string) => ({
   content: { 'application/json': { schema: errorEnvelope } },
 });
 
-const authHeaderParams = [
-  {
-    name: HEADERS_MAP.serviceSecret,
-    in: 'header',
-    required: true,
-    schema: { type: 'string' },
-    description: 'Shared secret required on every /api/v1/* request (typically set by the API gateway).',
-  },
-  {
-    name: HEADERS_MAP.userId,
-    in: 'header',
-    required: true,
-    schema: { type: 'string' },
-    description: "The authenticated end user's id, forwarded by the caller (no JWT here).",
-  },
-];
-
 export const openApiSpec = {
   openapi: '3.0.3',
   info: {
@@ -52,11 +35,30 @@ export const openApiSpec = {
   },
   servers: [{ url: '/', description: 'This service' }],
   tags: [{ name: 'Upload', description: 'Media upload endpoints' }],
+  components: {
+    securitySchemes: {
+      serviceSecret: {
+        type: 'apiKey',
+        in: 'header',
+        name: HEADERS_MAP.serviceSecret,
+        description:
+          'Shared secret required on every /api/v1/* request (typically set by the API gateway).',
+      },
+      userId: {
+        type: 'apiKey',
+        in: 'header',
+        name: HEADERS_MAP.userId,
+        description: "The authenticated end user's id, forwarded by the caller (no JWT here).",
+      },
+    },
+  },
+  security: [{ serviceSecret: [], userId: [] }],
   paths: {
     '/health': {
       get: {
         tags: ['Health'],
         summary: 'Liveness + MongoDB connection status',
+        security: [],
         responses: {
           '200': {
             description: 'Service is up (database may still be down - check `data.database`).',
@@ -79,7 +81,6 @@ export const openApiSpec = {
       post: {
         tags: ['Upload'],
         summary: 'Upload a single image or video',
-        parameters: authHeaderParams,
         requestBody: {
           required: true,
           content: {
@@ -123,7 +124,6 @@ export const openApiSpec = {
       post: {
         tags: ['Upload'],
         summary: 'Upload several images/videos at once',
-        parameters: authHeaderParams,
         requestBody: {
           required: true,
           content: {
