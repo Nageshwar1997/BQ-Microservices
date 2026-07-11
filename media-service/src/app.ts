@@ -53,10 +53,10 @@ app.use(successResponse({ defaultMessage: 'Success.' }));
 /* -------------------------------------------------------------------------- */
 
 /**
- * Service information endpoint.
+ * Serves the landing page.
  */
 app.get('/', (_, res) => {
-  res.success({ message: 'Welcome to the Media Service API' });
+  res.sendFile(path.resolve('public', 'index.html'));
 });
 
 /**
