@@ -6,6 +6,8 @@ import {
 } from '@beautinique/shared-constants';
 import { model, Schema } from 'mongoose';
 
+import { TTL_SAFETY_BUFFER_SECONDS } from '../constants/index.js';
+
 export const mediaSchema = new Schema(
   {
     publicId: { type: String, required: true, unique: true },
@@ -25,8 +27,8 @@ export const mediaSchema = new Schema(
 
 mediaSchema.index({ status: 1, expiresAt: 1 });
 
-/* ---------------- TTL INDEX ---------------- */
+/* ---------------- TTL INDEX (backup safety net - see TTL_SAFETY_BUFFER_SECONDS) ---------------- */
 
-mediaSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+mediaSchema.index({ expiresAt: 1 }, { expireAfterSeconds: TTL_SAFETY_BUFFER_SECONDS });
 
 export const Media = model('Media', mediaSchema);

@@ -48,11 +48,6 @@ app.use(createHttpLogger({ ...LOGGER_BASE_OPTIONS, logger }));
  */
 app.use(successResponse({ defaultMessage: 'Success.' }));
 
-/**
- * Rejects requests while MongoDB is unavailable.
- */
-app.use(checkDbConnection({ message: 'Database is unavailable' }));
-
 /* -------------------------------------------------------------------------- */
 /*                                   Routes                                   */
 /* -------------------------------------------------------------------------- */
@@ -61,25 +56,29 @@ app.use(checkDbConnection({ message: 'Database is unavailable' }));
  * Service information endpoint.
  */
 app.get('/', (_, res) => {
-  res.success(200, 'Welcome to the Media Service API');
+  res.success?.({ message: 'Welcome to the Media Service API' });
 });
 
 /**
  * Health endpoint.
  */
 app.get('/health', (_, res) => {
-  res.success(200, 'Media Service is healthy', {
-    database: getConnectionHealth(),
-    service: SERVICE_NAMES_MAP.media,
+  res.success?.({
+    message: 'Media Service is healthy',
+    data: { database: getConnectionHealth(), service: SERVICE_NAMES_MAP['media-service'] },
   });
 });
 
 /**
- * Liveness and database health endpoint.
+ * API routes - requires a trusted service caller and a ready DB connection.
+ *
+ * `checkDbConnection` is scoped to this router (not global) so `/` and
+ * `/health` above can still respond while MongoDB is unavailable.
  */
 app.use(
   base,
   checkServiceAccess({ secret: envs.service_secret, headerName: HEADERS_MAP.serviceSecret }),
+  checkDbConnection({ message: 'Database is unavailable' }),
   router,
 );
 
