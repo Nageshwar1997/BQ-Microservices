@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Media Service Upload Flow (Hand-Drawn)</title>
+    <style>
+      :root {
+        --bg: #eef1ea;
+        --bg-line: rgba(31, 58, 95, 0.12);
+        --bg-line-major: rgba(31, 58, 95, 0.2);
+        --card-async: rgba(31, 58, 95, 0.03);
+        --ink: #1f3a5f;
+        --ink-soft: #4a6483;
+        --ink-faint: #7488a0;
+        --accent: #c33f4e;
+        --accent-fill: rgba(195, 63, 78, 0.08);
+        --sticky-fill: rgba(244, 201, 93, 0.22);
+      }
+
+      :root[data-theme='dark'] {
+        --bg: #20262b;
+        --bg-line: rgba(255, 255, 255, 0.07);
+        --bg-line-major: rgba(255, 255, 255, 0.12);
+        --card-async: rgba(255, 255, 255, 0.03);
+        --ink: #eef1ea;
+        --ink-soft: #b9c2bd;
+        --ink-faint: #8b948f;
+        --accent: #ff8a70;
+        --accent-fill: rgba(255, 138, 112, 0.1);
+        --sticky-fill: rgba(255, 209, 102, 0.14);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) {
+          --bg: #20262b;
+          --bg-line: rgba(255, 255, 255, 0.07);
+          --bg-line-major: rgba(255, 255, 255, 0.12);
+          --card-async: rgba(255, 255, 255, 0.03);
+          --ink: #eef1ea;
+          --ink-soft: #b9c2bd;
+          --ink-faint: #8b948f;
+          --accent: #ff8a70;
+          --accent-fill: rgba(255, 138, 112, 0.1);
+          --sticky-fill: rgba(255, 209, 102, 0.14);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg);
+        background-image:
+          linear-gradient(var(--bg-line) 1px, transparent 1px),
+          linear-gradient(90deg, var(--bg-line) 1px, transparent 1px),
+          linear-gradient(var(--bg-line-major) 1px, transparent 1px),
+          linear-gradient(90deg, var(--bg-line-major) 1px, transparent 1px);
+        background-size:
+          18px 18px,
+          18px 18px,
+          90px 90px,
+          90px 90px;
+        color: var(--ink);
+        overflow-x: hidden;
+      }
+
+      .sheet {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 28px 16px 56px;
+      }
+
+      svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        overflow: visible;
+      }
+
+      .hand {
+        font-family:
+          'Segoe Print', 'Bradley Hand', 'Chalkboard SE', 'Comic Sans MS', cursive, sans-serif;
+      }
+
+      .mono {
+        font-family: 'Cascadia Code', 'Consolas', 'SFMono-Regular', Menlo, monospace;
+      }
+
+      .stroke-ink {
+        stroke: var(--ink);
+        fill: none;
+      }
+      .stroke-soft {
+        stroke: var(--ink-soft);
+        fill: none;
+      }
+      .stroke-accent {
+        stroke: var(--accent);
+        fill: none;
+      }
+      .fill-ink {
+        fill: var(--ink);
+        stroke: none;
+      }
+      .fill-soft {
+        fill: var(--ink-soft);
+        stroke: none;
+      }
+      .fill-faint {
+        fill: var(--ink-faint);
+        stroke: none;
+      }
+      .fill-accent {
+        fill: var(--accent);
+        stroke: none;
+      }
+      .fill-card-async {
+        fill: var(--card-async);
+      }
+      .fill-sticky {
+        fill: var(--sticky-fill);
+      }
+      .fill-accent-tint {
+        fill: var(--accent-fill);
+      }
+
+      .title-xl {
+        font-size: 40px;
+      }
+      .title-sub {
+        font-size: 17px;
+        fill: var(--ink-soft);
+      }
+      .node-title {
+        font-size: 23px;
+      }
+      .node-body {
+        font-size: 15.5px;
+      }
+      .node-mono {
+        font-size: 13.5px;
+      }
+      .lane-label {
+        font-size: 16px;
+      }
+      .caption {
+        font-size: 13px;
+      }
+
+      .footer-credit {
+        text-align: center;
+        font-size: 13px;
+        color: var(--ink-faint);
+        margin-top: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sheet">
+      <svg viewBox="0 0 900 2160" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrowhead" markerWidth="12" markerHeight="12" refX="6" refY="6" orient="auto">
+            <path d="M1,1 L10,6 L1,11 L4,6 Z" class="fill-ink" />
+          </marker>
+        </defs>
+
+        <!-- ============ TITLE ============ -->
+        <g class="hand">
+          <text
+            x="450"
+            y="58"
+            text-anchor="middle"
+            class="title-xl fill-ink"
+            transform="rotate(-0.6 450 58)"
+          >
+            Media Service — Upload Flow
+          </text>
+          <path
+            d="M150,74 Q300,68 450,90 T750,73"
+            class="stroke-accent"
+            stroke-width="3"
+            fill="none"
+          />
+          <text x="450" y="102" text-anchor="middle" class="title-sub">
+            sketched from README.md — one request, two lanes
+          </text>
+        </g>
+
+        <!-- ============ LANE MARKER: SYNC ============ -->
+        <text x="145" y="140" class="hand lane-label fill-soft" transform="rotate(-1 145 140)">
+          ① while the client waits…
+        </text>
+
+        <!-- NODE 1: Client / Gateway -->
+        <g transform="rotate(-0.4 450 209)">
+          <rect
+            x="130"
+            y="150"
+            width="640"
+            height="118"
+            rx="14"
+            class="stroke-ink"
+            stroke-width="2.4"
+          />
+        </g>
+        <g transform="rotate(0.5 450 209)">
+          <rect
+            x="134"
+            y="154"
+            width="632"
+            height="110"
+            rx="12"
+            class="stroke-soft"
+            stroke-width="1"
+            opacity="0.5"
+          />
+        </g>
+        <text x="450" y="182" text-anchor="middle" class="hand node-title fill-ink">
+          Client / API Gateway
+        </text>
+        <text x="450" y="212" text-anchor="middle" class="mono node-mono fill-soft">
+          POST /api/v1/upload/single
+        </text>
+        <text x="450" y="234" text-anchor="middle" class="mono node-mono fill-faint">
+          X-Service-Secret · X-User-Id
+        </text>
+        <text x="450" y="254" text-anchor="middle" class="mono node-mono fill-faint">
+          multipart: file + folder
+        </text>
+
+        <path
+          d="M450,268 C 442,286 458,296 450,310"
+          class="stroke-ink"
+          stroke-width="2.2"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 2: Middleware chain -->
+        <g transform="rotate(0.35 450 400)">
+          <rect
+            x="130"
+            y="312"
+            width="640"
+            height="176"
+            rx="14"
+            class="stroke-ink"
+            stroke-width="2.4"
+          />
+        </g>
+        <g transform="rotate(-0.4 450 400)">
+          <rect
+            x="135"
+            y="317"
+            width="630"
+            height="167"
+            rx="12"
+            class="stroke-soft"
+            stroke-width="1"
+            opacity="0.45"
+          />
+        </g>
+        <text x="450" y="344" text-anchor="middle" class="hand node-title fill-ink">
+          Guarded by the middleware chain
+        </text>
+        <g class="mono node-mono fill-soft" text-anchor="middle">
+          <text x="450" y="372">checkServiceAccess → checkDbConnection</text>
+          <text x="450" y="396">→ authenticate → validateMulter</text>
+          <text x="450" y="420">→ checkEmptyRequest → validateZod(folder)</text>
+        </g>
+        <text x="450" y="450" text-anchor="middle" class="hand node-body fill-faint">
+          (a bad header, empty body, or oversized file stops here)
+        </text>
+
+        <path
+          d="M450,488 C 458,506 442,516 450,530"
+          class="stroke-ink"
+          stroke-width="2.2"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 3: Controller -->
+        <g transform="rotate(-0.3 450 566)">
+          <rect
+            x="200"
+            y="532"
+            width="500"
+            height="68"
+            rx="14"
+            class="stroke-ink"
+            stroke-width="2.4"
+          />
+        </g>
+        <text x="450" y="574" text-anchor="middle" class="hand node-body fill-ink">
+          Upload Controller takes over
+        </text>
+
+        <path
+          d="M450,600 C 442,618 458,628 450,642"
+          class="stroke-ink"
+          stroke-width="2.2"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 4: Cloudinary -->
+        <g transform="rotate(0.4 450 706)">
+          <rect
+            x="150"
+            y="644"
+            width="600"
+            height="128"
+            rx="16"
+            class="stroke-ink"
+            stroke-width="2.4"
+          />
+        </g>
+        <!-- little cloud doodle -->
+        <g transform="translate(196,672)" class="stroke-ink" stroke-width="2.2">
+          <path
+            d="M4,20 a10,10 0 1,1 3,-14 a12,12 0 1,1 20,4 a9,9 0 0,1 -2,17 h-21 a8,8 0 0,1 0,-7 z"
+            fill="none"
+          />
+        </g>
+        <text x="470" y="690" text-anchor="middle" class="hand node-title fill-ink">
+          Cloudinary — stream upload
+        </text>
+        <text x="470" y="716" text-anchor="middle" class="hand node-body fill-soft">
+          image → f_auto,q_auto · video → chunked
+        </text>
+        <text x="470" y="748" text-anchor="middle" class="hand node-body fill-faint">
+          fails here → nothing to undo yet, just rethrow
+        </text>
+
+        <path
+          d="M450,772 C 442,790 458,800 450,814"
+          class="stroke-ink"
+          stroke-width="2.2"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 5: Job Producer -->
+        <g transform="rotate(-0.35 450 900)">
+          <rect
+            x="130"
+            y="816"
+            width="640"
+            height="178"
+            rx="16"
+            class="stroke-ink"
+            stroke-width="2.4"
+          />
+        </g>
+        <!-- little stacked-papers doodle -->
+        <g transform="translate(168,846)" class="stroke-ink" stroke-width="2">
+          <rect x="0" y="10" width="26" height="18" rx="2" />
+          <rect x="4" y="4" width="26" height="18" rx="2" />
+        </g>
+        <text x="470" y="862" text-anchor="middle" class="hand node-title fill-ink">
+          jobProducer.addJob() ×2
+        </text>
+        <text x="450" y="890" text-anchor="middle" class="mono node-mono fill-soft">
+          create-single-unused-media
+        </text>
+        <text x="450" y="912" text-anchor="middle" class="mono node-mono fill-soft">
+          delete-single-media (delay: 2 days)
+        </text>
+        <path
+          d="M200,930 Q450,924 700,930"
+          class="stroke-accent"
+          stroke-width="1.4"
+          stroke-dasharray="2 6"
+          fill="none"
+          opacity="0.6"
+        />
+        <text x="450" y="954" text-anchor="middle" class="hand node-body fill-accent">
+          ✏ fails here → rolls back the Cloudinary upload
+        </text>
+        <text x="450" y="978" text-anchor="middle" class="hand caption fill-faint">
+          (dedup'd by a hash of the publicId, so retries don't double-queue)
+        </text>
+
+        <path
+          d="M450,994 C 442,1012 458,1022 450,1036"
+          class="stroke-ink"
+          stroke-width="2.2"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 6: Response divider -->
+        <g transform="rotate(-0.25 450 1078)">
+          <rect
+            x="110"
+            y="1038"
+            width="680"
+            height="86"
+            rx="10"
+            class="fill-accent-tint stroke-accent"
+            stroke-width="2.4"
+          />
+        </g>
+        <text x="450" y="1072" text-anchor="middle" class="hand node-title fill-accent">
+          ⚡ the request ends here
+        </text>
+        <text x="450" y="1098" text-anchor="middle" class="mono node-mono fill-soft">
+          res.success({ data: { url } })
+        </text>
+
+        <!-- torn edge -->
+        <path
+          d="M110,1132 q15,9 30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0 t30,0"
+          class="stroke-ink"
+          stroke-width="1.6"
+          fill="none"
+          opacity="0.45"
+        />
+
+        <!-- ============ LANE MARKER: ASYNC ============ -->
+        <text x="145" y="1176" class="hand lane-label fill-soft" transform="rotate(-1 145 1176)">
+          ② meanwhile, in the background…
+        </text>
+        <path
+          d="M450,1120 C 442,1150 458,1165 450,1184"
+          class="stroke-soft"
+          stroke-width="2"
+          stroke-dasharray="3 7"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 7: Worker -->
+        <g transform="rotate(0.3 450 1224)">
+          <rect
+            x="230"
+            y="1188"
+            width="440"
+            height="70"
+            rx="14"
+            class="fill-card-async stroke-soft"
+            stroke-width="2"
+            stroke-dasharray="6 5"
+          />
+        </g>
+        <!-- gear doodle -->
+        <g transform="translate(262,1210)" class="stroke-soft" stroke-width="1.8">
+          <circle cx="12" cy="12" r="7" fill="none" />
+          <path
+            d="M12,2 v4 M12,18 v4 M2,12 h4 M18,12 h4 M5,5 l3,3 M16,16 l3,3 M19,5 l-3,3 M8,16 l-3,3"
+            fill="none"
+          />
+        </g>
+        <text x="470" y="1230" text-anchor="middle" class="hand node-body fill-soft">
+          media-queue Worker picks it up
+        </text>
+
+        <path
+          d="M450,1258 C 442,1274 458,1282 450,1298"
+          class="stroke-soft"
+          stroke-width="2"
+          stroke-dasharray="3 7"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 8: create-single-unused-media -->
+        <g transform="rotate(-0.3 450 1360)">
+          <rect
+            x="170"
+            y="1300"
+            width="560"
+            height="116"
+            rx="14"
+            class="fill-card-async stroke-soft"
+            stroke-width="2"
+            stroke-dasharray="6 5"
+          />
+        </g>
+        <text x="450" y="1334" text-anchor="middle" class="mono node-mono fill-soft">
+          create-single-unused-media
+        </text>
+        <text x="450" y="1364" text-anchor="middle" class="hand node-body fill-ink">
+          Media.create({ status: UNUSED, expiresAt })
+        </text>
+        <text x="450" y="1392" text-anchor="middle" class="hand caption fill-faint">
+          the doc now has a clock on it
+        </text>
+
+        <path
+          d="M450,1416 C 442,1436 458,1448 450,1464"
+          class="stroke-soft"
+          stroke-width="2"
+          stroke-dasharray="3 7"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 9: Aside card - meanwhile elsewhere -->
+        <g transform="rotate(0.4 450 1540)">
+          <rect
+            x="150"
+            y="1466"
+            width="600"
+            height="150"
+            rx="14"
+            class="fill-sticky stroke-accent"
+            stroke-width="2"
+          />
+        </g>
+        <text x="450" y="1498" text-anchor="middle" class="hand node-title fill-accent">
+          🔀 meanwhile, elsewhere…
+        </text>
+        <text x="450" y="1524" text-anchor="middle" class="hand node-body fill-ink">
+          another service (e.g. product-service) actually
+        </text>
+        <text x="450" y="1546" text-anchor="middle" class="hand node-body fill-ink">
+          *uses* the media, and enqueues:
+        </text>
+        <text x="450" y="1572" text-anchor="middle" class="mono node-mono fill-soft">
+          mark-single-media-as-used
+        </text>
+        <text x="450" y="1598" text-anchor="middle" class="hand caption fill-faint">
+          → status: USED, expiresAt cleared — this is what saves it
+        </text>
+
+        <path
+          d="M450,1616 C 442,1640 458,1656 450,1678"
+          class="stroke-soft"
+          stroke-width="2"
+          stroke-dasharray="3 7"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+        <text x="560" y="1652" class="hand caption fill-faint">(only if still UNUSED)</text>
+
+        <!-- NODE 10: delete-single-media -->
+        <g transform="rotate(-0.25 450 1750)">
+          <rect
+            x="150"
+            y="1682"
+            width="600"
+            height="140"
+            rx="14"
+            class="fill-card-async stroke-soft"
+            stroke-width="2"
+            stroke-dasharray="6 5"
+          />
+        </g>
+        <text x="450" y="1714" text-anchor="middle" class="hand node-title fill-ink">
+          2 days later — delete-single-media
+        </text>
+        <text x="450" y="1742" text-anchor="middle" class="hand node-body fill-soft">
+          removes the Cloudinary asset
+        </text>
+        <text x="450" y="1766" text-anchor="middle" class="hand node-body fill-soft">
+          marks the doc DELETED
+        </text>
+        <text x="450" y="1796" text-anchor="middle" class="hand caption fill-faint">
+          skips quietly if it was already marked USED above
+        </text>
+
+        <path
+          d="M450,1822 C 442,1840 458,1848 450,1864"
+          class="stroke-ink"
+          stroke-width="2"
+          fill="none"
+          marker-end="url(#arrowhead)"
+        />
+
+        <!-- NODE 11: Footer sticky - TTL safety net -->
+        <g transform="rotate(0.6 450 1936)">
+          <rect
+            x="190"
+            y="1868"
+            width="520"
+            height="130"
+            rx="10"
+            class="fill-sticky stroke-accent"
+            stroke-width="2.2"
+          />
+        </g>
+        <text x="450" y="1902" text-anchor="middle" class="hand node-title fill-accent">
+          📌 safety net
+        </text>
+        <text x="450" y="1928" text-anchor="middle" class="hand node-body fill-ink">
+          a Mongo TTL index sweeps up any doc whose
+        </text>
+        <text x="450" y="1950" text-anchor="middle" class="hand node-body fill-ink">
+          job never ran — one day *after* the delay above,
+        </text>
+        <text x="450" y="1976" text-anchor="middle" class="hand caption fill-faint">
+          so it never races the real cleanup job
+        </text>
+
+        <!-- bottom flourish -->
+        <path
+          d="M330,2030 Q450,2050 570,2030"
+          class="stroke-ink"
+          stroke-width="2"
+          fill="none"
+          opacity="0.5"
+        />
+      </svg>
+
+      <div class="footer-credit hand">— drawn from media-service/README.md —</div>
+    </div>
+  </body>
+</html>
