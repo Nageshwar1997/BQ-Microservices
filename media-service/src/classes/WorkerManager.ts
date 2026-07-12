@@ -1,5 +1,6 @@
 import { JobWorker } from '@beautinique/backend-bullmq';
 import { MEDIA_STATUS_MAP } from '@beautinique/shared-constants';
+import { stringifyData } from '@beautinique/shared-utils';
 
 import { logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';
@@ -28,7 +29,7 @@ export class WorkerManager {
             await cloudinary.removeSingle(data);
           } catch (error) {
             logger.error(
-              `Failed to remove single media directly. Error:${JSON.stringify(error)}. Data:${JSON.stringify(
+              `Failed to remove single media directly. Error:${stringifyData(error)}. Data:${stringifyData(
                 data,
               )}`,
             );
@@ -44,7 +45,7 @@ export class WorkerManager {
             await cloudinary.removeMultiple(data);
           } catch (error) {
             logger.error(
-              `Failed to remove multiple media directly. Error:${JSON.stringify(error)}. Data:${JSON.stringify(
+              `Failed to remove multiple media directly. Error:${stringifyData(error)}. Data:${stringifyData(
                 data,
               )}`,
             );
@@ -61,7 +62,7 @@ export class WorkerManager {
             await Media.create({ ...data, status: MEDIA_STATUS_MAP.UNUSED, expiresAt });
           } catch (error) {
             logger.error(
-              `Failed to create single unused media. Error:${JSON.stringify(error)}. Data:${JSON.stringify(data)}`,
+              `Failed to create single unused media. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
             );
 
             throw error;
@@ -79,7 +80,7 @@ export class WorkerManager {
             );
           } catch (error) {
             logger.error(
-              `Failed to create multiple unused media. Error:${JSON.stringify(error)}. Data:${JSON.stringify(data)}`,
+              `Failed to create multiple unused media. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
             );
 
             throw error;
@@ -103,7 +104,7 @@ export class WorkerManager {
             }
           } catch (error) {
             logger.error(
-              `Failed to mark single media as used. Error:${JSON.stringify(error)}. Data:${JSON.stringify(data)}`,
+              `Failed to mark single media as used. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
             );
             throw error;
           }
@@ -123,12 +124,12 @@ export class WorkerManager {
 
             if (result.matchedCount !== publicIds.length) {
               logger.warn(
-                `Some media were already used or not found. Requested: ${String(publicIds.length)}, Matched: ${String(result.matchedCount)}, Modified: ${String(result.modifiedCount)}, IDs: ${JSON.stringify(publicIds)}`,
+                `Some media were already used or not found. Requested: ${String(publicIds.length)}, Matched: ${String(result.matchedCount)}, Modified: ${String(result.modifiedCount)}, IDs: ${stringifyData(publicIds)}`,
               );
             }
           } catch (error) {
             logger.warn(
-              `Some media were already used or not found. Error: ${JSON.stringify(error)}, Data: ${JSON.stringify(data)}`,
+              `Some media were already used or not found. Error: ${stringifyData(error)}, Data: ${stringifyData(data)}`,
             );
             throw error;
           }
@@ -170,7 +171,7 @@ export class WorkerManager {
             );
           } catch (error) {
             logger.error(
-              `Failed to delete single media. Error:${JSON.stringify(error)}. Data:${JSON.stringify(data)}`,
+              `Failed to delete single media. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
             );
 
             throw error;
@@ -194,7 +195,7 @@ export class WorkerManager {
 
             if (medias.length === 0) {
               logger.warn(
-                `Unused medias not found or already processed, publicIds: ${JSON.stringify(publicIds)}`,
+                `Unused medias not found or already processed, publicIds: ${stringifyData(publicIds)}`,
               );
               return;
             }
@@ -228,12 +229,12 @@ export class WorkerManager {
 
             if (medias.length !== publicIds.length) {
               logger.warn(
-                `Some medias were already processed or not found. Requested: ${String(publicIds.length)}, Found: ${String(medias.length)}, Public IDs: ${JSON.stringify(publicIds)}`,
+                `Some medias were already processed or not found. Requested: ${String(publicIds.length)}, Found: ${String(medias.length)}, Public IDs: ${stringifyData(publicIds)}`,
               );
             }
           } catch (error) {
             logger.error(
-              `Failed to delete multiple media. Error: ${JSON.stringify(error)}. Data: ${JSON.stringify(data)}`,
+              `Failed to delete multiple media. Error: ${stringifyData(error)}. Data: ${stringifyData(data)}`,
             );
 
             throw error;

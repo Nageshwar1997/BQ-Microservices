@@ -49,6 +49,7 @@
     "@beautinique/backend-response": "^1.0.2",
     "@beautinique/backend-zod": "^1.0.6",
     "@beautinique/shared-constants": "^1.0.6",
+    "@beautinique/shared-utils": "^1.0.0",
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

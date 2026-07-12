@@ -14,6 +14,7 @@ import type {
   TVideoFormat,
   TVideoMime,
 } from '@beautinique/shared-types';
+import { stringifyData } from '@beautinique/shared-utils';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { createHash, randomUUID } from 'crypto';
 import pLimit from 'p-limit';
@@ -209,11 +210,11 @@ class Cloudinary {
         );
       }
 
-      logger.info(`Cloudinary delete success. ${JSON.stringify(result)}`);
+      logger.info(`Cloudinary delete success. ${stringifyData(result)}`);
 
       return result;
     } catch (error) {
-      logger.error(`Cloudinary delete failed. ${JSON.stringify(error)}`);
+      logger.error(`Cloudinary delete failed. ${stringifyData(error)}`);
 
       throw new ExternalServiceError(
         error instanceof Error ? error.message : 'Failed to delete media.',
@@ -260,7 +261,7 @@ class Cloudinary {
     // Log if retry limit exceeded
     if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
       logger.error(
-        `Delete retry limit reached. Failed IDs: ${JSON.stringify(failedIds)}, Retry count: ${String(retryCount)}`,
+        `Delete retry limit reached. Failed IDs: ${stringifyData(failedIds)}, Retry count: ${String(retryCount)}`,
       );
     }
 

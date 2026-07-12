@@ -1,4 +1,5 @@
 import type { TFolderZodSchema } from '@beautinique/backend-types';
+import { stringifyData } from '@beautinique/shared-utils';
 import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
 
@@ -28,7 +29,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
     try {
       await cloudinary.removeSingle({ publicId: payload.publicId });
     } catch (cleanupError) {
-      logger.error(`Failed to rollback uploaded single media ${JSON.stringify(cleanupError)}`);
+      logger.error(`Failed to rollback uploaded single media ${stringifyData(cleanupError)}`);
     }
   });
 
@@ -87,7 +88,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
     try {
       await cloudinary.removeMultiple({ publicIds });
     } catch (cleanupError) {
-      logger.error(`Failed to rollback uploaded multiple media ${JSON.stringify(cleanupError)}`);
+      logger.error(`Failed to rollback uploaded multiple media ${stringifyData(cleanupError)}`);
     }
   });
 
