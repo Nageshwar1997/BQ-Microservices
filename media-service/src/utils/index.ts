@@ -1,24 +1,8 @@
-import { AuthenticationError, ValidationError } from '@beautinique/backend-classes';
+import { AuthenticationError } from '@beautinique/backend-classes';
+import { getObjId } from '@beautinique/backend-mongoose';
 import type { TMediaResource } from '@beautinique/shared-types';
 import type { UploadApiResponse } from 'cloudinary';
 import type { Request } from 'express';
-import { Types } from 'mongoose';
-
-import type { TId } from '../types/index.js';
-
-/* ========== OBJECT ID CONVERTER FUNCTION ========== */
-
-export const toObjectId = (id: string): TId => {
-  if (!Types.ObjectId.isValid(id)) {
-    throw new ValidationError('Invalid ObjectId.');
-  }
-
-  return new Types.ObjectId(id);
-};
-
-export const getObjId = (id: string | TId): TId => {
-  return typeof id === 'string' ? toObjectId(id) : id;
-};
 
 /* ========== GET AUTH USER ========== */
 export const getUser = (req: Request) => {
