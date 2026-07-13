@@ -5,279 +5,386 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Media Service</title>
     <style>
-  :root {
-    color-scheme: light dark;
-    --bg: #ffffff;
-    --fg: #1f2328;
-    --muted: #59636e;
-    --border: #d1d9e0;
-    --code-bg: #f6f8fa;
-    --link: #0969da;
-  }
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1f2328;
+        --muted: #59636e;
+        --border: #d1d9e0;
+        --code-bg: #f6f8fa;
+        --link: #0969da;
+      }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0d1117;
-      --fg: #e6edf3;
-      --muted: #9198a1;
-      --border: #30363d;
-      --code-bg: #161b22;
-      --link: #4493f8;
-    }
-  }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --fg: #e6edf3;
+          --muted: #9198a1;
+          --border: #30363d;
+          --code-bg: #161b22;
+          --link: #4493f8;
+        }
+      }
 
-  * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-  }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+      }
 
-  main {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 48px 24px 96px;
-  }
+      main {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
 
-  h1, h2, h3, h4 {
-    font-weight: 600;
-    line-height: 1.25;
-    margin: 1.6em 0 0.6em;
-  }
-  h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
-  h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
-  h3 { font-size: 1.25em; }
-  h4 { font-size: 1.05em; }
-  h1:first-child { margin-top: 0; }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-weight: 600;
+        line-height: 1.25;
+        margin: 1.6em 0 0.6em;
+      }
+      h1 {
+        font-size: 2em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid var(--border);
+      }
+      h2 {
+        font-size: 1.5em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid var(--border);
+      }
+      h3 {
+        font-size: 1.25em;
+      }
+      h4 {
+        font-size: 1.05em;
+      }
+      h1:first-child {
+        margin-top: 0;
+      }
 
-  p, ul, ol, table, blockquote { margin: 0 0 1em; }
-  ul, ol { padding-left: 1.6em; }
-  li + li { margin-top: 0.2em; }
+      p,
+      ul,
+      ol,
+      table,
+      blockquote {
+        margin: 0 0 1em;
+      }
+      ul,
+      ol {
+        padding-left: 1.6em;
+      }
+      li + li {
+        margin-top: 0.2em;
+      }
 
-  a { color: var(--link); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+      a {
+        color: var(--link);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
 
-  code {
-    font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.88em;
-    background: var(--code-bg);
-    padding: 0.15em 0.4em;
-    border-radius: 6px;
-  }
+      code {
+        font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+        font-size: 0.88em;
+        background: var(--code-bg);
+        padding: 0.15em 0.4em;
+        border-radius: 6px;
+      }
 
-  pre {
-    background: var(--code-bg);
-    border-radius: 8px;
-    padding: 16px;
-    overflow-x: auto;
-  }
-  pre code { background: none; padding: 0; font-size: 0.85em; }
+      pre {
+        background: var(--code-bg);
+        border-radius: 8px;
+        padding: 16px;
+        overflow-x: auto;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        font-size: 0.85em;
+      }
 
-  blockquote {
-    margin-left: 0;
-    padding: 0 1em;
-    color: var(--muted);
-    border-left: 0.25em solid var(--border);
-  }
+      blockquote {
+        margin-left: 0;
+        padding: 0 1em;
+        color: var(--muted);
+        border-left: 0.25em solid var(--border);
+      }
 
-  table { display: block; overflow-x: auto; border-collapse: collapse; margin: 0 0 1em; }
-  th, td { border: 1px solid var(--border); padding: 6px 13px; text-align: left; }
-  th { background: var(--code-bg); font-weight: 600; }
+      table {
+        display: block;
+        overflow-x: auto;
+        border-collapse: collapse;
+        margin: 0 0 1em;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 6px 13px;
+        text-align: left;
+      }
+      th {
+        background: var(--code-bg);
+        font-weight: 600;
+      }
 
-  hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
-  img { max-width: 100%; }
-</style>
+      hr {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 2em 0;
+      }
+      img {
+        max-width: 100%;
+      }
+    </style>
   </head>
   <body>
-    <main><h1>Media Service</h1>
-<p>Handles media (image/video) upload, storage, and lifecycle for the Beautinique
-platform. Uploads go straight to Cloudinary; MongoDB only tracks metadata and
-usage state; BullMQ (Redis) drives every background/cleanup step so the HTTP
-request returns as soon as the Cloudinary upload finishes.</p>
-<h2>Tech stack</h2>
-<table>
-<thead>
-<tr>
-<th>Concern</th>
-<th>Package / Tool</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>HTTP framework</td>
-<td>Express 5</td>
-</tr>
-<tr>
-<td>Media storage</td>
-<td>Cloudinary</td>
-</tr>
-<tr>
-<td>Database</td>
-<td>MongoDB (Mongoose), via <code>@beautinique/backend-mongoose</code></td>
-</tr>
-<tr>
-<td>Background jobs</td>
-<td>BullMQ (Redis), via <code>@beautinique/backend-bullmq</code></td>
-</tr>
-<tr>
-<td>Validation</td>
-<td>Zod, via <code>@beautinique/backend-zod</code></td>
-</tr>
-<tr>
-<td>File upload parsing</td>
-<td>Multer, via <code>@beautinique/backend-multer</code></td>
-</tr>
-<tr>
-<td>Logging</td>
-<td>Pino, via <code>@beautinique/backend-logger</code></td>
-</tr>
-<tr>
-<td>Shared response shape</td>
-<td><code>@beautinique/backend-response</code></td>
-</tr>
-<tr>
-<td>Shared constants/types</td>
-<td><code>@beautinique/shared-constants</code>, <code>@beautinique/shared-types</code></td>
-</tr>
-</tbody></table>
-<h2>Running locally</h2>
-<pre><code class="language-bash">npm install
+    <main>
+      <h1>Media Service</h1>
+      <p>
+        Handles media (image/video) upload, storage, and lifecycle for the Beautinique platform.
+        Uploads go straight to Cloudinary; MongoDB only tracks metadata and usage state; BullMQ
+        (Redis) drives every background/cleanup step so the HTTP request returns as soon as the
+        Cloudinary upload finishes.
+      </p>
+      <h2>Tech stack</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Concern</th>
+            <th>Package / Tool</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HTTP framework</td>
+            <td>Express 5</td>
+          </tr>
+          <tr>
+            <td>Media storage</td>
+            <td>Cloudinary</td>
+          </tr>
+          <tr>
+            <td>Database</td>
+            <td>MongoDB (Mongoose), via <code>@beautinique/backend-mongoose</code></td>
+          </tr>
+          <tr>
+            <td>Background jobs</td>
+            <td>BullMQ (Redis), via <code>@beautinique/backend-bullmq</code></td>
+          </tr>
+          <tr>
+            <td>Validation</td>
+            <td>Zod, via <code>@beautinique/backend-zod</code></td>
+          </tr>
+          <tr>
+            <td>File upload parsing</td>
+            <td>Multer, via <code>@beautinique/backend-multer</code></td>
+          </tr>
+          <tr>
+            <td>Logging</td>
+            <td>Pino, via <code>@beautinique/backend-logger</code></td>
+          </tr>
+          <tr>
+            <td>Shared response shape</td>
+            <td><code>@beautinique/backend-response</code></td>
+          </tr>
+          <tr>
+            <td>Shared constants/types</td>
+            <td>
+              <code>@beautinique/shared-constants</code>, <code>@beautinique/shared-types</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h2>Running locally</h2>
+      <pre><code class="language-bash">npm install
 npm run dev          # tsc --noEmit --watch + nodemon, auto-restarts on src changes
 </code></pre>
-<p>Other scripts:</p>
-<pre><code class="language-bash">npm run build         # compile to dist/
+      <p>Other scripts:</p>
+      <pre><code class="language-bash">npm run build         # compile to dist/
 npm run start          # node dist/index.js (run build first)
 npm run start:dev      # build + start in one step
 npm run lint            # eslint src
 npm run lint:fix
 </code></pre>
-<p>Requires a <code>.env</code> file (see <a href="#environment-variables">Environment variables</a>),
-a reachable MongoDB instance, a reachable Redis instance (shared with the
-other services that produce/consume <code>media-queue</code>/<code>mail-queue</code> jobs), and a
-Cloudinary account.</p>
-<h2>Environment variables</h2>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>PORT</code></td>
-<td>HTTP port to listen on</td>
-</tr>
-<tr>
-<td><code>IS_DEV</code></td>
-<td><code>&#39;true&#39;</code> enables pretty logging, stack traces in error responses, and dev URLs for downstream service links</td>
-</tr>
-<tr>
-<td><code>SERVICE_NAME</code></td>
-<td>Name tag attached to every log line</td>
-</tr>
-<tr>
-<td><code>SERVICE_SECRET</code></td>
-<td>Shared secret required in the <code>X-Service-Secret</code> header on every <code>/api/v1/*</code> request (see <a href="#auth">Auth</a>)</td>
-</tr>
-<tr>
-<td><code>DATABASE_NAME</code></td>
-<td>MongoDB database name</td>
-</tr>
-<tr>
-<td><code>MONGODB_URI</code></td>
-<td>MongoDB connection string</td>
-</tr>
-<tr>
-<td><code>JOB_REDIS_HOST</code> / <code>JOB_REDIS_PORT</code> / <code>JOB_REDIS_PASSWORD</code> / <code>JOB_REDIS_USERNAME</code></td>
-<td>Redis connection used for BullMQ (<strong>shared</strong> across services - see <a href="#cross-service-queue-integration">Cross-service queue integration</a>)</td>
-</tr>
-<tr>
-<td><code>CLOUDINARY_CLOUD_NAME</code> / <code>CLOUDINARY_API_KEY</code> / <code>CLOUDINARY_API_SECRET</code></td>
-<td>Cloudinary credentials</td>
-</tr>
-<tr>
-<td><code>GATEWAY_DEV_URL</code> / <code>GATEWAY_PROD_URL</code></td>
-<td>API gateway URL (informational, exposed via <code>envs.url.gateway</code>)</td>
-</tr>
-<tr>
-<td><code>USER_SERVICE_*</code>, <code>MAIL_SERVICE_*</code>, <code>MEDIA_SERVICE_*</code> (<code>_DEV_URL</code>/<code>_PROD_URL</code>)</td>
-<td>Sibling service base URLs (informational)</td>
-</tr>
-</tbody></table>
-<h2>Auth model</h2>
-<p>Two independent layers, both enforced as middleware:</p>
-<ol>
-<li><strong>Service-to-service</strong> - every route under <code>/api/v1</code> requires a matching
-<code>X-Service-Secret</code> header (<code>checkServiceAccess</code>, <a href="src/app.ts">src/app.ts</a>).
-This service is not meant to be called directly by browsers; only a
-trusted caller (typically the API gateway) should hold this secret.</li>
-<li><strong>End user</strong> - <code>authenticate</code> (<a href="src/middlewares/index.ts">src/middlewares/index.ts</a>)
-reads <code>X-User-Id</code> (required) and <code>X-User-Role</code> (defaults to <code>USER</code>) headers
-and attaches <code>req.user</code>. There&#39;s no JWT here - the gateway/upstream service
-is expected to have already authenticated the user and forwarded their
-identity via these headers.</li>
-</ol>
-<p><code>/</code> and <code>/health</code> are intentionally outside <code>/api/v1</code> and require neither -
-they must stay reachable for load balancer / uptime checks even when the DB
-or a downstream dependency is down.</p>
-<h2>HTTP endpoints</h2>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GET</td>
-<td><code>/</code></td>
-<td>none</td>
-<td>This README, rendered as HTML</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/docs</code></td>
-<td>none</td>
-<td>Interactive API docs (Swagger UI, spec in <a href="src/docs/openapi.ts">src/docs/openapi.ts</a>)</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/health</code></td>
-<td>none</td>
-<td>Liveness + Mongo connection status (<code>{ data: { database, service } }</code>)</td>
-</tr>
-<tr>
-<td>POST</td>
-<td><code>/api/v1/upload/single</code></td>
-<td>service secret + user</td>
-<td>Upload one file (field name <code>file</code>)</td>
-</tr>
-<tr>
-<td>POST</td>
-<td><code>/api/v1/upload/multiple</code></td>
-<td>service secret + user</td>
-<td>Upload several files (field name <code>files</code>)</td>
-</tr>
-</tbody></table>
-<p>Both upload routes take a <code>folder</code> field in the multipart body
-(<code>folderZodSchema</code> requires it; an empty/whitespace value falls back to
-<code>common_folder</code>). Response shape on success:</p>
-<pre><code class="language-jsonc">// POST /api/v1/upload/single
+      <p>
+        Requires a <code>.env</code> file (see
+        <a href="#environment-variables">Environment variables</a>), a reachable MongoDB instance, a
+        reachable Redis instance (shared with the other services that produce/consume
+        <code>media-queue</code>/<code>mail-queue</code> jobs), and a Cloudinary account.
+      </p>
+      <h2>Environment variables</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>PORT</code></td>
+            <td>HTTP port to listen on</td>
+          </tr>
+          <tr>
+            <td><code>IS_DEV</code></td>
+            <td>
+              <code>&#39;true&#39;</code> enables pretty logging, stack traces in error responses,
+              and dev URLs for downstream service links
+            </td>
+          </tr>
+          <tr>
+            <td><code>SERVICE_NAME</code></td>
+            <td>Name tag attached to every log line</td>
+          </tr>
+          <tr>
+            <td><code>SERVICE_SECRET</code></td>
+            <td>
+              Shared secret required in the <code>X-Service-Secret</code> header on every
+              <code>/api/v1/*</code> request (see <a href="#auth">Auth</a>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>DATABASE_NAME</code></td>
+            <td>MongoDB database name</td>
+          </tr>
+          <tr>
+            <td><code>MONGODB_URI</code></td>
+            <td>MongoDB connection string</td>
+          </tr>
+          <tr>
+            <td>
+              <code>JOB_REDIS_HOST</code> / <code>JOB_REDIS_PORT</code> /
+              <code>JOB_REDIS_PASSWORD</code> / <code>JOB_REDIS_USERNAME</code>
+            </td>
+            <td>
+              Redis connection used for BullMQ (<strong>shared</strong> across services - see
+              <a href="#cross-service-queue-integration">Cross-service queue integration</a>)
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>CLOUDINARY_CLOUD_NAME</code> / <code>CLOUDINARY_API_KEY</code> /
+              <code>CLOUDINARY_API_SECRET</code>
+            </td>
+            <td>Cloudinary credentials</td>
+          </tr>
+          <tr>
+            <td><code>GATEWAY_DEV_URL</code> / <code>GATEWAY_PROD_URL</code></td>
+            <td>API gateway URL (informational, exposed via <code>envs.url.gateway</code>)</td>
+          </tr>
+          <tr>
+            <td>
+              <code>USER_SERVICE_*</code>, <code>MAIL_SERVICE_*</code>,
+              <code>MEDIA_SERVICE_*</code> (<code>_DEV_URL</code>/<code>_PROD_URL</code>)
+            </td>
+            <td>Sibling service base URLs (informational)</td>
+          </tr>
+        </tbody>
+      </table>
+      <h2>Auth model</h2>
+      <p>Two independent layers, both enforced as middleware:</p>
+      <ol>
+        <li>
+          <strong>Service-to-service</strong> - every route under <code>/api/v1</code> requires a
+          matching <code>X-Service-Secret</code> header (<code>checkServiceAccess</code>,
+          <a href="src/app.ts">src/app.ts</a>). This service is not meant to be called directly by
+          browsers; only a trusted caller (typically the API gateway) should hold this secret.
+        </li>
+        <li>
+          <strong>End user</strong> - <code>authenticate</code> (<a href="src/middlewares/index.ts"
+            >src/middlewares/index.ts</a
+          >) reads <code>X-User-Id</code> (required) and <code>X-User-Role</code> (defaults to
+          <code>USER</code>) headers and attaches <code>req.user</code>. There&#39;s no JWT here -
+          the gateway/upstream service is expected to have already authenticated the user and
+          forwarded their identity via these headers.
+        </li>
+      </ol>
+      <p>
+        <code>/</code> and <code>/health</code> are intentionally outside <code>/api/v1</code> and
+        require neither - they must stay reachable for load balancer / uptime checks even when the
+        DB or a downstream dependency is down.
+      </p>
+      <h2>HTTP endpoints</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GET</td>
+            <td><code>/</code></td>
+            <td>none</td>
+            <td>This README, rendered as HTML</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/docs</code></td>
+            <td>none</td>
+            <td>
+              Interactive API docs (Swagger UI, spec in
+              <a href="src/docs/openapi.ts">src/docs/openapi.ts</a>)
+            </td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/health</code></td>
+            <td>none</td>
+            <td>
+              Liveness + Mongo connection status (<code>{ data: { database, service } }</code>)
+            </td>
+          </tr>
+          <tr>
+            <td>POST</td>
+            <td><code>/api/v1/upload/single</code></td>
+            <td>service secret + user</td>
+            <td>Upload one file (field name <code>file</code>)</td>
+          </tr>
+          <tr>
+            <td>POST</td>
+            <td><code>/api/v1/upload/multiple</code></td>
+            <td>service secret + user</td>
+            <td>Upload several files (field name <code>files</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Both upload routes take a <code>folder</code> field in the multipart body (<code
+          >folderZodSchema</code
+        >
+        requires it; an empty/whitespace value falls back to <code>common_folder</code>). Response
+        shape on success:
+      </p>
+      <pre><code class="language-jsonc">// POST /api/v1/upload/single
 { &quot;success&quot;: true, &quot;message&quot;: &quot;File uploaded successfully&quot;, &quot;data&quot;: { &quot;url&quot;: &quot;https://res.cloudinary.com/...&quot; } }
 
 // POST /api/v1/upload/multiple
 { &quot;success&quot;: true, &quot;message&quot;: &quot;Files uploaded successfully&quot;, &quot;data&quot;: { &quot;urls&quot;: [&quot;https://...&quot;, &quot;https://...&quot;] } }
 </code></pre>
-<p>File constraints (enforced by <code>@beautinique/backend-multer</code> defaults, driven
-by <code>@beautinique/shared-constants</code>): images up to 2 MB
-(<code>IMAGE_MIMES</code>/<code>IMAGE_FORMATS</code>), videos up to 10 MB
-(<code>VIDEO_MIMES</code>/<code>VIDEO_FORMATS</code>).</p>
-<h2>End-to-end upload flow</h2>
-<pre><code>Client / gateway
+      <p>
+        File constraints (enforced by <code>@beautinique/backend-multer</code> defaults, driven by
+        <code>@beautinique/shared-constants</code>): images up to 2 MB
+        (<code>IMAGE_MIMES</code>/<code>IMAGE_FORMATS</code>), videos up to 10 MB
+        (<code>VIDEO_MIMES</code>/<code>VIDEO_FORMATS</code>).
+      </p>
+      <h2>End-to-end upload flow</h2>
+      <pre><code>Client / gateway
    │  POST /api/v1/upload/single  (X-Service-Secret, X-User-Id, multipart file+folder)
    ▼
 checkServiceAccess → checkDbConnection → authenticate → validateMulter
@@ -300,155 +407,231 @@ res.success({ data: { url } })      # request returns here - DB write happens as
    ▼
 &#39;delete-single-media&#39; handler → removes the Cloudinary asset, marks the Media doc DELETED
 </code></pre>
-<p>The multiple-file path is the same shape, batched: <code>uploadMultiple</code> uploads
-all files in parallel and rolls back every successfully-uploaded file if any
-one fails, <code>create-multiple-unused-media</code>/<code>delete-multiple-media</code> carry
-arrays instead of single values, and job IDs are a deterministic hash of the
-sorted <code>publicId</code>s (so retrying the same batch doesn&#39;t double-queue).</p>
-<h3>Marking media as &quot;used&quot;</h3>
-<p><code>media-service</code> never marks its own media as used - a <strong>different</strong> service
-enqueues <code>mark-single-media-as-used</code> / <code>mark-multiple-media-as-used</code> onto
-<code>media-queue</code> once it actually references the uploaded URL (e.g.
-<code>product-service</code> does this in <code>publishDraftProductController</code> when a
-product referencing the media is saved). That handler flips
-<code>status: UNUSED → USED</code> and clears <code>expiresAt</code>, which is what keeps the media
-from being auto-deleted by the cleanup job / TTL index.</p>
-<h2>Background jobs (<code>media-queue</code>)</h2>
-<p>Owned and consumed by this service&#39;s <code>WorkerManager</code>
-(<a href="src/classes/WorkerManager.ts">src/classes/WorkerManager.ts</a>), one BullMQ
-<code>JobWorker</code> for the whole queue (concurrency 5, shared across all job names
-below - not per-job like the old <code>be-jobs</code>-based implementation).</p>
-<table>
-<thead>
-<tr>
-<th>Job name</th>
-<th>Enqueued by</th>
-<th>What it does</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>create-single-unused-media</code> / <code>create-multiple-unused-media</code></td>
-<td>this service (controllers)</td>
-<td>Inserts <code>Media</code> doc(s) with <code>status: UNUSED</code> and an <code>expiresAt</code></td>
-</tr>
-<tr>
-<td><code>delete-single-media</code> / <code>delete-multiple-media</code></td>
-<td>this service (controllers, delayed by <code>CLEANUP_DELAY</code>)</td>
-<td>Removes the Cloudinary asset(s) and marks the doc(s) <code>DELETED</code>, if still <code>UNUSED</code></td>
-</tr>
-<tr>
-<td><code>mark-single-media-as-used</code> / <code>mark-multiple-media-as-used</code></td>
-<td>other services (e.g. <code>product-service</code>)</td>
-<td>Flips <code>status → USED</code>, clears <code>expiresAt</code></td>
-</tr>
-<tr>
-<td><code>remove-single-media-directly</code> / <code>remove-multiple-media-directly</code></td>
-<td>this service (<code>Cloudinary</code> class, as a retry path)</td>
-<td>Re-attempts a Cloudinary deletion that failed inline</td>
-</tr>
-</tbody></table>
-<p><code>media-service</code> only runs a worker for <code>media-queue</code>. <code>mail-queue</code> (used for
-OTP emails) is owned end-to-end by <code>user-service</code> (producer) and
-<code>mail-service</code> (worker) - unrelated to this service.</p>
-<h2>Cross-service queue integration</h2>
-<p>Redis/BullMQ jobs are identified purely by queue name + job name at the
-Redis level, so producers and consumers don&#39;t need to share a package
-version - <code>product-service</code> currently enqueues <code>mark-multiple-media-as-used</code>
-using the <strong>older</strong> <code>@beautinique/be-jobs</code> package, while this service
-consumes it via the newer <code>@beautinique/backend-bullmq</code>. Both target the same
-<code>media-queue</code> string on the same Redis instance, so it works, but it means:</p>
-<ul>
-<li>The <code>JOB_REDIS_*</code> env vars must point to the <strong>same</strong> Redis instance across
-every service that touches <code>media-queue</code>.</li>
-<li>If <code>media-queue</code>&#39;s schema/job names ever change in <code>backend-bullmq</code>,
-<code>product-service</code> (and any other producer still on <code>be-jobs</code>) needs a
-matching update, or those jobs will silently stop being picked up.</li>
-</ul>
-<h2>Data model (<code>Media</code>)</h2>
-<p><a href="src/models/index.ts">src/models/index.ts</a>:</p>
-<ul>
-<li><code>status</code>: <code>DRAFT | UNUSED | USED | DELETED</code> - new uploads start <code>UNUSED</code>.</li>
-<li><code>expiresAt</code>: set on create (<code>UNUSED</code>) and on delete (<code>DELETED</code>); cleared
-when marked <code>USED</code>.</li>
-<li>A compound <code>{ status, expiresAt }</code> index for the cleanup queries, plus a
-single-field TTL index on <code>expiresAt</code> as a <strong>backup</strong> deletion path (see
-next section) - it does not remove the Cloudinary asset itself, only the
-MongoDB document.</li>
-</ul>
-<h2>Graceful startup / shutdown</h2>
-<p><a href="src/bootstrap/startup.ts">src/bootstrap/startup.ts</a> /
-<a href="src/bootstrap/shutdown.ts">src/bootstrap/shutdown.ts</a>, wired to
-<code>SIGINT</code>/<code>SIGTERM</code> in <a href="src/index.ts">src/index.ts</a>:</p>
-<ul>
-<li><strong>Startup</strong>: register Mongo event listeners → connect Mongo → start HTTP
-server → start the <code>media-queue</code> worker.</li>
-<li><strong>Shutdown</strong>: stop accepting new HTTP requests → stop the worker → close
-the job producer → disconnect Mongo → destroy any lingering sockets →
-exit. Idempotent (safe to call more than once); every step&#39;s
-success/failure is logged individually via <code>Promise.allSettled</code>.</li>
-</ul>
-<p>This service intentionally does <strong>not</strong> use <code>backend-bullmq</code>&#39;s
-<code>registerGracefulShutdown</code> helper - it already owns a full, ordered shutdown
-sequence (HTTP server first, then jobs, then DB), and that helper registers
-its <em>own</em> <code>SIGTERM</code>/<code>SIGINT</code> listeners + calls <code>process.exit()</code> itself, which
-would race with the sequence above. It&#39;s meant for a process with no
-existing shutdown orchestration of its own (e.g. a standalone worker script).</p>
-<h2>Design notes / known trade-offs</h2>
-<ul>
-<li><strong>TTL index is a backup, not the primary cleanup path.</strong> The <code>expiresAt</code>
-TTL index (<code>expireAfterSeconds</code>) is set to <code>CLEANUP_DELAY</code> + a 1-day
-safety buffer (<code>TTL_SAFETY_BUFFER_SECONDS</code> in
-<a href="src/constants/index.ts">src/constants/index.ts</a>), specifically so it
-fires well <em>after</em> the <code>delete-single-media</code>/<code>delete-multiple-media</code>
-BullMQ jobs (which are scheduled with exactly <code>CLEANUP_DELAY</code>, and also
-remove the actual Cloudinary asset). Without that buffer, Mongo&#39;s TTL
-monitor could delete the document before the BullMQ job runs, and the job
-would then find nothing to clean up - orphaning the Cloudinary asset
-forever, since the TTL sweep never touches Cloudinary itself.</li>
-<li><strong>Two overlapping retry mechanisms on Cloudinary deletion.</strong> A failed
-removal is retried both by BullMQ&#39;s own <code>attempts</code>/<code>backoff</code> on the job
-<em>and</em> by the <code>Cloudinary</code> class&#39;s own <code>retryCount</code> re-queueing
-(<a href="src/classes/Cloudinary.ts">src/classes/Cloudinary.ts</a>) after rethrowing.
-In practice this just means a stuck deletion gets retried more
-aggressively than either mechanism alone would - not incorrect, but worth
-knowing if you&#39;re tuning retry/backoff behavior.</li>
-<li><strong><code>relatedTo</code> on <code>Media</code> is currently unused.</strong> The schema has a
-<code>relatedTo: { service, entity }</code> field, but nothing in this service (or
-the <code>product-service</code> integration above) ever populates it.</li>
-</ul>
-<h2>Recent fixes (this review pass)</h2>
-<ul>
-<li><code>checkDbConnection</code> was registered globally, ahead of <code>/</code> and <code>/health</code> -
-meaning the health endpoint couldn&#39;t respond at all while MongoDB was
-down, exactly backwards from its purpose. Scoped it to the <code>/api/v1</code>
-router only.</li>
-<li>Every <code>res.success(...)</code> call site (<code>app.ts</code>, <code>controllers/index.ts</code>) used
-a stale positional signature (<code>(statusCode, message, data)</code>) left over from
-an incomplete migration to <code>@beautinique/backend-response</code>, which actually
-takes a single options object. A conflicting local type declaration in
-<code>src/types/express.d.ts</code> hid this from the type-checker. At runtime this
-silently dropped every custom message <em>and</em> the entire <code>data</code> payload -
-including the uploaded file&#39;s <code>url</code>/<code>urls</code> in the upload responses.
-Removed the bad local type and switched every call site to
-<code>res.success({ statusCode, message, data })</code>.</li>
-<li><code>SERVICE_NAMES_MAP.media</code> doesn&#39;t exist (the map&#39;s keys are the full
-service names, e.g. <code>&#39;media-service&#39;</code>) - it silently evaluated to
-<code>undefined</code>, so <code>/health</code>&#39;s response was missing its <code>service</code> field.
-Fixed to <code>SERVICE_NAMES_MAP[&#39;media-service&#39;]</code>.</li>
-<li>Added a safety buffer to the <code>Media</code> TTL index so it can no longer race
-ahead of the BullMQ cleanup jobs (see above).</li>
-<li>Multer uploads didn&#39;t pass <code>limits.fileSize</code>, so an oversized upload was
-fully buffered into memory before the per-type size check rejected it.
-Added <code>limits: { fileSize: MAX_VIDEO_SIZE }</code> (the largest allowed type) for
-an earlier cutoff.</li>
-<li>Migrated the BullMQ integration from the retired <code>@beautinique/be-jobs</code>
-package to <code>@beautinique/backend-bullmq</code> (<code>JobProducer</code>/<code>JobWorker</code>).</li>
-</ul>
-<p>All of the above were verified against a live run: <code>npm run dev</code>, hit <code>/</code>,
-<code>/health</code>, and a real <code>POST /api/v1/upload/single</code> with a test image -
-confirmed the Cloudinary upload, the correct JSON response shape, and the
-<code>create-single-unused-media</code> background job completing and writing to
-MongoDB.</p>
-</main>
+      <p>
+        The multiple-file path is the same shape, batched: <code>uploadMultiple</code> uploads all
+        files in parallel and rolls back every successfully-uploaded file if any one fails,
+        <code>create-multiple-unused-media</code>/<code>delete-multiple-media</code> carry arrays
+        instead of single values, and job IDs are a deterministic hash of the sorted
+        <code>publicId</code>s (so retrying the same batch doesn&#39;t double-queue).
+      </p>
+      <h3>Marking media as &quot;used&quot;</h3>
+      <p>
+        <code>media-service</code> never marks its own media as used - a
+        <strong>different</strong> service enqueues <code>mark-single-media-as-used</code> /
+        <code>mark-multiple-media-as-used</code> onto <code>media-queue</code> once it actually
+        references the uploaded URL (e.g. <code>product-service</code> does this in
+        <code>publishDraftProductController</code> when a product referencing the media is saved).
+        That handler flips <code>status: UNUSED → USED</code> and clears <code>expiresAt</code>,
+        which is what keeps the media from being auto-deleted by the cleanup job / TTL index.
+      </p>
+      <h2>Background jobs (<code>media-queue</code>)</h2>
+      <p>
+        Owned and consumed by this service&#39;s <code>WorkerManager</code> (<a
+          href="src/classes/WorkerManager.ts"
+          >src/classes/WorkerManager.ts</a
+        >), one BullMQ <code>JobWorker</code> for the whole queue (concurrency 5, shared across all
+        job names below - not per-job like the old <code>be-jobs</code>-based implementation).
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Job name</th>
+            <th>Enqueued by</th>
+            <th>What it does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <code>create-single-unused-media</code> / <code>create-multiple-unused-media</code>
+            </td>
+            <td>this service (controllers)</td>
+            <td>
+              Inserts <code>Media</code> doc(s) with <code>status: UNUSED</code> and an
+              <code>expiresAt</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>delete-single-media</code> / <code>delete-multiple-media</code></td>
+            <td>this service (controllers, delayed by <code>CLEANUP_DELAY</code>)</td>
+            <td>
+              Removes the Cloudinary asset(s) and marks the doc(s) <code>DELETED</code>, if still
+              <code>UNUSED</code>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <code>mark-single-media-as-used</code> / <code>mark-multiple-media-as-used</code>
+            </td>
+            <td>other services (e.g. <code>product-service</code>)</td>
+            <td>Flips <code>status → USED</code>, clears <code>expiresAt</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>remove-single-media-directly</code> /
+              <code>remove-multiple-media-directly</code>
+            </td>
+            <td>this service (<code>Cloudinary</code> class, as a retry path)</td>
+            <td>Re-attempts a Cloudinary deletion that failed inline</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <code>media-service</code> only runs a worker for <code>media-queue</code>.
+        <code>mail-queue</code> (used for OTP emails) is owned end-to-end by
+        <code>user-service</code> (producer) and <code>mail-service</code> (worker) - unrelated to
+        this service.
+      </p>
+      <h2>Cross-service queue integration</h2>
+      <p>
+        Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so
+        producers and consumers don&#39;t need to share a package version -
+        <code>product-service</code> currently enqueues
+        <code>mark-multiple-media-as-used</code> using the <strong>older</strong>
+        <code>@beautinique/be-jobs</code> package, while this service consumes it via the newer
+        <code>@beautinique/backend-bullmq</code>. Both target the same
+        <code>media-queue</code> string on the same Redis instance, so it works, but it means:
+      </p>
+      <ul>
+        <li>
+          The <code>JOB_REDIS_*</code> env vars must point to the <strong>same</strong> Redis
+          instance across every service that touches <code>media-queue</code>.
+        </li>
+        <li>
+          If <code>media-queue</code>&#39;s schema/job names ever change in
+          <code>backend-bullmq</code>, <code>product-service</code> (and any other producer still on
+          <code>be-jobs</code>) needs a matching update, or those jobs will silently stop being
+          picked up.
+        </li>
+      </ul>
+      <h2>Data model (<code>Media</code>)</h2>
+      <p><a href="src/models/index.ts">src/models/index.ts</a>:</p>
+      <ul>
+        <li>
+          <code>status</code>: <code>DRAFT | UNUSED | USED | DELETED</code> - new uploads start
+          <code>UNUSED</code>.
+        </li>
+        <li>
+          <code>expiresAt</code>: set on create (<code>UNUSED</code>) and on delete
+          (<code>DELETED</code>); cleared when marked <code>USED</code>.
+        </li>
+        <li>
+          A compound <code>{ status, expiresAt }</code> index for the cleanup queries, plus a
+          single-field TTL index on <code>expiresAt</code> as a <strong>backup</strong> deletion
+          path (see next section) - it does not remove the Cloudinary asset itself, only the MongoDB
+          document.
+        </li>
+      </ul>
+      <h2>Graceful startup / shutdown</h2>
+      <p>
+        <a href="src/bootstrap/startup.ts">src/bootstrap/startup.ts</a> /
+        <a href="src/bootstrap/shutdown.ts">src/bootstrap/shutdown.ts</a>, wired to
+        <code>SIGINT</code>/<code>SIGTERM</code> in <a href="src/index.ts">src/index.ts</a>:
+      </p>
+      <ul>
+        <li>
+          <strong>Startup</strong>: register Mongo event listeners → connect Mongo → start HTTP
+          server → start the <code>media-queue</code> worker.
+        </li>
+        <li>
+          <strong>Shutdown</strong>: stop accepting new HTTP requests → stop the worker → close the
+          job producer → disconnect Mongo → destroy any lingering sockets → exit. Idempotent (safe
+          to call more than once); every step&#39;s success/failure is logged individually via
+          <code>Promise.allSettled</code>.
+        </li>
+      </ul>
+      <p>
+        This service intentionally does <strong>not</strong> use <code>backend-bullmq</code>&#39;s
+        <code>registerGracefulShutdown</code> helper - it already owns a full, ordered shutdown
+        sequence (HTTP server first, then jobs, then DB), and that helper registers its <em>own</em>
+        <code>SIGTERM</code>/<code>SIGINT</code> listeners + calls
+        <code>process.exit()</code> itself, which would race with the sequence above. It&#39;s meant
+        for a process with no existing shutdown orchestration of its own (e.g. a standalone worker
+        script).
+      </p>
+      <h2>Design notes / known trade-offs</h2>
+      <ul>
+        <li>
+          <strong>TTL index is a backup, not the primary cleanup path.</strong> The
+          <code>expiresAt</code> TTL index (<code>expireAfterSeconds</code>) is set to
+          <code>CLEANUP_DELAY</code> + a 1-day safety buffer (<code>TTL_SAFETY_BUFFER_SECONDS</code>
+          in <a href="src/constants/index.ts">src/constants/index.ts</a>), specifically so it fires
+          well <em>after</em> the <code>delete-single-media</code>/<code
+            >delete-multiple-media</code
+          >
+          BullMQ jobs (which are scheduled with exactly <code>CLEANUP_DELAY</code>, and also remove
+          the actual Cloudinary asset). Without that buffer, Mongo&#39;s TTL monitor could delete
+          the document before the BullMQ job runs, and the job would then find nothing to clean up -
+          orphaning the Cloudinary asset forever, since the TTL sweep never touches Cloudinary
+          itself.
+        </li>
+        <li>
+          <strong>Two overlapping retry mechanisms on Cloudinary deletion.</strong> A failed removal
+          is retried both by BullMQ&#39;s own <code>attempts</code>/<code>backoff</code> on the job
+          <em>and</em> by the <code>Cloudinary</code> class&#39;s own
+          <code>retryCount</code> re-queueing (<a href="src/classes/Cloudinary.ts"
+            >src/classes/Cloudinary.ts</a
+          >) after rethrowing. In practice this just means a stuck deletion gets retried more
+          aggressively than either mechanism alone would - not incorrect, but worth knowing if
+          you&#39;re tuning retry/backoff behavior.
+        </li>
+        <li>
+          <strong><code>relatedTo</code> on <code>Media</code> is currently unused.</strong> The
+          schema has a <code>relatedTo: { service, entity }</code> field, but nothing in this
+          service (or the <code>product-service</code> integration above) ever populates it.
+        </li>
+      </ul>
+      <h2>Recent fixes (this review pass)</h2>
+      <ul>
+        <li>
+          <code>checkDbConnection</code> was registered globally, ahead of <code>/</code> and
+          <code>/health</code> - meaning the health endpoint couldn&#39;t respond at all while
+          MongoDB was down, exactly backwards from its purpose. Scoped it to the
+          <code>/api/v1</code> router only.
+        </li>
+        <li>
+          Every <code>res.success(...)</code> call site (<code>app.ts</code>,
+          <code>controllers/index.ts</code>) used a stale positional signature (<code
+            >(statusCode, message, data)</code
+          >) left over from an incomplete migration to <code>@beautinique/backend-response</code>,
+          which actually takes a single options object. A conflicting local type declaration in
+          <code>src/types/express.d.ts</code> hid this from the type-checker. At runtime this
+          silently dropped every custom message <em>and</em> the entire <code>data</code> payload -
+          including the uploaded file&#39;s <code>url</code>/<code>urls</code> in the upload
+          responses. Removed the bad local type and switched every call site to
+          <code>res.success({ statusCode, message, data })</code>.
+        </li>
+        <li>
+          <code>SERVICE_NAMES_MAP.media</code> doesn&#39;t exist (the map&#39;s keys are the full
+          service names, e.g. <code>&#39;media-service&#39;</code>) - it silently evaluated to
+          <code>undefined</code>, so <code>/health</code>&#39;s response was missing its
+          <code>service</code> field. Fixed to
+          <code>SERVICE_NAMES_MAP[&#39;media-service&#39;]</code>.
+        </li>
+        <li>
+          Added a safety buffer to the <code>Media</code> TTL index so it can no longer race ahead
+          of the BullMQ cleanup jobs (see above).
+        </li>
+        <li>
+          Multer uploads didn&#39;t pass <code>limits.fileSize</code>, so an oversized upload was
+          fully buffered into memory before the per-type size check rejected it. Added
+          <code>limits: { fileSize: MAX_VIDEO_SIZE }</code> (the largest allowed type) for an
+          earlier cutoff.
+        </li>
+        <li>
+          Migrated the BullMQ integration from the retired <code>@beautinique/be-jobs</code> package
+          to
+          <code>@beautinique/backend-bullmq</code>
+          (<code>JobProducer</code>/<code>JobWorker</code>).
+        </li>
+      </ul>
+      <p>
+        All of the above were verified against a live run: <code>npm run dev</code>, hit
+        <code>/</code>, <code>/health</code>, and a real
+        <code>POST /api/v1/upload/single</code> with a test image - confirmed the Cloudinary upload,
+        the correct JSON response shape, and the <code>create-single-unused-media</code> background
+        job completing and writing to MongoDB.
+      </p>
+    </main>
   </body>
 </html>
