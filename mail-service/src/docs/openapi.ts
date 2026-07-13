@@ -1,3 +1,9 @@
+import { SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
+
+const { health } = METHODS_AND_PATHS;
+
 const successEnvelope = (dataSchema?: object) => ({
   type: 'object',
   properties: {
@@ -21,8 +27,8 @@ export const openApiSpec = {
   servers: [{ url: '/', description: 'This service' }],
   tags: [{ name: 'Health', description: 'Service health check' }],
   paths: {
-    '/health': {
-      get: {
+    [health.path]: {
+      [health.method]: {
         tags: ['Health'],
         summary: 'Liveness + dependency connection status',
         responses: {
@@ -35,7 +41,7 @@ export const openApiSpec = {
                   properties: {
                     mail: { type: 'boolean', description: 'SMTP transporter is connected.' },
                     worker: { type: 'boolean', description: 'BullMQ worker is running.' },
-                    service: { type: 'string', example: 'Mail-Service' },
+                    service: { type: 'string', example: SERVICE_NAMES_MAP['mail-service'] },
                   },
                 }),
               },
