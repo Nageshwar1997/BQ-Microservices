@@ -7,16 +7,16 @@ request returns as soon as the Cloudinary upload finishes.
 
 ## Tech stack
 
-| Concern            | Package / Tool                                    |
-| ------------------- | -------------------------------------------------- |
-| HTTP framework      | Express 5                                           |
-| Media storage        | Cloudinary                                          |
-| Database             | MongoDB (Mongoose), via `@beautinique/backend-mongoose` |
-| Background jobs      | BullMQ (Redis), via `@beautinique/backend-bullmq`    |
-| Validation           | Zod, via `@beautinique/backend-zod`                 |
-| File upload parsing  | Multer, via `@beautinique/backend-multer`           |
-| Logging              | Pino, via `@beautinique/backend-logger`             |
-| Shared response shape | `@beautinique/backend-response`                    |
+| Concern                | Package / Tool                                               |
+| ---------------------- | ------------------------------------------------------------ |
+| HTTP framework         | Express 5                                                    |
+| Media storage          | Cloudinary                                                   |
+| Database               | MongoDB (Mongoose), via `@beautinique/backend-mongoose`      |
+| Background jobs/Queues | BullMQ (Redis), via `@beautinique/backend-bullmq`            |
+| Validation             | Zod, via `@beautinique/backend-zod`                          |
+| File upload parsing    | Multer, via `@beautinique/backend-multer`                    |
+| Logging                | Pino, via `@beautinique/backend-logger`                      |
+| Shared response shape  | `@beautinique/backend-response`                              |
 | Shared constants/types | `@beautinique/shared-constants`, `@beautinique/shared-types` |
 
 ## Running locally
@@ -43,18 +43,16 @@ Cloudinary account.
 
 ## Environment variables
 
-| Variable | Purpose |
-| --- | --- |
-| `PORT` | HTTP port to listen on |
-| `IS_DEV` | `'true'` enables pretty logging, stack traces in error responses, and dev URLs for downstream service links |
-| `SERVICE_NAME` | Name tag attached to every log line |
-| `SERVICE_SECRET` | Shared secret required in the `X-Service-Secret` header on every `/api/v1/*` request (see [Auth](#auth)) |
-| `DATABASE_NAME` | MongoDB database name |
-| `MONGODB_URI` | MongoDB connection string |
-| `JOB_REDIS_HOST` / `JOB_REDIS_PORT` / `JOB_REDIS_PASSWORD` / `JOB_REDIS_USERNAME` | Redis connection used for BullMQ (**shared** across services - see [Cross-service queue integration](#cross-service-queue-integration)) |
-| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | Cloudinary credentials |
-| `GATEWAY_DEV_URL` / `GATEWAY_PROD_URL` | API gateway URL (informational, exposed via `envs.url.gateway`) |
-| `USER_SERVICE_*`, `MAIL_SERVICE_*`, `MEDIA_SERVICE_*` (`_DEV_URL`/`_PROD_URL`) | Sibling service base URLs (informational) |
+| Variable                                                                  | Purpose                                                                                                                                 |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`                                                                    | HTTP port to listen on                                                                                                                  |
+| `IS_DEV`                                                                  | `'true'` enables pretty logging, stack traces in error responses, and dev URLs for downstream service links                             |
+| `SERVICE_NAME`                                                            | Name tag attached to every log line                                                                                                     |
+| `SERVICE_SECRET`                                                          | Shared secret required in the `X-Service-Secret` header on every `/api/v1/*` request (see [Auth](#auth))                                |
+| `DATABASE_NAME`                                                           | MongoDB database name                                                                                                                   |
+| `MONGODB_URI`                                                             | MongoDB connection string                                                                                                               |
+| `BULL_MQ_HOST` / `BULL_MQ_PORT` / `BULL_MQ_PASSWORD` / `BULL_MQ_USERNAME` | Redis connection used for BullMQ (**shared** across services - see [Cross-service queue integration](#cross-service-queue-integration)) |
+| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET`  | Cloudinary credentials                                                                                                                  |
 
 ## Auth model
 
@@ -76,13 +74,13 @@ or a downstream dependency is down.
 
 ## HTTP endpoints
 
-| Method | Path | Auth | Purpose |
-| --- | --- | --- | --- |
-| GET | `/` | none | This README, rendered as HTML |
-| GET | `/docs` | none | Interactive API docs (Swagger UI, spec in [src/docs/openapi.ts](src/docs/openapi.ts)) |
-| GET | `/health` | none | Liveness + Mongo connection status (`{ data: { database, service } }`) |
-| POST | `/api/v1/upload/single` | service secret + user | Upload one file (field name `file`) |
-| POST | `/api/v1/upload/multiple` | service secret + user | Upload several files (field name `files`) |
+| Method | Path                      | Auth                  | Purpose                                                                               |
+| ------ | ------------------------- | --------------------- | ------------------------------------------------------------------------------------- |
+| GET    | `/`                       | none                  | This README, rendered as HTML                                                         |
+| GET    | `/docs`                   | none                  | Interactive API docs (Swagger UI, spec in [src/docs/openapi.ts](src/docs/openapi.ts)) |
+| GET    | `/health`                 | none                  | Liveness + Mongo connection status (`{ data: { database, service } }`)                |
+| POST   | `/api/v1/upload/single`   | service secret + user | Upload one file (field name `file`)                                                   |
+| POST   | `/api/v1/upload/multiple` | service secret + user | Upload several files (field name `files`)                                             |
 
 Both upload routes take a `folder` field in the multipart body
 (`folderZodSchema` requires it; an empty/whitespace value falls back to
@@ -149,14 +147,14 @@ from being auto-deleted by the cleanup job / TTL index.
 Owned and consumed by this service's `WorkerManager`
 ([src/classes/WorkerManager.ts](src/classes/WorkerManager.ts)), one BullMQ
 `JobWorker` for the whole queue (concurrency 5, shared across all job names
-below - not per-job like the old `be-jobs`-based implementation).
+below).
 
-| Job name | Enqueued by | What it does |
-| --- | --- | --- |
-| `create-single-unused-media` / `create-multiple-unused-media` | this service (controllers) | Inserts `Media` doc(s) with `status: UNUSED` and an `expiresAt` |
-| `delete-single-media` / `delete-multiple-media` | this service (controllers, delayed by `CLEANUP_DELAY`) | Removes the Cloudinary asset(s) and marks the doc(s) `DELETED`, if still `UNUSED` |
-| `mark-single-media-as-used` / `mark-multiple-media-as-used` | other services (e.g. `product-service`) | Flips `status → USED`, clears `expiresAt` |
-| `remove-single-media-directly` / `remove-multiple-media-directly` | this service (`Cloudinary` class, as a retry path) | Re-attempts a Cloudinary deletion that failed inline |
+| Job name                                                          | Enqueued by                                            | What it does                                                                      |
+| ----------------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| `create-single-unused-media` / `create-multiple-unused-media`     | this service (controllers)                             | Inserts `Media` doc(s) with `status: UNUSED` and an `expiresAt`                   |
+| `delete-single-media` / `delete-multiple-media`                   | this service (controllers, delayed by `CLEANUP_DELAY`) | Removes the Cloudinary asset(s) and marks the doc(s) `DELETED`, if still `UNUSED` |
+| `mark-single-media-as-used` / `mark-multiple-media-as-used`       | other services (e.g. `product-service`)                | Flips `status → USED`, clears `expiresAt`                                         |
+| `remove-single-media-directly` / `remove-multiple-media-directly` | this service (`Cloudinary` class, as a retry path)     | Re-attempts a Cloudinary deletion that failed inline                              |
 
 `media-service` only runs a worker for `media-queue`. `mail-queue` (used for
 OTP emails) is owned end-to-end by `user-service` (producer) and
@@ -171,7 +169,7 @@ using the **older** `@beautinique/be-jobs` package, while this service
 consumes it via the newer `@beautinique/backend-bullmq`. Both target the same
 `media-queue` string on the same Redis instance, so it works, but it means:
 
-- The `JOB_REDIS_*` env vars must point to the **same** Redis instance across
+- The `BULL_MQ_*` env vars must point to the **same** Redis instance across
   every service that touches `media-queue`.
 - If `media-queue`'s schema/job names ever change in `backend-bullmq`,
   `product-service` (and any other producer still on `be-jobs`) needs a

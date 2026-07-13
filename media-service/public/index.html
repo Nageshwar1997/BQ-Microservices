@@ -180,7 +180,7 @@
             <td>MongoDB (Mongoose), via <code>@beautinique/backend-mongoose</code></td>
           </tr>
           <tr>
-            <td>Background jobs</td>
+            <td>Background jobs/Queues</td>
             <td>BullMQ (Redis), via <code>@beautinique/backend-bullmq</code></td>
           </tr>
           <tr>
@@ -265,8 +265,8 @@ npm run lint:fix
           </tr>
           <tr>
             <td>
-              <code>JOB_REDIS_HOST</code> / <code>JOB_REDIS_PORT</code> /
-              <code>JOB_REDIS_PASSWORD</code> / <code>JOB_REDIS_USERNAME</code>
+              <code>BULL_MQ_HOST</code> / <code>BULL_MQ_PORT</code> /
+              <code>BULL_MQ_PASSWORD</code> / <code>BULL_MQ_USERNAME</code>
             </td>
             <td>
               Redis connection used for BullMQ (<strong>shared</strong> across services - see
@@ -279,17 +279,6 @@ npm run lint:fix
               <code>CLOUDINARY_API_SECRET</code>
             </td>
             <td>Cloudinary credentials</td>
-          </tr>
-          <tr>
-            <td><code>GATEWAY_DEV_URL</code> / <code>GATEWAY_PROD_URL</code></td>
-            <td>API gateway URL (informational, exposed via <code>envs.url.gateway</code>)</td>
-          </tr>
-          <tr>
-            <td>
-              <code>USER_SERVICE_*</code>, <code>MAIL_SERVICE_*</code>,
-              <code>MEDIA_SERVICE_*</code> (<code>_DEV_URL</code>/<code>_PROD_URL</code>)
-            </td>
-            <td>Sibling service base URLs (informational)</td>
           </tr>
         </tbody>
       </table>
@@ -494,8 +483,8 @@ res.success({ data: { url } })      # request returns here - DB write happens as
       </p>
       <ul>
         <li>
-          The <code>JOB_REDIS_*</code> env vars must point to the <strong>same</strong> Redis
-          instance across every service that touches <code>media-queue</code>.
+          The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance
+          across every service that touches <code>media-queue</code>.
         </li>
         <li>
           If <code>media-queue</code>&#39;s schema/job names ever change in
