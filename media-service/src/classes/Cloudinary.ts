@@ -22,7 +22,6 @@ import pLimit from 'p-limit';
 import { jobProducer, logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import type {
-  IMedia,
   IMultipleRemover,
   IMultipleUploader,
   IRemover,
@@ -30,6 +29,7 @@ import type {
   ISingleUploader,
   IUploader,
   TFile,
+  TResource,
 } from '../types/index.js';
 
 const DEFAULT_FOLDER_NAME = 'common_folder';
@@ -65,10 +65,7 @@ class Cloudinary {
   }
 
   /* ========== GENERATE SAFE FOLDER PATH ========== */
-  private generateFolderName({
-    folder,
-    resourceType,
-  }: TFolderZodSchema & Pick<IMedia, 'resourceType'>) {
+  private generateFolderName({ folder, resourceType }: TFolderZodSchema & TResource) {
     // Replace unsafe characters with underscore
     const sanitize = (str: string) => str.replace(FOLDER_SANITIZE_REGEX, '_');
     const mediaType = resourceType === MEDIA_RESOURCE_MAP.IMAGE ? 'Images' : 'Videos';
