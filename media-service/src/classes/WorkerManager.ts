@@ -18,7 +18,7 @@ export class WorkerManager {
   public start() {
     this.worker = new JobWorker({
       queueName: 'media-queue',
-      connection: envs.redis.job,
+      connection: envs.redis.bull_mq,
       concurrency: WORKER_CONCURRENCY,
       logger,
       handlers: {

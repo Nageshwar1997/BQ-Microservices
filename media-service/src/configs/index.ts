@@ -18,6 +18,6 @@ export const logger = createLogger({
   logsDir: 'logs',
 });
 
-export const jobProducer = new JobProducer({ connection: envs.redis.job, logger });
+export const jobProducer = new JobProducer({ connection: envs.redis.bull_mq, logger });
 
 export const workerManager = new WorkerManager();
