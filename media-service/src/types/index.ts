@@ -1,4 +1,5 @@
 import type { TFolderZodSchema } from '@beautinique/backend-types';
+import type { TUserRole } from '@beautinique/shared-types';
 import type { InferSchemaType, Types } from 'mongoose';
 
 import type { mediaSchema } from '../models/index.js';
@@ -6,6 +7,11 @@ import type { mediaSchema } from '../models/index.js';
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
+}
+
+export interface IUser {
+  _id: string;
+  role: TUserRole;
 }
 
 export interface ITimestamp {

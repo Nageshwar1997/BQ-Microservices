@@ -1,4 +1,5 @@
 import type { TFolderZodSchema } from '@beautinique/backend-types';
+import { getUser } from '@beautinique/backend-utils';
 import { stringifyData } from '@beautinique/shared-utils';
 import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
@@ -7,10 +8,10 @@ import { cloudinary } from '../classes/index.js';
 import { jobProducer, logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';
 import type { TFile } from '../types/index.js';
-import { generateBaseMediaPayload, getUser } from '../utils/index.js';
+import { generateBaseMediaPayload } from '../utils/index.js';
 
 export const singleMediaUploadController = async (req: Request, res: Response) => {
-  const { _id: userId } = getUser(req);
+  const { _id: userId } = getUser(req.user);
 
   const {
     body: { folder },
@@ -63,7 +64,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
 };
 
 export const multipleMediaUploadController = async (req: Request, res: Response) => {
-  const { _id: userId } = getUser(req);
+  const { _id: userId } = getUser(req.user);
 
   const {
     body: { folder },

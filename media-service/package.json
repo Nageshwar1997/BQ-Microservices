@@ -47,6 +47,7 @@
     "@beautinique/backend-multer": "^1.0.3",
     "@beautinique/backend-request": "^1.0.0",
     "@beautinique/backend-response": "^1.0.2",
+    "@beautinique/backend-utils": "^1.0.2",
     "@beautinique/backend-zod": "^1.0.6",
     "@beautinique/shared-constants": "^1.0.6",
     "@beautinique/shared-utils": "^1.0.1",
