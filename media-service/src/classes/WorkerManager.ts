@@ -203,7 +203,7 @@ export class WorkerManager {
             /* ---------------- GROUP BY RESOURCE TYPE ---------------- */
 
             const groupedMedia = medias.reduce<Record<string, string[]>>((acc, media) => {
-              acc[media.resourceType].push(media.publicId);
+              (acc[media.resourceType] ??= []).push(media.publicId);
 
               return acc;
             }, {});

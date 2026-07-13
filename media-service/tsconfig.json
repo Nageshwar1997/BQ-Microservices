@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     /* Language */
     "target": "ES2025",
@@ -15,7 +16,11 @@
 
     /* Environment */
     "types": ["node"],
-    "resolveJsonModule": true,
+
+    /* Declaration Files */
+    /* `declaration`/`declarationMap` deliberately omitted (both default to
+       false) - this is an application (an Express server), not a package
+       anything else imports, so no consumer ever reads dist/*.d.ts. */
 
     /* Type Checking */
     "strict": true,
@@ -23,18 +28,31 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    /* Indexed access (arr[i], Record<string, T>[key], ...) is typed as
+       `T | undefined` instead of just `T`, forcing an explicit check. */
+    "noUncheckedIndexedAccess": true,
 
-    /* Build */
+    /* Build Safety */
+    /* `tsc` (the "build" script) must not write dist/ output when there are
+       type errors - otherwise a broken build could still get deployed. */
+    "noEmitOnError": true,
+
+    /* Build Compatibility */
     "isolatedModules": true,
+
+    /* Module Resolution */
+    "resolveJsonModule": true,
 
     /* Interop */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
 
-    /* Output */
+    /* Source Maps/Debug/Output */
     "sourceMap": true,
+    "removeComments": true,
 
-    /* Consistency */
+    /* Misc/Consistency */
     "forceConsistentCasingInFileNames": true,
 
     /* Performance */

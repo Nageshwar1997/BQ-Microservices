@@ -91,12 +91,7 @@ class Cloudinary {
   /* ========== EXTRACT FAILED IDS FROM RESULTS ========== */
   private getFailedIds(results: PromiseSettledResult<unknown>[], ids: string[]) {
     // Return only IDs whose corresponding promise failed
-    return results.reduce<string[]>((acc, result, index) => {
-      if (result.status === 'rejected') {
-        acc.push(ids[index]);
-      }
-      return acc;
-    }, []);
+    return ids.filter((_, index) => results[index]?.status === 'rejected');
   }
 
   /* ========== RETRY FAILED DELETIONS VIA QUEUE ========== */

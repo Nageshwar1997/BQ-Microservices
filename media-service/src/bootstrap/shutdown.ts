@@ -49,14 +49,22 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
       await stopHttpServer();
     }
 
-    const results = await Promise.allSettled(shutdownTasks.map(({ task }) => task()));
+    const outcomes = await Promise.all(
+      shutdownTasks.map(async ({ name, task }) => {
+        try {
+          await task();
+          return { name, status: 'fulfilled' as const };
+        } catch (error) {
+          return { name, status: 'rejected' as const, reason: error };
+        }
+      }),
+    );
 
-    results.forEach((result, index) => {
-      const { name } = shutdownTasks[index];
-      if (result.status === 'fulfilled') {
-        logger.info(`✅ ${name} stopped successfully`);
+    outcomes.forEach((outcome) => {
+      if (outcome.status === 'fulfilled') {
+        logger.info(`✅ ${outcome.name} stopped successfully`);
       } else {
-        logger.error(`❌ Failed to stop ${name}: ${String(result.reason)}`);
+        logger.error(`❌ Failed to stop ${outcome.name}: ${String(outcome.reason)}`);
       }
     });
 

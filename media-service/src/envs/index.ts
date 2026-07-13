@@ -1,6 +1,12 @@
 const {
   // A
   // B
+
+  BULL_MQ_HOST,
+  BULL_MQ_PORT,
+  BULL_MQ_PASSWORD,
+  BULL_MQ_USERNAME,
+
   // C
   CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY,
@@ -13,35 +19,19 @@ const {
   // E
   // F
   // G
-
-  GATEWAY_DEV_URL,
-  GATEWAY_PROD_URL,
-
   // H
   // I
-
-  IS_DEV,
-
   // J
-
-  JOB_REDIS_HOST,
-  JOB_REDIS_PORT,
-  JOB_REDIS_PASSWORD,
-  JOB_REDIS_USERNAME,
-
   // K
   // L
   // M
 
-  MAIL_SERVICE_DEV_URL,
-  MAIL_SERVICE_PROD_URL,
-
-  MEDIA_SERVICE_DEV_URL,
-  MEDIA_SERVICE_PROD_URL,
-
   MONGODB_URI,
 
   // N
+
+  NODE_ENV,
+
   // O
   // P
 
@@ -57,18 +47,33 @@ const {
 
   // T
   // U
-
-  USER_SERVICE_DEV_URL,
-  USER_SERVICE_PROD_URL,
-
   // V
   // W
   // X
   // Y
   // Z
-} = process.env as Record<string, string>;
+} = process.env;
 
-const is_dev = IS_DEV === 'true';
+/** Fails fast at startup with a clear message instead of a confusing downstream crash. */
+const requireEnv = (value: string | undefined, name: string): string => {
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+
+  return value;
+};
+
+const requirePort = (value: string | undefined, name: string): number => {
+  const port = Number(requireEnv(value, name));
+
+  if (!Number.isInteger(port) || port <= 0) {
+    throw new Error(
+      `Environment variable ${name} must be a positive integer, got: ${String(value)}`,
+    );
+  }
+
+  return port;
+};
 
 export const envs = {
   // A
@@ -76,14 +81,14 @@ export const envs = {
   // C
 
   cloudinary: {
-    cloud_name: CLOUDINARY_CLOUD_NAME,
-    api_key: CLOUDINARY_API_KEY,
-    api_secret: CLOUDINARY_API_SECRET,
+    cloud_name: requireEnv(CLOUDINARY_CLOUD_NAME, 'CLOUDINARY_CLOUD_NAME'),
+    api_key: requireEnv(CLOUDINARY_API_KEY, 'CLOUDINARY_API_KEY'),
+    api_secret: requireEnv(CLOUDINARY_API_SECRET, 'CLOUDINARY_API_SECRET'),
   },
 
   // D
 
-  database_name: DATABASE_NAME,
+  database_name: requireEnv(DATABASE_NAME, 'DATABASE_NAME'),
 
   // E
   // F
@@ -91,50 +96,40 @@ export const envs = {
   // H
   // I
 
-  is_dev,
+  is_dev: NODE_ENV === 'development',
 
   // J
   // K
   // L
   // M
 
-  mongo_uri: MONGODB_URI,
+  mongo_uri: requireEnv(MONGODB_URI, 'MONGODB_URI'),
 
   // N
   // O
   // P
 
-  port: Number(PORT),
+  port: requirePort(PORT, 'PORT'),
 
   // Q
   // R
 
   redis: {
-    job: {
-      host: JOB_REDIS_HOST,
-      port: Number(JOB_REDIS_PORT),
-      password: JOB_REDIS_PASSWORD,
-      username: JOB_REDIS_USERNAME,
+    bull_mq: {
+      host: requireEnv(BULL_MQ_HOST, 'BULL_MQ_HOST'),
+      port: requirePort(BULL_MQ_PORT, 'BULL_MQ_PORT'),
+      password: BULL_MQ_PASSWORD,
+      username: BULL_MQ_USERNAME,
     },
   },
 
   // S
 
-  service_name: SERVICE_NAME,
-  service_secret: SERVICE_SECRET,
+  service_name: requireEnv(SERVICE_NAME, 'SERVICE_NAME'),
+  service_secret: requireEnv(SERVICE_SECRET, 'SERVICE_SECRET'),
 
   // T
   // U
-
-  url: {
-    gateway: is_dev ? GATEWAY_DEV_URL : GATEWAY_PROD_URL,
-    service: {
-      mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
-      media: is_dev ? MEDIA_SERVICE_DEV_URL : MEDIA_SERVICE_PROD_URL,
-      user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
-    },
-  },
-
   // V
   // W
   // X
