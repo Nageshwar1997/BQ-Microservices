@@ -41,7 +41,7 @@
     "@beautinique/backend-response": "^1.0.2",
     "@beautinique/shared-constants": "^1.0.6",
     "@beautinique/shared-markdown-to-html": "^1.0.0",
-    "@beautinique/shared-utils": "^1.0.1",
+    "@beautinique/shared-utils": "^1.0.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "html-to-text": "^10.0.0",
