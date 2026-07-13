@@ -28,10 +28,10 @@ export const registerDatabaseEvents = (): void => {
       logger.info('✅ MongoDB connected');
     })
     .on('disconnecting', () => {
-      logger.warn('⚠️ Disconnecting MongoDB...');
+      logger.warn('⚠️  Disconnecting MongoDB...');
     })
     .on('disconnected', () => {
-      logger.warn('⚠️ MongoDB disconnected');
+      logger.warn('⚠️  MongoDB disconnected');
     })
     .on('error', (error) => {
       logger.error(`❌ MongoDB error: ${error}`);

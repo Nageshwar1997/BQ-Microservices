@@ -243,16 +243,18 @@ export class WorkerManager {
       },
     });
 
-    logger.info('Worker manager started');
+    logger.info('✅ Worker manager started');
+  }
+
+  /* ---------------- RUNNING STATE ---------------- */
+
+  public isRunning() {
+    return this.worker?.isRunning() ?? false;
   }
 
   /* ---------------- STOP ---------------- */
 
   public async stop() {
-    logger.info('Closing workers...');
-
     await this.worker?.close();
-
-    logger.info('All workers closed');
   }
 }

@@ -7,7 +7,7 @@ import express from 'express';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 
-import { logger } from './configs/index.js';
+import { logger, workerManager } from './configs/index.js';
 import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
 import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
@@ -75,7 +75,11 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 app.get('/health', (_, res) => {
   res.success({
     message: 'Media Service is healthy',
-    data: { database: getConnectionHealth(), service: SERVICE_NAMES_MAP['media-service'] },
+    data: {
+      database: getConnectionHealth(),
+      service: SERVICE_NAMES_MAP['media-service'],
+      worker: workerManager.isRunning(),
+    },
   });
 });
 

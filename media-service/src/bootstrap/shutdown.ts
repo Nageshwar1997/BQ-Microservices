@@ -52,6 +52,8 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     const outcomes = await Promise.all(
       shutdownTasks.map(async ({ name, task }) => {
         try {
+          logger.warn('⚠️  Stopping %s...', name);
+
           await task();
           return { name, status: 'fulfilled' as const };
         } catch (error) {
