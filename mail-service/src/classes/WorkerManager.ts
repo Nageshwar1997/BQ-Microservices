@@ -46,12 +46,6 @@ export class WorkerManager {
   /* ---------------- STOP ---------------- */
 
   public async stop() {
-    logger.info('Closing workers...');
-
     await this.worker?.close();
-
-    logger.info('All workers closed');
   }
 }
-
-export const workerManager = new WorkerManager();
