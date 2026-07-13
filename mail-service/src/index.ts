@@ -1,17 +1,20 @@
+import 'dotenv/config';
+
+import type { Socket } from 'node:net';
+
 import {
   errorResponse,
   notFoundResponse,
   setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
-import 'dotenv/config';
 import express from 'express';
-import type { Socket } from 'node:net';
 import path from 'path';
 import { parse } from 'qs';
-import { transporter, workerManager } from './classes';
-import { errorLogs, logger, requestLogs } from './configs';
-import { envs } from './envs';
+
+import { transporter, workerManager } from './classes/index.js';
+import { errorLogs, logger, requestLogs } from './configs/index.js';
+import { envs } from './envs/index.js';
 
 /* ---------------- APP SETUP ---------------- */
 
@@ -44,10 +47,14 @@ app.use(successResponse);
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/', (_, res) => res.success(200, 'Welcome to the Mail Service API'));
+app.get('/', (_, res) => {
+  res.success(200, 'Welcome to the Mail Service API');
+});
 
 // Health Route
-app.get('/health', (_, res) => res.success(200, 'Mail Service is healthy'));
+app.get('/health', (_, res) => {
+  res.success(200, 'Mail Service is healthy');
+});
 
 /* ---------------- ERROR HANDLING ---------------- */
 
@@ -68,7 +75,7 @@ async function start() {
       const httpServer = app.listen(envs.port, () => {
         httpServer.off('error', onError);
 
-        logger.info(`🚀 Server running on port: ${envs.port}`);
+        logger.info(`🚀 Server running on port: ${String(envs.port)}`);
 
         resolve();
       });
@@ -102,7 +109,8 @@ async function start() {
     httpServer.headersTimeout = 66_000;
 
     // 🔥 Start transporter and workers AFTER server starts
-    await Promise.all([transporter.connect(), workerManager.start()]);
+    await Promise.all([transporter.connect()]);
+    workerManager.start();
 
     logger.info('✅ Mail service initialized');
   } catch (err) {
@@ -119,7 +127,9 @@ async function shutdown(signal: string) {
 
   try {
     // 🔥 Stop workers + transporter first
-    await Promise.allSettled([workerManager.stop(), transporter.disconnect()]);
+    await Promise.allSettled([workerManager.stop()]);
+
+    transporter.disconnect();
 
     logger.info('📦 Workers and transporter stopped');
 
@@ -138,7 +148,10 @@ async function shutdown(signal: string) {
         server?.close((err) => {
           clearTimeout(forceCloseTimer);
 
-          if (err) return reject(err);
+          if (err) {
+            reject(err);
+            return;
+          }
 
           logger.info('🌐 HTTP server closed');
 
@@ -159,8 +172,8 @@ async function shutdown(signal: string) {
 
 /* ---------------- PROCESS SIGNALS ---------------- */
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
 /* ---------------- BOOTSTRAP ---------------- */
 

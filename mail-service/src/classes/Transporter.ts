@@ -1,8 +1,9 @@
 import { convert } from 'html-to-text';
 import { createTransport } from 'nodemailer';
-import { logger } from '../configs';
-import { envs } from '../envs';
-import { getOtpHtmlMessage } from '../utils';
+
+import { logger } from '../configs/index.js';
+import { envs } from '../envs/index.js';
+import { getOtpHtmlMessage } from '../utils/index.js';
 
 const config = createTransport({
   host: envs.mail.host,
@@ -38,9 +39,9 @@ class Transporter {
 
   /* ---------------- CLOSE ---------------- */
 
-  public async disconnect() {
+  public disconnect() {
     try {
-      if (!this.transporter) return;
+      if (!this.isReady) return;
 
       // 🔥 close only works if pooling enabled
       if (typeof this.transporter.close === 'function') {

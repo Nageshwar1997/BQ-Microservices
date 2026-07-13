@@ -1,2 +1,2 @@
-export * from './Transporter';
-export * from './WorkerManager';
+export * from './Transporter.js';
+export * from './WorkerManager.js';

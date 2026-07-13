@@ -1,12 +1,12 @@
 import { bullWorker } from '@beautinique/be-jobs';
 
-import { envs } from '../envs';
-import { transporter } from './Transporter';
+import { envs } from '../envs/index.js';
+import { transporter } from './Transporter.js';
 
 class WorkerManager {
   /* ---------------- CONNECT ---------------- */
   private connect() {
-    bullWorker.connect(envs.redis.job);
+    bullWorker.connect(envs.redis.bull_mq);
   }
 
   /* ---------------- RUN WORKERS ---------------- */
@@ -14,7 +14,9 @@ class WorkerManager {
     bullWorker.createWorker({
       queueName: 'mail-queue',
       jobName: 'send-otp',
-      handler: async (job) => await transporter.sendOtp(job.data.email, job.data.otp),
+      handler: async (job) => {
+        await transporter.sendOtp(job.data.email, job.data.otp);
+      },
     });
   }
 

@@ -1,5 +1,6 @@
 import { winstonLogs } from '@beautinique/be-middlewares';
-import { envs } from '../envs';
+
+import { envs } from '../envs/index.js';
 
 export const {
   error: errorLogs,
