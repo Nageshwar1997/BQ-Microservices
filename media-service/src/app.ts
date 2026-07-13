@@ -55,8 +55,8 @@ app.use(successResponse({ defaultMessage: 'Success.' }));
 /* -------------------------------------------------------------------------- */
 
 /**
- * Serves the README, pre-rendered to HTML at build time by
- * `scripts/generate-readme.js` (see the "build"/"predev" scripts) -
+ * Serves the README, pre-rendered to HTML by `scripts/generate-html.mjs`
+ * (runs automatically after `npm run build` via the "postbuild" script) -
  * avoids re-parsing markdown on every request.
  */
 app[home.method](home.path, (_, res) => {

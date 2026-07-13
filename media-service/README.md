@@ -16,23 +16,23 @@ The Media Service is the central media-handling microservice for the **Beautiniq
 
 ## 2. Technology Stack
 
-| Layer                  | Technology                                                     |
-| ----------------------- | ---------------------------------------------------------------- |
-| Runtime                 | Node.js (ES2025, ESM)                                            |
-| Language                | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`) |
-| Framework                | Express.js 5.x                                                  |
-| Database                | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`)      |
-| Media storage            | Cloudinary                                                       |
-| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq`                |
-| Validation               | Zod, via `@beautinique/backend-zod`                              |
-| File upload parsing      | Multer, via `@beautinique/backend-multer`                        |
-| Logging                  | Pino, via `@beautinique/backend-logger`                          |
-| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`           |
-| README rendering         | `marked` (markdown → HTML)                                       |
-| Shared response envelope | `@beautinique/backend-response`                                  |
-| Shared utilities         | `@beautinique/backend-utils`, `@beautinique/shared-utils`        |
+| Layer                    | Technology                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| Runtime                  | Node.js (ES2025, ESM)                                                                      |
+| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                     |
+| Framework                | Express.js 5.x                                                                             |
+| Database                 | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`)                                |
+| Media storage            | Cloudinary                                                                                 |
+| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq`                                          |
+| Validation               | Zod, via `@beautinique/backend-zod`                                                        |
+| File upload parsing      | Multer, via `@beautinique/backend-multer`                                                  |
+| Logging                  | Pino, via `@beautinique/backend-logger`                                                    |
+| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                     |
+| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                   |
+| Shared response envelope | `@beautinique/backend-response`                                                            |
+| Shared utilities         | `@beautinique/backend-utils`, `@beautinique/shared-utils`                                  |
 | Shared constants/types   | `@beautinique/shared-constants`, `@beautinique/shared-types`, `@beautinique/backend-types` |
-| Code quality              | ESLint (flat config, type-checked + strict), Prettier            |
+| Code quality             | ESLint (flat config, type-checked + strict), Prettier                                      |
 
 ---
 
@@ -75,7 +75,7 @@ media-service/
 │   └── utils/
 │       └── index.ts                 #   generateBaseMediaPayload
 ├── scripts/
-│   └── generate-readme.js           # Renders README.md → public/index.html (marked)
+│   └── generate-html.mjs            # Renders README.md → public/index.html (@beautinique/shared-markdown-to-html), runs via "postbuild"
 ├── public/
 │   └── index.html                   # Pre-rendered README, served by GET /
 ├── dist/                            # Compiled JavaScript output (git-ignored)
@@ -94,38 +94,38 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.1 Server & App
 
-| Variable          | Required | Description                                                                 |
-| ------------------ | -------- | ----------------------------------------------------------------------------- |
-| `PORT`             | Yes      | HTTP port to listen on (must be a positive integer)                          |
-| `IS_DEV`           | No       | `"true"` enables pretty logging and stack traces in error responses          |
-| `SERVICE_NAME`     | Yes      | Name tag attached to every log line                                          |
-| `SERVICE_SECRET`   | Yes      | Shared secret required in the `X-Service-Secret` header on every `/api/v1/*` request |
-| `DATABASE_NAME`    | Yes      | MongoDB database name                                                        |
+| Variable         | Required | Description                                                                          |
+| ---------------- | -------- | ------------------------------------------------------------------------------------ |
+| `PORT`           | Yes      | HTTP port to listen on (must be a positive integer)                                  |
+| `IS_DEV`         | No       | `"true"` enables pretty logging and stack traces in error responses                  |
+| `SERVICE_NAME`   | Yes      | Name tag attached to every log line                                                  |
+| `SERVICE_SECRET` | Yes      | Shared secret required in the `X-Service-Secret` header on every `/api/v1/*` request |
+| `DATABASE_NAME`  | Yes      | MongoDB database name                                                                |
 
 ### 4.2 MongoDB
 
-| Variable       | Required | Description                 |
-| --------------- | -------- | ----------------------------- |
-| `MONGODB_URI`   | Yes      | MongoDB connection string    |
+| Variable      | Required | Description               |
+| ------------- | -------- | ------------------------- |
+| `MONGODB_URI` | Yes      | MongoDB connection string |
 
 ### 4.3 Redis — BullMQ
 
-| Variable            | Required | Description                                                  |
-| -------------------- | -------- | ---------------------------------------------------------------- |
-| `BULL_MQ_HOST`       | Yes      | Redis host used for the `media-queue` BullMQ connection          |
-| `BULL_MQ_PORT`       | Yes      | Redis port (must be a positive integer)                         |
-| `BULL_MQ_PASSWORD`   | No       | Redis password, if the instance requires auth                    |
-| `BULL_MQ_USERNAME`   | No       | Redis username, if the instance requires auth                    |
+| Variable           | Required | Description                                             |
+| ------------------ | -------- | ------------------------------------------------------- |
+| `BULL_MQ_HOST`     | Yes      | Redis host used for the `media-queue` BullMQ connection |
+| `BULL_MQ_PORT`     | Yes      | Redis port (must be a positive integer)                 |
+| `BULL_MQ_PASSWORD` | No       | Redis password, if the instance requires auth           |
+| `BULL_MQ_USERNAME` | No       | Redis username, if the instance requires auth           |
 
 **This Redis instance is shared** across every service that produces or consumes `media-queue` jobs (see [§10 Cross-service queue integration](#10-background-jobs-media-queue)) — it must point to the same instance everywhere.
 
 ### 4.4 Cloudinary
 
-| Variable                 | Required | Description            |
-| ------------------------- | -------- | ------------------------ |
-| `CLOUDINARY_CLOUD_NAME`   | Yes      | Cloudinary cloud name    |
-| `CLOUDINARY_API_KEY`      | Yes      | Cloudinary API key       |
-| `CLOUDINARY_API_SECRET`   | Yes      | Cloudinary API secret    |
+| Variable                | Required | Description           |
+| ----------------------- | -------- | --------------------- |
+| `CLOUDINARY_CLOUD_NAME` | Yes      | Cloudinary cloud name |
+| `CLOUDINARY_API_KEY`    | Yes      | Cloudinary API key    |
+| `CLOUDINARY_API_SECRET` | Yes      | Cloudinary API secret |
 
 ---
 
@@ -135,17 +135,17 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 Collection: `medias` (Mongoose default, pluralized from `Media`)
 
-| Field           | Type                  | Required | Default        | Notes                                                               |
-| ---------------- | ---------------------- | -------- | ---------------- | ---------------------------------------------------------------------- |
-| `publicId`       | String                 | Yes      | —               | Cloudinary public ID, unique                                          |
-| `url`            | String                 | Yes      | —               | Optimized Cloudinary URL (`f_auto,q_auto`), unique                   |
-| `resourceType`   | String (enum)          | Yes      | —               | `image` \| `video` (`MEDIA_RESOURCES`), indexed                       |
-| `userId`         | ObjectId               | Yes      | —               | Uploader's user id                                                    |
-| `relatedTo`      | Object                 | No       | —               | `{ service, entity }` — **currently unused**, no code populates it   |
-| `expiresAt`      | Date                   | No       | —               | Set on create (`UNUSED`) and on delete (`DELETED`); cleared when `USED` |
-| `deletedAt`      | Date                   | No       | —               | Indexed                                                               |
-| `status`         | String (enum)          | No       | `"UNUSED"`      | `DRAFT` \| `UNUSED` \| `USED` \| `DELETED` (`MEDIA_STATUSES`), indexed |
-| `metadata`       | Mixed                  | No       | —               | `{ width, height, format, size, folder }` from the Cloudinary response |
+| Field          | Type          | Required | Default    | Notes                                                                   |
+| -------------- | ------------- | -------- | ---------- | ----------------------------------------------------------------------- |
+| `publicId`     | String        | Yes      | —          | Cloudinary public ID, unique                                            |
+| `url`          | String        | Yes      | —          | Optimized Cloudinary URL (`f_auto,q_auto`), unique                      |
+| `resourceType` | String (enum) | Yes      | —          | `image` \| `video` (`MEDIA_RESOURCES`), indexed                         |
+| `userId`       | ObjectId      | Yes      | —          | Uploader's user id                                                      |
+| `relatedTo`    | Object        | No       | —          | `{ service, entity }` — **currently unused**, no code populates it      |
+| `expiresAt`    | Date          | No       | —          | Set on create (`UNUSED`) and on delete (`DELETED`); cleared when `USED` |
+| `deletedAt`    | Date          | No       | —          | Indexed                                                                 |
+| `status`       | String (enum) | No       | `"UNUSED"` | `DRAFT` \| `UNUSED` \| `USED` \| `DELETED` (`MEDIA_STATUSES`), indexed  |
+| `metadata`     | Mixed         | No       | —          | `{ width, height, format, size, folder }` from the Cloudinary response  |
 
 Also has `timestamps: true` (`createdAt`/`updatedAt`), `versionKey: false`.
 
@@ -177,20 +177,20 @@ Also has `timestamps: true` (`createdAt`/`updatedAt`), `versionKey: false`.
 
 ### 6.1 Home & Health & Docs
 
-| Method | Path       | Auth | Description                                                             |
-| ------ | ----------- | ---- | --------------------------------------------------------------------- |
-| GET    | `/`         | None | This README, pre-rendered to HTML by `scripts/generate-readme.js`      |
-| GET    | `/docs`     | None | Interactive Swagger UI (spec in `src/docs/openapi.ts`)                 |
-| GET    | `/health`   | None | Liveness + Mongo connection status + worker running state              |
+| Method | Path      | Auth | Description                                                      |
+| ------ | --------- | ---- | ---------------------------------------------------------------- |
+| GET    | `/`       | None | This README, pre-rendered to HTML by `scripts/generate-html.mjs` |
+| GET    | `/docs`   | None | Interactive Swagger UI (spec in `src/docs/openapi.ts`)           |
+| GET    | `/health` | None | Liveness + Mongo connection status + worker running state        |
 
 `/`, `/docs`, and `/health` are intentionally outside `/api/v1` and require neither the service secret nor a user — they must stay reachable for uptime checks even when the DB or a downstream dependency is down.
 
 ### 6.2 Upload Routes — `/api/v1/upload` (service secret + user required)
 
-| Method | Path                       | Field name | Description                          |
-| ------ | --------------------------- | ---------- | --------------------------------------- |
-| POST   | `/api/v1/upload/single`     | `file`     | Upload one image or video               |
-| POST   | `/api/v1/upload/multiple`   | `files`    | Upload several images/videos at once    |
+| Method | Path                      | Field name | Description                          |
+| ------ | ------------------------- | ---------- | ------------------------------------ |
+| POST   | `/api/v1/upload/single`   | `file`     | Upload one image or video            |
+| POST   | `/api/v1/upload/multiple` | `files`    | Upload several images/videos at once |
 
 Both take a `folder` field in the multipart body (`folderZodSchema` requires it; an empty/whitespace value falls back to `common_folder`).
 
@@ -206,20 +206,20 @@ Both take a `folder` field in the multipart body (`folderZodSchema` requires it;
 
 **File constraints** (enforced by `@beautinique/backend-multer` defaults via `@beautinique/shared-constants`, plus an early `limits.fileSize` cutoff at the largest allowed size):
 
-| Type  | Max size | Allowed MIME types                                                                                  | Allowed extensions                              |
-| ----- | -------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| Image | 2 MB     | `image/jpeg`, `png`, `webp`, `jpg`, `svg+xml`, `avif`, `gif`, `heic`, `heif`                              | `jpg`, `jpeg`, `png`, `webp`, `avif`, `gif`, `svg`, `heic`, `heif` |
-| Video | 10 MB    | `video/mp4`, `webm`, `quicktime`, `x-matroska`, `matroska`, `ogg`, HLS variants                          | `mp4`, `webm`, `mov`, `mkv`, `ogg`, `m3u8`         |
+| Type  | Max size | Allowed MIME types                                                              | Allowed extensions                                                 |
+| ----- | -------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Image | 2 MB     | `image/jpeg`, `png`, `webp`, `jpg`, `svg+xml`, `avif`, `gif`, `heic`, `heif`    | `jpg`, `jpeg`, `png`, `webp`, `avif`, `gif`, `svg`, `heic`, `heif` |
+| Video | 10 MB    | `video/mp4`, `webm`, `quicktime`, `x-matroska`, `matroska`, `ogg`, HLS variants | `mp4`, `webm`, `mov`, `mkv`, `ogg`, `m3u8`                         |
 
 ---
 
 ## 7. Request Headers
 
-| Header               | Purpose                                                                 |
-| --------------------- | --------------------------------------------------------------------- |
-| `X-Service-Secret`    | Service-to-service authentication (`checkServiceAccess`, required on `/api/v1/*`) |
-| `X-User-Id`           | End user's id (forwarded by the gateway/caller, required on `/api/v1/*`) |
-| `X-User-Role`         | End user's role, defaults to `USER` if not sent                        |
+| Header             | Purpose                                                                           |
+| ------------------ | --------------------------------------------------------------------------------- |
+| `X-Service-Secret` | Service-to-service authentication (`checkServiceAccess`, required on `/api/v1/*`) |
+| `X-User-Id`        | End user's id (forwarded by the gateway/caller, required on `/api/v1/*`)          |
+| `X-User-Role`      | End user's role, defaults to `USER` if not sent                                   |
 
 There's no JWT here — the gateway/upstream service is expected to have already authenticated the user and forwarded their identity via `X-User-Id`/`X-User-Role`.
 
@@ -286,18 +286,18 @@ Factory middleware — same header extraction as `authenticate`, plus throws `Au
 
 ### External Middlewares (from `@beautinique/*` packages)
 
-| Middleware              | Package                       | Purpose                                                                 |
-| ------------------------ | ------------------------------ | ---------------------------------------------------------------------- |
-| `checkServiceAccess`     | `@beautinique/backend-request`  | Validates `X-Service-Secret`, timing-safe compare                     |
-| `checkDbConnection`      | `@beautinique/backend-mongoose` | Rejects with 503 if MongoDB isn't ready (scoped to `/api/v1` only)     |
-| `checkEmptyRequest`      | `@beautinique/backend-request`  | Guards against empty body/file(s) before validation                   |
-| `validateMulter`         | `@beautinique/backend-multer`   | Multer wrapper: file type/size validation with structured errors      |
-| `validateZod`            | `@beautinique/backend-zod`      | Request body validation via Zod (`folderZodSchema`)                   |
-| `tryCatchResponse`       | `@beautinique/backend-response` | Wraps controller; provides `res.locals.afterResponse/afterRollback/afterFinish` |
-| `successResponse`        | `@beautinique/backend-response` | Attaches `res.success({ statusCode, message, data })`                 |
-| `notFoundResponse`       | `@beautinique/backend-response` | 404 handler (branded HTML page for browser requests)                  |
-| `errorResponse`          | `@beautinique/backend-response` | Central error handler; `{ success:false, code, message, fieldErrors?, globalErrors? }` |
-| `createHttpLogger`       | `@beautinique/backend-logger`   | Per-request Pino logging                                              |
+| Middleware           | Package                         | Purpose                                                                                |
+| -------------------- | ------------------------------- | -------------------------------------------------------------------------------------- |
+| `checkServiceAccess` | `@beautinique/backend-request`  | Validates `X-Service-Secret`, timing-safe compare                                      |
+| `checkDbConnection`  | `@beautinique/backend-mongoose` | Rejects with 503 if MongoDB isn't ready (scoped to `/api/v1` only)                     |
+| `checkEmptyRequest`  | `@beautinique/backend-request`  | Guards against empty body/file(s) before validation                                    |
+| `validateMulter`     | `@beautinique/backend-multer`   | Multer wrapper: file type/size validation with structured errors                       |
+| `validateZod`        | `@beautinique/backend-zod`      | Request body validation via Zod (`folderZodSchema`)                                    |
+| `tryCatchResponse`   | `@beautinique/backend-response` | Wraps controller; provides `res.locals.afterResponse/afterRollback/afterFinish`        |
+| `successResponse`    | `@beautinique/backend-response` | Attaches `res.success({ statusCode, message, data })`                                  |
+| `notFoundResponse`   | `@beautinique/backend-response` | 404 handler (branded HTML page for browser requests)                                   |
+| `errorResponse`      | `@beautinique/backend-response` | Central error handler; `{ success:false, code, message, fieldErrors?, globalErrors? }` |
+| `createHttpLogger`   | `@beautinique/backend-logger`   | Per-request Pino logging                                                               |
 
 ---
 
@@ -305,12 +305,12 @@ Factory middleware — same header extraction as `authenticate`, plus throws `Au
 
 Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single BullMQ `JobWorker` for the whole queue (concurrency 5, shared across every job name below, not one worker per job name).
 
-| Job name                                                          | Enqueued by                                             | What it does                                                                      |
-| ------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `create-single-unused-media` / `create-multiple-unused-media`       | this service (controllers)                                  | Inserts `Media` doc(s) with `status: UNUSED` and an `expiresAt`                       |
-| `delete-single-media` / `delete-multiple-media`                     | this service (controllers, delayed by `CLEANUP_DELAY` = 2 days) | Removes the Cloudinary asset(s) and marks the doc(s) `DELETED`, if still `UNUSED`   |
-| `mark-single-media-as-used` / `mark-multiple-media-as-used`         | other services (e.g. `product-service`)                     | Flips `status → USED`, clears `expiresAt`                                            |
-| `remove-single-media-directly` / `remove-multiple-media-directly`   | this service (`Cloudinary` class, as a retry path)          | Re-attempts a Cloudinary deletion that failed inline                                  |
+| Job name                                                          | Enqueued by                                                     | What it does                                                                      |
+| ----------------------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `create-single-unused-media` / `create-multiple-unused-media`     | this service (controllers)                                      | Inserts `Media` doc(s) with `status: UNUSED` and an `expiresAt`                   |
+| `delete-single-media` / `delete-multiple-media`                   | this service (controllers, delayed by `CLEANUP_DELAY` = 2 days) | Removes the Cloudinary asset(s) and marks the doc(s) `DELETED`, if still `UNUSED` |
+| `mark-single-media-as-used` / `mark-multiple-media-as-used`       | other services (e.g. `product-service`)                         | Flips `status → USED`, clears `expiresAt`                                         |
+| `remove-single-media-directly` / `remove-multiple-media-directly` | this service (`Cloudinary` class, as a retry path)              | Re-attempts a Cloudinary deletion that failed inline                              |
 
 `media-service` only runs a worker for `media-queue`. `mail-queue` (used for OTP emails) is owned end-to-end by `user-service` (producer) and `mail-service` (worker) — unrelated to this service.
 
@@ -332,12 +332,12 @@ Redis/BullMQ jobs are identified purely by queue name + job name at the Redis le
 
 A singleton `Cloudinary` class wrapping the `cloudinary` SDK.
 
-| Method                | Description                                                                                          |
-| ----------------------- | -------------------------------------------------------------------------------------------------------- |
-| `uploadSingle(data)`    | Streams one file to Cloudinary (`upload_stream`), returns the optimized URL (`f_auto,q_auto` for images, `playback_url` for videos) |
-| `uploadMultiple(data)`  | Uploads all files in parallel; if any fails, rolls back every successful upload and throws               |
-| `removeSingle(data)`    | Deletes one asset; on failure, re-queues via `remove-multiple-media-directly` (up to 5 retries) then rethrows |
-| `removeMultiple(data)`  | Deletes many assets in parallel (`p-limit`, concurrency 5); partial failures are re-queued for retry, never thrown |
+| Method                 | Description                                                                                                                         |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `uploadSingle(data)`   | Streams one file to Cloudinary (`upload_stream`), returns the optimized URL (`f_auto,q_auto` for images, `playback_url` for videos) |
+| `uploadMultiple(data)` | Uploads all files in parallel; if any fails, rolls back every successful upload and throws                                          |
+| `removeSingle(data)`   | Deletes one asset; on failure, re-queues via `remove-multiple-media-directly` (up to 5 retries) then rethrows                       |
+| `removeMultiple(data)` | Deletes many assets in parallel (`p-limit`, concurrency 5); partial failures are re-queued for retry, never thrown                  |
 
 **Folder naming:** `Beautinique/{Images|Videos}/{sanitized folder}` — unsafe characters (`&|/\#?%`) replaced with `_`, spaces collapsed, empty folder falls back to `common_folder`.
 
@@ -351,18 +351,18 @@ A singleton `Cloudinary` class wrapping the `cloudinary` SDK.
 
 ### `utils/index.ts`
 
-| Function                     | Description                                                                                     |
-| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| Function                         | Description                                                                                                                                                                                                    |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `generateBaseMediaPayload(data)` | Builds the `Media` document payload from a Cloudinary `UploadApiResponse` + `userId` — extracts `url`, `publicId`, `resourceType`, `createdAt`, and `metadata` (`width`, `height`, `format`, `size`, `folder`) |
 
 ### External Utilities (from `@beautinique/*` packages)
 
-| Function                       | Package                          | Description                                          |
-| -------------------------------- | ----------------------------------- | -------------------------------------------------------- |
-| `getUser(user)`                  | `@beautinique/backend-utils`         | Throws if `user` is null/undefined, otherwise returns it |
-| `getObjId(id)`                   | `@beautinique/backend-mongoose`      | Accepts string or `ObjectId`, returns a validated `ObjectId` |
-| `stringifyData(data)`            | `@beautinique/shared-utils`          | Safe `JSON.stringify` wrapper used throughout logging    |
-| `getConnectionHealth()`          | `@beautinique/backend-mongoose`      | Returns `{ readyState, connected, host, port, database }` |
+| Function                | Package                         | Description                                                  |
+| ----------------------- | ------------------------------- | ------------------------------------------------------------ |
+| `getUser(user)`         | `@beautinique/backend-utils`    | Throws if `user` is null/undefined, otherwise returns it     |
+| `getObjId(id)`          | `@beautinique/backend-mongoose` | Accepts string or `ObjectId`, returns a validated `ObjectId` |
+| `stringifyData(data)`   | `@beautinique/shared-utils`     | Safe `JSON.stringify` wrapper used throughout logging        |
+| `getConnectionHealth()` | `@beautinique/backend-mongoose` | Returns `{ readyState, connected, host, port, database }`    |
 
 ---
 
@@ -370,15 +370,15 @@ A singleton `Cloudinary` class wrapping the `cloudinary` SDK.
 
 All errors are thrown as `AppError` subclasses from `@beautinique/backend-classes` (e.g. `AuthenticationError`, `AuthorizationError`, `ExternalServiceError`, `ValidationError`). Standard error codes used across the service:
 
-| Code                    | HTTP Equivalent | When Used                                                |
-| ------------------------- | ------------------ | ------------------------------------------------------------ |
-| `VALIDATION_ERROR`        | 400/422            | Failed Zod validation, empty request                         |
-| `AUTHENTICATION_ERROR`    | 401                | Missing `X-User-Id`                                           |
-| `AUTHORIZATION_ERROR`     | 403                | Missing/invalid `X-Service-Secret`, or role not permitted     |
-| `PAYLOAD_TOO_LARGE`       | 413                | File exceeds the allowed size for its type                    |
-| `SERVICE_UNAVAILABLE`     | 503                | MongoDB not connected (`checkDbConnection`)                   |
-| `EXTERNAL_SERVICE_ERROR`  | 502                | Cloudinary upload/delete failure                               |
-| `INTERNAL_SERVER_ERROR`   | 500                | Unexpected failures                                            |
+| Code                     | HTTP Equivalent | When Used                                                 |
+| ------------------------ | --------------- | --------------------------------------------------------- |
+| `VALIDATION_ERROR`       | 400/422         | Failed Zod validation, empty request                      |
+| `AUTHENTICATION_ERROR`   | 401             | Missing `X-User-Id`                                       |
+| `AUTHORIZATION_ERROR`    | 403             | Missing/invalid `X-Service-Secret`, or role not permitted |
+| `PAYLOAD_TOO_LARGE`      | 413             | File exceeds the allowed size for its type                |
+| `SERVICE_UNAVAILABLE`    | 503             | MongoDB not connected (`checkDbConnection`)               |
+| `EXTERNAL_SERVICE_ERROR` | 502             | Cloudinary upload/delete failure                          |
+| `INTERNAL_SERVER_ERROR`  | 500             | Unexpected failures                                       |
 
 Errors flow through the `errorResponse` middleware, which uses `envs.is_dev` to include/exclude the stack trace, and sends `{ success: false, code, message, fieldErrors?, globalErrors? }`.
 
@@ -415,16 +415,17 @@ This service intentionally does **not** use `backend-bullmq`'s `registerGraceful
 ```bash
 npm install
 npm run dev            # tsc --noEmit --watch + nodemon (tsx) — development, auto-restarts on src changes
-npm run build           # tsc → dist/
+npm run build           # tsc → dist/, then auto-regenerates public/index.html (see "postbuild" below)
 npm run start            # node dist/index.js — production (run build first)
 npm run start:dev        # build + start in one step
 npm run lint              # eslint src
 npm run lint:fix
-npm run docs:build        # regenerate public/index.html from README.md (marked) — run manually after editing the README
 npm run clean              # remove dist/
 ```
 
-**Note:** `npm run docs:build` is a standalone script, not currently wired into `build`/`dev` via a `pre*` hook — run it manually whenever `README.md` changes, or `GET /` will keep serving the previously-generated `public/index.html`.
+**`postbuild`** (`node scripts/generate-html.mjs`) runs automatically after every `npm run build`, via npm's `pre*`/`post*` script convention — it re-renders `README.md` → `public/index.html` using `@beautinique/shared-markdown-to-html`, so `GET /` is always in sync with the latest `README.md` after a build.
+
+**Note:** this only fires on `npm run build` (and anything that calls it, like `start:dev`) — `npm run dev` runs `tsx` directly and never touches `tsc`/`postbuild`, so editing `README.md` during `npm run dev` won't update `GET /` until you run `npm run build` (or `node scripts/generate-html.mjs` directly).
 
 ### Deploying (Render / similar PaaS)
 
@@ -448,21 +449,22 @@ Flat config: `@eslint/js` recommended → `typescript-eslint` recommended/strict
 
 ## 16. Shared Packages (`@beautinique/*`)
 
-| Package                          | Purpose                                                              |
-| ----------------------------------- | ------------------------------------------------------------------------ |
-| `@beautinique/backend-bullmq`        | `JobProducer`/`JobWorker` — typed BullMQ wrapper, schema-checked jobs   |
-| `@beautinique/backend-classes`       | `AppError` subclasses for structured error handling                    |
-| `@beautinique/backend-logger`        | `createLogger`/`createHttpLogger` (Pino-based)                          |
-| `@beautinique/backend-mongoose`      | `connectDb`, `checkDbConnection`, `getConnectionHealth`, `getObjId`, mongo events |
-| `@beautinique/backend-multer`        | `validateMulter` — file type/size validated upload middleware           |
-| `@beautinique/backend-request`       | `checkServiceAccess`, `checkEmptyRequest`                                |
-| `@beautinique/backend-response`      | `successResponse`/`errorResponse`/`notFoundResponse`/`tryCatchResponse` |
-| `@beautinique/backend-utils`         | `getUser` and other backend-only helpers                                 |
-| `@beautinique/backend-zod`           | `folderZodSchema`, `validateZod`                                         |
-| `@beautinique/shared-constants`      | `MEDIA_STATUSES`, `MEDIA_RESOURCES`, `HEADERS_MAP`, `MAX_IMAGE_SIZE`, etc. |
-| `@beautinique/shared-utils`          | `stringifyData` and other cross-service helpers                          |
-| `@beautinique/backend-types`         | `TFolderZodSchema` and other backend-only shared types                   |
-| `@beautinique/shared-types`          | `TUserRole`, `TMediaResource`, etc.                                       |
+| Package                                | Purpose                                                                                                       |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `@beautinique/backend-bullmq`          | `JobProducer`/`JobWorker` — typed BullMQ wrapper, schema-checked jobs                                         |
+| `@beautinique/backend-classes`         | `AppError` subclasses for structured error handling                                                           |
+| `@beautinique/backend-logger`          | `createLogger`/`createHttpLogger` (Pino-based)                                                                |
+| `@beautinique/backend-mongoose`        | `connectDb`, `checkDbConnection`, `getConnectionHealth`, `getObjId`, mongo events                             |
+| `@beautinique/backend-multer`          | `validateMulter` — file type/size validated upload middleware                                                 |
+| `@beautinique/backend-request`         | `checkServiceAccess`, `checkEmptyRequest`                                                                     |
+| `@beautinique/backend-response`        | `successResponse`/`errorResponse`/`notFoundResponse`/`tryCatchResponse`                                       |
+| `@beautinique/backend-utils`           | `getUser` and other backend-only helpers                                                                      |
+| `@beautinique/backend-zod`             | `folderZodSchema`, `validateZod`                                                                              |
+| `@beautinique/shared-constants`        | `MEDIA_STATUSES`, `MEDIA_RESOURCES`, `HEADERS_MAP`, `MAX_IMAGE_SIZE`, etc.                                    |
+| `@beautinique/shared-markdown-to-html` | `generateHtmlFromMarkdown` — used by `scripts/generate-html.mjs` to render this README to `public/index.html` |
+| `@beautinique/shared-utils`            | `stringifyData` and other cross-service helpers                                                               |
+| `@beautinique/backend-types`           | `TFolderZodSchema` and other backend-only shared types                                                        |
+| `@beautinique/shared-types`            | `TUserRole`, `TMediaResource`, etc.                                                                           |
 
 ---
 
@@ -488,7 +490,7 @@ All responses use `@beautinique/backend-response`'s envelope, attached via `app.
 - **Two overlapping retry mechanisms on Cloudinary deletion.** A failed removal is retried both by BullMQ's own `attempts`/`backoff` on the job *and* by the `Cloudinary` class's own `retryCount` re-queueing, after rethrowing. Not incorrect, but worth knowing if tuning retry/backoff behavior.
 - **`relatedTo` on `Media` is currently unused.** The schema has a `relatedTo: { service, entity }` field, but nothing in this service (or the `product-service` integration) ever populates it.
 - **`authorize` middleware is exported but unused.** No route currently requires role-based restriction beyond `authenticate`.
-- **`GET /` depends on a manually-run build step.** `public/index.html` is generated from `README.md` by `npm run docs:build`, which is not wired into `npm run build`/`npm run dev` — remember to re-run it after editing this file.
+- **`GET /` regenerates on `npm run build`, not `npm run dev`.** `public/index.html` is generated from `README.md` by the `postbuild` script (`scripts/generate-html.mjs`). Editing this file while running `npm run dev` won't update `GET /` until a build actually runs.
 
 ---
 

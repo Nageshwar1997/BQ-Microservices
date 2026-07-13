@@ -4,8 +4,8 @@
   "description": "Media service for Beautinique project",
   "main": "dist/index.js",
   "scripts": {
-    "docs:build": "node scripts/generate-readme.js",
     "build": "tsc",
+    "postbuild": "node scripts/generate-html.mjs",
     "dev": "concurrently -n \"TS,APP\" -c \"yellow,cyan\" \"tsc --noEmit --watch\" \"nodemon --watch src --ext ts --exec tsx src/index.ts\"",
     "start": "node dist/index.js",
     "start:dev": "npm run build && node dist/index.js",
@@ -47,6 +47,7 @@
     "@beautinique/backend-utils": "^1.0.2",
     "@beautinique/backend-zod": "^1.0.6",
     "@beautinique/shared-constants": "^1.0.6",
+    "@beautinique/shared-markdown-to-html": "^1.0.0",
     "@beautinique/shared-utils": "^1.0.1",
     "cloudinary": "^2.10.0",
     "dotenv": "^17.4.2",
