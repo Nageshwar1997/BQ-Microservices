@@ -43,7 +43,7 @@
     "@beautinique/backend-classes": "^1.0.1",
     "@beautinique/backend-logger": "^1.0.2",
     "@beautinique/backend-mongoose": "^1.0.6",
-    "@beautinique/backend-multer": "^1.0.3",
+    "@beautinique/backend-multer": "^1.0.4",
     "@beautinique/backend-request": "^1.0.0",
     "@beautinique/backend-response": "^1.0.2",
     "@beautinique/backend-utils": "^1.0.2",

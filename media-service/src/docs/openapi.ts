@@ -1,4 +1,8 @@
-import { HEADERS_MAP } from '@beautinique/shared-constants';
+import { HEADERS_MAP, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE } from '@beautinique/shared-constants';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
+
+const { base, health, upload } = METHODS_AND_PATHS;
 
 const successEnvelope = (dataSchema?: object) => ({
   type: 'object',
@@ -54,8 +58,8 @@ export const openApiSpec = {
   },
   security: [{ serviceSecret: [], userId: [] }],
   paths: {
-    '/health': {
-      get: {
+    [health.path]: {
+      [health.method]: {
         tags: ['Health'],
         summary: 'Liveness + MongoDB connection status',
         security: [],
@@ -69,6 +73,7 @@ export const openApiSpec = {
                   properties: {
                     database: { type: 'object' },
                     service: { type: 'string', example: 'media-service' },
+                    worker: { type: 'boolean', example: true },
                   },
                 }),
               },
@@ -77,8 +82,8 @@ export const openApiSpec = {
         },
       },
     },
-    '/api/v1/upload/single': {
-      post: {
+    [`${base}${upload.base}${upload.single.path}`]: {
+      [upload.single.method]: {
         tags: ['Upload'],
         summary: 'Upload a single image or video',
         requestBody: {
@@ -92,9 +97,13 @@ export const openApiSpec = {
                   file: {
                     type: 'string',
                     format: 'binary',
-                    description: 'Image (≤2MB) or video (≤10MB).',
+                    description: `Image (≤${String(MAX_IMAGE_SIZE)}MB) or video (≤${String(MAX_VIDEO_SIZE)}MB).`,
                   },
-                  folder: { type: 'string', description: 'Cloudinary subfolder, e.g. "products".' },
+                  folder: {
+                    type: 'string',
+                    example: 'products',
+                    description: 'Cloudinary subfolder, e.g. "products".',
+                  },
                 },
               },
             },
@@ -113,15 +122,15 @@ export const openApiSpec = {
             },
           },
           '400': errorResponse('Missing/empty body or file, or failed validation.'),
-          '401': errorResponse('Missing X-User-Id header.'),
-          '403': errorResponse('Missing/invalid X-Service-Secret header.'),
+          '401': errorResponse(`Missing ${HEADERS_MAP.userId} header.`),
+          '403': errorResponse(`Missing/invalid ${HEADERS_MAP.serviceSecret} header.`),
           '413': errorResponse('File exceeds the allowed size for its type.'),
           '503': errorResponse('Database is unavailable.'),
         },
       },
     },
-    '/api/v1/upload/multiple': {
-      post: {
+    [`${base}${upload.base}${upload.multiple.path}`]: {
+      [upload.multiple.method]: {
         tags: ['Upload'],
         summary: 'Upload several images/videos at once',
         requestBody: {
@@ -137,7 +146,11 @@ export const openApiSpec = {
                     items: { type: 'string', format: 'binary' },
                     description: 'Any mix of images (≤2MB each) and videos (≤10MB each).',
                   },
-                  folder: { type: 'string', description: 'Cloudinary subfolder, e.g. "products".' },
+                  folder: {
+                    type: 'string',
+                    example: 'products',
+                    description: 'Cloudinary subfolder, e.g. "products".',
+                  },
                 },
               },
             },
@@ -158,10 +171,10 @@ export const openApiSpec = {
               },
             },
           },
-          '400': errorResponse('Missing/empty body or files, or failed validation.'),
-          '401': errorResponse('Missing X-User-Id header.'),
-          '403': errorResponse('Missing/invalid X-Service-Secret header.'),
-          '413': errorResponse('A file exceeds the allowed size for its type.'),
+          '400': errorResponse('Missing/empty body or file, or failed validation.'),
+          '401': errorResponse(`Missing ${HEADERS_MAP.userId} header.`),
+          '403': errorResponse(`Missing/invalid ${HEADERS_MAP.serviceSecret} header.`),
+          '413': errorResponse('File exceeds the allowed size for its type.'),
           '503': errorResponse('Database is unavailable.'),
         },
       },
