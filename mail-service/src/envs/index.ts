@@ -40,8 +40,6 @@ const {
 
   SERVICE_NAME,
 
-  SERVICE_SECRET,
-
   // T
   // U
   // V
@@ -119,7 +117,6 @@ export const envs = {
   // S
 
   service_name: requireEnv(SERVICE_NAME, 'SERVICE_NAME'),
-  service_secret: requireEnv(SERVICE_SECRET, 'SERVICE_SECRET'),
 
   // T
   // U

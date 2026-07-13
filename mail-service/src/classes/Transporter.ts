@@ -1,3 +1,4 @@
+import { stringifyData } from '@beautinique/shared-utils';
 import { convert } from 'html-to-text';
 import { createTransport } from 'nodemailer';
 
@@ -12,7 +13,7 @@ const config = createTransport({
   auth: { user: envs.mail.user, pass: envs.mail.pass },
 });
 
-class Transporter {
+export class NodemailerTransporter {
   private transporter: typeof config;
   private isReady = false;
 
@@ -20,9 +21,9 @@ class Transporter {
     this.transporter = config;
   }
 
-  /* ---------------- CONNECT ---------------- */
+  /* ---------------- START ---------------- */
 
-  public async connect() {
+  public async start() {
     try {
       if (this.isReady) return;
 
@@ -30,16 +31,16 @@ class Transporter {
 
       this.isReady = true;
       logger.info('📧 Mail Service Connected');
-    } catch (err) {
+    } catch (error) {
       this.isReady = false;
-      logger.error('❌ Mail Service connection failed:', err);
-      throw err;
+      logger.error(`❌ Mail Service connection failed: ${stringifyData(error)}`);
+      throw error;
     }
   }
 
-  /* ---------------- CLOSE ---------------- */
+  /* ---------------- STOP ---------------- */
 
-  public disconnect() {
+  public stop() {
     try {
       if (!this.isReady) return;
 
@@ -50,8 +51,8 @@ class Transporter {
 
       this.isReady = false;
       logger.warn('🛑 Mail Service Closed');
-    } catch (err) {
-      logger.error('❌ Mail Service close failed:', err);
+    } catch (error) {
+      logger.error(`❌ Mail Service close failed: ${stringifyData(error)}`);
     }
   }
 
@@ -68,9 +69,9 @@ class Transporter {
         text,
         html: options.htmlOrText,
       });
-    } catch (err) {
-      logger.error('❌ Email send failed:', err);
-      throw err;
+    } catch (error) {
+      logger.error(`❌ Email send failed: ${stringifyData(error)}`);
+      throw error;
     }
   }
 
@@ -80,5 +81,3 @@ class Transporter {
     await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
   }
 }
-
-export const transporter = new Transporter();

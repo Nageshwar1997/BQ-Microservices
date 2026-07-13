@@ -1,36 +1,50 @@
-import { bullWorker } from '@beautinique/be-jobs';
+import { JobWorker } from '@beautinique/backend-bullmq';
+import { stringifyData } from '@beautinique/shared-utils';
 
+import { logger, transporter } from '../configs/index.js';
 import { envs } from '../envs/index.js';
-import { transporter } from './Transporter.js';
 
-class WorkerManager {
-  /* ---------------- CONNECT ---------------- */
-  private connect() {
-    bullWorker.connect(envs.redis.bull_mq);
-  }
+const WORKER_CONCURRENCY = 5;
 
-  /* ---------------- RUN WORKERS ---------------- */
-  private runWorkers() {
-    bullWorker.createWorker({
-      queueName: 'mail-queue',
-      jobName: 'send-otp',
-      handler: async (job) => {
-        await transporter.sendOtp(job.data.email, job.data.otp);
-      },
-    });
-  }
+export class WorkerManager {
+  private worker: JobWorker<'mail-queue'> | undefined;
 
   /* ---------------- START ---------------- */
 
   public start() {
-    this.connect();
-    this.runWorkers();
+    this.worker = new JobWorker({
+      queueName: 'mail-queue',
+      connection: envs.redis.bull_mq,
+      concurrency: WORKER_CONCURRENCY,
+      logger,
+      handlers: {
+        /* ---------------- SEND OTP ---------------- */
+
+        'send-otp': async (data) => {
+          try {
+            await transporter.sendOtp(data.email, data.otp);
+          } catch (error) {
+            logger.error(
+              `Failed to send OTP. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
+            );
+
+            throw error;
+          }
+        },
+      },
+    });
+
+    logger.info('Worker manager started');
   }
 
-  /* ---------------- CLOSE ---------------- */
+  /* ---------------- STOP ---------------- */
 
   public async stop() {
-    await bullWorker.closeAll();
+    logger.info('Closing workers...');
+
+    await this.worker?.close();
+
+    logger.info('All workers closed');
   }
 }
 
