@@ -34,7 +34,13 @@ export class WorkerManager {
       },
     });
 
-    logger.info('Worker manager started');
+    logger.info('✅ Worker manager started');
+  }
+
+  /* ---------------- RUNNING STATE ---------------- */
+
+  public isRunning() {
+    return this.worker?.isRunning() ?? false;
   }
 
   /* ---------------- STOP ---------------- */

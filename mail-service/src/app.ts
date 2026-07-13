@@ -4,7 +4,7 @@ import express from 'express';
 import path from 'path';
 import { serve, setup } from 'swagger-ui-express';
 
-import { logger } from './configs/index.js';
+import { logger, transporter, workerManager } from './configs/index.js';
 import { LOGGER_BASE_OPTIONS } from './constants/index.js';
 import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
@@ -69,6 +69,11 @@ app.use('/docs', serve, setup(openApiSpec));
 app.get('/health', (_, res) => {
   res.success({
     message: 'Mail Service is healthy',
+    data: {
+      mail: transporter.isConnected(),
+      worker: workerManager.isRunning(),
+      service: envs.service_name,
+    },
   });
 });
 

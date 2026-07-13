@@ -11,6 +11,7 @@ const config = createTransport({
   port: envs.mail.port,
   secure: false,
   auth: { user: envs.mail.user, pass: envs.mail.pass },
+  pool: true,
 });
 
 export class NodemailerTransporter {
@@ -19,6 +20,12 @@ export class NodemailerTransporter {
 
   constructor() {
     this.transporter = config;
+  }
+
+  /* ---------------- READY STATE ---------------- */
+
+  public isConnected() {
+    return this.isReady;
   }
 
   /* ---------------- START ---------------- */
@@ -30,10 +37,10 @@ export class NodemailerTransporter {
       await this.transporter.verify();
 
       this.isReady = true;
-      logger.info('📧 Mail Service Connected');
+      logger.info('✅ Transporter is ready.');;
     } catch (error) {
       this.isReady = false;
-      logger.error(`❌ Mail Service connection failed: ${stringifyData(error)}`);
+      logger.error(`❌ Transporter connection failed: ${stringifyData(error)}`);
       throw error;
     }
   }
@@ -44,10 +51,7 @@ export class NodemailerTransporter {
     try {
       if (!this.isReady) return;
 
-      // 🔥 close only works if pooling enabled
-      if (typeof this.transporter.close === 'function') {
-        this.transporter.close();
-      }
+      this.transporter.close();
 
       this.isReady = false;
       logger.warn('🛑 Mail Service Closed');

@@ -1,4 +1,4 @@
-import { jobProducer, logger, transporter, workerManager } from '../configs/index.js';
+import { logger, transporter, workerManager } from '../configs/index.js';
 import {
   destroyConnections,
   isServerRunning,
@@ -14,7 +14,6 @@ interface IShutdownTask {
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
   { name: 'Worker Manager', task: workerManager.stop.bind(workerManager) },
-  { name: 'Job Producer', task: jobProducer.close.bind(jobProducer) },
 ]);
 
 /* -------------------------------------------------------------------------- */
@@ -28,11 +27,10 @@ const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
  *
  * Shutdown order:
  * 1. Stop accepting HTTP requests.
- * 2. Stop BullMQ workers.
- * 3. Close BullMQ connection.
- * 4. Disconnect MongoDB.
- * 5. Destroy any remaining sockets.
- * 6. Exit process.
+ * 2. Stop the BullMQ worker.
+ * 3. Close the SMTP transporter.
+ * 4. Destroy any remaining sockets.
+ * 5. Exit process.
  */
 export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
   if (!setShuttingDown()) {

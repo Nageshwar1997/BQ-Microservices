@@ -1,4 +1,3 @@
-
 import { logger, transporter, workerManager } from '../configs/index.js';
 import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './server.js';
 
@@ -12,10 +11,8 @@ import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './
  * Safe to call multiple times.
  *
  * Startup order:
- * 1. Register MongoDB event listeners.
- * 2. Connect MongoDB.
- * 3. Start the HTTP server.
- * 4. Start background workers.
+ * 1. Start the HTTP server and connect the SMTP transporter (in parallel).
+ * 2. Start the BullMQ worker.
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
@@ -27,7 +24,7 @@ export const startup = async (): Promise<void> => {
 
     workerManager.start();
 
-    logger.info('✅ Media service initialized');
+    logger.info('✅ Mail service initialized');
 
     resetShuttingDown();
   } catch (error) {
@@ -35,7 +32,7 @@ export const startup = async (): Promise<void> => {
 
     resetShuttingDown();
 
-    logger.error(`❌ Failed to start media service: ${String(error)}`);
+    logger.error(`❌ Failed to start mail service: ${String(error)}`);
 
     process.exit(1);
   }
