@@ -6,9 +6,11 @@ import path from 'path';
 import { serve, setup } from 'swagger-ui-express';
 
 import { logger, transporter, workerManager } from './configs/index.js';
-import { LOGGER_BASE_OPTIONS } from './constants/index.js';
+import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
 import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
+
+const { health, home } = METHODS_AND_PATHS;
 
 /* -------------------------------------------------------------------------- */
 /*                               Express App                                  */
@@ -54,7 +56,7 @@ app.use(successResponse({ defaultMessage: 'Success.' }));
  * `scripts/generate-readme.js` (see the "build"/"predev" scripts) -
  * avoids re-parsing markdown on every request.
  */
-app.get('/', (_, res) => {
+app[home.method](home.path, (_, res) => {
   res.sendFile(path.resolve('public', 'index.html'));
 });
 
@@ -67,7 +69,7 @@ app.use('/docs', serve, setup(openApiSpec));
 /**
  * Health endpoint.
  */
-app.get('/health', (_, res) => {
+app[health.method](health.path, (_, res) => {
   res.success({
     message: 'Mail Service is healthy',
     data: {
@@ -75,7 +77,7 @@ app.get('/health', (_, res) => {
       worker: workerManager.isRunning(),
       service: SERVICE_NAMES_MAP['mail-service'],
     },
-  });;
+  });
 });
 
 /* -------------------------------------------------------------------------- */
