@@ -1,5 +1,6 @@
 import { createHttpLogger } from '@beautinique/backend-logger';
 import { errorResponse, notFoundResponse, successResponse } from '@beautinique/backend-response';
+import { SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
 import { serve, setup } from 'swagger-ui-express';
@@ -72,9 +73,9 @@ app.get('/health', (_, res) => {
     data: {
       mail: transporter.isConnected(),
       worker: workerManager.isRunning(),
-      service: envs.service_name,
+      service: SERVICE_NAMES_MAP['mail-service'],
     },
-  });
+  });;
 });
 
 /* -------------------------------------------------------------------------- */
