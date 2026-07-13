@@ -5,8 +5,6 @@
   "main": "dist/index.js",
   "scripts": {
     "docs:build": "node scripts/generate-readme.js",
-    "predev": "npm run docs:build",
-    "prebuild": "npm run docs:build",
     "build": "tsc",
     "dev": "concurrently -n \"TS,APP\" -c \"yellow,cyan\" \"tsc --noEmit --watch\" \"nodemon --watch src --ext ts --exec tsx src/index.ts\"",
     "start": "node dist/index.js",

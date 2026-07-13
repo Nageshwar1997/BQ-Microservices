@@ -115,8 +115,9 @@ export const openApiSpec = {
             content: {
               'application/json': {
                 schema: successEnvelope({
-                  type: 'object',
-                  properties: { url: { type: 'string', format: 'uri' } },
+                  type: 'string',
+                  format: 'uri',
+                  example: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
                 }),
               },
             },
@@ -163,10 +164,12 @@ export const openApiSpec = {
             content: {
               'application/json': {
                 schema: successEnvelope({
-                  type: 'object',
-                  properties: {
-                    urls: { type: 'array', items: { type: 'string', format: 'uri' } },
-                  },
+                  type: 'array',
+                  items: { type: 'string', format: 'uri' },
+                  example: [
+                    'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+                    'https://res.cloudinary.com/demo/image/upload/sample.mp4',
+                  ],
                 }),
               },
             },
