@@ -5,308 +5,858 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mail Service</title>
     <style>
-  :root {
-    color-scheme: light dark;
-    --bg: #ffffff;
-    --fg: #1f2328;
-    --muted: #59636e;
-    --border: #d1d9e0;
-    --code-bg: #f6f8fa;
-    --link: #0969da;
-  }
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1f2328;
+        --muted: #59636e;
+        --border: #d1d9e0;
+        --code-bg: #f6f8fa;
+        --link: #0969da;
+      }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0d1117;
-      --fg: #e6edf3;
-      --muted: #9198a1;
-      --border: #30363d;
-      --code-bg: #161b22;
-      --link: #4493f8;
-    }
-  }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --fg: #e6edf3;
+          --muted: #9198a1;
+          --border: #30363d;
+          --code-bg: #161b22;
+          --link: #4493f8;
+        }
+      }
 
-  * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-  }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+      }
 
-  main {
-    max-width: 1024px;
-    margin: 0 auto;
-    padding: 48px 24px 96px;
-  }
+      main {
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
 
-  h1, h2, h3, h4 {
-    font-weight: 600;
-    line-height: 1.25;
-    margin: 1.6em 0 0.6em;
-  }
-  h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
-  h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
-  h3 { font-size: 1.25em; }
-  h4 { font-size: 1.05em; }
-  h1:first-child { margin-top: 0; }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-weight: 600;
+        line-height: 1.25;
+        margin: 1.6em 0 0.6em;
+      }
+      h1 {
+        font-size: 2em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid var(--border);
+      }
+      h2 {
+        font-size: 1.5em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid var(--border);
+      }
+      h3 {
+        font-size: 1.25em;
+      }
+      h4 {
+        font-size: 1.05em;
+      }
+      h1:first-child {
+        margin-top: 0;
+      }
 
-  p, ul, ol, table, blockquote { margin: 0 0 1em; }
-  ul, ol { padding-left: 1.6em; }
-  li + li { margin-top: 0.2em; }
+      p,
+      ul,
+      ol,
+      table,
+      blockquote {
+        margin: 0 0 1em;
+      }
+      ul,
+      ol {
+        padding-left: 1.6em;
+      }
+      li + li {
+        margin-top: 0.2em;
+      }
 
-  a { color: var(--link); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+      a {
+        color: var(--link);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
 
-  code {
-    font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.88em;
-    background: var(--code-bg);
-    padding: 0.15em 0.4em;
-    border-radius: 6px;
-  }
+      code {
+        font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+        font-size: 0.88em;
+        background: var(--code-bg);
+        padding: 0.15em 0.4em;
+        border-radius: 6px;
+      }
 
-  pre {
-    background: var(--code-bg);
-    border-radius: 8px;
-    padding: 16px;
-    overflow-x: auto;
-  }
-  pre code { background: none; padding: 0; font-size: 0.85em; }
+      pre {
+        background: var(--code-bg);
+        border-radius: 8px;
+        padding: 16px;
+        overflow-x: auto;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        font-size: 0.85em;
+      }
 
-  blockquote {
-    margin-left: 0;
-    padding: 0 1em;
-    color: var(--muted);
-    border-left: 0.25em solid var(--border);
-  }
+      blockquote {
+        margin-left: 0;
+        padding: 0 1em;
+        color: var(--muted);
+        border-left: 0.25em solid var(--border);
+      }
 
-  table { display: block; overflow-x: auto; border-collapse: collapse; margin: 0 0 1em; }
-  th, td { border: 1px solid var(--border); padding: 6px 13px; text-align: left; }
-  th { background: var(--code-bg); font-weight: 600; }
+      table {
+        display: block;
+        overflow-x: auto;
+        border-collapse: collapse;
+        margin: 0 0 1em;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 6px 13px;
+        text-align: left;
+      }
+      th {
+        background: var(--code-bg);
+        font-weight: 600;
+      }
 
-  hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
-  img { max-width: 100%; }
-</style>
+      hr {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 2em 0;
+      }
+      img {
+        max-width: 100%;
+      }
+    </style>
   </head>
   <body>
-    <main><h1>Mail Service</h1>
-<p>Sends transactional email for the Beautinique platform over SMTP
-(Nodemailer). Currently the only email type is OTP verification. This
-service has <strong>no public &quot;send email&quot; HTTP endpoint</strong> - work arrives
-asynchronously as BullMQ jobs on the <code>mail-queue</code> queue, produced by other
-services (e.g. <code>user-service</code>) and consumed here by a single background
-worker.</p>
-<h2>Tech stack</h2>
-<table>
-<thead>
-<tr>
-<th>Concern</th>
-<th>Package / Tool</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>HTTP framework</td>
-<td>Express 5</td>
-</tr>
-<tr>
-<td>Outbound email</td>
-<td>Nodemailer (SMTP)</td>
-</tr>
-<tr>
-<td>HTML → plain-text fallback</td>
-<td><code>html-to-text</code></td>
-</tr>
-<tr>
-<td>Background jobs/Queue</td>
-<td>BullMQ (Redis), via <code>@beautinique/backend-bullmq</code></td>
-</tr>
-<tr>
-<td>Logging</td>
-<td>Pino, via <code>@beautinique/backend-logger</code></td>
-</tr>
-<tr>
-<td>Shared response shape</td>
-<td><code>@beautinique/backend-response</code></td>
-</tr>
-<tr>
-<td>Shared constants</td>
-<td><code>@beautinique/shared-constants</code></td>
-</tr>
-<tr>
-<td>API docs</td>
-<td><code>swagger-ui-express</code></td>
-</tr>
-<tr>
-<td>README → HTML</td>
-<td><code>marked</code> (build-time, see below)</td>
-</tr>
-</tbody></table>
-<h2>Running locally</h2>
-<pre><code class="language-bash">npm install
-npm run dev          # tsc --noEmit --watch + nodemon, auto-restarts on src changes
+    <main>
+      <h1>Mail Service — Documentation</h1>
+      <p>
+        <strong>Project:</strong> Beautinique (BQ-Microservices) <strong>Service:</strong> Mail
+        Service <strong>Author:</strong> Nageshwar Pawar <strong>Version:</strong> 1.0.0
+        <strong>Port:</strong> 8083
+      </p>
+      <hr />
+      <h2>1. Overview</h2>
+      <p>
+        The Mail Service is the transactional-email microservice for the
+        <strong>Beautinique</strong> platform. It has
+        <strong>no public &quot;send email&quot; HTTP endpoint</strong> — it does one thing: run a
+        single BullMQ worker that consumes <code>send-otp</code> jobs off the
+        <code>mail-queue</code> queue (produced by <code>user-service</code>, on
+        signup/login/forgot-password flows) and delivers them over SMTP via Nodemailer. It also
+        serves its own documentation: <code>GET /</code> renders this README as HTML, and
+        <code>GET /docs</code> serves an interactive Swagger UI.
+      </p>
+      <hr />
+      <h2>2. Technology Stack</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Runtime</td>
+            <td>Node.js (ES2025, ESM)</td>
+          </tr>
+          <tr>
+            <td>Language</td>
+            <td>
+              TypeScript 6.x (<code>strict</code>, <code>noUncheckedIndexedAccess</code>,
+              <code>noEmitOnError</code>)
+            </td>
+          </tr>
+          <tr>
+            <td>Framework</td>
+            <td>Express.js 5.x</td>
+          </tr>
+          <tr>
+            <td>Outbound email</td>
+            <td>Nodemailer 9.x (pooled SMTP transport)</td>
+          </tr>
+          <tr>
+            <td>HTML → plain-text</td>
+            <td><code>html-to-text</code></td>
+          </tr>
+          <tr>
+            <td>Background jobs / queue</td>
+            <td>BullMQ (Redis), via <code>@beautinique/backend-bullmq</code></td>
+          </tr>
+          <tr>
+            <td>Logging</td>
+            <td>Pino, via <code>@beautinique/backend-logger</code></td>
+          </tr>
+          <tr>
+            <td>API docs</td>
+            <td>OpenAPI 3.0 spec (hand-written) + <code>swagger-ui-express</code></td>
+          </tr>
+          <tr>
+            <td>README rendering</td>
+            <td><code>@beautinique/shared-markdown-to-html</code> (markdown → HTML)</td>
+          </tr>
+          <tr>
+            <td>Shared response envelope</td>
+            <td><code>@beautinique/backend-response</code></td>
+          </tr>
+          <tr>
+            <td>Shared utilities</td>
+            <td><code>@beautinique/shared-utils</code></td>
+          </tr>
+          <tr>
+            <td>Shared constants</td>
+            <td><code>@beautinique/shared-constants</code></td>
+          </tr>
+          <tr>
+            <td>Code quality</td>
+            <td>ESLint (flat config, type-checked + strict), Prettier</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>3. Project Structure</h2>
+      <pre><code>mail-service/
+├── src/
+│   ├── index.ts                     # Entry point: loads env, wires SIGINT/SIGTERM, calls startup()
+│   ├── app.ts                       # Express app: middleware chain, routes, error handlers
+│   ├── bootstrap/                   # Startup/shutdown orchestration
+│   │   ├── startup.ts               #   HTTP server + SMTP verify → worker, in order
+│   │   ├── shutdown.ts              #   HTTP server → worker → SMTP transporter, in order
+│   │   └── server.ts                #   Low-level HTTP server lifecycle + connection tracking
+│   ├── classes/
+│   │   ├── index.ts                 #   Re-exports
+│   │   ├── Transporter.ts           #   NodemailerTransporter — pooled SMTP transport, sendOtp
+│   │   └── WorkerManager.ts         #   Owns the mail-queue BullMQ JobWorker
+│   ├── configs/
+│   │   └── index.ts                 #   Singletons: logger, workerManager, transporter
+│   ├── constants/
+│   │   └── index.ts                 #   METHODS_AND_PATHS, LOGGER_BASE_OPTIONS
+│   ├── docs/
+│   │   └── openapi.ts               #   Hand-written OpenAPI 3.0 spec, served at /docs
+│   ├── envs/
+│   │   └── index.ts                 #   process.env → typed envs, fail-fast on missing/invalid vars
+│   ├── types/
+│   │   └── index.ts                 #   (currently empty — no service-local types yet)
+│   └── utils/
+│       └── index.ts                 #   baseHtmlLayout, getOtpHtmlMessage
+├── scripts/
+│   └── generate-html.mjs            # Renders README.md → public/index.html (@beautinique/shared-markdown-to-html), runs via &quot;postbuild&quot;
+├── public/
+│   └── index.html                   # Pre-rendered README, served by GET /
+├── dist/                            # Compiled JavaScript output (git-ignored)
+├── logs/                            # error.log, warning.log, success.log, request.log
+├── package.json
+├── tsconfig.json
+├── eslint.config.mjs
+└── .env
 </code></pre>
-<p>Other scripts:</p>
-<pre><code class="language-bash">npm run build         # docs:build (README → public/index.html) + tsc -&gt; dist/
-npm run start          # node dist/index.js (run build first)
-npm run start:dev      # build + start in one step
-npm run lint            # eslint src
+      <hr />
+      <h2>4. Environment Variables</h2>
+      <p>
+        All environment variables are loaded via <code>dotenv</code> and validated in
+        <code>src/envs/index.ts</code> — every required variable is checked with
+        <code>requireEnv</code>/<code>requirePort</code> at startup, so a missing or invalid value
+        throws a clear <code>Missing required environment variable: X</code> error immediately
+        instead of failing confusingly later.
+      </p>
+      <h3>4.1 Server &amp; App</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Required</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>PORT</code></td>
+            <td>Yes</td>
+            <td>HTTP port to listen on (must be a positive integer)</td>
+          </tr>
+          <tr>
+            <td><code>IS_DEV</code></td>
+            <td>No</td>
+            <td>
+              <code>&quot;true&quot;</code> enables pretty logging and stack traces in error
+              responses
+            </td>
+          </tr>
+          <tr>
+            <td><code>SERVICE_NAME</code></td>
+            <td>Yes</td>
+            <td>Name tag attached to every log line</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>4.2 SMTP — Transporter</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Required</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>MAIL_HOST</code></td>
+            <td>Yes</td>
+            <td>SMTP server host (e.g. <code>smtp.gmail.com</code>)</td>
+          </tr>
+          <tr>
+            <td><code>MAIL_PORT</code></td>
+            <td>Yes</td>
+            <td>SMTP server port (e.g. <code>587</code>; must be a positive integer)</td>
+          </tr>
+          <tr>
+            <td><code>MAIL_USER</code></td>
+            <td>Yes</td>
+            <td>SMTP auth username</td>
+          </tr>
+          <tr>
+            <td><code>MAIL_PASS</code></td>
+            <td>Yes</td>
+            <td>
+              SMTP auth password (a Gmail
+              <a href="https://myaccount.google.com/apppasswords">app password</a> works for
+              <code>MAIL_HOST=smtp.gmail.com</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>MAIL_FROM</code></td>
+            <td>Yes</td>
+            <td><code>From</code> address on outgoing mail</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>4.3 Redis — BullMQ</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Required</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>BULL_MQ_HOST</code></td>
+            <td>Yes</td>
+            <td>Redis host used for the <code>mail-queue</code> BullMQ connection</td>
+          </tr>
+          <tr>
+            <td><code>BULL_MQ_PORT</code></td>
+            <td>Yes</td>
+            <td>Redis port (must be a positive integer)</td>
+          </tr>
+          <tr>
+            <td><code>BULL_MQ_PASSWORD</code></td>
+            <td>No</td>
+            <td>Redis password, if the instance requires auth</td>
+          </tr>
+          <tr>
+            <td><code>BULL_MQ_USERNAME</code></td>
+            <td>No</td>
+            <td>Redis username, if the instance requires auth</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>This Redis instance is shared</strong> across every service that produces or
+        consumes <code>mail-queue</code> jobs (see
+        <a href="#7-background-jobs-mail-queue">§7 Background Jobs</a>) — it must point to the same
+        instance everywhere, most notably wherever <code>user-service</code> runs.
+      </p>
+      <hr />
+      <h2>5. API Routes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GET</td>
+            <td><code>/</code></td>
+            <td>None</td>
+            <td>This README, pre-rendered to HTML by <code>scripts/generate-readme.js</code></td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/docs</code></td>
+            <td>None</td>
+            <td>Interactive Swagger UI (spec in <code>src/docs/openapi.ts</code>)</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/health</code></td>
+            <td>None</td>
+            <td>
+              Liveness + SMTP/worker status (<code>{ data: { mail, worker, service } }</code>)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        That&#39;s the entire route table — this service has no <code>/api/v1/*</code> business API,
+        no request headers to authenticate, and no per-route middleware beyond the global chain in
+        <code>app.ts</code> (JSON/urlencoded parsing, static assets, request logging,
+        <code>res.success</code>). <code>/</code>, <code>/docs</code>, and <code>/health</code> stay
+        reachable regardless of SMTP/Redis state, since they don&#39;t depend on either.
+      </p>
+      <p>
+        <code>mail</code> reflects whether the SMTP transporter last verified successfully
+        (<code>NodemailerTransporter.isConnected()</code>); <code>worker</code> reflects whether the
+        <code>mail-queue</code> BullMQ worker is running (<code>WorkerManager.isRunning()</code>).
+        Neither actively re-probes Redis/SMTP on every <code>/health</code> call — see
+        <a href="#15-design-notes--known-trade-offs">§15 Design Notes</a>.
+      </p>
+      <hr />
+      <h2>6. Email Delivery (<code>classes/Transporter.ts</code>)</h2>
+      <p>
+        A singleton <code>NodemailerTransporter</code> class wrapping a single pooled Nodemailer
+        SMTP transport.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>start()</code></td>
+            <td>
+              Verifies the SMTP connection (<code>transporter.verify()</code>); idempotent, sets
+              <code>isConnected() → true</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>stop()</code></td>
+            <td>
+              Closes the pooled transport&#39;s connections; idempotent, sets
+              <code>isConnected() → false</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>isConnected()</code></td>
+            <td>Returns the last-known verified state, surfaced on <code>/health</code></td>
+          </tr>
+          <tr>
+            <td><code>sendOtp(to, otp)</code></td>
+            <td>
+              Renders the OTP HTML email (<code>getOtpHtmlMessage</code>) and sends it via the
+              private <code>sendMail</code> helper
+            </td>
+          </tr>
+          <tr>
+            <td><code>sendMail(options)</code> <em>(private)</em></td>
+            <td>
+              Converts the HTML to a plain-text fallback (<code>html-to-text</code>) and calls
+              <code>transporter.sendMail(...)</code>, logging + rethrowing on failure
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Transport config:</strong> <code>host</code>/<code>port</code>/<code
+          >secure: false</code
+        >
+        (STARTTLS on 587) from env, <code>auth: { user, pass }</code>, <code>pool: true</code> —
+        connections are reused across sends instead of opening a fresh SMTP/TLS handshake per email,
+        sized to match the worker&#39;s concurrency (5).
+      </p>
+      <hr />
+      <h2>7. Background Jobs (<code>mail-queue</code>)</h2>
+      <p>
+        Owned and consumed by <code>WorkerManager</code> (<code>classes/WorkerManager.ts</code>) — a
+        single BullMQ <code>JobWorker</code> for the whole queue, concurrency 5.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Job name</th>
+            <th>Enqueued by</th>
+            <th>What it does</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>send-otp</code></td>
+            <td>
+              <code>user-service</code> (<code>register</code>/<code>password</code> controllers —
+              signup, login OTP, forgot-password)
+            </td>
+            <td>
+              <code>transporter.sendOtp(email, otp)</code> — renders the OTP email and sends it over
+              SMTP
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Job payload shape (from <code>@beautinique/backend-bullmq</code>&#39;s
+        <code>QUEUE_SCHEMA</code>): <code>{ email: string; otp: string }</code>.
+      </p>
+      <p>
+        <code>mail-service</code> never enqueues jobs onto any queue itself — it is a consumer only.
+        <code>media-queue</code> (used for Cloudinary media lifecycle) is owned end-to-end by
+        <code>media-service</code> — unrelated to this service.
+      </p>
+      <h3>Cross-service queue integration</h3>
+      <p>
+        Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any
+        service can enqueue onto <code>mail-queue</code> as long as it targets the same Redis
+        instance and uses <code>@beautinique/backend-bullmq</code> — <code>user-service</code> does
+        this today. This means:
+      </p>
+      <ul>
+        <li>
+          The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance
+          as every producer of <code>mail-queue</code>.
+        </li>
+        <li>
+          If <code>mail-queue</code>&#39;s schema/job names ever change in
+          <code>backend-bullmq</code>, every producer needs a matching update, or
+          <code>send-otp</code> jobs will silently stop being picked up here.
+        </li>
+      </ul>
+      <h3>Retry behavior</h3>
+      <p>
+        <code>JobWorker</code> applies <code>@beautinique/backend-bullmq</code>&#39;s
+        <code>DEFAULT_JOB_OPTIONS</code>: <code>attempts: 3</code> with exponential backoff (<code
+          >delay: 1000</code
+        >ms, doubling each retry). A failed <code>send-otp</code> handler logs the error + job data
+        (<code>stringifyData</code>) and rethrows, so BullMQ picks it up as a retry rather than
+        silently dropping it.
+      </p>
+      <hr />
+      <h2>8. OTP Email Flow</h2>
+      <pre><code>user-service (register/password controller)
+   │  bullQueue.addJob({ queueName: &#39;mail-queue&#39;, jobName: &#39;send-otp&#39;, data: { email, otp } })
+   ▼
+Redis (mail-queue)
+   │  (async, on this service&#39;s JobWorker, concurrency 5)
+   ▼
+WorkerManager&#39;s &#39;send-otp&#39; handler
+   ▼
+NodemailerTransporter.sendOtp(email, otp)
+   │  getOtpHtmlMessage(...)              # branded HTML email (utils/index.ts)
+   │  html-to-text convert(...)           # plain-text fallback
+   ▼
+transporter.sendMail({ from, to, subject, text, html })   # pooled SMTP connection
+   │  on failure: logs + rethrows → BullMQ retries (attempts: 3, exponential backoff)
+   ▼
+Email delivered
+</code></pre>
+      <hr />
+      <h2>9. Utilities (<code>utils/index.ts</code>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>baseHtmlLayout(title, description, content)</code></td>
+            <td>
+              Beautinique-branded HTML email shell (header, card, footer) shared by every email
+              template
+            </td>
+          </tr>
+          <tr>
+            <td><code>getOtpHtmlMessage(title, otp)</code></td>
+            <td>
+              Wraps <code>baseHtmlLayout</code> with the OTP-specific body (the code box,
+              &quot;valid for 10 minutes&quot; copy)
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>External utility (from <code>@beautinique/*</code> packages)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Package</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>stringifyData(data)</code></td>
+            <td><code>@beautinique/shared-utils</code></td>
+            <td>Safe <code>JSON.stringify</code> wrapper used throughout error logging</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>10. Error Handling</h2>
+      <p>
+        Mail-service has two independent error paths, since almost all of its real work happens off
+        the HTTP request/response cycle:
+      </p>
+      <ul>
+        <li>
+          <strong>HTTP layer</strong> (<code>/</code>, <code>/docs</code>, <code>/health</code>):
+          none of these routes contain business logic that can throw, so
+          <code>errorResponse</code>/<code>notFoundResponse</code>
+          (<code>@beautinique/backend-response</code>) exist mainly as the framework-level catch-all
+          — an unmatched route gets a branded 404 HTML page for browser requests, JSON otherwise; a
+          genuinely unexpected error becomes a generic <code>500</code> (<code
+            >includeStack: envs.is_dev</code
+          >), never leaking internals.
+        </li>
+        <li>
+          <strong>Job layer</strong> (<code>send-otp</code> handler): a thrown error from
+          <code>NodemailerTransporter.sendMail</code> (bad credentials, SMTP timeout, invalid
+          recipient, etc.) is logged with the error and the job&#39;s data, then rethrown —
+          BullMQ&#39;s own <code>attempts</code>/<code>backoff</code> (see
+          <a href="#7-background-jobs-mail-queue">§7 Retry behavior</a>) governs retries, not
+          <code>errorResponse</code>.
+        </li>
+      </ul>
+      <p>
+        Unlike <code>media-service</code>, this service has no dependency on
+        <code>@beautinique/backend-classes</code>&#39; <code>AppError</code> hierarchy — it never
+        needs structured HTTP error codes because it has no business API surface to protect.
+      </p>
+      <hr />
+      <h2>11. Server Lifecycle</h2>
+      <h3>Startup (<code>bootstrap/startup.ts</code>)</h3>
+      <ol>
+        <li>
+          Start the HTTP server and verify the SMTP transporter, in parallel (<code
+            >Promise.all([startHttpServer(), transporter.start()])</code
+          >).
+        </li>
+        <li>Start the <code>mail-queue</code> worker (<code>workerManager.start()</code>).</li>
+      </ol>
+      <p>
+        Idempotent (<code>setStarted()</code> guards re-entry). On any failure, logs and calls
+        <code>process.exit(1)</code>.
+      </p>
+      <h3>
+        Graceful shutdown (<code>bootstrap/shutdown.ts</code>,
+        <code>SIGINT</code>/<code>SIGTERM</code>)
+      </h3>
+      <ol>
+        <li>
+          Stop accepting new HTTP requests (<code>stopHttpServer</code>, existing requests finish
+          first).
+        </li>
+        <li>Stop the <code>mail-queue</code> worker.</li>
+        <li>Close the SMTP transporter.</li>
+        <li>Destroy any remaining open sockets.</li>
+        <li>Exit <code>0</code> on success, <code>1</code> on failure.</li>
+      </ol>
+      <p>
+        Idempotent (<code>setShuttingDown()</code> guards re-entry); every step&#39;s
+        success/failure is logged individually (<code>Promise.all</code> + per-task
+        <code>try/catch</code> — one task failing doesn&#39;t stop the others).
+      </p>
+      <hr />
+      <h2>12. Build &amp; Run Commands</h2>
+      <pre><code class="language-bash">npm install
+npm run dev            # tsc --noEmit --watch + nodemon (tsx) — development, auto-restarts on src changes
+npm run build           # tsc → dist/, then auto-regenerates public/index.html (see &quot;postbuild&quot; below)
+npm run start            # node dist/index.js — production (run build first)
+npm run start:dev        # build + start in one step
+npm run lint              # eslint src
 npm run lint:fix
-npm run docs:build     # regenerate public/index.html from this README
+npm run clean              # remove dist/
 </code></pre>
-<p>Requires a <code>.env</code> file (see <a href="#environment-variables">Environment variables</a>),
-a reachable Redis instance (<strong>shared</strong> with <code>user-service</code>, which produces
-the <code>send-otp</code> jobs this service consumes), and SMTP credentials (a Gmail
-account + <a href="https://myaccount.google.com/apppasswords">app password</a> works
-for <code>MAIL_HOST=smtp.gmail.com</code>).</p>
-<h2>Environment variables</h2>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>PORT</code></td>
-<td>HTTP port to listen on</td>
-</tr>
-<tr>
-<td><code>IS_DEV</code></td>
-<td><code>&#39;true&#39;</code> enables pretty logging and stack traces in error responses</td>
-</tr>
-<tr>
-<td><code>SERVICE_NAME</code></td>
-<td>Name tag attached to every log line</td>
-</tr>
-<tr>
-<td><code>MAIL_HOST</code> / <code>MAIL_PORT</code></td>
-<td>SMTP server to connect to (e.g. <code>smtp.gmail.com</code> / <code>587</code>)</td>
-</tr>
-<tr>
-<td><code>MAIL_USER</code> / <code>MAIL_PASS</code></td>
-<td>SMTP auth credentials</td>
-</tr>
-<tr>
-<td><code>MAIL_FROM</code></td>
-<td><code>From</code> address on outgoing mail</td>
-</tr>
-<tr>
-<td><code>BULL_MQ_HOST</code> / <code>BULL_MQ_PORT</code> / <code>BULL_MQ_PASSWORD</code> / <code>BULL_MQ_USERNAME</code></td>
-<td>Redis connection used for BullMQ (see <a href="#cross-service-queue-integration">Cross-service queue integration</a>)</td>
-</tr>
-</tbody></table>
-<h2>HTTP endpoints</h2>
-<p>This service exposes no authenticated or business API - only the three
-routes every Beautinique service keeps unauthenticated so they stay
-reachable for load balancer / uptime checks regardless of downstream state:</p>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GET</td>
-<td><code>/</code></td>
-<td>none</td>
-<td>This README, rendered as HTML</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/docs</code></td>
-<td>none</td>
-<td>Interactive API docs (Swagger UI, spec in <a href="src/docs/openapi.ts">src/docs/openapi.ts</a>)</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/health</code></td>
-<td>none</td>
-<td>Liveness + SMTP/worker status (<code>{ data: { mail, worker, service } }</code>)</td>
-</tr>
-</tbody></table>
-<p><code>mail</code> reflects whether the SMTP transporter last verified successfully;
-<code>worker</code> reflects whether the <code>mail-queue</code> BullMQ worker is running. Neither
-actively re-checks Redis connectivity on every <code>/health</code> call - see
-<a href="#design-notes--known-trade-offs">Design notes</a>.</p>
-<h2>Background jobs (<code>mail-queue</code>)</h2>
-<p>Owned and consumed by this service&#39;s <code>WorkerManager</code>
-(<a href="src/classes/WorkerManager.ts">src/classes/WorkerManager.ts</a>) - a single
-BullMQ <code>JobWorker</code> with concurrency 5.</p>
-<table>
-<thead>
-<tr>
-<th>Job name</th>
-<th>Enqueued by</th>
-<th>What it does</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>send-otp</code></td>
-<td><code>user-service</code> (<code>register</code>/<code>password</code> controllers, on signup, login OTP, forgot-password)</td>
-<td>Renders the OTP HTML email (<a href="src/utils/index.ts">src/utils/index.ts</a>) and sends it over SMTP via <code>NodemailerTransporter.sendOtp</code></td>
-</tr>
-</tbody></table>
-<p><code>mail-service</code> never enqueues jobs onto any queue itself - it is a consumer
-only.</p>
-<h2>Email delivery</h2>
-<ul>
-<li><strong>Transport</strong>: <a href="src/classes/Transporter.ts">src/classes/Transporter.ts</a>
-wraps a single pooled Nodemailer SMTP transport (<code>pool: true</code>), sized to
-the worker&#39;s concurrency (5) so OTP sends reuse connections instead of
-opening a fresh SMTP/TLS handshake per email.</li>
-<li><strong>Template</strong>: <code>getOtpHtmlMessage</code> builds a branded HTML email
-(<code>baseHtmlLayout</code>); <code>html-to-text</code> derives the plain-text fallback part
-sent alongside it.</li>
-<li><strong>Failures</strong>: a failed <code>sendMail</code> rethrows out of the <code>send-otp</code> handler,
-which BullMQ retries per its default job options (<code>attempts: 3</code>,
-exponential backoff) from <code>@beautinique/backend-bullmq</code>.</li>
-</ul>
-<h2>Graceful startup / shutdown</h2>
-<p><a href="src/bootstrap/startup.ts">src/bootstrap/startup.ts</a> /
-<a href="src/bootstrap/shutdown.ts">src/bootstrap/shutdown.ts</a>, wired to
-<code>SIGINT</code>/<code>SIGTERM</code> in <a href="src/index.ts">src/index.ts</a>:</p>
-<ul>
-<li><strong>Startup</strong>: start the HTTP server and verify the SMTP transporter (in
-parallel) → start the <code>mail-queue</code> worker.</li>
-<li><strong>Shutdown</strong>: stop accepting new HTTP requests → stop the worker → close
-the SMTP transporter → destroy any lingering sockets → exit. Idempotent
-(safe to call more than once); every step&#39;s success/failure is logged
-individually.</li>
-</ul>
-<h2>Cross-service queue integration</h2>
-<p>Redis/BullMQ jobs are identified purely by queue name + job name at the
-Redis level, so any service can enqueue onto <code>mail-queue</code> as long as it
-targets the same Redis instance and uses <code>@beautinique/backend-bullmq</code> -
-<code>user-service</code> does this today. This means:</p>
-<ul>
-<li>The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance as
-every producer of <code>mail-queue</code>.</li>
-<li>If <code>mail-queue</code>&#39;s schema/job names ever change in <code>backend-bullmq</code>, every
-producer needs a matching update, or <code>send-otp</code> jobs will silently stop
-being picked up here.</li>
-</ul>
-<h2>Design notes / known trade-offs</h2>
-<ul>
-<li><strong><code>/health</code>&#39;s <code>worker</code> field reflects local worker state, not live Redis
-connectivity.</strong> <code>JobWorker.isRunning()</code> (from <code>bullmq</code>) is <code>true</code> as long
-as the worker hasn&#39;t been closed/paused - it doesn&#39;t actively probe Redis.
-If Redis becomes unreachable after startup, <code>/health</code> can still report
-<code>worker: true</code> for a period before BullMQ&#39;s own reconnect/error events
-surface the problem in logs.</li>
-<li><strong>Only one email type today.</strong> <code>send-otp</code> is the only job handler; adding
-a new transactional email means adding both a producer call in the
-enqueuing service and a matching handler + template here.</li>
-<li><strong>SMTP via a personal Gmail account.</strong> Works fine at low volume with an
-app password, but Gmail enforces sending-rate limits not designed for
-production transactional-email traffic - worth moving to a dedicated
-provider (SES, Postmark, SendGrid, etc.) if OTP volume grows.</li>
-</ul>
-</main>
+      <p>
+        <strong><code>postbuild</code></strong> (<code>node scripts/generate-html.mjs</code>) runs
+        automatically after every <code>npm run build</code>, via npm&#39;s <code>pre*</code>/<code
+          >post*</code
+        >
+        script convention — it re-renders <code>README.md</code> →
+        <code>public/index.html</code> using <code>@beautinique/shared-markdown-to-html</code>, so
+        <code>GET /</code> is always in sync with the latest <code>README.md</code> after a build.
+      </p>
+      <p>
+        <strong>Note:</strong> this only fires on <code>npm run build</code> (and anything that
+        calls it, like <code>start:dev</code>) — <code>npm run dev</code> runs
+        <code>tsx</code> directly and never touches <code>tsc</code>/<code>postbuild</code>, so
+        editing <code>README.md</code> during <code>npm run dev</code> won&#39;t update
+        <code>GET /</code> until you run <code>npm run build</code> (or
+        <code>node scripts/generate-html.mjs</code> directly).
+      </p>
+      <h3>TypeScript strictness (<code>tsconfig.json</code>)</h3>
+      <p>
+        Beyond <code>strict: true</code>: <code>noUncheckedIndexedAccess</code> (indexed access is
+        <code>T | undefined</code>, not <code>T</code>), <code>noEmitOnError</code> (a broken build
+        produces no <code>dist/</code> output at all),
+        <code>noUnusedLocals</code>/<code>noUnusedParameters</code>, <code>noImplicitReturns</code>,
+        <code>noFallthroughCasesInSwitch</code>, <code>noUncheckedSideEffectImports</code>.
+        <code>declaration</code>/<code>declarationMap</code> are deliberately <strong>off</strong> —
+        this is an application, not a package anything imports.
+      </p>
+      <h3>ESLint (<code>eslint.config.mjs</code>)</h3>
+      <p>
+        Flat config: <code>@eslint/js</code> recommended →
+        <code>typescript-eslint</code> recommended/strict/stylistic → type-checked variants
+        (<code>recommendedTypeChecked</code>/<code>strictTypeChecked</code>/<code
+          >stylisticTypeChecked</code
+        >
+        via <code>projectService</code>) → <code>simple-import-sort</code> → Prettier (last,
+        disables conflicting stylistic rules). Notable custom rules:
+        <code>no-floating-promises</code>/<code>no-misused-promises</code>/<code
+          >require-await</code
+        >
+        (error), <code>no-explicit-any</code> (warn),
+        <code>reportUnusedDisableDirectives</code> (error).
+      </p>
+      <hr />
+      <h2>13. Shared Packages (<code>@beautinique/*</code>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>@beautinique/backend-bullmq</code></td>
+            <td>
+              <code>JobWorker</code> — typed BullMQ wrapper, schema-checked jobs
+              (<code>mail-queue</code>/<code>send-otp</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-logger</code></td>
+            <td><code>createLogger</code>/<code>createHttpLogger</code> (Pino-based)</td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-response</code></td>
+            <td>
+              <code>successResponse</code>/<code>errorResponse</code>/<code>notFoundResponse</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/shared-constants</code></td>
+            <td><code>SERVICE_NAMES_MAP</code>, <code>API_METHODS_MAP</code></td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/shared-markdown-to-html</code></td>
+            <td>
+              <code>generateHtmlFromMarkdown</code> — used by
+              <code>scripts/generate-html.mjs</code> to render this README to
+              <code>public/index.html</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/shared-utils</code></td>
+            <td><code>stringifyData</code></td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>14. API Response Format</h2>
+      <p>
+        All responses use <code>@beautinique/backend-response</code>&#39;s envelope, attached via
+        <code>app.use(successResponse({ defaultMessage: &#39;Success.&#39; }))</code>:
+      </p>
+      <pre><code class="language-jsonc">// success
+{ &quot;success&quot;: true, &quot;message&quot;: &quot;Mail Service is healthy&quot;, &quot;data&quot;: { &quot;mail&quot;: true, &quot;worker&quot;: true, &quot;service&quot;: &quot;mail-service&quot; } }
+
+// error
+{ &quot;success&quot;: false, &quot;code&quot;: &quot;INTERNAL_SERVER_ERROR&quot;, &quot;message&quot;: &quot;...&quot; }
+</code></pre>
+      <p>
+        <code>res.success({ message, data })</code> — <code>data</code> is omitted entirely (not
+        sent as <code>null</code>) when not provided.
+      </p>
+      <hr />
+      <h2>15. Design Notes / Known Trade-offs</h2>
+      <ul>
+        <li>
+          <strong
+            ><code>/health</code>&#39;s <code>worker</code>/<code>mail</code> fields reflect local
+            state, not a live re-check.</strong
+          >
+          <code>JobWorker.isRunning()</code> is <code>true</code> as long as the worker hasn&#39;t
+          been closed/paused — it doesn&#39;t actively probe Redis on every
+          <code>/health</code> call. Likewise <code>isConnected()</code> reflects the
+          <em>last</em> successful <code>verify()</code>, not a fresh SMTP handshake. If Redis or
+          SMTP becomes unreachable after startup, <code>/health</code> can still report both as
+          healthy for a period before BullMQ&#39;s/Nodemailer&#39;s own error events surface the
+          problem in logs.
+        </li>
+        <li>
+          <strong>Only one email type today.</strong> <code>send-otp</code> is the only job handler;
+          adding a new transactional email means adding both a producer call in the enqueuing
+          service and a matching handler + template here.
+        </li>
+        <li>
+          <strong>SMTP via a personal Gmail account.</strong> Works fine at low volume with an app
+          password, but Gmail enforces sending-rate limits not designed for production
+          transactional-email traffic — worth moving to a dedicated provider (SES, Postmark,
+          SendGrid, etc.) if OTP volume grows.
+        </li>
+        <li>
+          <strong><code>src/types/index.ts</code> is currently empty.</strong> Kept as a scaffold
+          for when this service needs service-local types; nothing imports it today.
+        </li>
+        <li>
+          <strong
+            ><code>GET /</code> regenerates on <code>npm run build</code>, not
+            <code>npm run dev</code>.</strong
+          >
+          <code>public/index.html</code> is generated from <code>README.md</code> by the
+          <code>postbuild</code> script (<code>scripts/generate-html.mjs</code>). Editing this file
+          while running <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build
+          actually runs.
+        </li>
+      </ul>
+      <hr />
+      <h2>16. Data Flow Example — OTP Send</h2>
+      <pre><code>user-service → bullQueue.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, { email, otp })
+  (async, on this service&#39;s mail-queue worker)
+  → WorkerManager&#39;s &#39;send-otp&#39; handler
+  → transporter.sendOtp(email, otp)
+      → getOtpHtmlMessage(title, otp)         ← branded HTML
+      → html-to-text convert(html)            ← plain-text fallback
+      → transporter.sendMail({ from, to, subject, text, html })
+  ← email delivered via pooled SMTP connection
+
+  (on failure at any step)
+  → logger.error(...) with stringifyData(error) + stringifyData(data)
+  → rethrow → BullMQ retries (attempts: 3, exponential backoff, delay 1000ms)
+</code></pre>
+    </main>
   </body>
 </html>
