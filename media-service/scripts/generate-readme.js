@@ -36,7 +36,7 @@ const PAGE_STYLES = `
   }
 
   main {
-    max-width: 860px;
+    max-width: 1024px;
     margin: 0 auto;
     padding: 48px 24px 96px;
   }
