@@ -419,7 +419,7 @@ res.success({ data: { url } })      # request returns here - DB write happens as
           href="src/classes/WorkerManager.ts"
           >src/classes/WorkerManager.ts</a
         >), one BullMQ <code>JobWorker</code> for the whole queue (concurrency 5, shared across all
-        job names below - not per-job like the old <code>be-jobs</code>-based implementation).
+        job names below).
       </p>
       <table>
         <thead>
@@ -473,13 +473,11 @@ res.success({ data: { url } })      # request returns here - DB write happens as
       </p>
       <h2>Cross-service queue integration</h2>
       <p>
-        Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so
-        producers and consumers don&#39;t need to share a package version -
-        <code>product-service</code> currently enqueues
-        <code>mark-multiple-media-as-used</code> using the <strong>older</strong>
-        <code>@beautinique/be-jobs</code> package, while this service consumes it via the newer
-        <code>@beautinique/backend-bullmq</code>. Both target the same
-        <code>media-queue</code> string on the same Redis instance, so it works, but it means:
+        Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any
+        service can enqueue onto <code>media-queue</code> as long as it targets the same Redis
+        instance and uses <code>@beautinique/backend-bullmq</code> -
+        <code>product-service</code> does this in <code>publishDraftProductController</code> when it
+        enqueues <code>mark-multiple-media-as-used</code>. This means:
       </p>
       <ul>
         <li>
@@ -488,9 +486,8 @@ res.success({ data: { url } })      # request returns here - DB write happens as
         </li>
         <li>
           If <code>media-queue</code>&#39;s schema/job names ever change in
-          <code>backend-bullmq</code>, <code>product-service</code> (and any other producer still on
-          <code>be-jobs</code>) needs a matching update, or those jobs will silently stop being
-          picked up.
+          <code>backend-bullmq</code>, every producer needs a matching update, or those jobs will
+          silently stop being picked up.
         </li>
       </ul>
       <h2>Data model (<code>Media</code>)</h2>
@@ -608,9 +605,7 @@ res.success({ data: { url } })      # request returns here - DB write happens as
           earlier cutoff.
         </li>
         <li>
-          Migrated the BullMQ integration from the retired <code>@beautinique/be-jobs</code> package
-          to
-          <code>@beautinique/backend-bullmq</code>
+          Implemented the BullMQ integration package <code>@beautinique/backend-bullmq</code> for
           (<code>JobProducer</code>/<code>JobWorker</code>).
         </li>
       </ul>

@@ -163,17 +163,16 @@ OTP emails) is owned end-to-end by `user-service` (producer) and
 ## Cross-service queue integration
 
 Redis/BullMQ jobs are identified purely by queue name + job name at the
-Redis level, so producers and consumers don't need to share a package
-version - `product-service` currently enqueues `mark-multiple-media-as-used`
-using the **older** `@beautinique/be-jobs` package, while this service
-consumes it via the newer `@beautinique/backend-bullmq`. Both target the same
-`media-queue` string on the same Redis instance, so it works, but it means:
+Redis level, so any service can enqueue onto `media-queue` as long as it
+targets the same Redis instance and uses `@beautinique/backend-bullmq` -
+`product-service` does this in `publishDraftProductController` when it
+enqueues `mark-multiple-media-as-used`. This means:
 
 - The `BULL_MQ_*` env vars must point to the **same** Redis instance across
   every service that touches `media-queue`.
-- If `media-queue`'s schema/job names ever change in `backend-bullmq`,
-  `product-service` (and any other producer still on `be-jobs`) needs a
-  matching update, or those jobs will silently stop being picked up.
+- If `media-queue`'s schema/job names ever change in `backend-bullmq`, every
+  producer needs a matching update, or those jobs will silently stop being
+  picked up.
 
 ## Data model (`Media`)
 
@@ -255,8 +254,7 @@ existing shutdown orchestration of its own (e.g. a standalone worker script).
   fully buffered into memory before the per-type size check rejected it.
   Added `limits: { fileSize: MAX_VIDEO_SIZE }` (the largest allowed type) for
   an earlier cutoff.
-- Migrated the BullMQ integration from the retired `@beautinique/be-jobs`
-  package to `@beautinique/backend-bullmq` (`JobProducer`/`JobWorker`).
+- Implemented the BullMQ integration package `@beautinique/backend-bullmq` for (`JobProducer`/`JobWorker`).
 
 All of the above were verified against a live run: `npm run dev`, hit `/`,
 `/health`, and a real `POST /api/v1/upload/single` with a test image -
