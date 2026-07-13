@@ -13,7 +13,7 @@ import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
 import { router } from './routes/index.js';
 
-const { base } = METHODS_AND_PATHS;
+const { base, health, home } = METHODS_AND_PATHS;
 
 /* -------------------------------------------------------------------------- */
 /*                               Express App                                  */
@@ -59,7 +59,7 @@ app.use(successResponse({ defaultMessage: 'Success.' }));
  * `scripts/generate-readme.js` (see the "build"/"predev" scripts) -
  * avoids re-parsing markdown on every request.
  */
-app.get('/', (_, res) => {
+app[home.method](home.path, (_, res) => {
   res.sendFile(path.resolve('public', 'index.html'));
 });
 
@@ -72,7 +72,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 /**
  * Health endpoint.
  */
-app.get('/health', (_, res) => {
+app[health.method](health.path, (_, res) => {
   res.success({
     message: 'Media Service is healthy',
     data: {

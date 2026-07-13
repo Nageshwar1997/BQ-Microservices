@@ -9,6 +9,8 @@ export const LOGGER_BASE_OPTIONS = {
 
 export const METHODS_AND_PATHS = {
   base: '/api/v1',
+  home: { method: API_METHODS_MAP.GET, path: '/' },
+  health: { method: API_METHODS_MAP.GET, path: '/health' },
   upload: {
     base: '/upload',
     single: { method: API_METHODS_MAP.POST, path: '/single' },
