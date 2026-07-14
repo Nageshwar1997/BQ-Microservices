@@ -1,13 +1,7 @@
-import {
-  BadRequestError,
-  ConflictError,
-  TooManyRequestsError,
-  ValidationError,
-} from '@beautinique/backend-classes';
-import { MAX_RESEND } from '@beautinique/be-constants';
-import { sanitizeToken } from '@beautinique/be-utils';
+import { ConflictError, TooManyRequestsError, ValidationError } from '@beautinique/backend-classes';
+import { sanitizeToken } from '@beautinique/backend-utils';
 import type { TEmail, TOtp, TRegister } from '@beautinique/be-zod';
-import { HEADERS_MAP } from '@beautinique/shared-constants';
+import { HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
@@ -46,11 +40,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
 };
 
 export const registerResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
-
-  if (!token) {
-    throw new BadRequestError('Invalid or expired session');
-  }
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
@@ -61,7 +51,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
 
   const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
-  if (sendCount > MAX_RESEND) {
+  if (sendCount > MAX_OTP_RESEND) {
     throw new TooManyRequestsError('Maximum resend attempts reached');
   }
 
@@ -82,11 +72,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
 };
 
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
-
-  if (!token) {
-    throw new BadRequestError('Invalid or expired session');
-  }
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   const { otp } = req.body as TOtp;
 
@@ -101,11 +87,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
 };
 
 export const registerAndSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
-
-  if (!token) {
-    throw new BadRequestError('Invalid or expired session');
-  }
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   const { firstName, lastName, password, phoneNumber } = req.body as TRegister;
 

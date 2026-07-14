@@ -1,5 +1,4 @@
 import { ValidationError } from '@beautinique/backend-classes';
-import { HOUR, MINUTE } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/shared-utils';
 import { createClient, type RedisClientType } from 'redis';
 
@@ -41,6 +40,8 @@ const client: RedisClientType = createClient({
 class RedisCache {
   private client: RedisClientType;
   private isReady = false;
+  private MINUTE = 60 as const;
+  private HOUR = this.MINUTE ** 2;
 
   private KEY_PREFIX = { USER: 'bq:user-service:users', TOKEN: 'bq:user-service:tokens' };
 
@@ -146,7 +147,7 @@ class RedisCache {
 
   public async setUser(user: TMinimalUser) {
     const key = this.getUserKey(user._id);
-    await this.setData(key, HOUR * 24, user);
+    await this.setData(key, this.HOUR * 24 /* 1 Day */, user);
   }
 
   public async getUser(userId: string | TId): Promise<TMinimalUser> {
@@ -188,7 +189,7 @@ class RedisCache {
 
     const data = { otp, email, sendCount: 1 };
 
-    await this.setData(key, MINUTE * 10, data);
+    await this.setData(key, this.MINUTE * 10, data);
 
     return { token, ...data };
   }
@@ -213,7 +214,7 @@ class RedisCache {
       otp: generateOtp(),
     };
 
-    await this.setData(key, MINUTE * 10, updated);
+    await this.setData(key, this.MINUTE * 10, updated);
 
     return updated;
   }

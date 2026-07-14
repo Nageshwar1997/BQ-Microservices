@@ -1,15 +1,12 @@
 import {
-  BadRequestError,
   NotFoundError,
   TooManyRequestsError,
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
-import { getUser } from '@beautinique/backend-utils';
-import { MAX_RESEND } from '@beautinique/be-constants';
-import { sanitizeToken } from '@beautinique/be-utils';
+import { getUser, sanitizeToken } from '@beautinique/backend-utils';
 import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@beautinique/be-zod';
-import { HEADERS_MAP } from '@beautinique/shared-constants';
+import { HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
@@ -53,11 +50,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
 };
 
 export const forgotPasswordResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
-
-  if (!token) {
-    throw new BadRequestError('Invalid or expired session');
-  }
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
@@ -69,7 +62,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
   // Update OTP & sendCount in cache
   const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
-  if (sendCount > MAX_RESEND) {
+  if (sendCount > MAX_OTP_RESEND) {
     throw new TooManyRequestsError('Maximum resend attempts reached');
   }
 
@@ -88,11 +81,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
-
-  if (!token) {
-    throw new BadRequestError('Invalid or expired session');
-  }
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   const { otp } = req.body as TOtp;
 
@@ -107,11 +96,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
-
-  if (!token) {
-    throw new BadRequestError('Invalid or expired session');
-  }
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   const { password } = req.body as TPasswords;
 
