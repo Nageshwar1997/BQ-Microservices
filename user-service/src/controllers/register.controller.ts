@@ -39,7 +39,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
     throw error;
   }
 
-  res.success(200, 'OTP sent successfully', { token });
+  res.success({ message: 'OTP sent successfully', data: token });
 };
 
 export const registerResendOtpController = async (req: Request, res: Response) => {
@@ -75,7 +75,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
     throw error;
   }
 
-  res.success(200, 'OTP resent successfully', { sendCount });
+  res.success({ message: 'OTP resent successfully', data: sendCount });
 };
 
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
@@ -94,7 +94,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
     throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
-  res.success(200, 'OTP verified successfully');
+  res.success({ message: 'OTP verified successfully' });
 };
 
 export const registerAndSaveController = async (req: Request, res: Response) => {
@@ -169,5 +169,5 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   await redisCache.setUser(minUser);
 
-  res.success(201, 'User registered successfully', { user: minUser });
+  res.success({ message: 'User registered successfully', data: minUser });
 };

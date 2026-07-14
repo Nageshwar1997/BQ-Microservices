@@ -13,5 +13,5 @@ export const getSessionUserController = async (req: Request, res: Response) => {
 
   const user = await redisCache.getUser(userId);
 
-  res.success(200, 'User details fetched successfully', { user });
+  res.success({message:'User details fetched successfully', data: user });
 };

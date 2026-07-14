@@ -1,6 +1,5 @@
 import type { InferSchemaType, Types } from 'mongoose';
 
-import type { METHOD_MAP } from '../constants/index.js';
 import type { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
 import type { getMinimalUser } from '../utils/index.js';
 
@@ -17,9 +16,6 @@ export interface ITimestamp {
   createdAt: Date;
   updatedAt: Date;
 }
-
-export type TMethodKey = keyof typeof METHOD_MAP;
-export type TMethod = (typeof METHOD_MAP)[TMethodKey];
 
 export interface IUser extends InferSchemaType<typeof userSchema>, IId {}
 

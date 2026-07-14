@@ -8,5 +8,5 @@ export const logoutController = async (req: Request, res: Response) => {
 
   if (userId) await redisCache.deleteUser(userId);
 
-  res.success(200, 'Logged out successfully');
+  res.success({ message: 'Logged out successfully' });
 };

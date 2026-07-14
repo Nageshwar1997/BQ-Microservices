@@ -44,7 +44,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
     throw error;
   }
 
-  res.success(200, 'OTP sent successfully', { token });
+  res.success({ message: 'OTP sent successfully', data: token });
 };
 
 export const forgotPasswordResendOtpController = async (req: Request, res: Response) => {
@@ -80,7 +80,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 
     throw error;
   }
-  res.success(200, 'OTP resent successfully', { sendCount });
+  res.success({ message: 'OTP resent successfully', data: sendCount });
 };
 
 export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
@@ -99,7 +99,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
     throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
-  res.success(200, 'OTP verified successfully');
+  res.success({ message: 'OTP verified successfully' });
 };
 
 export const forgotPasswordSaveController = async (req: Request, res: Response) => {
@@ -149,7 +149,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
 
   await redisCache.setUser(minUser);
 
-  res.success(200, 'Password reset successfully', { user: minUser });
+  res.success({ message: 'Password reset successfully', data: minUser });
 };
 
 export const changePasswordController = async (req: Request, res: Response) => {
@@ -193,7 +193,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
 
   await redisCache.setUser(minUser);
 
-  res.success(200, 'Password changed successfully', { user: minUser });
+  res.success({ message: 'Password changed successfully', data: minUser });
 };
 
 export const setPasswordController = async (req: Request, res: Response) => {
@@ -216,5 +216,5 @@ export const setPasswordController = async (req: Request, res: Response) => {
 
   await redisCache.setUser(minUser);
 
-  res.success(200, 'Password set successfully', { user: minUser });
+  res.success({ message: 'Password set successfully', data: minUser });
 };

@@ -47,13 +47,13 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
   await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const googleRedirectController = async (_req: Request, res: Response) => {
   const url = googleAuth.url();
-  res.success(200, "Google's login page", { url });
+  res.success({ message: "Google's login page", data: url });
 };
 
 export const googleCallbackController = async (req: Request, res: Response) => {
@@ -94,13 +94,13 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const linkedinRedirectController = async (_req: Request, res: Response) => {
   const url = linkedinAuth.url();
-  res.success(200, 'LinkedIn login page', { url });
+  res.success({ message: 'LinkedIn login page', data: url });
 };
 
 export const linkedinCallbackController = async (req: Request, res: Response) => {
@@ -145,13 +145,13 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
   await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const githubRedirectController = async (_req: Request, res: Response) => {
   const url = githubAuth.url();
-  res.success(200, 'GitHub login page', { url });
+  res.success({ message: 'GitHub login page', data: url });
 };
 
 export const githubCallbackController = async (req: Request, res: Response) => {
@@ -195,5 +195,5 @@ export const githubCallbackController = async (req: Request, res: Response) => {
 
   await redisCache.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };
