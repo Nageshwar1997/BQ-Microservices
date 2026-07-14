@@ -1,6 +1,7 @@
-import { COUNTRIES, SELLER_TYPES, STATES_AND_UTS } from "@beautinique/be-constants";
-import { Schema } from "mongoose";
-import { SELLER_APPROVAL_STATUS, USER_STATUS } from "../constants";
+import { COUNTRIES, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/be-constants';
+import { Schema } from 'mongoose';
+
+import { SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants/index.js';
 
 const businessAddressSchema = new Schema(
   {

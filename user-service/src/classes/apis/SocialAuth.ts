@@ -1,17 +1,25 @@
-import type { TAuthProvider } from '@beautinique/be-constants';
+import { UnprocessableEntityError } from '@beautinique/backend-classes';
+import { type TAuthProvider } from '@beautinique/be-constants';
+import { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
 import { google } from 'googleapis';
-import { HEADERS_KEYS, OAUTH_API_ROUTES_AND_METHODS } from '../../constants';
-import { envs } from '../../envs';
-import { ApiRequest } from './ApiRequest';
+
+import { HEADERS_KEYS, OAUTH_API_ROUTES_AND_METHODS } from '../../constants/index.js';
+import { envs } from '../../envs/index.js';
+import { ApiRequest } from './ApiRequest.js';
 
 function getSocialAuthRedirectURL(provider: Exclude<TAuthProvider, 'MANUAL'>) {
   const redirectMap: Partial<Record<Exclude<TAuthProvider, 'MANUAL'>, string>> = {
-    GOOGLE: envs.oAuth.google.redirect_endpoint,
-    LINKEDIN: envs.oAuth.linkedin.redirect_endpoint,
-    GITHUB: envs.oAuth.github.redirect_endpoint,
+    [AUTH_PROVIDER_MAP.GOOGLE]: envs.oAuth.google.redirect_endpoint,
+    [AUTH_PROVIDER_MAP.LINKEDIN]: envs.oAuth.linkedin.redirect_endpoint,
+    [AUTH_PROVIDER_MAP.GITHUB]: envs.oAuth.github.redirect_endpoint,
   };
+  const endpoint = redirectMap[provider];
 
-  return `${envs.url.gateway}${redirectMap[provider]}`;
+  if (!endpoint) {
+    throw new UnprocessableEntityError('Invalid provider.');
+  }
+
+  return `${envs.url.gateway}${endpoint}`;
 }
 
 class GoogleAuth extends ApiRequest {
@@ -40,12 +48,14 @@ class GoogleAuth extends ApiRequest {
   public async decode(code: string) {
     const client = this.getClient();
 
-    const { tokens } = await client.getToken(code.toString());
+    const { tokens } = await client.getToken(code);
     client.setCredentials(tokens);
 
     return this.request({
       ...this.routes.decode,
-      headers: { [HEADERS_KEYS.authorization]: `Bearer ${tokens.access_token}` },
+      ...(tokens.access_token && {
+        headers: { [HEADERS_KEYS.authorization]: `Bearer ${tokens.access_token}` },
+      }),
     });
   }
 }
@@ -107,15 +117,22 @@ class GithubAuth extends ApiRequest {
   }
   public async decode(access_token: string) {
     const headers = { [HEADERS_KEYS.authorization]: `Bearer ${access_token}` };
-    const profile = await this.request({ ...this.routes.decode_profile, headers });
+    const profile = await this.request<Record<string, string>>({
+      ...this.routes.decode_profile,
+      headers,
+    });
 
     if (!profile.email) {
-      const emails = await this.request({ ...this.routes.decode_emails, headers });
+      const emails = await this.request<Record<string, string | boolean>[]>({
+        ...this.routes.decode_emails,
+        headers,
+      });
 
-      const email =
-        emails.find((email: Record<string, string | boolean>) => email.primary)?.email ||
-        emails[0]?.email;
-      profile.email = email || '';
+      const filteredEmails = emails.find((email) => email.primary);
+
+      const email = filteredEmails?.email ?? emails[0]?.email;
+
+      profile.email = (email ?? '') as string;
     }
 
     return profile;

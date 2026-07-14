@@ -2,7 +2,8 @@ import { AppError } from '@beautinique/be-classes';
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
-import type { IUser, TId } from '../types';
+
+import type { IUser, TId } from '../types/index.js';
 
 /* ======================= Auth Utils ======================= */
 
@@ -10,17 +11,17 @@ export const createOAuthDbPayload = (
   data: Record<string, string>,
   provider: TAuthProvider,
 ): Omit<IUser, '_id' | 'createdAt' | 'updatedAt'> => {
-  const fullName = data.name?.trim() || '';
+  const fullName = data.name?.trim() ?? '';
   const nameParts = fullName.split(/\s+/);
 
-  const firstName = data.given_name || nameParts[0];
+  const firstName = data.given_name ?? nameParts[0] ?? '';
   const lastName =
-    data.family_name || (nameParts.length > 1 ? nameParts?.slice(1)?.join(' ') : '') || '';
+    (data.family_name ?? (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '')) || '';
 
-  const avatar = data.picture || data.avatar_url;
+  const avatar = data.picture ?? data.avatar_url ?? '';
 
   return {
-    email: data.email,
+    email: data.email ?? '',
     firstName,
     lastName,
     avatar,

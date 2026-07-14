@@ -1,4 +1,4 @@
-import { AppError, type AppSuccess } from '@beautinique/be-classes';
+import { AppError } from '@beautinique/be-classes';
 import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
 
 export class ApiRequest {
@@ -8,10 +8,10 @@ export class ApiRequest {
     this.instance = axios.create({ baseURL });
   }
 
-  protected async request(config: AxiosRequestConfig) {
+  protected async request<T = unknown>(config: AxiosRequestConfig) {
     try {
-      const { data } = await this.instance.request(config);
-      return data as AppSuccess;
+      const response = await this.instance.request(config);
+      return response.data as T;
     } catch (error) {
       if (error instanceof AxiosError) {
         const message = error.response?.data?.message || 'API Error occurred';

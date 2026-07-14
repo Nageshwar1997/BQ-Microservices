@@ -1,1 +1,1 @@
-export * from './SocialAuth';
+export * from './SocialAuth.js';

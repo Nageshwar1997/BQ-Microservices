@@ -1,6 +1,7 @@
 import { AUTH_PROVIDERS, ROLES } from '@beautinique/be-constants';
 import { Schema } from 'mongoose';
-import { USER_STATUS } from '../constants';
+
+import { USER_STATUS } from '../constants/index.js';
 
 export const userSchema = new Schema(
   {

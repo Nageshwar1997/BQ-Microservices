@@ -1,3 +1,4 @@
+import { requireEnv, requirePort } from '@beautinique/shared-utils';
 const {
   // A
   // B
@@ -90,7 +91,7 @@ export const envs = {
   // C
   // D
 
-  database_name: DATABASE_NAME,
+  database_name: requireEnv(DATABASE_NAME, 'DATABASE_NAME'),
 
   // E
   // F
@@ -105,65 +106,73 @@ export const envs = {
   // L
   // M
 
-  mongo_uri: MONGODB_URI,
+  mongo_uri: requireEnv(MONGODB_URI, 'MONGODB_URI'),
 
   // N
   // O
 
   oAuth: {
     github: {
-      client_id: GITHUB_CLIENT_ID,
-      client_secret: GITHUB_CLIENT_SECRET,
-      redirect_endpoint: GITHUB_REDIRECT_ENDPOINT,
+      client_id: requireEnv(GITHUB_CLIENT_ID, 'GITHUB_CLIENT_ID'),
+      client_secret: requireEnv(GITHUB_CLIENT_SECRET, 'GITHUB_CLIENT_SECRET'),
+      redirect_endpoint: requireEnv(GITHUB_REDIRECT_ENDPOINT, 'GITHUB_REDIRECT_ENDPOINT'),
     },
     google: {
-      client_id: GOOGLE_CLIENT_ID,
-      client_secret: GOOGLE_CLIENT_SECRET,
-      redirect_endpoint: GOOGLE_REDIRECT_ENDPOINT,
+      client_id: requireEnv(GOOGLE_CLIENT_ID, 'GOOGLE_CLIENT_ID'),
+      client_secret: requireEnv(GOOGLE_CLIENT_SECRET, 'GOOGLE_CLIENT_SECRET'),
+      redirect_endpoint: requireEnv(GOOGLE_REDIRECT_ENDPOINT, 'GOOGLE_REDIRECT_ENDPOINT'),
     },
     linkedin: {
-      client_id: LINKEDIN_CLIENT_ID,
-      client_secret: LINKEDIN_CLIENT_SECRET,
-      redirect_endpoint: LINKEDIN_REDIRECT_ENDPOINT,
+      client_id: requireEnv(LINKEDIN_CLIENT_ID, 'LINKEDIN_CLIENT_ID'),
+      client_secret: requireEnv(LINKEDIN_CLIENT_SECRET, 'LINKEDIN_CLIENT_SECRET'),
+      redirect_endpoint: requireEnv(LINKEDIN_REDIRECT_ENDPOINT, 'LINKEDIN_REDIRECT_ENDPOINT'),
     },
   },
 
   // P
 
-  port: Number(PORT),
+  port: requirePort(PORT, 'PORT'),
 
   // Q
   // R
 
   redis: {
     cache: {
-      host: CACHE_REDIS_HOST,
-      port: Number(CACHE_REDIS_PORT),
-      password: CACHE_REDIS_PASSWORD,
-      username: CACHE_REDIS_USERNAME,
+      host: requireEnv(CACHE_REDIS_HOST, 'CACHE_REDIS_HOST'),
+      port: requirePort(CACHE_REDIS_PORT, 'CACHE_REDIS_PORT'),
+      password: requireEnv(CACHE_REDIS_PASSWORD, 'CACHE_REDIS_PASSWORD'),
+      username: requireEnv(CACHE_REDIS_USERNAME, 'CACHE_REDIS_USERNAME'),
     },
     job: {
-      host: JOB_REDIS_HOST,
-      port: Number(JOB_REDIS_PORT),
-      password: JOB_REDIS_PASSWORD,
-      username: JOB_REDIS_USERNAME,
+      host: requireEnv(JOB_REDIS_HOST, 'JOB_REDIS_HOST'),
+      port: requirePort(JOB_REDIS_PORT, 'JOB_REDIS_PORT'),
+      password: requireEnv(JOB_REDIS_PASSWORD, 'JOB_REDIS_PASSWORD'),
+      username: requireEnv(JOB_REDIS_USERNAME, 'JOB_REDIS_USERNAME'),
     },
   },
 
   // S
 
-  service_name: SERVICE_NAME,
-  service_secret: SERVICE_SECRET,
+  service_name: requireEnv(SERVICE_NAME, 'SERVICE_NAME'),
+  service_secret: requireEnv(SERVICE_SECRET, 'SERVICE_SECRET'),
 
   // T
   // U
 
   url: {
-    gateway: is_dev ? GATEWAY_DEV_URL : GATEWAY_PROD_URL,
+    gateway: is_dev
+      ? requireEnv(GATEWAY_DEV_URL, 'GATEWAY_DEV_URL')
+      : requireEnv(GATEWAY_PROD_URL, 'GATEWAY_PROD_URL'),
     service: {
-      mail: is_dev ? MAIL_SERVICE_DEV_URL : MAIL_SERVICE_PROD_URL,
-      media: is_dev ? MEDIA_SERVICE_DEV_URL : MEDIA_SERVICE_PROD_URL,
-      user: is_dev ? USER_SERVICE_DEV_URL : USER_SERVICE_PROD_URL,
+      mail: is_dev
+        ? requireEnv(MAIL_SERVICE_DEV_URL, 'MAIL_SERVICE_DEV_URL')
+        : requireEnv(MAIL_SERVICE_PROD_URL, 'MAIL_SERVICE_PROD_URL'),
+      media: is_dev
+        ? requireEnv(MEDIA_SERVICE_DEV_URL, 'MEDIA_SERVICE_DEV_URL')
+        : requireEnv(MEDIA_SERVICE_PROD_URL, 'MEDIA_SERVICE_PROD_URL'),
+      user: is_dev
+        ? requireEnv(USER_SERVICE_DEV_URL, 'USER_SERVICE_DEV_URL')
+        : requireEnv(USER_SERVICE_PROD_URL, 'USER_SERVICE_PROD_URL'),
     },
   },
 

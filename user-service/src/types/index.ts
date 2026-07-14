@@ -1,7 +1,8 @@
 import type { InferSchemaType, Types } from 'mongoose';
-import type { METHOD_MAP } from '../constants';
-import type { sellerSchema, userSchema, wishlistSchema } from '../schemas';
-import type { getMinimalUser } from '../utils';
+
+import type { METHOD_MAP } from '../constants/index.js';
+import type { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
+import type { getMinimalUser } from '../utils/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -27,3 +28,10 @@ export type TMinimalUser = ReturnType<typeof getMinimalUser>;
 export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
 
 export interface IWishlist extends InferSchemaType<typeof wishlistSchema>, IId {}
+
+export interface TApiResponse {
+  statusCode: number;
+  message: string;
+  data?: unknown;
+  [key: string]: unknown;
+}

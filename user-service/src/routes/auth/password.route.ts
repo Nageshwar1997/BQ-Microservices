@@ -7,7 +7,8 @@ import {
   setPasswordSchema,
 } from '@beautinique/be-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../../constants';
+
+import { METHODS_AND_PATHS } from '../../constants/index.js';
 import {
   changePasswordController,
   forgotPasswordResendOtpController,
@@ -15,8 +16,8 @@ import {
   forgotPasswordSendOtpController,
   forgotPasswordVerifyOtpController,
   setPasswordController,
-} from '../../controllers';
-import { authenticate } from '../../middlewares';
+} from '../../controllers/index.js';
+import { authenticate } from '../../middlewares/index.js';
 
 export const passwordRouter = Router();
 

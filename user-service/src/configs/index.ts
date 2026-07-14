@@ -1,6 +1,7 @@
 import { winstonLogs } from '@beautinique/be-middlewares';
-import { type ConnectOptions, connection } from 'mongoose';
-import { envs } from '../envs';
+import { connection, type ConnectOptions, STATES } from 'mongoose';
+
+import { envs } from '../envs/index.js';
 
 export const databaseConfigs = {
   uri: envs.mongo_uri,
@@ -8,7 +9,7 @@ export const databaseConfigs = {
   options: { dbName: envs.database_name } as ConnectOptions,
 };
 
-export const isDbConnected = () => connection.readyState === 1;
+export const isDbConnected = () => connection.readyState === STATES.connected;
 
 export const {
   error: errorLogs,

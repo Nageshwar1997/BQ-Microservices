@@ -1,3 +1,4 @@
+import { getUser } from '@beautinique/backend-utils';
 import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
@@ -6,11 +7,12 @@ import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@b
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
-import { redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
-import { getUserByEmail, getUserById, updateUser } from '../services';
-import type { IUser } from '../types';
-import { getMinimalUser, getObjId } from '../utils';
+
+import { redisCache } from '../classes/index.js';
+import { HEADERS_KEYS } from '../constants/index.js';
+import { getUserByEmail, getUserById, updateUser } from '../services/index.js';
+import type { IUser } from '../types/index.js';
+import { getMinimalUser, getObjId } from '../utils/index.js';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
   const { email } = req.body as TEmail;
@@ -46,7 +48,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
 };
 
 export const forgotPasswordResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -82,7 +84,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -93,7 +95,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
 
-  if (!parsedData || parsedData.otp !== otp) {
+  if (parsedData?.otp !== otp) {
     throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
@@ -101,7 +103,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -120,7 +122,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   const user = (await getUserByEmail({
     email: parsedData.email,
     lean: false,
-  })) as HydratedDocument<IUser>;
+  })) as HydratedDocument<IUser> | null;
 
   if (!user) {
     throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
@@ -151,11 +153,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
 };
 
 export const changePasswordController = async (req: Request, res: Response) => {
-  const userId = req.user?._id;
-
-  if (!userId) {
-    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-  }
+  const { _id: userId } = getUser(req.user);
 
   const { currentPassword, password } = req.body as TChangePassword;
 
@@ -199,11 +197,9 @@ export const changePasswordController = async (req: Request, res: Response) => {
 };
 
 export const setPasswordController = async (req: Request, res: Response) => {
-  const user = req.user;
+  const user = getUser(req.user);
 
-  if (!user) {
-    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-  } else if (user.providers.includes('MANUAL')) {
+  if (user.providers.includes('MANUAL')) {
     throw new AppError({
       message: 'Password already set. Please use forgot password.',
       code: 'UNPROCESSABLE_ENTITY',

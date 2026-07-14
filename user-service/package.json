@@ -55,7 +55,7 @@
     "@beautinique/backend-zod": "^1.0.6",
     "@beautinique/shared-constants": "^1.0.6",
     "@beautinique/shared-markdown-to-html": "^1.0.0",
-    "@beautinique/shared-utils": "^1.0.3",
+    "@beautinique/shared-utils": "^1.0.4",
     "cloudinary": "^2.10.0",
     "axios": "^1.18.1",
     "bcryptjs": "^3.0.3",

@@ -1,5 +1,6 @@
 import { model } from 'mongoose';
-import { sellerSchema, userSchema, wishlistSchema } from '../schemas';
+
+import { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
 
 export const User = model('User', userSchema);
 

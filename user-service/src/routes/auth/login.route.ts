@@ -1,7 +1,9 @@
-import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
+import { tryCatchResponse } from '@beautinique/backend-response';
+import { checkEmptyRequest, zodValidator } from '@beautinique/be-middlewares';
 import { loginSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../../constants';
+
+import { METHODS_AND_PATHS } from '../../constants/index.js';
 import {
   githubCallbackController,
   githubRedirectController,
@@ -10,7 +12,7 @@ import {
   linkedinCallbackController,
   linkedinRedirectController,
   manualLoginController,
-} from '../../controllers';
+} from '../../controllers/index.js';
 
 export const loginRouter = Router();
 

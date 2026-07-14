@@ -1,13 +1,14 @@
 import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
 import { emailSchema, otpSchema, registerSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../../constants';
+
+import { METHODS_AND_PATHS } from '../../constants/index.js';
 import {
   registerAndSaveController,
   registerResendOtpController,
   registerSendOtpController,
   registerVerifyOtpController,
-} from '../../controllers';
+} from '../../controllers/index.js';
 
 export const registerRouter = Router();
 

@@ -1,12 +1,13 @@
 import { AppError } from '@beautinique/be-classes';
 import { HOUR, MINUTE } from '@beautinique/be-constants';
-import { parseData, stringifyData } from '@beautinique/be-utils';
-import { type RedisClientType, createClient } from 'redis';
-import { logger } from '../configs';
-import { envs } from '../envs';
-import { getUserById } from '../services';
-import type { TId, TMinimalUser } from '../types';
-import { generateOtp, generateTempToken, getMinimalUser } from '../utils';
+import { parseData, stringifyData } from '@beautinique/shared-utils';
+import { createClient, type RedisClientType } from 'redis';
+
+import { logger } from '../configs/index.js';
+import { envs } from '../envs/index.js';
+import { getUserById } from '../services/index.js';
+import type { TId, TMinimalUser } from '../types/index.js';
+import { generateOtp, generateTempToken, getMinimalUser } from '../utils/index.js';
 
 interface IOtpData {
   otp: string;
@@ -27,7 +28,7 @@ const client: RedisClientType = createClient({
         return false;
       }
       const delay = Math.min(retries * 1000, 10000); //10s
-      logger.info(`🔄 Redis reconnecting in ${delay}ms (attempt ${retries + 1})`);
+      logger.info(`🔄 Redis reconnecting in ${String(delay)}ms (attempt ${String(retries + 1)})`);
       return delay;
     },
   },
@@ -46,7 +47,7 @@ class RedisCache {
   constructor() {
     this.client = client;
 
-    this.client.on('error', (err) => {
+    this.client.on('error', (err: Error) => {
       logger.error('❌ Redis Error:', err);
       this.isReady = false;
     });
@@ -101,13 +102,13 @@ class RedisCache {
     }
   }
 
-  private async getData(key: string) {
+  private async getData<T = unknown>(key: string): Promise<T | null> {
     const client = this.getClient();
     if (!client) return null;
 
     try {
       const data = await client.get(key);
-      return data ? parseData(data) : null;
+      return data ? parseData<T>(data) : null;
     } catch (err) {
       logger.warn('⚠️ Redis get failed:', err);
       return null;
@@ -128,7 +129,7 @@ class RedisCache {
   /* ================= KEY HELPERS ================= */
 
   private getUserKey(userId: string | TId) {
-    return `${this.KEY_PREFIX.USER}:${userId}`;
+    return `${this.KEY_PREFIX.USER}:${userId.toString()}`;
   }
 
   private getTokenKey(token: string) {
@@ -152,7 +153,7 @@ class RedisCache {
     const key = this.getUserKey(userId);
 
     // 1️. Try cache
-    const cachedUser: TMinimalUser = await this.getData(key);
+    const cachedUser = await this.getData<TMinimalUser>(key);
     if (cachedUser) {
       return cachedUser;
     }
@@ -194,7 +195,7 @@ class RedisCache {
 
   public async getOtpData(token: string) {
     const key = this.getTokenKey(token);
-    return (await this.getData(key)) as IOtpData | null;
+    return await this.getData<IOtpData | null>(key);
   }
 
   public async updateOtpData(token: string) {

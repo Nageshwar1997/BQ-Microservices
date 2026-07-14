@@ -1,14 +1,16 @@
 import { AppError } from '@beautinique/be-classes';
 import type { TRole } from '@beautinique/be-constants';
+import type { TLogin } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
-import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
-import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services';
-import { createOAuthDbPayload, getMinimalUser } from '../utils';
+
+import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes/index.js';
+import { HEADERS_KEYS } from '../constants/index.js';
+import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services/index.js';
+import { createOAuthDbPayload, getMinimalUser } from '../utils/index.js';
 
 export const manualLoginController = async (req: Request, res: Response) => {
-  const { email, password, phoneNumber } = req.body ?? {};
+  const { email, password, phoneNumber } = req.body as TLogin;
   const user = await getUserByEmailOrPhone({ email, phoneNumber });
 
   if (!user.providers.includes('MANUAL')) {
@@ -48,22 +50,23 @@ export const manualLoginController = async (req: Request, res: Response) => {
   res.success(200, 'User logged in successfully', { user: minUser });
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const googleRedirectController = async (_req: Request, res: Response) => {
   const url = googleAuth.url();
   res.success(200, "Google's login page", { url });
 };
 
 export const googleCallbackController = async (req: Request, res: Response) => {
-  const { code } = req.query;
+  const code = req.query.code as string;
 
   if (!code) {
     throw new AppError({ message: 'No code returned from Google', code: 'BAD_REQUEST' });
   }
 
   // Fetch user info from Google
-  const profile = await googleAuth.decode(String(code));
+  const profile = (await googleAuth.decode(code)) as Record<string, string> | undefined;
 
-  if (!profile) {
+  if (!profile?.email) {
     throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
   }
 
@@ -75,7 +78,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     if (!user.providers.includes('GOOGLE') && 'save' in user) {
       user.providers.push('GOOGLE');
       if (!user.avatar) {
-        user.avatar = profile.picture || '';
+        user.avatar = profile.picture ?? '';
       }
       await user.save();
     }
@@ -94,24 +97,27 @@ export const googleCallbackController = async (req: Request, res: Response) => {
   res.success(200, 'User logged in successfully', { user: minUser });
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const linkedinRedirectController = async (_req: Request, res: Response) => {
   const url = linkedinAuth.url();
   res.success(200, 'LinkedIn login page', { url });
 };
 
 export const linkedinCallbackController = async (req: Request, res: Response) => {
-  const { code } = req.query;
+  const code = req.query.code as string;
 
   if (!code) {
     throw new AppError({ message: 'No code returned from LinkedIn', code: 'BAD_REQUEST' });
   }
 
   // Fetch user info from Google
-  const { access_token } = await linkedinAuth.access_token(String(code));
+  const { access_token } = (await linkedinAuth.access_token(code)) as {
+    access_token: string;
+  };
 
-  const profile = await linkedinAuth.decode(access_token);
+  const profile = (await linkedinAuth.decode(access_token)) as Record<string, string> | undefined;
 
-  if (!profile) {
+  if (!profile?.email) {
     throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
   }
 
@@ -123,7 +129,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
     if (!user.providers.includes('LINKEDIN') && 'save' in user) {
       user.providers.push('LINKEDIN');
       if (!user.avatar) {
-        user.avatar = profile.picture || '';
+        user.avatar = profile.picture ?? '';
       }
       await user.save();
     }
@@ -142,23 +148,26 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
   res.success(200, 'User logged in successfully', { user: minUser });
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const githubRedirectController = async (_req: Request, res: Response) => {
   const url = githubAuth.url();
   res.success(200, 'GitHub login page', { url });
 };
 
 export const githubCallbackController = async (req: Request, res: Response) => {
-  const { code } = req.query;
+  const code = req.query.code as string;
 
   if (!code) {
     throw new AppError({ message: 'No code returned from GitHub', code: 'BAD_REQUEST' });
   }
 
   // Fetch user info from Google
-  const { access_token } = await githubAuth.access_token(String(code));
-  const profile = await githubAuth.decode(access_token);
+  const { access_token } = (await githubAuth.access_token(code)) as {
+    access_token: string;
+  };
+  const profile = (await githubAuth.decode(access_token)) as Record<string, string> | undefined;
 
-  if (!profile) {
+  if (!profile?.email) {
     throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
   }
 
@@ -170,7 +179,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
     if (!user.providers.includes('GITHUB') && 'save' in user) {
       user.providers.push('GITHUB');
       if (!user.avatar) {
-        user.avatar = profile.avatar_url || '';
+        user.avatar = profile.avatar_url ?? '';
       }
       await user.save();
     }

@@ -1,4 +1,4 @@
-import type { TMethodKey } from '../types';
+import type { TMethodKey } from '../types/index.js';
 
 export const HEADERS_KEYS = {
   authorization: 'Authorization',

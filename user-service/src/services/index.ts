@@ -1,7 +1,8 @@
 import { AppError } from '@beautinique/be-classes';
-import { User } from '../models';
-import type { IUser, TId } from '../types';
-import { getObjId } from '../utils';
+
+import { User } from '../models/index.js';
+import type { IUser, TId } from '../types/index.js';
+import { getObjId } from '../utils/index.js';
 
 interface ILean {
   lean?: boolean;
@@ -10,9 +11,13 @@ interface IById extends ILean {
   id: string | TId;
   password?: boolean;
 }
-type TByEmail = Pick<IUser, 'email'> & ILean;
-type TByPhone = Pick<IUser, 'phoneNumber'> & ILean;
-type TByEmailOrPhone = TByEmail | TByPhone;
+
+type TEmail = Pick<IUser, 'email'>;
+type TPhone = Pick<IUser, 'phoneNumber'>;
+
+type TByEmail = TEmail & ILean;
+type TByPhone = TPhone & ILean;
+type TByEmailOrPhone = Partial<TPhone | TEmail> & ILean;
 
 export const getUserById = async (data: IById) => {
   const { id, lean = true, password = false } = data;
@@ -63,12 +68,10 @@ export const getUserByEmailOrPhone = async ({ lean = true, ...data }: TByEmailOr
   return user;
 };
 
-export const createNewUser = async (payload: Omit<IUser, '_id' | 'createdAt' | 'updatedAt' | "reason">) => {
+export const createNewUser = async (
+  payload: Omit<IUser, '_id' | 'createdAt' | 'updatedAt' | 'reason'>,
+) => {
   const user = await User.create(payload);
-
-  if (!user) {
-    throw new AppError({ message: 'Failed to create user', code: 'INTERNAL_SERVER_ERROR' });
-  }
 
   return user;
 };

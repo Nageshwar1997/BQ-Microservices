@@ -5,16 +5,17 @@ import { sanitizeToken } from '@beautinique/be-utils';
 import type { TEmail, TOtp, TRegister } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
-import { redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
-import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services';
-import { getMinimalUser } from '../utils';
+
+import { redisCache } from '../classes/index.js';
+import { HEADERS_KEYS } from '../constants/index.js';
+import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services/index.js';
+import { getMinimalUser } from '../utils/index.js';
 
 export const registerSendOtpController = async (req: Request, res: Response) => {
   const { email } = req.body as TEmail;
   const user = await getUserByEmail({ email });
 
-  if (user && user.providers.includes('MANUAL')) {
+  if (user?.providers.includes('MANUAL')) {
     throw new AppError({
       message: 'User already exists, please login',
       code: 'CONFLICT',
@@ -42,7 +43,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
 };
 
 export const registerResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -78,7 +79,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
 };
 
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -89,7 +90,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
 
-  if (!parsedData || parsedData.otp !== otp) {
+  if (parsedData?.otp !== otp) {
     throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
   }
 
@@ -97,7 +98,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
 };
 
 export const registerAndSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
     throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
@@ -117,7 +118,8 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
     getUserByEmail({ email: parsedData.email, lean: false }),
     getUserByPhoneNumber({ phoneNumber, lean: false }),
   ]);
-  let user = emailUser || phoneUser;
+
+  let user = emailUser ?? phoneUser;
 
   if (phoneUser && phoneUser._id.toString() !== emailUser?._id.toString()) {
     throw new AppError({

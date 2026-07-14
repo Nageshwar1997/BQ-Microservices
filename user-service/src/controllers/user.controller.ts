@@ -1,7 +1,8 @@
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
-import { redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
+
+import { redisCache } from '../classes/index.js';
+import { HEADERS_KEYS } from '../constants/index.js';
 
 export const getSessionUserController = async (req: Request, res: Response) => {
   const userId = req.get(HEADERS_KEYS.userId);
@@ -11,8 +12,6 @@ export const getSessionUserController = async (req: Request, res: Response) => {
   }
 
   const user = await redisCache.getUser(userId);
-
-  if (!user) throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
 
   res.success(200, 'User details fetched successfully', { user });
 };
