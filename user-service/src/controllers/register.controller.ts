@@ -7,12 +7,12 @@ import {
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
 import type { TEmail, TOtp, TRegister } from '@beautinique/be-zod';
+import { HEADERS_MAP } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 import { redisCache } from '../classes/index.js';
 import { jobProducer } from '../configs/index.js';
-import { HEADERS_KEYS } from '../constants/index.js';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services/index.js';
 import { getMinimalUser } from '../utils/index.js';
 
@@ -46,7 +46,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
 };
 
 export const registerResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
 
   if (!token) {
     throw new BadRequestError('Invalid or expired session');
@@ -82,7 +82,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
 };
 
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
 
   if (!token) {
     throw new BadRequestError('Invalid or expired session');
@@ -101,7 +101,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
 };
 
 export const registerAndSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
 
   if (!token) {
     throw new BadRequestError('Invalid or expired session');

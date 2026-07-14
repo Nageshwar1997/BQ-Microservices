@@ -6,13 +6,12 @@ import {
   ValidationError,
 } from '@beautinique/backend-classes';
 import type { TLogin } from '@beautinique/be-zod';
-import { AUTH_PROVIDER_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
+import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { TUserRole } from '@beautinique/shared-types';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes/index.js';
-import { HEADERS_KEYS } from '../constants/index.js';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services/index.js';
 import { createOAuthDbPayload, getMinimalUser } from '../utils/index.js';
 
@@ -29,7 +28,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
     );
   }
 
-  const role = req.get(HEADERS_KEYS.loginRole) as TUserRole | undefined;
+  const role = req.get(HEADERS_MAP.loginRole) as TUserRole | undefined;
 
   if (role && user.role !== role && user.role !== USER_ROLE_MAP.MASTER) {
     throw new AuthorizationError('You are not authorized to perform this action');

@@ -1,7 +1,7 @@
-import { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
+import { AUTH_PROVIDER_MAP, HEADERS_MAP } from '@beautinique/shared-constants';
 import { google } from 'googleapis';
 
-import { HEADERS_KEYS, OAUTH_API_ROUTES_AND_METHODS } from '../../constants/index.js';
+import { OAUTH_API_ROUTES_AND_METHODS } from '../../constants/index.js';
 import { envs } from '../../envs/index.js';
 import type { TSocialAuthProvider } from '../../types/index.js';
 import { ApiRequest } from './ApiRequest.js';
@@ -49,7 +49,7 @@ class GoogleAuth extends ApiRequest {
     return this.request({
       ...this.routes.decode,
       ...(tokens.access_token && {
-        headers: { [HEADERS_KEYS.authorization]: `Bearer ${tokens.access_token}` },
+        headers: { [HEADERS_MAP.authorization]: `Bearer ${tokens.access_token}` },
       }),
     });
   }
@@ -75,14 +75,14 @@ class LinkedinAuth extends ApiRequest {
         client_id: envs.oAuth.linkedin.client_id,
         client_secret: envs.oAuth.linkedin.client_secret,
       },
-      headers: { [HEADERS_KEYS.contentType]: 'application/x-www-form-urlencoded' },
+      headers: { [HEADERS_MAP.contentType]: 'application/x-www-form-urlencoded' },
     });
   }
 
   public decode(access_token: string) {
     return this.request({
       ...this.routes.decode,
-      headers: { [HEADERS_KEYS.authorization]: `Bearer ${access_token}` },
+      headers: { [HEADERS_MAP.authorization]: `Bearer ${access_token}` },
     });
   }
 }
@@ -111,7 +111,7 @@ class GithubAuth extends ApiRequest {
     });
   }
   public async decode(access_token: string) {
-    const headers = { [HEADERS_KEYS.authorization]: `Bearer ${access_token}` };
+    const headers = { [HEADERS_MAP.authorization]: `Bearer ${access_token}` };
     const profile = await this.request<Record<string, string>>({
       ...this.routes.decode_profile,
       headers,

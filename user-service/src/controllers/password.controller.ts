@@ -9,13 +9,13 @@ import { getUser } from '@beautinique/backend-utils';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { sanitizeToken } from '@beautinique/be-utils';
 import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@beautinique/be-zod';
+import { HEADERS_MAP } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
 
 import { redisCache } from '../classes/index.js';
 import { jobProducer } from '../configs/index.js';
-import { HEADERS_KEYS } from '../constants/index.js';
 import { getUserByEmail, getUserById, updateUser } from '../services/index.js';
 import type { IUser } from '../types/index.js';
 import { getMinimalUser, getObjId } from '../utils/index.js';
@@ -53,7 +53,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
 };
 
 export const forgotPasswordResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
 
   if (!token) {
     throw new BadRequestError('Invalid or expired session');
@@ -88,7 +88,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
 
   if (!token) {
     throw new BadRequestError('Invalid or expired session');
@@ -107,7 +107,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
 };
 
 export const forgotPasswordSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization) ?? '');
 
   if (!token) {
     throw new BadRequestError('Invalid or expired session');
