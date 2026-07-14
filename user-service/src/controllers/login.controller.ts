@@ -5,8 +5,9 @@ import {
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
-import type { TRole } from '@beautinique/be-constants';
 import type { TLogin } from '@beautinique/be-zod';
+import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import type { TUserRole } from '@beautinique/shared-types';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
@@ -28,9 +29,9 @@ export const manualLoginController = async (req: Request, res: Response) => {
     );
   }
 
-  const role = req.get(HEADERS_KEYS.loginRole) as TRole | undefined;
+  const role = req.get(HEADERS_KEYS.loginRole) as TUserRole | undefined;
 
-  if (role && user.role !== role && user.role !== 'MASTER') {
+  if (role && user.role !== role && user.role !== USER_ROLE_MAP.MASTER) {
     throw new AuthorizationError('You are not authorized to perform this action');
   }
 
@@ -38,7 +39,9 @@ export const manualLoginController = async (req: Request, res: Response) => {
   const isPasswordMatch = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatch) {
-    throw new ValidationError('Login Failed', { fieldErrors: { password: ['Incorrect password'] } });
+    throw new ValidationError('Login Failed', {
+      fieldErrors: { password: ['Incorrect password'] },
+    });
   }
 
   const minUser = getMinimalUser(user);

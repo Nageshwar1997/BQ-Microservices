@@ -1,5 +1,6 @@
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
-import type { TAuthProvider } from '@beautinique/be-constants';
+import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import type { TAuthProvider } from '@beautinique/shared-types';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
 
@@ -28,7 +29,7 @@ export const createOAuthDbPayload = (
     password: '',
     phoneNumber: '',
     providers: [provider],
-    role: 'USER',
+    role: USER_ROLE_MAP.USER,
     status: 'ACTIVE',
   };
 };

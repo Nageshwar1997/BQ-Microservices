@@ -1,4 +1,9 @@
-import { COUNTRIES, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/be-constants';
+import {
+  COUNTRIES,
+  COUNTRIES_MAP,
+  SELLER_TYPES,
+  STATES_AND_UTS,
+} from '@beautinique/shared-constants';
 import { Schema } from 'mongoose';
 
 import { SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants/index.js';
@@ -10,7 +15,7 @@ const businessAddressSchema = new Schema(
     city: { type: String, required: true, minlength: 2 },
     state: { type: String, required: true, enum: STATES_AND_UTS },
     pinCode: { type: String, required: true, minlength: 6, maxlength: 6 },
-    country: { type: String, required: true, enum: COUNTRIES, default: 'India' },
+    country: { type: String, required: true, enum: COUNTRIES, default: COUNTRIES_MAP.India },
     pan: { type: String, required: true, minlength: 10, maxlength: 10, uppercase: true },
     gst: { type: String, required: true, minlength: 15, maxlength: 15, uppercase: true },
   },

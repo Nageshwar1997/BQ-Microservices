@@ -1,4 +1,9 @@
-import { AUTH_PROVIDERS, ROLES } from '@beautinique/be-constants';
+import {
+  AUTH_PROVIDER_MAP,
+  AUTH_PROVIDERS,
+  USER_ROLE_MAP,
+  USER_ROLES,
+} from '@beautinique/shared-constants';
 import { Schema } from 'mongoose';
 
 import { USER_STATUS } from '../constants/index.js';
@@ -10,9 +15,12 @@ export const userSchema = new Schema(
     phoneNumber: { type: String, trim: true, default: '' },
     email: { type: String, trim: true, lowercase: true, required: true },
     avatar: { type: String, default: '', trim: true },
-    role: { type: String, enum: ROLES, default: 'USER' },
+    role: { type: String, enum: USER_ROLES, default: USER_ROLE_MAP.USER },
     password: { type: String, trim: true, default: '' },
-    providers: { type: [{ type: String, enum: AUTH_PROVIDERS }], default: ['MANUAL'] },
+    providers: {
+      type: [{ type: String, enum: AUTH_PROVIDERS }],
+      default: [AUTH_PROVIDER_MAP.MANUAL],
+    },
     status: { type: String, enum: USER_STATUS, default: 'ACTIVE' },
     reason: { type: String },
   },

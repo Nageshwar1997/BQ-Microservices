@@ -1,23 +1,18 @@
-import { UnprocessableEntityError } from '@beautinique/backend-classes';
-import { type TAuthProvider } from '@beautinique/be-constants';
 import { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
 import { google } from 'googleapis';
 
 import { HEADERS_KEYS, OAUTH_API_ROUTES_AND_METHODS } from '../../constants/index.js';
 import { envs } from '../../envs/index.js';
+import type { TSocialAuthProvider } from '../../types/index.js';
 import { ApiRequest } from './ApiRequest.js';
 
-function getSocialAuthRedirectURL(provider: Exclude<TAuthProvider, 'MANUAL'>) {
-  const redirectMap: Partial<Record<Exclude<TAuthProvider, 'MANUAL'>, string>> = {
+function getSocialAuthRedirectURL(provider: TSocialAuthProvider) {
+  const redirectMap: Record<TSocialAuthProvider, string> = {
     [AUTH_PROVIDER_MAP.GOOGLE]: envs.oAuth.google.redirect_endpoint,
     [AUTH_PROVIDER_MAP.LINKEDIN]: envs.oAuth.linkedin.redirect_endpoint,
     [AUTH_PROVIDER_MAP.GITHUB]: envs.oAuth.github.redirect_endpoint,
   };
   const endpoint = redirectMap[provider];
-
-  if (!endpoint) {
-    throw new UnprocessableEntityError('Invalid provider.');
-  }
 
   return `${envs.url.gateway}${endpoint}`;
 }

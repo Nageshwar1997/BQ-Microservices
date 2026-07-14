@@ -1,5 +1,6 @@
 import { AuthenticationError, AuthorizationError } from '@beautinique/backend-classes';
-import type { TRole } from '@beautinique/be-constants';
+import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import type { TUserRole } from '@beautinique/shared-types';
 import type { NextFunction, Request, Response } from 'express';
 
 import { redisCache } from '../classes/index.js';
@@ -24,10 +25,10 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
 };
 
 export const authorize =
-  (allowedRoles: TRole[]) => async (req: Request, _res: Response, next: NextFunction) => {
+  (allowedRoles: TUserRole[]) => async (req: Request, _res: Response, next: NextFunction) => {
     try {
       const userId = req.get(HEADERS_KEYS.userId);
-      const userRole = (req.get(HEADERS_KEYS.userRole) ?? 'USER') as TRole;
+      const userRole = (req.get(HEADERS_KEYS.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
 
       if (!userId) {
         throw new AuthenticationError('You are not logged in');
