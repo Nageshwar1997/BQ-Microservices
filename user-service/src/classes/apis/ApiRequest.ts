@@ -6,6 +6,8 @@ import axios, {
   type AxiosResponse,
 } from 'axios';
 
+import type { TApiResponse } from '../../types/index.js';
+
 interface ErrorResponse {
   message: string;
   statusCode?: number;
@@ -24,7 +26,7 @@ export class ApiRequest {
     this.instance = axios.create({ baseURL });
   }
 
-  protected async request<T = unknown>(config: AxiosRequestConfig) {
+  protected async request<T = TApiResponse>(config: AxiosRequestConfig) {
     try {
       const response = await this.instance.request(config);
       return response.data as T;

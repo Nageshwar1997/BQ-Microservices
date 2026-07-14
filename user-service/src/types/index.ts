@@ -10,10 +10,6 @@ export interface IId {
   _id: TId;
 }
 
-export interface IStrId {
-  _id: string;
-}
-
 export type TSocialAuthProvider = Exclude<TAuthProvider, typeof AUTH_PROVIDER_MAP.MANUAL>;
 
 export interface ITimestamp {

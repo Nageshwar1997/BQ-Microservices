@@ -46,7 +46,7 @@ class GoogleAuth extends ApiRequest {
     const { tokens } = await client.getToken(code);
     client.setCredentials(tokens);
 
-    return this.request({
+    return this.request<Record<string, string> | undefined>({
       ...this.routes.decode,
       ...(tokens.access_token && {
         headers: { [HEADERS_MAP.authorization]: `Bearer ${tokens.access_token}` },
@@ -66,7 +66,7 @@ class LinkedinAuth extends ApiRequest {
   }
 
   public access_token(code: string) {
-    return this.request({
+    return this.request<{ access_token: string }>({
       ...this.routes.access_token,
       data: {
         grant_type: 'authorization_code',
@@ -80,7 +80,7 @@ class LinkedinAuth extends ApiRequest {
   }
 
   public decode(access_token: string) {
-    return this.request({
+    return this.request<Record<string, string> | undefined>({
       ...this.routes.decode,
       headers: { [HEADERS_MAP.authorization]: `Bearer ${access_token}` },
     });
@@ -99,7 +99,7 @@ class GithubAuth extends ApiRequest {
     return `https://github.com/login/oauth/authorize?${params.toString()}`;
   }
   public access_token(code: string) {
-    return this.request({
+    return this.request<{ access_token: string }>({
       ...this.routes.access_token,
       data: {
         client_id: envs.oAuth.github.client_id,
@@ -112,12 +112,12 @@ class GithubAuth extends ApiRequest {
   }
   public async decode(access_token: string) {
     const headers = { [HEADERS_MAP.authorization]: `Bearer ${access_token}` };
-    const profile = await this.request<Record<string, string>>({
+    const profile = await this.request<Record<string, string> | undefined>({
       ...this.routes.decode_profile,
       headers,
     });
 
-    if (!profile.email) {
+    if (!!profile && !profile.email) {
       const emails = await this.request<Record<string, string | boolean>[]>({
         ...this.routes.decode_emails,
         headers,
@@ -127,7 +127,7 @@ class GithubAuth extends ApiRequest {
 
       const email = filteredEmails?.email ?? emails[0]?.email;
 
-      profile.email = (email ?? '') as string;
+      profile.email = email as string;
     }
 
     return profile;

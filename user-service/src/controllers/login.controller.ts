@@ -71,7 +71,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
   }
 
   // Fetch user info from Google
-  const profile = (await googleAuth.decode(code)) as Record<string, string> | undefined;
+  const profile = await googleAuth.decode(code);
 
   if (!profile?.email) {
     throw new NotFoundError('User info not found');
@@ -118,11 +118,9 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
   }
 
   // Fetch user info from Google
-  const { access_token } = (await linkedinAuth.access_token(code)) as {
-    access_token: string;
-  };
+  const { access_token } = await linkedinAuth.access_token(code);
 
-  const profile = (await linkedinAuth.decode(access_token)) as Record<string, string> | undefined;
+  const profile = await linkedinAuth.decode(access_token);
 
   if (!profile?.email) {
     throw new NotFoundError('User info not found');
@@ -169,10 +167,8 @@ export const githubCallbackController = async (req: Request, res: Response) => {
   }
 
   // Fetch user info from Google
-  const { access_token } = (await githubAuth.access_token(code)) as {
-    access_token: string;
-  };
-  const profile = (await githubAuth.decode(access_token)) as Record<string, string> | undefined;
+  const { access_token } = await githubAuth.access_token(code);
+  const profile = await githubAuth.decode(access_token);
 
   if (!profile?.email) {
     throw new NotFoundError('User info not found');
