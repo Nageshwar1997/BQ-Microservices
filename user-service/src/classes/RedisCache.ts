@@ -47,8 +47,8 @@ class RedisCache {
   constructor() {
     this.client = client;
 
-    this.client.on('error', (err: Error) => {
-      logger.error('❌ Redis Error:', err);
+    this.client.on('error', (err) => {
+      logger.error(err, '❌ Redis connection error:');
       this.isReady = false;
     });
 
@@ -74,7 +74,7 @@ class RedisCache {
     try {
       await this.client.connect();
     } catch (err) {
-      logger.error('❌ Redis connection failed:', err);
+      logger.error(err, '❌ Redis connection failed:');
       this.isReady = false;
     }
   }
@@ -98,7 +98,7 @@ class RedisCache {
     try {
       await client.setEx(key, ttl, strData);
     } catch (err) {
-      logger.warn('⚠️ Redis set failed:', err);
+      logger.warn(err, '⚠️  Redis set failed:');
     }
   }
 
@@ -110,7 +110,7 @@ class RedisCache {
       const data = await client.get(key);
       return data ? parseData<T>(data) : null;
     } catch (err) {
-      logger.warn('⚠️ Redis get failed:', err);
+      logger.warn(err, '⚠️  Redis get failed:');
       return null;
     }
   }
@@ -122,7 +122,7 @@ class RedisCache {
     try {
       await client.del(key);
     } catch (err) {
-      logger.warn('⚠️ Redis delete failed:', err);
+      logger.warn(err, '⚠️  Redis delete failed:');
     }
   }
 
@@ -232,7 +232,7 @@ class RedisCache {
 
       logger.warn('🛑 Redis Cache Connection Closed');
     } catch (err) {
-      logger.error('❌ Redis close failed:', err);
+      logger.error(err, '❌ Redis close failed:');
     }
   }
 }
