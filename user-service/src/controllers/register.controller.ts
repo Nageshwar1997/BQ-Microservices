@@ -1,4 +1,9 @@
-import { AppError } from '@beautinique/be-classes';
+import {
+  BadRequestError,
+  ConflictError,
+  TooManyRequestsError,
+  ValidationError,
+} from '@beautinique/backend-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
 import { sanitizeToken } from '@beautinique/be-utils';
@@ -16,9 +21,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   const user = await getUserByEmail({ email });
 
   if (user?.providers.includes('MANUAL')) {
-    throw new AppError({
-      message: 'User already exists, please login',
-      code: 'CONFLICT',
+    throw new ConflictError('User already exists, please login', {
       fieldErrors: { email: ['Email already exists'] },
     });
   }
@@ -46,20 +49,20 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
+    throw new BadRequestError('Invalid or expired session');
   }
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP session expired or invalid');
   }
 
   const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
   if (sendCount > MAX_RESEND) {
-    throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
+    throw new TooManyRequestsError('Maximum resend attempts reached');
   }
 
   try {
@@ -82,7 +85,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
+    throw new BadRequestError('Invalid or expired session');
   }
 
   const { otp } = req.body as TOtp;
@@ -91,7 +94,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const parsedData = await redisCache.getOtpData(token);
 
   if (parsedData?.otp !== otp) {
-    throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP expired or invalid');
   }
 
   res.success({ message: 'OTP verified successfully' });
@@ -101,7 +104,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
+    throw new BadRequestError('Invalid or expired session');
   }
 
   const { firstName, lastName, password, phoneNumber } = req.body as TRegister;
@@ -110,7 +113,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP session expired or invalid');
   }
 
   // Check for existing users
@@ -122,10 +125,8 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   let user = emailUser ?? phoneUser;
 
   if (phoneUser && phoneUser._id.toString() !== emailUser?._id.toString()) {
-    throw new AppError({
-      message: 'Phone number already exists',
+    throw new ConflictError('Phone number already exists', {
       fieldErrors: { phoneNumber: ['Phone number already exists'] },
-      code: 'CONFLICT',
     });
   }
 
@@ -141,10 +142,8 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
       user.phoneNumber = phoneNumber;
       await user.save();
     } else {
-      throw new AppError({
-        message: 'Email already exists',
+      throw new ConflictError('Email already exists', {
         fieldErrors: { email: ['Email already exists'] },
-        code: 'CONFLICT',
       });
     }
   } else {

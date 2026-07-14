@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { ValidationError } from '@beautinique/backend-classes';
 import { HOUR, MINUTE } from '@beautinique/be-constants';
 import { parseData, stringifyData } from '@beautinique/shared-utils';
 import { createClient, type RedisClientType } from 'redis';
@@ -202,7 +202,7 @@ class RedisCache {
     const prevData = await this.getOtpData(token);
 
     if (!prevData) {
-      throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
+      throw new ValidationError('OTP session expired or invalid');
     }
 
     const key = this.getTokenKey(token);
@@ -226,14 +226,8 @@ class RedisCache {
   /* ================= CLOSE ================= */
 
   public async close() {
-    try {
-      await this.client.quit();
-      this.isReady = false;
-
-      logger.warn('🛑 Redis Cache Connection Closed');
-    } catch (err) {
-      logger.error(err, '❌ Redis close failed:');
-    }
+    await this.client.quit();
+    this.isReady = false;
   }
 }
 

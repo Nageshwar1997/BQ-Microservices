@@ -1,5 +1,11 @@
+import {
+  BadRequestError,
+  NotFoundError,
+  TooManyRequestsError,
+  UnprocessableEntityError,
+  ValidationError,
+} from '@beautinique/backend-classes';
 import { getUser } from '@beautinique/backend-utils';
-import { AppError } from '@beautinique/be-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
 import { bullQueue } from '@beautinique/be-jobs';
 import { sanitizeToken } from '@beautinique/be-utils';
@@ -20,12 +26,11 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
 
   if (user && !user.providers.includes('MANUAL')) {
     // Check if user has MANUAL login
-    throw new AppError({
-      message: `This account was created using an oAuth (${user.providers.join(
+    throw new UnprocessableEntityError(
+      `This account was created using an oAuth (${user.providers.join(
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    );
   }
 
   // Store EMAIL & OTP in cache
@@ -51,21 +56,21 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
   const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
+    throw new BadRequestError('Invalid or expired session');
   }
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP session expired or invalid');
   }
 
   // Update OTP & sendCount in cache
   const { otp, sendCount, email } = await redisCache.updateOtpData(token);
 
   if (sendCount > MAX_RESEND) {
-    throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
+    throw new TooManyRequestsError('Maximum resend attempts reached');
   }
 
   try {
@@ -87,7 +92,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
+    throw new BadRequestError('Invalid or expired session');
   }
 
   const { otp } = req.body as TOtp;
@@ -96,7 +101,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   const parsedData = await redisCache.getOtpData(token);
 
   if (parsedData?.otp !== otp) {
-    throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP expired or invalid');
   }
 
   res.success({ message: 'OTP verified successfully' });
@@ -106,7 +111,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) ?? '');
 
   if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
+    throw new BadRequestError('Invalid or expired session');
   }
 
   const { password } = req.body as TPasswords;
@@ -115,7 +120,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   const parsedData = await redisCache.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP session expired or invalid');
   }
 
   // Check for existing users
@@ -125,16 +130,13 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   })) as HydratedDocument<IUser> | null;
 
   if (!user) {
-    throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('User not found');
   }
 
   const isSamePassword = await bcrypt.compare(password, user.password);
 
   if (isSamePassword) {
-    throw new AppError({
-      message: 'New password cannot be same as current password',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new UnprocessableEntityError('New password cannot be same as current password');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -166,9 +168,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
   const isCurrentPasswordMatch = await bcrypt.compare(currentPassword, user.password);
 
   if (!isCurrentPasswordMatch) {
-    throw new AppError({
-      message: 'Current password is incorrect',
-      code: 'VALIDATION_ERROR',
+    throw new ValidationError('Current password is incorrect', {
       fieldErrors: { currentPassword: ['Current password is incorrect'] },
     });
   }
@@ -176,9 +176,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
   const isSamePassword = await bcrypt.compare(password, user.password);
 
   if (isSamePassword) {
-    throw new AppError({
-      message: 'New password cannot be same as current password',
-      code: 'UNPROCESSABLE_ENTITY',
+    throw new UnprocessableEntityError('New password cannot be same as current password', {
       fieldErrors: { password: ['New password cannot be same as current password'] },
     });
   }
@@ -200,10 +198,7 @@ export const setPasswordController = async (req: Request, res: Response) => {
   const user = getUser(req.user);
 
   if (user.providers.includes('MANUAL')) {
-    throw new AppError({
-      message: 'Password already set. Please use forgot password.',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new UnprocessableEntityError('Password already set. Please use forgot password.');
   }
 
   const { password } = req.body as TSetPassword;

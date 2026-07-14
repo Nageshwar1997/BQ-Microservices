@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { NotFoundError } from '@beautinique/backend-classes';
 
 import { User } from '../models/index.js';
 import type { IUser, TId } from '../types/index.js';
@@ -27,7 +27,7 @@ export const getUserById = async (data: IById) => {
 
   const user = await (lean ? query.lean() : query);
 
-  if (!user) throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
+  if (!user) throw new NotFoundError('User not found');
 
   return user;
 };
@@ -55,9 +55,7 @@ export const getUserByEmailOrPhone = async ({ lean = true, ...data }: TByEmailOr
   const user = lean ? await User.findOne(query).lean() : await User.findOne(query);
 
   if (!user) {
-    throw new AppError({
-      message: 'User not found',
-      code: 'NOT_FOUND',
+    throw new NotFoundError('User not found', {
       fieldErrors: {
         ...('email' in data && data.email && { email: ['Invalid email'] }),
         ...('phoneNumber' in data && data.phoneNumber && { phoneNumber: ['Invalid phone number'] }),
@@ -83,7 +81,7 @@ export const updateUser = async (
   const user = await User.findOneAndUpdate(filter, payload, { new: true });
 
   if (!user) {
-    throw new AppError({ message: 'User not found!', code: 'NOT_FOUND' });
+    throw new NotFoundError('User not found!');
   }
 
   return user;

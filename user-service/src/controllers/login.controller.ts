@@ -1,4 +1,10 @@
-import { AppError } from '@beautinique/be-classes';
+import {
+  AuthorizationError,
+  BadRequestError,
+  NotFoundError,
+  UnprocessableEntityError,
+  ValidationError,
+} from '@beautinique/backend-classes';
 import type { TRole } from '@beautinique/be-constants';
 import type { TLogin } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
@@ -15,32 +21,24 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
   if (!user.providers.includes('MANUAL')) {
     // Check if user has MANUAL login
-    throw new AppError({
-      message: `This account was created using an oAuth (${user.providers.join(
+    throw new UnprocessableEntityError(
+      `This account was created using an oAuth (${user.providers.join(
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    );
   }
 
   const role = req.get(HEADERS_KEYS.loginRole) as TRole | undefined;
 
   if (role && user.role !== role && user.role !== 'MASTER') {
-    throw new AppError({
-      message: 'You are not authorized to perform this action',
-      code: 'AUTHORIZATION_ERROR',
-    });
+    throw new AuthorizationError('You are not authorized to perform this action');
   }
 
   // Compare password
   const isPasswordMatch = await bcrypt.compare(password, user.password);
 
   if (!isPasswordMatch) {
-    throw new AppError({
-      message: 'Login Failed',
-      code: 'VALIDATION_ERROR',
-      fieldErrors: { password: ['Incorrect password'] },
-    });
+    throw new ValidationError('Login Failed', { fieldErrors: { password: ['Incorrect password'] } });
   }
 
   const minUser = getMinimalUser(user);
@@ -60,14 +58,14 @@ export const googleCallbackController = async (req: Request, res: Response) => {
   const code = req.query.code as string;
 
   if (!code) {
-    throw new AppError({ message: 'No code returned from Google', code: 'BAD_REQUEST' });
+    throw new BadRequestError('No code returned from Google');
   }
 
   // Fetch user info from Google
   const profile = (await googleAuth.decode(code)) as Record<string, string> | undefined;
 
   if (!profile?.email) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('User info not found');
   }
 
   // Check if user already exists (email = primary identity)
@@ -107,7 +105,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
   const code = req.query.code as string;
 
   if (!code) {
-    throw new AppError({ message: 'No code returned from LinkedIn', code: 'BAD_REQUEST' });
+    throw new BadRequestError('No code returned from LinkedIn');
   }
 
   // Fetch user info from Google
@@ -118,7 +116,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
   const profile = (await linkedinAuth.decode(access_token)) as Record<string, string> | undefined;
 
   if (!profile?.email) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('User info not found');
   }
 
   // Check if user already exists (email = primary identity)
@@ -158,7 +156,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
   const code = req.query.code as string;
 
   if (!code) {
-    throw new AppError({ message: 'No code returned from GitHub', code: 'BAD_REQUEST' });
+    throw new BadRequestError('No code returned from GitHub');
   }
 
   // Fetch user info from Google
@@ -168,7 +166,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
   const profile = (await githubAuth.decode(access_token)) as Record<string, string> | undefined;
 
   if (!profile?.email) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('User info not found');
   }
 
   // Check if user already exists (email = primary identity)

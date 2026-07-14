@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { UnprocessableEntityError } from '@beautinique/backend-classes';
 import type { TAuthProvider } from '@beautinique/be-constants';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
@@ -61,7 +61,7 @@ export const generateTempToken = (bytes = 32) => {
 
 export const toObjectId = (id: string): TId => {
   if (!Types.ObjectId.isValid(id)) {
-    throw new AppError({ message: 'Invalid object id', code: 'UNPROCESSABLE_ENTITY' });
+    throw new UnprocessableEntityError('Invalid object id');
   }
 
   return new Types.ObjectId(id);

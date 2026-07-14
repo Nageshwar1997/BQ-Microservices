@@ -1,5 +1,4 @@
-import type { TErrorCode } from '@beautinique/backend-classes';
-import { AppError } from '@beautinique/be-classes';
+import { createError, ERROR_CLASS_MAP, type TErrorCode } from '@beautinique/backend-classes';
 import axios, {
   AxiosError,
   type AxiosInstance,
@@ -14,6 +13,9 @@ interface ErrorResponse {
   globalErrors?: string[];
   fieldErrors?: Record<string, string[]>;
 }
+
+const isErrorCode = (code: string | undefined): code is TErrorCode =>
+  !!code && code in ERROR_CLASS_MAP;
 
 export class ApiRequest {
   private readonly instance: AxiosInstance;
@@ -34,20 +36,14 @@ export class ApiRequest {
         const globalErrors = errResp?.data.globalErrors;
         const fieldErrors = errResp?.data.fieldErrors;
         const statusCode = errResp?.status ?? errResp?.data.statusCode ?? 500;
-        const code = (errResp?.data.code ?? 'INTERNAL_SERVER_ERROR') as TErrorCode;
+        const code = isErrorCode(errResp?.data.code) ? errResp.data.code : 'INTERNAL_SERVER_ERROR';
 
-        throw new AppError({
-          message,
-          globalErrors,
-          fieldErrors,
-          statusCode,
-          code,
-        });
+        throw createError({ message, payload: { code, statusCode, fieldErrors, globalErrors } });
       }
 
-      throw new AppError({
+      throw createError({
         message: error instanceof Error ? error.message : 'Something went wrong!',
-        code: 'INTERNAL_SERVER_ERROR',
+        payload: { code: 'INTERNAL_SERVER_ERROR' },
       });
     }
   }

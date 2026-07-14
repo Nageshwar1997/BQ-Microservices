@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { AuthenticationError, AuthorizationError } from '@beautinique/backend-classes';
 import type { TRole } from '@beautinique/be-constants';
 import type { NextFunction, Request, Response } from 'express';
 
@@ -10,7 +10,7 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
     const userId = req.get(HEADERS_KEYS.userId);
 
     if (!userId) {
-      throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+      throw new AuthenticationError('You are not logged in');
     }
 
     const user = await redisCache.getUser(userId);
@@ -30,16 +30,13 @@ export const authorize =
       const userRole = (req.get(HEADERS_KEYS.userRole) ?? 'USER') as TRole;
 
       if (!userId) {
-        throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+        throw new AuthenticationError('You are not logged in');
       }
 
       const user = await redisCache.getUser(userId);
 
       if (!allowedRoles.includes(user.role) || user.role !== userRole) {
-        throw new AppError({
-          message: 'You are not authorized to perform this action',
-          code: 'AUTHORIZATION_ERROR',
-        });
+        throw new AuthorizationError('You are not authorized to perform this action');
       }
 
       req.user = user;

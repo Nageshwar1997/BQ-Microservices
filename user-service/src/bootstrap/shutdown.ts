@@ -1,5 +1,6 @@
 import { disconnectDB } from '@beautinique/backend-mongoose';
 
+import { redisCache } from '../classes/RedisCache.js';
 import { jobProducer, logger } from '../configs/index.js';
 import {
   destroyConnections,
@@ -16,6 +17,7 @@ interface IShutdownTask {
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
   { name: 'Job Producer', task: jobProducer.close.bind(jobProducer) },
+  { name: 'Redis Connection', task: redisCache.close.bind(redisCache) },
   { name: 'MongoDB', task: disconnectDB },
 ]);
 
@@ -41,7 +43,7 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     return;
   }
 
-  logger.warn(`🛑 Received ${signal}. Starting graceful shutdown...`);
+  logger.info(`🛑 Received ${signal}. Starting graceful shutdown...`);
 
   try {
     if (isServerRunning()) {
@@ -51,7 +53,7 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     const outcomes = await Promise.all(
       shutdownTasks.map(async ({ name, task }) => {
         try {
-          logger.warn('⚠️  Stopping %s...', name);
+          logger.info(`🛑 Stopping ${name}...`);
 
           await task();
           return { name, status: 'fulfilled' as const };
