@@ -6,7 +6,7 @@ import {
   ValidationError,
 } from '@beautinique/backend-classes';
 import type { TLogin } from '@beautinique/be-zod';
-import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import { AUTH_PROVIDER_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { TUserRole } from '@beautinique/shared-types';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
@@ -20,7 +20,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
   const { email, password, phoneNumber } = req.body as TLogin;
   const user = await getUserByEmailOrPhone({ email, phoneNumber });
 
-  if (!user.providers.includes('MANUAL')) {
+  if (!user.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
     // Check if user has MANUAL login
     throw new UnprocessableEntityError(
       `This account was created using an oAuth (${user.providers.join(

@@ -1,4 +1,4 @@
-import { tryCatchResponse } from '@beautinique/be-middlewares';
+import { tryCatchResponse } from '@beautinique/backend-response';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../../constants/index.js';

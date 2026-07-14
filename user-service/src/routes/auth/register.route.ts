@@ -1,4 +1,6 @@
-import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
+import { checkEmptyRequest } from '@beautinique/backend-request';
+import { tryCatchResponse } from '@beautinique/backend-response';
+import { validateZod } from '@beautinique/backend-zod';
 import { emailSchema, otpSchema, registerSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
 
@@ -17,7 +19,7 @@ const { resendOtp, sendOtp, verifyOtp, saveUser } = METHODS_AND_PATHS.auth.regis
 registerRouter[sendOtp.method](
   sendOtp.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(emailSchema),
+  validateZod({ body: emailSchema }),
   tryCatchResponse(registerSendOtpController),
 );
 
@@ -26,13 +28,13 @@ registerRouter[resendOtp.method](resendOtp.path, tryCatchResponse(registerResend
 registerRouter[verifyOtp.method](
   verifyOtp.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(otpSchema),
+  validateZod({ body: otpSchema }),
   tryCatchResponse(registerVerifyOtpController),
 );
 
 registerRouter[saveUser.method](
   saveUser.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(registerSchema),
+  validateZod({ body: registerSchema }),
   tryCatchResponse(registerAndSaveController),
 );

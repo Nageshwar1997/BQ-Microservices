@@ -5,13 +5,13 @@ import {
   ValidationError,
 } from '@beautinique/backend-classes';
 import { MAX_RESEND } from '@beautinique/be-constants';
-import { bullQueue } from '@beautinique/be-jobs';
 import { sanitizeToken } from '@beautinique/be-utils';
 import type { TEmail, TOtp, TRegister } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 import { redisCache } from '../classes/index.js';
+import { jobProducer } from '../configs/index.js';
 import { HEADERS_KEYS } from '../constants/index.js';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services/index.js';
 import { getMinimalUser } from '../utils/index.js';
@@ -32,7 +32,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
@@ -68,7 +68,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 

@@ -17,4 +17,14 @@ export const logger = createLogger({
   logsDir: 'logs',
 });
 
-export const jobProducer = new JobProducer({ connection: envs.redis.job, logger });
+export const jobProducer = new JobProducer({
+  connection: envs.redis.job,
+  logger,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 },
+    removeOnComplete: { age: 30, count: 5 },
+    removeOnFail: { age: 1800, count: 10 },
+  },
+  queueOptions: {},
+});

@@ -1,5 +1,6 @@
+import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
-import { checkEmptyRequest, zodValidator } from '@beautinique/be-middlewares';
+import { validateZod } from '@beautinique/backend-zod';
 import { loginSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
 
@@ -22,7 +23,7 @@ const { login } = METHODS_AND_PATHS.auth;
 loginRouter[login.manual.method](
   login.manual.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(loginSchema),
+  validateZod({ body: loginSchema }),
   tryCatchResponse(manualLoginController),
 );
 

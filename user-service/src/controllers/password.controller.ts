@@ -7,7 +7,6 @@ import {
 } from '@beautinique/backend-classes';
 import { getUser } from '@beautinique/backend-utils';
 import { MAX_RESEND } from '@beautinique/be-constants';
-import { bullQueue } from '@beautinique/be-jobs';
 import { sanitizeToken } from '@beautinique/be-utils';
 import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@beautinique/be-zod';
 import bcrypt from 'bcryptjs';
@@ -15,6 +14,7 @@ import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
 
 import { redisCache } from '../classes/index.js';
+import { jobProducer } from '../configs/index.js';
 import { HEADERS_KEYS } from '../constants/index.js';
 import { getUserByEmail, getUserById, updateUser } from '../services/index.js';
 import type { IUser } from '../types/index.js';
@@ -39,7 +39,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
@@ -75,8 +75,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 
   try {
     /* ---------------- SEND OTP ---------------- */
-
-    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
