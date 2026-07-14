@@ -1,6 +1,6 @@
 import { ConflictError, TooManyRequestsError, ValidationError } from '@beautinique/backend-classes';
+import type { TEmailZodSchema, TOtpZodSchema, TRegisterZodSchema } from '@beautinique/backend-types';
 import { sanitizeToken } from '@beautinique/backend-utils';
-import type { TEmail, TOtp, TRegister } from '@beautinique/be-zod';
 import { HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
@@ -11,7 +11,7 @@ import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services
 import { getMinimalUser } from '../utils/index.js';
 
 export const registerSendOtpController = async (req: Request, res: Response) => {
-  const { email } = req.body as TEmail;
+  const { email } = req.body as TEmailZodSchema;
   const user = await getUserByEmail({ email });
 
   if (user?.providers.includes('MANUAL')) {
@@ -74,7 +74,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
 export const registerVerifyOtpController = async (req: Request, res: Response) => {
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
-  const { otp } = req.body as TOtp;
+  const { otp } = req.body as TOtpZodSchema;
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
@@ -89,7 +89,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
 export const registerAndSaveController = async (req: Request, res: Response) => {
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
-  const { firstName, lastName, password, phoneNumber } = req.body as TRegister;
+  const { firstName, lastName, password, phoneNumber } = req.body as TRegisterZodSchema;
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);

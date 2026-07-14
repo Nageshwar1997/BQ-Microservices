@@ -1,6 +1,6 @@
 import { AuthenticationError, AuthorizationError } from '@beautinique/backend-classes';
+import type { TUserRole } from '@beautinique/backend-types';
 import { HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
-import type { TUserRole } from '@beautinique/shared-types';
 import type { NextFunction, Request, Response } from 'express';
 
 import { redisCache } from '../classes/index.js';

@@ -5,19 +5,26 @@ import {
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
-import type { TLogin } from '@beautinique/be-zod';
+import type { TLoginZodSchema, TUserRole } from '@beautinique/backend-types';
 import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
-import type { TUserRole } from '@beautinique/shared-types';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes/index.js';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services/index.js';
+import type { IUser } from '../types/index.js';
 import { createOAuthDbPayload, getMinimalUser } from '../utils/index.js';
 
 export const manualLoginController = async (req: Request, res: Response) => {
-  const { email, password, phoneNumber } = req.body as TLogin;
-  const user = await getUserByEmailOrPhone({ email, phoneNumber });
+  const body = req.body as TLoginZodSchema;
+
+  const condition: Partial<Pick<IUser, 'email' | 'phoneNumber'>> = {};
+
+  if (body.loginMethod === 'email') condition.email = body.email;
+
+  if (body.loginMethod === 'phoneNumber') condition.phoneNumber = body.phoneNumber;
+
+  const user = await getUserByEmailOrPhone(condition);
 
   if (!user.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
     // Check if user has MANUAL login
@@ -35,7 +42,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
   }
 
   // Compare password
-  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  const isPasswordMatch = await bcrypt.compare(body.password, user.password);
 
   if (!isPasswordMatch) {
     throw new ValidationError('Login Failed', {

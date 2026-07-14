@@ -1,6 +1,6 @@
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
+import type { TAuthProvider } from '@beautinique/backend-types';
 import { USER_ROLE_MAP } from '@beautinique/shared-constants';
-import type { TAuthProvider } from '@beautinique/shared-types';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
 

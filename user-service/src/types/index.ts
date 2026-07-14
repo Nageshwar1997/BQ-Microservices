@@ -1,5 +1,5 @@
+import type { TAuthProvider } from '@beautinique/backend-types';
 import type { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
-import type { TAuthProvider } from '@beautinique/shared-types';
 import type { InferSchemaType, Types } from 'mongoose';
 
 import type { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';

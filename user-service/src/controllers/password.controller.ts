@@ -4,8 +4,14 @@ import {
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
+import type {
+  TChangePasswordZodSchema,
+  TEmailZodSchema,
+  TOtpZodSchema,
+  TPasswordsZodSchema,
+  TSetPasswordZodSchema,
+} from '@beautinique/backend-types';
 import { getUser, sanitizeToken } from '@beautinique/backend-utils';
-import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@beautinique/be-zod';
 import { HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
@@ -18,7 +24,7 @@ import type { IUser } from '../types/index.js';
 import { getMinimalUser, getObjId } from '../utils/index.js';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
-  const { email } = req.body as TEmail;
+  const { email } = req.body as TEmailZodSchema;
   const user = await getUserByEmail({ email });
 
   if (user && !user.providers.includes('MANUAL')) {
@@ -83,7 +89,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
-  const { otp } = req.body as TOtp;
+  const { otp } = req.body as TOtpZodSchema;
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
@@ -98,7 +104,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
 export const forgotPasswordSaveController = async (req: Request, res: Response) => {
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
-  const { password } = req.body as TPasswords;
+  const { password } = req.body as TPasswordsZodSchema;
 
   //  Get parsed data from cache
   const parsedData = await redisCache.getOtpData(token);
@@ -141,7 +147,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
 export const changePasswordController = async (req: Request, res: Response) => {
   const { _id: userId } = getUser(req.user);
 
-  const { currentPassword, password } = req.body as TChangePassword;
+  const { currentPassword, password } = req.body as TChangePasswordZodSchema;
 
   const user = (await getUserById({
     id: userId,
@@ -185,7 +191,7 @@ export const setPasswordController = async (req: Request, res: Response) => {
     throw new UnprocessableEntityError('Password already set. Please use forgot password.');
   }
 
-  const { password } = req.body as TSetPassword;
+  const { password } = req.body as TSetPasswordZodSchema;
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
