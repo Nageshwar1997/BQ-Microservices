@@ -59,7 +59,7 @@ class RedisCache {
     });
 
     this.client.on('reconnecting', () => {
-      logger.warn('⚠️ Redis Reconnecting');
+      logger.warn('⚠️  Redis Reconnecting');
       this.isReady = false;
     });
 
@@ -82,7 +82,7 @@ class RedisCache {
 
   private getClient(): RedisClientType | null {
     if (!this.isReady) {
-      logger.warn('⚠️ Redis unavailable → fallback to DB');
+      logger.warn('⚠️  Redis unavailable → fallback to DB');
       return null;
     }
     return this.client;
