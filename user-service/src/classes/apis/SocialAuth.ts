@@ -3,19 +3,8 @@ import { OAuth2Client } from 'google-auth-library';
 
 import { OAUTH_API_ROUTES_AND_METHODS } from '../../constants/index.js';
 import { envs } from '../../envs/index.js';
-import type { TSocialAuthProvider } from '../../types/index.js';
+import { getSocialAuthRedirectURL } from '../../utils/index.js';
 import { ApiRequest } from './ApiRequest.js';
-
-function getSocialAuthRedirectURL(provider: TSocialAuthProvider) {
-  const redirectMap: Record<TSocialAuthProvider, string> = {
-    [AUTH_PROVIDER_MAP.GOOGLE]: envs.oAuth.google.redirect_endpoint,
-    [AUTH_PROVIDER_MAP.LINKEDIN]: envs.oAuth.linkedin.redirect_endpoint,
-    [AUTH_PROVIDER_MAP.GITHUB]: envs.oAuth.github.redirect_endpoint,
-  };
-  const endpoint = redirectMap[provider];
-
-  return `${envs.url.gateway}${endpoint}`;
-}
 
 class GoogleAuth extends ApiRequest {
   private readonly routes = OAUTH_API_ROUTES_AND_METHODS.google;
@@ -58,7 +47,7 @@ class GoogleAuth extends ApiRequest {
 class LinkedinAuth extends ApiRequest {
   private readonly routes = OAUTH_API_ROUTES_AND_METHODS.linkedin;
   public url() {
-    const redirectUri = encodeURIComponent(getSocialAuthRedirectURL('LINKEDIN'));
+    const redirectUri = encodeURIComponent(getSocialAuthRedirectURL(AUTH_PROVIDER_MAP.LINKEDIN));
     const client_id = envs.oAuth.linkedin.client_id;
     return `https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=${client_id}&redirect_uri=${
       redirectUri

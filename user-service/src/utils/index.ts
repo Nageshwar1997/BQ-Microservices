@@ -1,10 +1,11 @@
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
 import type { TAuthProvider } from '@beautinique/backend-types';
-import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import { AUTH_PROVIDER_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import { randomBytes } from 'crypto';
 import { Types } from 'mongoose';
 
-import type { IUser, TId } from '../types/index.js';
+import { envs } from '../envs/index.js';
+import type { IUser, TId, TSocialAuthProvider } from '../types/index.js';
 
 /* ======================= Auth Utils ======================= */
 
@@ -73,3 +74,13 @@ export const getObjId = (id: string | TId): TId => {
 };
 
 /* ======================= User Utils End ======================= */
+
+export const getSocialAuthRedirectURL = (provider: TSocialAuthProvider) => {
+  const redirectMap: Record<TSocialAuthProvider, string> = {
+    [AUTH_PROVIDER_MAP.GOOGLE]: envs.oAuth.google.redirect_endpoint,
+    [AUTH_PROVIDER_MAP.LINKEDIN]: envs.oAuth.linkedin.redirect_endpoint,
+    [AUTH_PROVIDER_MAP.GITHUB]: envs.oAuth.github.redirect_endpoint,
+  };
+
+  return `${envs.url.gateway}${redirectMap[provider]}`;
+};
