@@ -12,11 +12,6 @@ export interface IId {
 
 export type TSocialAuthProvider = Exclude<TAuthProvider, typeof AUTH_PROVIDER_MAP.MANUAL>;
 
-export interface ITimestamp {
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface IUser extends InferSchemaType<typeof userSchema>, IId {}
 
 export type TMinimalUser = ReturnType<typeof getMinimalUser>;
