@@ -1,3 +1,3 @@
-export * from './github.js';
-export * from './google.js';
-export * from './linkedin.js';
+export * from './Github.js';
+export * from './Google.js';
+export * from './Linkedin.js';
