@@ -75,7 +75,7 @@ class RedisCache {
 
       this.isReady = false;
 
-      logger.warn('🛑 Redis Cache Connection Closed');
+      logger.info('🛑 Redis Cache Connection Closed');
     } catch (error) {
       logger.error(error, '❌ Redis close failed:');
     }

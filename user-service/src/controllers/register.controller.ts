@@ -21,7 +21,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   }
 
   // Store email in cache
-  const { otp, token } = await redisCache.setOtpData(email);
+  const { otp, token } = await redisCache.token.setOtpData(email);
 
   try {
     /* ---------------- SEND OTP ---------------- */
@@ -31,7 +31,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
     /* ---------------- ROLLBACK ---------------- */
 
     // Queue add failed, remove OTP from Redis
-    await redisCache.deleteOtpData(token);
+    await redisCache.token.deleteOtpData(token);
 
     throw error;
   }
@@ -43,13 +43,13 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpData(token);
+  const parsedData = await redisCache.token.getOtpData(token);
 
   if (!parsedData) {
     throw new ValidationError('OTP session expired or invalid');
   }
 
-  const { otp, sendCount, email } = await redisCache.updateOtpData(token);
+  const { otp, sendCount, email } = await redisCache.token.updateOtpData(token);
 
   if (sendCount > MAX_OTP_RESEND) {
     throw new TooManyRequestsError('Maximum resend attempts reached');
@@ -63,7 +63,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
     /* ---------------- ROLLBACK ---------------- */
 
     // Queue add failed, remove OTP from Redis
-    await redisCache.deleteOtpData(token);
+    await redisCache.token.deleteOtpData(token);
 
     throw error;
   }
@@ -77,7 +77,7 @@ export const registerVerifyOtpController = async (req: Request, res: Response) =
   const { otp } = req.body as TOtpZodSchema;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpData(token);
+  const parsedData = await redisCache.token.getOtpData(token);
 
   if (parsedData?.otp !== otp) {
     throw new ValidationError('OTP expired or invalid');
@@ -92,7 +92,7 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   const { firstName, lastName, password, phoneNumber } = req.body as TRegisterZodSchema;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpData(token);
+  const parsedData = await redisCache.token.getOtpData(token);
 
   if (!parsedData) {
     throw new ValidationError('OTP session expired or invalid');
@@ -144,11 +144,11 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
   }
 
   // Delete OTP and Token from Redis
-  await redisCache.deleteOtpData(token);
+  await redisCache.token.deleteOtpData(token);
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCache.user.setUser(minUser);
 
   res.success({ message: 'User registered successfully', data: minUser });
 };

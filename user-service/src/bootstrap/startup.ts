@@ -1,6 +1,6 @@
 import { connectDb } from '@beautinique/backend-mongoose';
 
-import { redisCache } from '../classes/RedisCache.js';
+import { redisCache } from '../classes/index.js';
 import { databaseConfigs, logger } from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
 import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './server.js';

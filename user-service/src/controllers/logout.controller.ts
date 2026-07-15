@@ -6,7 +6,7 @@ import { redisCache } from '../classes/index.js';
 export const logoutController = async (req: Request, res: Response) => {
   const { _id: userId } = getUser(req.user);
 
-  if (userId) await redisCache.deleteUser(userId);
+  if (userId) await redisCache.user.deleteUser(userId);
 
   res.success({ message: 'Logged out successfully' });
 };

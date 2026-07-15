@@ -26,7 +26,7 @@ export class RedisHelper {
     }
   }
 
-  protected async getData<T>(key: string): Promise<T | null> {
+  protected async getData<T = unknown>(key: string): Promise<T | null> {
     const client = this.getClient();
 
     if (!client) return null;
@@ -72,7 +72,7 @@ export class RedisHelper {
     }
   }
 
-  protected async getHashField<T>(key: string, field: string): Promise<T | null> {
+  protected async getHashField<T = unknown>(key: string, field: string): Promise<T | null> {
     const client = this.getClient();
 
     if (!client) return null;
@@ -88,7 +88,7 @@ export class RedisHelper {
     }
   }
 
-  protected async getAllHashFields<T>(key: string): Promise<Record<string, T>> {
+  protected async getAllHashFields<T = unknown>(key: string): Promise<Record<string, T>> {
     const client = this.getClient();
 
     if (!client) return {};

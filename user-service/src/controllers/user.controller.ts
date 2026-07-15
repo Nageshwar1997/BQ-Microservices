@@ -11,7 +11,7 @@ export const getSessionUserController = async (req: Request, res: Response) => {
     throw new AuthenticationError('You are not logged in');
   }
 
-  const user = await redisCache.getUser(userId);
+  const user = await redisCache.user.getUser(userId);
 
   res.success({ message: 'User details fetched successfully', data: user });
 };

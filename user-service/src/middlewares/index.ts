@@ -13,7 +13,7 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
       throw new AuthenticationError('You are not logged in');
     }
 
-    const user = await redisCache.getUser(userId);
+    const user = await redisCache.user.getUser(userId);
 
     req.user = user;
 
@@ -33,7 +33,7 @@ export const authorize =
         throw new AuthenticationError('You are not logged in');
       }
 
-      const user = await redisCache.getUser(userId);
+      const user = await redisCache.user.getUser(userId);
 
       if (!allowedRoles.includes(user.role) || user.role !== userRole) {
         throw new AuthorizationError('You are not authorized to perform this action');

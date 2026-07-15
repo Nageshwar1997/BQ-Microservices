@@ -1,6 +1,6 @@
 import { disconnectDB } from '@beautinique/backend-mongoose';
 
-import { redisCache } from '../classes/RedisCache.js';
+import { redisCache } from '../classes/index.js';
 import { jobProducer, logger } from '../configs/index.js';
 import {
   destroyConnections,

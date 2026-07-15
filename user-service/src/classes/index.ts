@@ -1,2 +1,2 @@
 export * from './apis/index.js';
-export * from './RedisCache.js';
+export * from './redis/index.js';

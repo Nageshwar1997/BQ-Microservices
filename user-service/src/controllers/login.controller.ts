@@ -52,7 +52,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCache.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };
@@ -99,7 +99,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCache.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };
@@ -148,7 +148,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCache.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };
@@ -196,7 +196,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCache.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };
