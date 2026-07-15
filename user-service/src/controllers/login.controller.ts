@@ -10,8 +10,7 @@ import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shar
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
-import { githubAuth, googleAuth, linkedinAuth } from '../classes/index.js';
-import { redisCacheManager } from '../configs/index.js';
+import { github, google, linkedin, redisCacheManager } from '../configs/index.js';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services/index.js';
 import type { IUser } from '../types/index.js';
 import { createOAuthDbPayload, getMinimalUser } from '../utils/index.js';
@@ -60,7 +59,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const googleRedirectController = async (_req: Request, res: Response) => {
-  const url = googleAuth.url();
+  const url = google.url();
   res.success({ message: "Google's login page", data: url });
 };
 
@@ -72,7 +71,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
   }
 
   // Fetch user info from Google
-  const profile = await googleAuth.decode(code);
+  const profile = await google.decode(code);
 
   if (!profile?.email) {
     throw new NotFoundError('User info not found');
@@ -107,7 +106,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const linkedinRedirectController = async (_req: Request, res: Response) => {
-  const url = linkedinAuth.url();
+  const url = linkedin.url();
   res.success({ message: 'LinkedIn login page', data: url });
 };
 
@@ -119,9 +118,9 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
   }
 
   // Fetch user info from Google
-  const { access_token } = await linkedinAuth.access_token(code);
+  const { access_token } = await linkedin.access_token(code);
 
-  const profile = await linkedinAuth.decode(access_token);
+  const profile = await linkedin.decode(access_token);
 
   if (!profile?.email) {
     throw new NotFoundError('User info not found');
@@ -156,7 +155,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
 // eslint-disable-next-line @typescript-eslint/require-await
 export const githubRedirectController = async (_req: Request, res: Response) => {
-  const url = githubAuth.url();
+  const url = github.url();
   res.success({ message: 'GitHub login page', data: url });
 };
 
@@ -168,8 +167,8 @@ export const githubCallbackController = async (req: Request, res: Response) => {
   }
 
   // Fetch user info from Google
-  const { access_token } = await githubAuth.access_token(code);
-  const profile = await githubAuth.decode(access_token);
+  const { access_token } = await github.access_token(code);
+  const profile = await github.decode(access_token);
 
   if (!profile?.email) {
     throw new NotFoundError('User info not found');
