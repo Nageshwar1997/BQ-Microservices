@@ -4,6 +4,7 @@ import {
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
+import { getObjId } from '@beautinique/backend-mongoose';
 import type {
   TChangePasswordZodSchema,
   TEmailZodSchema,
@@ -20,7 +21,7 @@ import type { HydratedDocument } from 'mongoose';
 import { jobProducer, redisCacheManager } from '../configs/index.js';
 import { getUserByEmail, getUserById, updateUser } from '../services/index.js';
 import type { IUser } from '../types/index.js';
-import { getMinimalUser, getObjId } from '../utils/index.js';
+import { getMinimalUser } from '../utils/index.js';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
   const { email } = req.body as TEmailZodSchema;

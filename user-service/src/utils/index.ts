@@ -1,11 +1,9 @@
-import { UnprocessableEntityError } from '@beautinique/backend-classes';
 import type { TAuthProvider } from '@beautinique/backend-types';
 import { AUTH_PROVIDER_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import { randomBytes } from 'crypto';
-import { Types } from 'mongoose';
 
 import { envs } from '../envs/index.js';
-import type { IUser, TId, TSocialAuthProvider } from '../types/index.js';
+import type { IUser, TSocialAuthProvider } from '../types/index.js';
 
 /* ======================= Auth Utils ======================= */
 
@@ -55,22 +53,9 @@ export const getMinimalUser = (user: IUser) => {
 export const generateOtp = () => {
   return String(Math.floor(100000 + Math.random() * 900000));
 };
+
 export const generateTempToken = (bytes = 32) => {
   return randomBytes(bytes).toString('hex');
-};
-
-/* ========== OBJECT ID CONVERTER FUNCTION ========== */
-
-export const toObjectId = (id: string): TId => {
-  if (!Types.ObjectId.isValid(id)) {
-    throw new UnprocessableEntityError('Invalid object id');
-  }
-
-  return new Types.ObjectId(id);
-};
-
-export const getObjId = (id: string | TId): TId => {
-  return typeof id === 'string' ? toObjectId(id) : id;
 };
 
 /* ======================= User Utils End ======================= */

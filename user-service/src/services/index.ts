@@ -1,8 +1,8 @@
 import { NotFoundError } from '@beautinique/backend-classes';
+import { getObjId } from '@beautinique/backend-mongoose';
 
 import { User } from '../models/index.js';
 import type { IUser, TId } from '../types/index.js';
-import { getObjId } from '../utils/index.js';
 
 interface ILean {
   lean?: boolean;
