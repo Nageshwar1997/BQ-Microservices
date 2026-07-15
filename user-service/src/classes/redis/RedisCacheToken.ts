@@ -2,7 +2,7 @@ import { ValidationError } from '@beautinique/backend-classes';
 import type { TEmailZodSchema, TOtpZodSchema } from '@beautinique/backend-types';
 
 import { generateOtp, generateTempToken } from '../../utils/index.js';
-import { RedisHelper } from './RedisHelper.js';
+import { RedisCacheHelper } from './RedisCacheHelper.js';
 
 interface IOtpData extends TOtpZodSchema, TEmailZodSchema {
   sendCount: number;
@@ -11,7 +11,7 @@ interface IOtpData extends TOtpZodSchema, TEmailZodSchema {
 const OTP_CACHE_TTL_SECONDS = 60 * 10; // 10 minutes
 const OTP_TOKEN_BYTES = 20;
 
-export class RedisToken extends RedisHelper {
+export class RedisCacheToken extends RedisCacheHelper {
   private readonly TOKENS_KEY = 'bq:user-service:tokens';
 
   private getTokenKey(token: string) {

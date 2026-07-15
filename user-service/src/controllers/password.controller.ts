@@ -17,8 +17,7 @@ import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
 
-import { redisCache } from '../classes/index.js';
-import { jobProducer } from '../configs/index.js';
+import { jobProducer, redisCacheManager } from '../configs/index.js';
 import { getUserByEmail, getUserById, updateUser } from '../services/index.js';
 import type { IUser } from '../types/index.js';
 import { getMinimalUser, getObjId } from '../utils/index.js';
@@ -37,7 +36,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
   }
 
   // Store EMAIL & OTP in cache
-  const { otp, token } = await redisCache.token.setOtpData(email);
+  const { otp, token } = await redisCacheManager.token.setOtpData(email);
 
   try {
     /* ---------------- SEND OTP ---------------- */
@@ -47,7 +46,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
     /* ---------------- ROLLBACK ---------------- */
 
     // Queue add failed, remove OTP from Redis
-    await redisCache.token.deleteOtpData(token);
+    await redisCacheManager.token.deleteOtpData(token);
 
     throw error;
   }
@@ -59,14 +58,14 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.token.getOtpData(token);
+  const parsedData = await redisCacheManager.token.getOtpData(token);
 
   if (!parsedData) {
     throw new ValidationError('OTP session expired or invalid');
   }
 
   // Update OTP & sendCount in cache
-  const { otp, sendCount, email } = await redisCache.token.updateOtpData(token);
+  const { otp, sendCount, email } = await redisCacheManager.token.updateOtpData(token);
 
   if (sendCount > MAX_OTP_RESEND) {
     throw new TooManyRequestsError('Maximum resend attempts reached');
@@ -79,7 +78,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
     /* ---------------- ROLLBACK ---------------- */
 
     // Queue add failed, remove OTP from Redis
-    await redisCache.token.deleteOtpData(token);
+    await redisCacheManager.token.deleteOtpData(token);
 
     throw error;
   }
@@ -92,7 +91,7 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   const { otp } = req.body as TOtpZodSchema;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.token.getOtpData(token);
+  const parsedData = await redisCacheManager.token.getOtpData(token);
 
   if (parsedData?.otp !== otp) {
     throw new ValidationError('OTP expired or invalid');
@@ -107,7 +106,7 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   const { password } = req.body as TPasswordsZodSchema;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.token.getOtpData(token);
+  const parsedData = await redisCacheManager.token.getOtpData(token);
 
   if (!parsedData) {
     throw new ValidationError('OTP session expired or invalid');
@@ -135,11 +134,11 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   await user.save();
 
   // Delete OTP and Token from Redis
-  await redisCache.token.deleteOtpData(token);
+  await redisCacheManager.token.deleteOtpData(token);
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.user.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
   res.success({ message: 'Password reset successfully', data: minUser });
 };
@@ -179,7 +178,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(updatedUser);
 
-  await redisCache.user.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
   res.success({ message: 'Password changed successfully', data: minUser });
 };
@@ -199,7 +198,7 @@ export const setPasswordController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(updatedUser);
 
-  await redisCache.user.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
   res.success({ message: 'Password set successfully', data: minUser });
 };

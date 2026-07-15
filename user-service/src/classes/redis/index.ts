@@ -1,17 +1,17 @@
 import { type RedisClientType } from 'redis';
 
 import { logger, redisClient } from '../../configs/index.js';
-import { RedisToken } from './RedisToken.js';
-import { RedisUser } from './RedisUser.js';
+import { RedisCacheToken } from './RedisCacheToken.js';
+import { RedisCacheUser } from './RedisCacheUser.js';
 
-class RedisCache {
+export class RedisCacheManager {
   private readonly client: RedisClientType;
 
   private isReady = false;
 
-  public readonly user: RedisUser;
+  public readonly user: RedisCacheUser;
 
-  public readonly token: RedisToken;
+  public readonly token: RedisCacheToken;
 
   constructor() {
     this.client = redisClient;
@@ -26,9 +26,9 @@ class RedisCache {
       return this.client;
     };
 
-    this.user = new RedisUser(this.client, getClient);
+    this.user = new RedisCacheUser(this.client, getClient);
 
-    this.token = new RedisToken(this.client, getClient);
+    this.token = new RedisCacheToken(this.client, getClient);
 
     this.registerEvents();
   }
@@ -81,5 +81,3 @@ class RedisCache {
     }
   }
 }
-
-export const redisCache = new RedisCache();

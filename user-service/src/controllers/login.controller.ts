@@ -10,7 +10,8 @@ import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shar
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
-import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes/index.js';
+import { githubAuth, googleAuth, linkedinAuth } from '../classes/index.js';
+import { redisCacheManager } from '../configs/index.js';
 import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services/index.js';
 import type { IUser } from '../types/index.js';
 import { createOAuthDbPayload, getMinimalUser } from '../utils/index.js';
@@ -52,7 +53,7 @@ export const manualLoginController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.user.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };
@@ -99,7 +100,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.user.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };
@@ -148,7 +149,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.user.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };
@@ -196,7 +197,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.user.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
   res.success({ message: 'User logged in successfully', data: minUser });
 };

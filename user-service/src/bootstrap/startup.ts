@@ -1,7 +1,6 @@
 import { connectDb } from '@beautinique/backend-mongoose';
 
-import { redisCache } from '../classes/index.js';
-import { databaseConfigs, logger } from '../configs/index.js';
+import { databaseConfigs, logger, redisCacheManager } from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
 import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './server.js';
 
@@ -29,7 +28,7 @@ export const startup = async (): Promise<void> => {
     registerDatabaseEvents();
 
     await connectDb(databaseConfigs);
-    await redisCache.connect();
+    await redisCacheManager.connect();
     await startHttpServer();
 
     logger.info('✅ Media service initialized');

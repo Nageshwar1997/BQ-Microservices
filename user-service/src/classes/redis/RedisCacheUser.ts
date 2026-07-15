@@ -1,11 +1,11 @@
 import { getUserById } from '../../services/index.js';
 import type { TId, TMinimalUser } from '../../types/index.js';
 import { getMinimalUser } from '../../utils/index.js';
-import { RedisHelper } from './RedisHelper.js';
+import { RedisCacheHelper } from './RedisCacheHelper.js';
 
 const USER_CACHE_TTL_SECONDS = 60 * 60 * 24; // 1 day
 
-export class RedisUser extends RedisHelper {
+export class RedisCacheUser extends RedisCacheHelper {
   private readonly USERS_KEY = 'bq:user-service:users';
 
   private getUserKey(userId: string | TId) {

@@ -1,7 +1,6 @@
 import { disconnectDB } from '@beautinique/backend-mongoose';
 
-import { redisCache } from '../classes/index.js';
-import { jobProducer, logger } from '../configs/index.js';
+import { jobProducer, logger, redisCacheManager } from '../configs/index.js';
 import {
   destroyConnections,
   isServerRunning,
@@ -17,7 +16,7 @@ interface IShutdownTask {
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
   { name: 'Job Producer', task: jobProducer.close.bind(jobProducer) },
-  { name: 'Redis Connection', task: redisCache.close.bind(redisCache) },
+  { name: 'Redis Connection', task: redisCacheManager.close.bind(redisCacheManager) },
   { name: 'MongoDB', task: disconnectDB },
 ]);
 

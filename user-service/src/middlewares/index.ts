@@ -3,7 +3,7 @@ import type { TUserRole } from '@beautinique/backend-types';
 import { HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 
-import { redisCache } from '../classes/index.js';
+import { redisCacheManager } from '../configs/index.js';
 
 export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
   try {
@@ -13,7 +13,7 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
       throw new AuthenticationError('You are not logged in');
     }
 
-    const user = await redisCache.user.getUser(userId);
+    const user = await redisCacheManager.user.getUser(userId);
 
     req.user = user;
 
@@ -33,7 +33,7 @@ export const authorize =
         throw new AuthenticationError('You are not logged in');
       }
 
-      const user = await redisCache.user.getUser(userId);
+      const user = await redisCacheManager.user.getUser(userId);
 
       if (!allowedRoles.includes(user.role) || user.role !== userRole) {
         throw new AuthorizationError('You are not authorized to perform this action');

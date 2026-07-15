@@ -3,7 +3,7 @@ import type { RedisClientType } from 'redis';
 
 import { logger } from '../../configs/index.js';
 
-export class RedisHelper {
+export class RedisCacheHelper {
   protected readonly client: RedisClientType;
   protected readonly getClient: () => RedisClientType | null;
 
