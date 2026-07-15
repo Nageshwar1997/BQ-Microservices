@@ -37,7 +37,7 @@ const client: RedisClientType = createClient({
 
 /* ================= CACHE CLASS ================= */
 
-class RedisCache {
+class OldRedisCache {
   private client: RedisClientType;
   private isReady = false;
   private MINUTE = 60 as const;
@@ -232,4 +232,4 @@ class RedisCache {
   }
 }
 
-export const redisCache = new RedisCache();
+export const redisCache = new OldRedisCache();
