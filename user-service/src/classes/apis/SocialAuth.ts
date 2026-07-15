@@ -1,5 +1,5 @@
 import { AUTH_PROVIDER_MAP, HEADERS_MAP } from '@beautinique/shared-constants';
-import { google } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
 
 import { OAUTH_API_ROUTES_AND_METHODS } from '../../constants/index.js';
 import { envs } from '../../envs/index.js';
@@ -20,7 +20,7 @@ function getSocialAuthRedirectURL(provider: TSocialAuthProvider) {
 class GoogleAuth extends ApiRequest {
   private readonly routes = OAUTH_API_ROUTES_AND_METHODS.google;
   private getClient() {
-    return new google.auth.OAuth2(
+    return new OAuth2Client(
       envs.oAuth.google.client_id,
       envs.oAuth.google.client_secret,
       getSocialAuthRedirectURL('GOOGLE'),
