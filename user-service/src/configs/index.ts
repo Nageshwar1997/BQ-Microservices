@@ -20,7 +20,7 @@ export const logger = createLogger({
 });
 
 export const jobProducer = new JobProducer({
-  connection: envs.redis.job,
+  connection: envs.redis.bull_mq,
   logger,
   defaultJobOptions: {
     attempts: 3,

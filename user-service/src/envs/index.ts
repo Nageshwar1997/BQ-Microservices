@@ -4,10 +4,10 @@ const {
   // B
   // C
 
-  CACHE_REDIS_HOST,
-  CACHE_REDIS_PORT,
-  CACHE_REDIS_PASSWORD,
-  CACHE_REDIS_USERNAME,
+  CACHE_HOST,
+  CACHE_PORT,
+  CACHE_PASSWORD,
+  CACHE_USERNAME,
 
   // D
 
@@ -35,10 +35,10 @@ const {
 
   // J
 
-  JOB_REDIS_HOST,
-  JOB_REDIS_PORT,
-  JOB_REDIS_PASSWORD,
-  JOB_REDIS_USERNAME,
+  BULL_MQ_HOST,
+  BULL_MQ_PORT,
+  BULL_MQ_PASSWORD,
+  BULL_MQ_USERNAME,
 
   // K
   // L
@@ -138,16 +138,16 @@ export const envs = {
 
   redis: {
     cache: {
-      host: requireEnv(CACHE_REDIS_HOST, 'CACHE_REDIS_HOST'),
-      port: requirePort(CACHE_REDIS_PORT, 'CACHE_REDIS_PORT'),
-      password: requireEnv(CACHE_REDIS_PASSWORD, 'CACHE_REDIS_PASSWORD'),
-      username: requireEnv(CACHE_REDIS_USERNAME, 'CACHE_REDIS_USERNAME'),
+      host: requireEnv(CACHE_HOST, 'REDIS_HOST'),
+      port: requirePort(CACHE_PORT, 'REDIS_PORT'),
+      password: requireEnv(CACHE_PASSWORD, 'REDIS_PASSWORD'),
+      username: requireEnv(CACHE_USERNAME, 'REDIS_USERNAME'),
     },
-    job: {
-      host: requireEnv(JOB_REDIS_HOST, 'JOB_REDIS_HOST'),
-      port: requirePort(JOB_REDIS_PORT, 'JOB_REDIS_PORT'),
-      password: requireEnv(JOB_REDIS_PASSWORD, 'JOB_REDIS_PASSWORD'),
-      username: requireEnv(JOB_REDIS_USERNAME, 'JOB_REDIS_USERNAME'),
+    bull_mq: {
+      host: requireEnv(BULL_MQ_HOST, 'BULL_MQ_HOST'),
+      port: requirePort(BULL_MQ_PORT, 'BULL_MQ_PORT'),
+      password: requireEnv(BULL_MQ_PASSWORD, 'BULL_MQ_PASSWORD'),
+      username: requireEnv(BULL_MQ_USERNAME, 'BULL_MQ_USERNAME'),
     },
   },
 
