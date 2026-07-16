@@ -1,5 +1,23 @@
-import { AppError, type AppSuccess } from '@beautinique/be-classes';
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import { createError, ERROR_CLASS_MAP, type TErrorCode } from '@beautinique/backend-classes';
+import axios, {
+  AxiosError,
+  type AxiosInstance,
+  type AxiosRequestConfig,
+  type AxiosResponse,
+} from 'axios';
+
+import type { TApiResponse } from '../../types/index.js';
+
+interface ErrorResponse {
+  message: string;
+  statusCode?: number;
+  code?: string;
+  globalErrors?: string[];
+  fieldErrors?: Record<string, string[]>;
+}
+
+const isErrorCode = (code: string | undefined): code is TErrorCode =>
+  !!code && code in ERROR_CLASS_MAP;
 
 export class ApiRequest {
   private readonly instance: AxiosInstance;
@@ -8,22 +26,26 @@ export class ApiRequest {
     this.instance = axios.create({ baseURL });
   }
 
-  protected async request(config: AxiosRequestConfig) {
+  protected async request<T = TApiResponse>(config: AxiosRequestConfig) {
     try {
-      const { data } = await this.instance.request(config);
-      return data as AppSuccess;
+      const response = await this.instance.request(config);
+      return response.data as T;
     } catch (error) {
       if (error instanceof AxiosError) {
-        const message = error.response?.data?.message || 'API Error occurred';
-        const globalErrors = error.response?.data?.globalErrors;
-        const fieldErrors = error.response?.data?.fieldErrors;
-        const statusCode = error.response?.status || error.response?.data?.statusCode || 500;
-        const code = error.response?.data?.code;
-        throw new AppError({ message, globalErrors, fieldErrors, statusCode, code });
+        const errResp: AxiosResponse<ErrorResponse> | undefined = error.response;
+
+        const message = errResp?.data.message ?? 'API Error occurred';
+        const globalErrors = errResp?.data.globalErrors;
+        const fieldErrors = errResp?.data.fieldErrors;
+        const statusCode = errResp?.status ?? errResp?.data.statusCode ?? 500;
+        const code = isErrorCode(errResp?.data.code) ? errResp.data.code : 'INTERNAL_SERVER_ERROR';
+
+        throw createError({ message, payload: { code, statusCode, fieldErrors, globalErrors } });
       }
-      throw new AppError({
+
+      throw createError({
         message: error instanceof Error ? error.message : 'Something went wrong!',
-        code: 'INTERNAL_SERVER_ERROR',
+        payload: { code: 'INTERNAL_SERVER_ERROR' },
       });
     }
   }

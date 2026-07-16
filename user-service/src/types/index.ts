@@ -1,24 +1,16 @@
+import type { TAuthProvider } from '@beautinique/backend-types';
+import type { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { METHOD_MAP } from '../constants';
-import type { sellerSchema, userSchema, wishlistSchema } from '../schemas';
-import type { getMinimalUser } from '../utils';
+
+import type { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
+import type { getMinimalUser } from '../utils/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
   _id: TId;
 }
 
-export interface IStrId {
-  _id: string;
-}
-
-export interface ITimestamp {
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export type TMethodKey = keyof typeof METHOD_MAP;
-export type TMethod = (typeof METHOD_MAP)[TMethodKey];
+export type TSocialAuthProvider = Exclude<TAuthProvider, typeof AUTH_PROVIDER_MAP.MANUAL>;
 
 export interface IUser extends InferSchemaType<typeof userSchema>, IId {}
 
@@ -27,3 +19,10 @@ export type TMinimalUser = ReturnType<typeof getMinimalUser>;
 export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
 
 export interface IWishlist extends InferSchemaType<typeof wishlistSchema>, IId {}
+
+export interface TApiResponse {
+  statusCode: number;
+  message: string;
+  data?: unknown;
+  [key: string]: unknown;
+}

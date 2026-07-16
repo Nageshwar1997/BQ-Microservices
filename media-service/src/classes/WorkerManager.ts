@@ -255,6 +255,11 @@ export class WorkerManager {
   /* ---------------- STOP ---------------- */
 
   public async stop() {
-    await this.worker?.close();
+    try {
+      await this.worker?.close();
+      logger.info('✅ Worker manager stopped successfully');
+    } catch (error) {
+      logger.error(error, '❌ Failed to stop worker manager');
+    }
   }
 }

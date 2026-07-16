@@ -1,10 +1,12 @@
+import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
-import { redisCache } from '../classes';
+
+import { redisCacheManager } from '../configs/index.js';
 
 export const logoutController = async (req: Request, res: Response) => {
-  const userId = req.user?._id;
+  const { _id: userId } = getUser(req.user);
 
-  if (userId) await redisCache.deleteUser(userId);
+  if (userId) await redisCacheManager.user.deleteUser(userId);
 
-  res.success(200, 'Logged out successfully');
+  res.success({ message: 'Logged out successfully' });
 };

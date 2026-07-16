@@ -1,3 +1,3 @@
-export * from './seller.schema';
-export * from './user.schema';
-export * from './wishlist.schema';
+export * from './seller.schema.js';
+export * from './user.schema.js';
+export * from './wishlist.schema.js';

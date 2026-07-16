@@ -8,12 +8,12 @@ import {
 } from './server.js';
 
 interface IShutdownTask {
-  readonly name: string;
+  readonly name?: string;
   readonly task: () => Promise<void>;
 }
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
-  { name: 'Worker Manager', task: workerManager.stop.bind(workerManager) },
+  { task: workerManager.stop.bind(workerManager) },
 ]);
 
 /* -------------------------------------------------------------------------- */
@@ -47,6 +47,10 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     const outcomes = await Promise.all(
       shutdownTasks.map(async ({ name, task }) => {
         try {
+          if (name) {
+            logger.warn(`🛑 Stopping ${name}...`);
+          }
+
           await task();
           return { name, status: 'fulfilled' as const };
         } catch (error) {
@@ -56,6 +60,8 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     );
 
     outcomes.forEach((outcome) => {
+      if (!outcome.name) return;
+
       if (outcome.status === 'fulfilled') {
         logger.info(`✅ ${outcome.name} stopped successfully`);
       } else {

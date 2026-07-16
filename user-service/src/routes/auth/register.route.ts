@@ -1,13 +1,20 @@
-import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
-import { emailSchema, otpSchema, registerSchema } from '@beautinique/be-zod';
+import { checkEmptyRequest } from '@beautinique/backend-request';
+import { tryCatchResponse } from '@beautinique/backend-response';
+import {
+  emailZodSchema,
+  otpZodSchema,
+  registerZodSchema,
+  validateZod,
+} from '@beautinique/backend-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../../constants';
+
+import { METHODS_AND_PATHS } from '../../constants/index.js';
 import {
   registerAndSaveController,
   registerResendOtpController,
   registerSendOtpController,
   registerVerifyOtpController,
-} from '../../controllers';
+} from '../../controllers/index.js';
 
 export const registerRouter = Router();
 
@@ -16,7 +23,7 @@ const { resendOtp, sendOtp, verifyOtp, saveUser } = METHODS_AND_PATHS.auth.regis
 registerRouter[sendOtp.method](
   sendOtp.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(emailSchema),
+  validateZod({ body: emailZodSchema }),
   tryCatchResponse(registerSendOtpController),
 );
 
@@ -25,13 +32,13 @@ registerRouter[resendOtp.method](resendOtp.path, tryCatchResponse(registerResend
 registerRouter[verifyOtp.method](
   verifyOtp.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(otpSchema),
+  validateZod({ body: otpZodSchema }),
   tryCatchResponse(registerVerifyOtpController),
 );
 
 registerRouter[saveUser.method](
   saveUser.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(registerSchema),
+  validateZod({ body: registerZodSchema }),
   tryCatchResponse(registerAndSaveController),
 );

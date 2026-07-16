@@ -1,70 +1,80 @@
-import { AppError } from '@beautinique/be-classes';
-import type { TRole } from '@beautinique/be-constants';
+import {
+  AuthorizationError,
+  BadRequestError,
+  NotFoundError,
+  UnprocessableEntityError,
+  ValidationError,
+} from '@beautinique/backend-classes';
+import type { TLoginZodSchema, TUserRole } from '@beautinique/backend-types';
+import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
-import { githubAuth, googleAuth, linkedinAuth, redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
-import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services';
-import { createOAuthDbPayload, getMinimalUser } from '../utils';
+
+import { github, google, linkedin, redisCacheManager } from '../configs/index.js';
+import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services/index.js';
+import type { IUser } from '../types/index.js';
+import { createOAuthDbPayload, getMinimalUser } from '../utils/index.js';
 
 export const manualLoginController = async (req: Request, res: Response) => {
-  const { email, password, phoneNumber } = req.body ?? {};
-  const user = await getUserByEmailOrPhone({ email, phoneNumber });
+  const body = req.body as TLoginZodSchema;
 
-  if (!user.providers.includes('MANUAL')) {
+  const condition: Partial<Pick<IUser, 'email' | 'phoneNumber'>> = {};
+
+  if (body.loginMethod === 'email') condition.email = body.email;
+
+  if (body.loginMethod === 'phoneNumber') condition.phoneNumber = body.phoneNumber;
+
+  const user = await getUserByEmailOrPhone(condition);
+
+  if (!user.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
     // Check if user has MANUAL login
-    throw new AppError({
-      message: `This account was created using an oAuth (${user.providers.join(
+    throw new UnprocessableEntityError(
+      `This account was created using an oAuth (${user.providers.join(
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    );
   }
 
-  const role = req.get(HEADERS_KEYS.loginRole) as TRole | undefined;
+  const role = req.get(HEADERS_MAP.loginRole) as TUserRole | undefined;
 
-  if (role && user.role !== role && user.role !== 'MASTER') {
-    throw new AppError({
-      message: 'You are not authorized to perform this action',
-      code: 'AUTHORIZATION_ERROR',
-    });
+  if (role && user.role !== role && user.role !== USER_ROLE_MAP.MASTER) {
+    throw new AuthorizationError('You are not authorized to perform this action');
   }
 
   // Compare password
-  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  const isPasswordMatch = await bcrypt.compare(body.password, user.password);
 
   if (!isPasswordMatch) {
-    throw new AppError({
-      message: 'Login Failed',
-      code: 'VALIDATION_ERROR',
+    throw new ValidationError('Login Failed', {
       fieldErrors: { password: ['Incorrect password'] },
     });
   }
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const googleRedirectController = async (_req: Request, res: Response) => {
-  const url = googleAuth.url();
-  res.success(200, "Google's login page", { url });
+  const url = google.url();
+  res.success({ message: "Google's login page", data: url });
 };
 
 export const googleCallbackController = async (req: Request, res: Response) => {
-  const { code } = req.query;
+  const code = req.query.code as string;
 
   if (!code) {
-    throw new AppError({ message: 'No code returned from Google', code: 'BAD_REQUEST' });
+    throw new BadRequestError('No code returned from Google');
   }
 
   // Fetch user info from Google
-  const profile = await googleAuth.decode(String(code));
+  const profile = await google.decode(code);
 
-  if (!profile) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
+  if (!profile?.email) {
+    throw new NotFoundError('User info not found');
   }
 
   // Check if user already exists (email = primary identity)
@@ -75,7 +85,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     if (!user.providers.includes('GOOGLE') && 'save' in user) {
       user.providers.push('GOOGLE');
       if (!user.avatar) {
-        user.avatar = profile.picture || '';
+        user.avatar = profile.picture ?? '';
       }
       await user.save();
     }
@@ -89,30 +99,31 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const linkedinRedirectController = async (_req: Request, res: Response) => {
-  const url = linkedinAuth.url();
-  res.success(200, 'LinkedIn login page', { url });
+  const url = linkedin.url();
+  res.success({ message: 'LinkedIn login page', data: url });
 };
 
 export const linkedinCallbackController = async (req: Request, res: Response) => {
-  const { code } = req.query;
+  const code = req.query.code as string;
 
   if (!code) {
-    throw new AppError({ message: 'No code returned from LinkedIn', code: 'BAD_REQUEST' });
+    throw new BadRequestError('No code returned from LinkedIn');
   }
 
   // Fetch user info from Google
-  const { access_token } = await linkedinAuth.access_token(String(code));
+  const { access_token } = await linkedin.access_token(code);
 
-  const profile = await linkedinAuth.decode(access_token);
+  const profile = await linkedin.decode(access_token);
 
-  if (!profile) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
+  if (!profile?.email) {
+    throw new NotFoundError('User info not found');
   }
 
   // Check if user already exists (email = primary identity)
@@ -123,7 +134,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
     if (!user.providers.includes('LINKEDIN') && 'save' in user) {
       user.providers.push('LINKEDIN');
       if (!user.avatar) {
-        user.avatar = profile.picture || '';
+        user.avatar = profile.picture ?? '';
       }
       await user.save();
     }
@@ -137,29 +148,30 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };
 
+// eslint-disable-next-line @typescript-eslint/require-await
 export const githubRedirectController = async (_req: Request, res: Response) => {
-  const url = githubAuth.url();
-  res.success(200, 'GitHub login page', { url });
+  const url = github.url();
+  res.success({ message: 'GitHub login page', data: url });
 };
 
 export const githubCallbackController = async (req: Request, res: Response) => {
-  const { code } = req.query;
+  const code = req.query.code as string;
 
   if (!code) {
-    throw new AppError({ message: 'No code returned from GitHub', code: 'BAD_REQUEST' });
+    throw new BadRequestError('No code returned from GitHub');
   }
 
   // Fetch user info from Google
-  const { access_token } = await githubAuth.access_token(String(code));
-  const profile = await githubAuth.decode(access_token);
+  const { access_token } = await github.access_token(code);
+  const profile = await github.decode(access_token);
 
-  if (!profile) {
-    throw new AppError({ message: 'User info not found', code: 'NOT_FOUND' });
+  if (!profile?.email) {
+    throw new NotFoundError('User info not found');
   }
 
   // Check if user already exists (email = primary identity)
@@ -170,7 +182,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
     if (!user.providers.includes('GITHUB') && 'save' in user) {
       user.providers.push('GITHUB');
       if (!user.avatar) {
-        user.avatar = profile.avatar_url || '';
+        user.avatar = profile.avatar_url ?? '';
       }
       await user.save();
     }
@@ -184,7 +196,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
-  res.success(200, 'User logged in successfully', { user: minUser });
+  res.success({ message: 'User logged in successfully', data: minUser });
 };

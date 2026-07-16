@@ -1,138 +1,132 @@
-import { AppError } from '@beautinique/be-classes';
-import { MAX_RESEND } from '@beautinique/be-constants';
-import { bullQueue } from '@beautinique/be-jobs';
-import { sanitizeToken } from '@beautinique/be-utils';
-import type { TChangePassword, TEmail, TOtp, TPasswords, TSetPassword } from '@beautinique/be-zod';
+import {
+  NotFoundError,
+  TooManyRequestsError,
+  UnprocessableEntityError,
+  ValidationError,
+} from '@beautinique/backend-classes';
+import { getObjId } from '@beautinique/backend-mongoose';
+import type {
+  TChangePasswordZodSchema,
+  TEmailZodSchema,
+  TOtpZodSchema,
+  TPasswordsZodSchema,
+  TSetPasswordZodSchema,
+} from '@beautinique/backend-types';
+import { getUser, sanitizeToken } from '@beautinique/backend-utils';
+import { HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
-import { redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
-import { getUserByEmail, getUserById, updateUser } from '../services';
-import type { IUser } from '../types';
-import { getMinimalUser, getObjId } from '../utils';
+
+import { jobProducer, redisCacheManager } from '../configs/index.js';
+import { getUserByEmail, getUserById, updateUser } from '../services/index.js';
+import type { IUser } from '../types/index.js';
+import { getMinimalUser } from '../utils/index.js';
 
 export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
-  const { email } = req.body as TEmail;
+  const { email } = req.body as TEmailZodSchema;
   const user = await getUserByEmail({ email });
 
   if (user && !user.providers.includes('MANUAL')) {
     // Check if user has MANUAL login
-    throw new AppError({
-      message: `This account was created using an oAuth (${user.providers.join(
+    throw new UnprocessableEntityError(
+      `This account was created using an oAuth (${user.providers.join(
         ' / ',
       )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    );
   }
 
   // Store EMAIL & OTP in cache
-  const { otp, token } = await redisCache.setOtpData(email);
+  const { otp, token } = await redisCacheManager.token.setOtpData(email);
 
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
     // Queue add failed, remove OTP from Redis
-    await redisCache.deleteOtpData(token);
+    await redisCacheManager.token.deleteOtpData(token);
 
     throw error;
   }
 
-  res.success(200, 'OTP sent successfully', { token });
+  res.success({ message: 'OTP sent successfully', data: token });
 };
 
 export const forgotPasswordResendOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
-
-  if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
-  }
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpData(token);
+  const parsedData = await redisCacheManager.token.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP session expired or invalid');
   }
 
   // Update OTP & sendCount in cache
-  const { otp, sendCount, email } = await redisCache.updateOtpData(token);
+  const { otp, sendCount, email } = await redisCacheManager.token.updateOtpData(token);
 
-  if (sendCount > MAX_RESEND) {
-    throw new AppError({ message: 'Maximum resend attempts reached', code: 'TOO_MANY_REQUESTS' });
+  if (sendCount > MAX_OTP_RESEND) {
+    throw new TooManyRequestsError('Maximum resend attempts reached');
   }
 
   try {
     /* ---------------- SEND OTP ---------------- */
-
-    await bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } });
+    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
     // Queue add failed, remove OTP from Redis
-    await redisCache.deleteOtpData(token);
+    await redisCacheManager.token.deleteOtpData(token);
 
     throw error;
   }
-  res.success(200, 'OTP resent successfully', { sendCount });
+  res.success({ message: 'OTP resent successfully', data: sendCount });
 };
 
 export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
-  if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
-  }
-
-  const { otp } = req.body as TOtp;
+  const { otp } = req.body as TOtpZodSchema;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpData(token);
+  const parsedData = await redisCacheManager.token.getOtpData(token);
 
-  if (!parsedData || parsedData.otp !== otp) {
-    throw new AppError({ message: 'OTP expired or invalid', code: 'VALIDATION_ERROR' });
+  if (parsedData?.otp !== otp) {
+    throw new ValidationError('OTP expired or invalid');
   }
 
-  res.success(200, 'OTP verified successfully');
+  res.success({ message: 'OTP verified successfully' });
 };
 
 export const forgotPasswordSaveController = async (req: Request, res: Response) => {
-  const token = sanitizeToken(req.get(HEADERS_KEYS.authorization) || '');
+  const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
-  if (!token) {
-    throw new AppError({ message: 'Invalid or expired session', code: 'BAD_REQUEST' });
-  }
-
-  const { password } = req.body as TPasswords;
+  const { password } = req.body as TPasswordsZodSchema;
 
   //  Get parsed data from cache
-  const parsedData = await redisCache.getOtpData(token);
+  const parsedData = await redisCacheManager.token.getOtpData(token);
 
   if (!parsedData) {
-    throw new AppError({ message: 'OTP session expired or invalid', code: 'VALIDATION_ERROR' });
+    throw new ValidationError('OTP session expired or invalid');
   }
 
   // Check for existing users
   const user = (await getUserByEmail({
     email: parsedData.email,
     lean: false,
-  })) as HydratedDocument<IUser>;
+  })) as HydratedDocument<IUser> | null;
 
   if (!user) {
-    throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('User not found');
   }
 
   const isSamePassword = await bcrypt.compare(password, user.password);
 
   if (isSamePassword) {
-    throw new AppError({
-      message: 'New password cannot be same as current password',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new UnprocessableEntityError('New password cannot be same as current password');
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -141,23 +135,19 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   await user.save();
 
   // Delete OTP and Token from Redis
-  await redisCache.deleteOtpData(token);
+  await redisCacheManager.token.deleteOtpData(token);
 
   const minUser = getMinimalUser(user);
 
-  await redisCache.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
-  res.success(200, 'Password reset successfully', { user: minUser });
+  res.success({ message: 'Password reset successfully', data: minUser });
 };
 
 export const changePasswordController = async (req: Request, res: Response) => {
-  const userId = req.user?._id;
+  const { _id: userId } = getUser(req.user);
 
-  if (!userId) {
-    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-  }
-
-  const { currentPassword, password } = req.body as TChangePassword;
+  const { currentPassword, password } = req.body as TChangePasswordZodSchema;
 
   const user = (await getUserById({
     id: userId,
@@ -168,9 +158,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
   const isCurrentPasswordMatch = await bcrypt.compare(currentPassword, user.password);
 
   if (!isCurrentPasswordMatch) {
-    throw new AppError({
-      message: 'Current password is incorrect',
-      code: 'VALIDATION_ERROR',
+    throw new ValidationError('Current password is incorrect', {
       fieldErrors: { currentPassword: ['Current password is incorrect'] },
     });
   }
@@ -178,9 +166,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
   const isSamePassword = await bcrypt.compare(password, user.password);
 
   if (isSamePassword) {
-    throw new AppError({
-      message: 'New password cannot be same as current password',
-      code: 'UNPROCESSABLE_ENTITY',
+    throw new UnprocessableEntityError('New password cannot be same as current password', {
       fieldErrors: { password: ['New password cannot be same as current password'] },
     });
   }
@@ -193,24 +179,19 @@ export const changePasswordController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(updatedUser);
 
-  await redisCache.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
-  res.success(200, 'Password changed successfully', { user: minUser });
+  res.success({ message: 'Password changed successfully', data: minUser });
 };
 
 export const setPasswordController = async (req: Request, res: Response) => {
-  const user = req.user;
+  const user = getUser(req.user);
 
-  if (!user) {
-    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-  } else if (user.providers.includes('MANUAL')) {
-    throw new AppError({
-      message: 'Password already set. Please use forgot password.',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+  if (user.providers.includes('MANUAL')) {
+    throw new UnprocessableEntityError('Password already set. Please use forgot password.');
   }
 
-  const { password } = req.body as TSetPassword;
+  const { password } = req.body as TSetPasswordZodSchema;
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -218,7 +199,7 @@ export const setPasswordController = async (req: Request, res: Response) => {
 
   const minUser = getMinimalUser(updatedUser);
 
-  await redisCache.setUser(minUser);
+  await redisCacheManager.user.setUser(minUser);
 
-  res.success(200, 'Password set successfully', { user: minUser });
+  res.success({ message: 'Password set successfully', data: minUser });
 };

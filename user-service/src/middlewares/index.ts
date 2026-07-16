@@ -1,18 +1,19 @@
-import { AppError } from '@beautinique/be-classes';
-import type { TRole } from '@beautinique/be-constants';
+import { AuthenticationError, AuthorizationError } from '@beautinique/backend-classes';
+import type { TUserRole } from '@beautinique/backend-types';
+import { HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
-import { redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
+
+import { redisCacheManager } from '../configs/index.js';
 
 export const authenticate = async (req: Request, _res: Response, next: NextFunction) => {
   try {
-    const userId = req.get(HEADERS_KEYS.userId);
+    const userId = req.get(HEADERS_MAP.userId);
 
     if (!userId) {
-      throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+      throw new AuthenticationError('You are not logged in');
     }
 
-    const user = await redisCache.getUser(userId);
+    const user = await redisCacheManager.user.getUser(userId);
 
     req.user = user;
 
@@ -23,22 +24,19 @@ export const authenticate = async (req: Request, _res: Response, next: NextFunct
 };
 
 export const authorize =
-  (allowedRoles: TRole[]) => async (req: Request, _res: Response, next: NextFunction) => {
+  (allowedRoles: TUserRole[]) => async (req: Request, _res: Response, next: NextFunction) => {
     try {
-      const userId = req.get(HEADERS_KEYS.userId);
-      const userRole = (req.get(HEADERS_KEYS.userRole) || 'USER') as TRole;
+      const userId = req.get(HEADERS_MAP.userId);
+      const userRole = (req.get(HEADERS_MAP.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
 
       if (!userId) {
-        throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+        throw new AuthenticationError('You are not logged in');
       }
 
-      const user = await redisCache.getUser(userId);
+      const user = await redisCacheManager.user.getUser(userId);
 
       if (!allowedRoles.includes(user.role) || user.role !== userRole) {
-        throw new AppError({
-          message: 'You are not authorized to perform this action',
-          code: 'AUTHORIZATION_ERROR',
-        });
+        throw new AuthorizationError('You are not authorized to perform this action');
       }
 
       req.user = user;

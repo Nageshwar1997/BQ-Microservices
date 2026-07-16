@@ -1,7 +1,9 @@
-import { checkEmptyRequest, tryCatchResponse, zodValidator } from '@beautinique/be-middlewares';
-import { loginSchema } from '@beautinique/be-zod';
+import { checkEmptyRequest } from '@beautinique/backend-request';
+import { tryCatchResponse } from '@beautinique/backend-response';
+import { loginZodSchema, validateZod } from '@beautinique/backend-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../../constants';
+
+import { METHODS_AND_PATHS } from '../../constants/index.js';
 import {
   githubCallbackController,
   githubRedirectController,
@@ -10,7 +12,7 @@ import {
   linkedinCallbackController,
   linkedinRedirectController,
   manualLoginController,
-} from '../../controllers';
+} from '../../controllers/index.js';
 
 export const loginRouter = Router();
 
@@ -20,7 +22,7 @@ const { login } = METHODS_AND_PATHS.auth;
 loginRouter[login.manual.method](
   login.manual.path,
   checkEmptyRequest({ body: true }),
-  zodValidator(loginSchema),
+  validateZod({ body: loginZodSchema }),
   tryCatchResponse(manualLoginController),
 );
 

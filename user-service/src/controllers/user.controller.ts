@@ -1,18 +1,17 @@
-import { AppError } from '@beautinique/be-classes';
+import { AuthenticationError } from '@beautinique/backend-classes';
+import { HEADERS_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
-import { redisCache } from '../classes';
-import { HEADERS_KEYS } from '../constants';
+
+import { redisCacheManager } from '../configs/index.js';
 
 export const getSessionUserController = async (req: Request, res: Response) => {
-  const userId = req.get(HEADERS_KEYS.userId);
+  const userId = req.get(HEADERS_MAP.userId);
 
   if (!userId) {
-    throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
+    throw new AuthenticationError('You are not logged in');
   }
 
-  const user = await redisCache.getUser(userId);
+  const user = await redisCacheManager.user.getUser(userId);
 
-  if (!user) throw new AppError({ message: 'User not found', code: 'NOT_FOUND' });
-
-  res.success(200, 'User details fetched successfully', { user });
+  res.success({ message: 'User details fetched successfully', data: user });
 };
