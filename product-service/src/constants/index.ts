@@ -1,4 +1,4 @@
-import { ROLES } from '@beautinique/be-constants';
+import { USER_ROLES } from '@beautinique/shared-constants';
 
 import { envs } from '../envs/index.js';
 import type { TDashboardListProduct, TProduct, TTryOnKey } from '../types/index.js';
@@ -60,9 +60,7 @@ export const PRODUCT_STATUS_MAP = Object.fromEntries(
   [K in (typeof PRODUCT_STATUSES)[number]]: K;
 };
 
-export const ROLES_MAP = Object.fromEntries(ROLES.map((role) => [role, role])) as {
-  [K in (typeof ROLES)[number]]: K;
-};
+export const ROLES_MAP = Object.fromEntries(USER_ROLES.map((role) => [role, role]));
 
 export const TRY_ON_MAP = {
   LIP: ['MATTE', 'GLOSS', 'SHIMMER', 'CRAYON'],

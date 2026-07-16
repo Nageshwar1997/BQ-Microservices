@@ -1,6 +1,6 @@
 import { getObjId } from '@beautinique/backend-mongoose';
 import { AppError } from '@beautinique/be-classes';
-import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 

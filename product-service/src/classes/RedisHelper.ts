@@ -1,4 +1,4 @@
-import { parseData, stringifyData } from '@beautinique/be-utils';
+import { parseData, stringifyData } from '@beautinique/shared-utils';
 import type { RedisClientType } from 'redis';
 
 import { logger } from '../configs/index.js';
@@ -34,7 +34,7 @@ export class RedisHelper {
     try {
       const data = await client.get(key);
 
-      return data ? (parseData(data) as T) : null;
+      return data ? parseData<T>(data) : null;
     } catch (err) {
       logger.warn(err, '⚠️ Redis get failed:');
 
@@ -80,7 +80,7 @@ export class RedisHelper {
     try {
       const data = await client.hGet(key, field);
 
-      return data ? (parseData(data) as T) : null;
+      return data ? parseData<T>(data) : null;
     } catch (err) {
       logger.warn(err, '⚠️ Redis hGet failed:');
 

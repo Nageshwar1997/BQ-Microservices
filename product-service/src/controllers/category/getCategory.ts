@@ -1,5 +1,5 @@
-import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 
 import { redisCache } from '../../classes/index.js';

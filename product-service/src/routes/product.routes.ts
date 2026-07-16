@@ -1,8 +1,6 @@
-import {
-  checkEmptyRequest,
-  tryCatchResponse,
-  tryCatchSessionResponse,
-} from '@beautinique/be-middlewares';
+import { tryCatchSession } from '@beautinique/backend-mongoose';
+import { checkEmptyRequest } from '@beautinique/backend-request';
+import { tryCatchResponse } from '@beautinique/backend-response';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
@@ -34,7 +32,7 @@ draftRouter[draft.publish.method](
   draft.publish.path,
   createPendingProductPayload,
   checkEmptyRequest({ body: true }),
-  tryCatchSessionResponse(publishDraftProductController),
+  tryCatchSession(publishDraftProductController),
 );
 
 draftRouter[draft.get.method](draft.get.path, tryCatchResponse(getDraftProductController));

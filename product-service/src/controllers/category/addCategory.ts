@@ -1,7 +1,7 @@
 import { getUser } from '@beautinique/backend-utils';
 import { AppError } from '@beautinique/be-classes';
-import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';

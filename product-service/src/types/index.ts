@@ -1,4 +1,4 @@
-import type { TRole } from '@beautinique/be-constants';
+import type { TUserRole } from '@beautinique/backend-types';
 import type { TCategory } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
 
@@ -50,7 +50,7 @@ export type TCreateProductPayload = Omit<
 > & { variants: Omit<TVariant, '_id' | 'discount'>[] };
 
 export interface IUser extends IId {
-  role: TRole;
+  role: TUserRole;
 }
 
 export type TDraftProductStep = keyof typeof DRAFT_PRODUCT_STEP_MAP;

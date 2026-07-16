@@ -2,16 +2,11 @@ import 'dotenv/config';
 
 import type { Socket } from 'node:net';
 
+import { checkServiceAccess } from '@beautinique/backend-request';
+import { errorResponse, notFoundResponse, successResponse } from '@beautinique/backend-response';
 import { connectToDB } from '@beautinique/be-configs';
 import { bullQueue } from '@beautinique/be-jobs';
-import {
-  checkDbConnection,
-  errorResponse,
-  notFoundResponse,
-  serviceAccess,
-  setRequestId,
-  successResponse,
-} from '@beautinique/be-middlewares';
+import { checkDbConnection, setRequestId } from '@beautinique/be-middlewares';
 import express from 'express';
 import path from 'path';
 import { parse } from 'qs';
@@ -50,7 +45,7 @@ app.use(express.static(path.resolve('public')));
 app.use(requestLogs);
 
 // 4. Custom middlewares
-app.use(successResponse);
+app.use(successResponse({ defaultMessage: 'Success.' }));
 app.use(checkDbConnection(isDbConnected));
 
 /* ---------------- ROUTES ---------------- */
@@ -68,15 +63,15 @@ app.get('/health', (_, res) => {
 // Api Routes
 app.use(
   base,
-  serviceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),
+  checkServiceAccess({ secret: envs.service_secret, headerName: HEADERS_KEYS.serviceSecret }),
   router,
 );
 
 /* ---------------- ERROR HANDLING ---------------- */
 
-app.use(notFoundResponse);
+app.use(notFoundResponse({ serveHtml: true }));
 app.use(errorLogs);
-app.use(errorResponse({ isDev: envs.is_dev }));
+app.use(errorResponse({ includeStack: envs.is_dev }));
 
 /* ---------------- START ---------------- */
 

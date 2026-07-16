@@ -1,9 +1,7 @@
-import {
-  checkEmptyRequest,
-  tryCatchResponse,
-  tryCatchSessionResponse,
-  zodValidator,
-} from '@beautinique/be-middlewares';
+import { tryCatchSession } from '@beautinique/backend-mongoose';
+import { checkEmptyRequest } from '@beautinique/backend-request';
+import { tryCatchResponse } from '@beautinique/backend-response';
+import { validateZod } from '@beautinique/backend-zod';
 import { categoryUpdateZodSchema, categoryZodSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
 
@@ -25,23 +23,23 @@ categoryRouter[add.method](
   add.path,
   authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ body: true }),
-  zodValidator(categoryZodSchema),
-  tryCatchSessionResponse(addCategoryController),
+  validateZod({ body: categoryZodSchema }),
+  tryCatchSession(addCategoryController),
 );
 
 categoryRouter[update.method](
   update.path,
   authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ body: true, params: true }),
-  zodValidator(categoryUpdateZodSchema),
-  tryCatchSessionResponse(updateCategoryController),
+  validateZod({ body: categoryUpdateZodSchema }),
+  tryCatchSession(updateCategoryController),
 );
 
 categoryRouter[remove.method](
   remove.path,
   authorize(['ADMIN', 'MASTER']),
   checkEmptyRequest({ params: true }),
-  tryCatchSessionResponse(deleteCategoryController),
+  tryCatchSession(deleteCategoryController),
 );
 
 categoryRouter[get.byParentLevel.method](
