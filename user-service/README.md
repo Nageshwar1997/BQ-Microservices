@@ -164,24 +164,20 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 | -------------------------------- | -------------------------------- |
 | `GOOGLE_CLIENT_ID`               | Google OAuth Client ID          |
 | `GOOGLE_CLIENT_SECRET`           | Google OAuth Client Secret      |
-| `GOOGLE_REDIRECT_ENDPOINT`       | Google OAuth callback path (appended to `GATEWAY_*_URL`) |
 | `LINKEDIN_CLIENT_ID`             | LinkedIn OAuth Client ID        |
 | `LINKEDIN_CLIENT_SECRET`         | LinkedIn OAuth Client Secret    |
-| `LINKEDIN_REDIRECT_ENDPOINT`     | LinkedIn OAuth callback path    |
 | `GITHUB_CLIENT_ID`               | GitHub OAuth Client ID          |
 | `GITHUB_CLIENT_SECRET`           | GitHub OAuth Client Secret      |
-| `GITHUB_REDIRECT_ENDPOINT`       | GitHub OAuth callback path      |
 
-### 4.6 External Service URLs
+There's no `*_REDIRECT_ENDPOINT` env var per provider anymore — each provider's callback URL is now derived in code (`getSocialAuthRedirectURL`, see [§13](#13-utilities-utilsindexts)) from the service's own route paths instead of being configured separately, so it can't drift out of sync with the actual routes.
 
-| Variable                   | Description                                                        |
-| ---------------------------- | -------------------------------------------------------------------- |
-| `GATEWAY_DEV_URL` / `GATEWAY_PROD_URL`               | Base URL prepended to OAuth redirect endpoints (dev/prod selected by `IS_DEV`) |
-| `USER_SERVICE_DEV_URL` / `USER_SERVICE_PROD_URL`     | Validated at startup but **not currently read anywhere in the code** |
-| `MAIL_SERVICE_DEV_URL` / `MAIL_SERVICE_PROD_URL`     | Validated at startup but **not currently read anywhere in the code** |
-| `MEDIA_SERVICE_DEV_URL` / `MEDIA_SERVICE_PROD_URL`   | Validated at startup but **not currently read anywhere in the code** |
+### 4.6 Gateway URL
 
-The OTP mail actually goes out via the `mail-queue` BullMQ job, not a direct HTTP call — these three URL pairs are reserved for future direct service-to-service calls but are unused today. They're still required at startup (`requireEnv`), so removing them from `.env` will crash the service.
+| Variable                                 | Description                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------------ |
+| `GATEWAY_DEV_URL` / `GATEWAY_PROD_URL`      | Base URL prepended to the computed OAuth callback path (dev/prod selected by `IS_DEV`), exposed as `envs.gateway_url` |
+
+`USER_SERVICE_*_URL`, `MAIL_SERVICE_*_URL`, and `MEDIA_SERVICE_*_URL` were removed — they were validated at startup but never actually read anywhere in the code. The OTP mail goes out via the `mail-queue` BullMQ job, not a direct HTTP call to `mail-service`, so no cross-service base URL is needed today.
 
 ---
 
@@ -498,7 +494,9 @@ Factory middleware — same header extraction as `authenticate`, plus reads `X-U
 | `getMinimalUser(user)`                | Returns the sanitized client-facing user shape (`_id` as string; excludes `password`/`reason`/timestamps) |
 | `generateOtp()`                       | Returns a random 6-digit numeric OTP                                                    |
 | `generateTempToken(bytes = 32)`       | Returns a hex token (default 32 bytes = 64 hex chars)                                   |
-| `getSocialAuthRedirectURL(provider)`  | Builds the absolute OAuth callback URL (`envs.gateway_url` + the provider's redirect endpoint) |
+| `getSocialAuthRedirectURL(provider)`  | Builds the absolute OAuth callback URL: `envs.gateway_url` + `/api/v1/{SERVICE_NAMES_MAP['user-service']}/auth/login` + that provider's `callback.path` from `METHODS_AND_PATHS` |
+
+`getSocialAuthRedirectURL` no longer reads a per-provider `*_REDIRECT_ENDPOINT` env var — it derives the callback path directly from this service's own `METHODS_AND_PATHS` route constants (`constants/index.ts`) and `SERVICE_NAMES_MAP['user-service']` (`@beautinique/shared-constants`), so the URL registered with each OAuth provider can never drift out of sync with the actual route. Each `socialAuth/*.ts` class now calls this once at construction and caches it in a `REDIRECT_URI` field, rather than recomputing it on every `url()`/`access_token()` call.
 
 `getObjId`/`toObjectId` moved out of this service — `getObjId` is now imported directly from `@beautinique/backend-mongoose` where needed (`services/index.ts`, `password.controller.ts`).
 
@@ -747,5 +745,5 @@ Wishlist ──1→N─── Product     (many products per wishlist)
 - **`authorize` middleware is exported but unused.** No route currently requires role-based restriction beyond `authenticate`'s "is logged in" check.
 - **`RedisCacheUser.updateUser` is a plain alias for `setUser`.** Kept as a separate method for call-site clarity (an explicit "I'm updating an existing entry" vs "I'm setting one for the first time"), not because the implementation differs.
 - **`Seller`/`Wishlist` have no controllers yet.** The Mongoose models and indexes exist so other services (or a future admin surface) can query them directly, but nothing in this service writes to them.
-- **Three `*_SERVICE_*_URL` env var pairs are validated but unread.** See [§4.6](#46-external-service-urls) — reserved for a possible future direct-HTTP integration path; today, `mail-queue` handles the only actual cross-service call.
+- **OAuth callback URLs are self-derived, not configured.** `getSocialAuthRedirectURL` builds each provider's callback URL from this service's own `METHODS_AND_PATHS` + `SERVICE_NAMES_MAP['user-service']` instead of a per-provider env var — the trade-off is that the URL registered with Google/LinkedIn/GitHub's OAuth console must match `{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback` exactly, and changing the route path in `constants/index.ts` now silently changes that URL too (previously it was two independent things that had to be kept in sync manually).
 - **`GET /` regenerates on `npm run build`, not `npm run dev`.** `public/index.html` is generated from `README.md` by the `postbuild` script. Editing this file while running `npm run dev` won't update `GET /` until a build actually runs.

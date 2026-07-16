@@ -365,20 +365,12 @@
 <td>Google OAuth Client Secret</td>
 </tr>
 <tr>
-<td><code>GOOGLE_REDIRECT_ENDPOINT</code></td>
-<td>Google OAuth callback path (appended to <code>GATEWAY_*_URL</code>)</td>
-</tr>
-<tr>
 <td><code>LINKEDIN_CLIENT_ID</code></td>
 <td>LinkedIn OAuth Client ID</td>
 </tr>
 <tr>
 <td><code>LINKEDIN_CLIENT_SECRET</code></td>
 <td>LinkedIn OAuth Client Secret</td>
-</tr>
-<tr>
-<td><code>LINKEDIN_REDIRECT_ENDPOINT</code></td>
-<td>LinkedIn OAuth callback path</td>
 </tr>
 <tr>
 <td><code>GITHUB_CLIENT_ID</code></td>
@@ -388,12 +380,9 @@
 <td><code>GITHUB_CLIENT_SECRET</code></td>
 <td>GitHub OAuth Client Secret</td>
 </tr>
-<tr>
-<td><code>GITHUB_REDIRECT_ENDPOINT</code></td>
-<td>GitHub OAuth callback path</td>
-</tr>
 </tbody></table>
-<h3>4.6 External Service URLs</h3>
+<p>There&#39;s no <code>*_REDIRECT_ENDPOINT</code> env var per provider anymore — each provider&#39;s callback URL is now derived in code (<code>getSocialAuthRedirectURL</code>, see <a href="#13-utilities-utilsindexts">§13</a>) from the service&#39;s own route paths instead of being configured separately, so it can&#39;t drift out of sync with the actual routes.</p>
+<h3>4.6 Gateway URL</h3>
 <table>
 <thead>
 <tr>
@@ -403,22 +392,10 @@
 </thead>
 <tbody><tr>
 <td><code>GATEWAY_DEV_URL</code> / <code>GATEWAY_PROD_URL</code></td>
-<td>Base URL prepended to OAuth redirect endpoints (dev/prod selected by <code>IS_DEV</code>)</td>
-</tr>
-<tr>
-<td><code>USER_SERVICE_DEV_URL</code> / <code>USER_SERVICE_PROD_URL</code></td>
-<td>Validated at startup but <strong>not currently read anywhere in the code</strong></td>
-</tr>
-<tr>
-<td><code>MAIL_SERVICE_DEV_URL</code> / <code>MAIL_SERVICE_PROD_URL</code></td>
-<td>Validated at startup but <strong>not currently read anywhere in the code</strong></td>
-</tr>
-<tr>
-<td><code>MEDIA_SERVICE_DEV_URL</code> / <code>MEDIA_SERVICE_PROD_URL</code></td>
-<td>Validated at startup but <strong>not currently read anywhere in the code</strong></td>
+<td>Base URL prepended to the computed OAuth callback path (dev/prod selected by <code>IS_DEV</code>), exposed as <code>envs.gateway_url</code></td>
 </tr>
 </tbody></table>
-<p>The OTP mail actually goes out via the <code>mail-queue</code> BullMQ job, not a direct HTTP call — these three URL pairs are reserved for future direct service-to-service calls but are unused today. They&#39;re still required at startup (<code>requireEnv</code>), so removing them from <code>.env</code> will crash the service.</p>
+<p><code>USER_SERVICE_*_URL</code>, <code>MAIL_SERVICE_*_URL</code>, and <code>MEDIA_SERVICE_*_URL</code> were removed — they were validated at startup but never actually read anywhere in the code. The OTP mail goes out via the <code>mail-queue</code> BullMQ job, not a direct HTTP call to <code>mail-service</code>, so no cross-service base URL is needed today.</p>
 <hr>
 <h2>5. Database Models</h2>
 <h3>5.1 User Schema (<code>user.schema.ts</code>)</h3>
@@ -1175,9 +1152,10 @@
 </tr>
 <tr>
 <td><code>getSocialAuthRedirectURL(provider)</code></td>
-<td>Builds the absolute OAuth callback URL (<code>envs.gateway_url</code> + the provider&#39;s redirect endpoint)</td>
+<td>Builds the absolute OAuth callback URL: <code>envs.gateway_url</code> + <code>/api/v1/{SERVICE_NAMES_MAP[&#39;user-service&#39;]}/auth/login</code> + that provider&#39;s <code>callback.path</code> from <code>METHODS_AND_PATHS</code></td>
 </tr>
 </tbody></table>
+<p><code>getSocialAuthRedirectURL</code> no longer reads a per-provider <code>*_REDIRECT_ENDPOINT</code> env var — it derives the callback path directly from this service&#39;s own <code>METHODS_AND_PATHS</code> route constants (<code>constants/index.ts</code>) and <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code> (<code>@beautinique/shared-constants</code>), so the URL registered with each OAuth provider can never drift out of sync with the actual route. Each <code>socialAuth/*.ts</code> class now calls this once at construction and caches it in a <code>REDIRECT_URI</code> field, rather than recomputing it on every <code>url()</code>/<code>access_token()</code> call.</p>
 <p><code>getObjId</code>/<code>toObjectId</code> moved out of this service — <code>getObjId</code> is now imported directly from <code>@beautinique/backend-mongoose</code> where needed (<code>services/index.ts</code>, <code>password.controller.ts</code>).</p>
 <hr>
 <h2>14. OAuth Integrations (<code>classes/apis/socialAuth/</code>)</h2>
@@ -1500,7 +1478,7 @@ Wishlist ──1→N─── Product     (many products per wishlist)
 <li><strong><code>authorize</code> middleware is exported but unused.</strong> No route currently requires role-based restriction beyond <code>authenticate</code>&#39;s &quot;is logged in&quot; check.</li>
 <li><strong><code>RedisCacheUser.updateUser</code> is a plain alias for <code>setUser</code>.</strong> Kept as a separate method for call-site clarity (an explicit &quot;I&#39;m updating an existing entry&quot; vs &quot;I&#39;m setting one for the first time&quot;), not because the implementation differs.</li>
 <li><strong><code>Seller</code>/<code>Wishlist</code> have no controllers yet.</strong> The Mongoose models and indexes exist so other services (or a future admin surface) can query them directly, but nothing in this service writes to them.</li>
-<li><strong>Three <code>*_SERVICE_*_URL</code> env var pairs are validated but unread.</strong> See <a href="#46-external-service-urls">§4.6</a> — reserved for a possible future direct-HTTP integration path; today, <code>mail-queue</code> handles the only actual cross-service call.</li>
+<li><strong>OAuth callback URLs are self-derived, not configured.</strong> <code>getSocialAuthRedirectURL</code> builds each provider&#39;s callback URL from this service&#39;s own <code>METHODS_AND_PATHS</code> + <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code> instead of a per-provider env var — the trade-off is that the URL registered with Google/LinkedIn/GitHub&#39;s OAuth console must match <code>{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback</code> exactly, and changing the route path in <code>constants/index.ts</code> now silently changes that URL too (previously it was two independent things that had to be kept in sync manually).</li>
 <li><strong><code>GET /</code> regenerates on <code>npm run build</code>, not <code>npm run dev</code>.</strong> <code>public/index.html</code> is generated from <code>README.md</code> by the <code>postbuild</code> script. Editing this file while running <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build actually runs.</li>
 </ul>
 </main>
