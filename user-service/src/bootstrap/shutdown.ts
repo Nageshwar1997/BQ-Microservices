@@ -10,14 +10,14 @@ import {
 } from './server.js';
 
 interface IShutdownTask {
-  readonly name: string;
+  readonly name?: string;
   readonly task: () => Promise<void>;
 }
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
   { name: 'Job Producer', task: jobProducer.close.bind(jobProducer) },
-  { name: 'Redis Connection', task: redisCacheManager.close.bind(redisCacheManager) },
-  { name: 'MongoDB', task: disconnectDB },
+  { task: redisCacheManager.close.bind(redisCacheManager) },
+  { task: disconnectDB },
 ]);
 
 /* -------------------------------------------------------------------------- */
@@ -52,7 +52,9 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     const outcomes = await Promise.all(
       shutdownTasks.map(async ({ name, task }) => {
         try {
-          logger.info(`🛑 Stopping ${name}...`);
+          if (name) {
+            logger.info(`🛑 Stopping ${name}...`);
+          }
 
           await task();
           return { name, status: 'fulfilled' as const };
@@ -63,6 +65,8 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     );
 
     outcomes.forEach((outcome) => {
+      if (!outcome.name) return;
+
       if (outcome.status === 'fulfilled') {
         logger.info(`✅ ${outcome.name} stopped successfully`);
       } else {

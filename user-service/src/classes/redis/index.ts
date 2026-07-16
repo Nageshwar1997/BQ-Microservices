@@ -35,24 +35,26 @@ export class RedisCacheManager {
 
   private registerEvents() {
     this.client.on('connect', () => {
-      logger.info('✅ Redis connected');
+      logger.info('✅ Redis connection established');
 
       this.isReady = true;
     });
 
     this.client.on('error', (error) => {
-      logger.error(error, '❌ Redis Error:');
+      logger.error(error, '❌ Redis connection failed:');
 
       this.isReady = false;
     });
 
     this.client.on('reconnecting', () => {
-      logger.warn('⚠️  Redis Reconnecting');
+      logger.warn('⚠️  Redis reconnecting...');
 
       this.isReady = false;
     });
 
     this.client.on('end', () => {
+      logger.info('👋 Redis connection closed. Client is no longer connected.');
+
       this.isReady = false;
     });
   }
@@ -60,6 +62,8 @@ export class RedisCacheManager {
   public async connect() {
     try {
       await this.client.connect();
+
+      logger.info('✅ Redis client connected successfully.');
     } catch (error) {
       logger.error(error, '❌ Redis connection failed:');
 
@@ -68,8 +72,14 @@ export class RedisCacheManager {
   }
 
   public async close() {
-    await this.client.quit();
+    try {
+      await this.client.quit();
 
-    this.isReady = false;
+      logger.info('✅ Redis client disconnected successfully.');
+
+      this.isReady = false;
+    } catch (error) {
+      logger.error(error, '❌ Redis disconnection failed:');
+    }
   }
 }
