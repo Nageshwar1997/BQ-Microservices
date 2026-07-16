@@ -1,7 +1,8 @@
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../constants';
-import { categoryRouter } from './category.routes';
-import { productRouter } from './product.routes';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
+import { categoryRouter } from './category.routes.js';
+import { productRouter } from './product.routes.js';
 
 export const router = Router();
 

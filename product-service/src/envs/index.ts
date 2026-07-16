@@ -1,3 +1,5 @@
+import { requireEnv, requirePort } from '@beautinique/shared-utils';
+
 const {
   // A
   // B
@@ -25,11 +27,11 @@ const {
   IS_DEV,
 
   // J
-  
-    JOB_REDIS_HOST,
-    JOB_REDIS_PORT,
-    JOB_REDIS_PASSWORD,
-    JOB_REDIS_USERNAME,
+
+  JOB_REDIS_HOST,
+  JOB_REDIS_PORT,
+  JOB_REDIS_PASSWORD,
+  JOB_REDIS_USERNAME,
 
   // K
   // L
@@ -52,7 +54,7 @@ const {
   PRODUCT_SERVICE_DEV_URL,
   PRODUCT_SERVICE_PROD_URL,
 
-  // Q  
+  // Q
   // R
   // S
 
@@ -101,7 +103,7 @@ export const envs = {
   // O
   // P
 
-  port: Number(PORT),
+  port: requirePort(PORT, 'PORT'),
 
   // Q
   // R
@@ -109,22 +111,22 @@ export const envs = {
   redis: {
     cache: {
       host: CACHE_REDIS_HOST,
-      port: Number(CACHE_REDIS_PORT),
+      port: requirePort(CACHE_REDIS_PORT, 'CACHE_REDIS_PORT'),
       password: CACHE_REDIS_PASSWORD,
       username: CACHE_REDIS_USERNAME,
     },
     job: {
-      host: JOB_REDIS_HOST,
-      port: Number(JOB_REDIS_PORT),
-      password: JOB_REDIS_PASSWORD,
-      username: JOB_REDIS_USERNAME,
+      host: requireEnv(JOB_REDIS_HOST, 'JOB_REDIS_HOST'),
+      port: requirePort(JOB_REDIS_PORT, 'JOB_REDIS_PORT'),
+      password: requireEnv(JOB_REDIS_PASSWORD, 'JOB_REDIS_PASSWORD'),
+      username: requireEnv(JOB_REDIS_USERNAME, 'JOB_REDIS_USERNAME'),
     },
   },
 
   // S
 
-  service_name: SERVICE_NAME,
-  service_secret: SERVICE_SECRET,
+  service_name: requireEnv(SERVICE_NAME, 'SERVICE_NAME'),
+  service_secret: requireEnv(SERVICE_SECRET, 'SERVICE_SECRET'),
 
   // T
   // U

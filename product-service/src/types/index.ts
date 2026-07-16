@@ -1,9 +1,14 @@
 import type { TRole } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { DRAFT_PRODUCT_STEP_MAP, PRODUCT_STATUSES, SORT, TRY_ON_MAP } from '../constants';
-import type { categorySchema, productSchema, variantSchema,  } from '../schemas';
 
+import type {
+  DRAFT_PRODUCT_STEP_MAP,
+  PRODUCT_STATUSES,
+  SORT,
+  TRY_ON_MAP,
+} from '../constants/index.js';
+import type { categorySchema, productSchema, variantSchema } from '../schemas/index.js';
 export type TId = Types.ObjectId;
 export type TStrId = string;
 export interface IId {
@@ -60,8 +65,7 @@ export type TTryOnCategoryMap = {
 }[TTryOnKey];
 
 type TTryOnDisabled =
-  | { enabled: false }
-  | ({ enabled: false; configured: boolean } & TTryOnCategoryMap);
+  { enabled: false } | ({ enabled: false; configured: boolean } & TTryOnCategoryMap);
 
 type TTryOnEnabled = { enabled: true; configured: boolean } & TTryOnCategoryMap;
 

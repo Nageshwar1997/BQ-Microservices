@@ -1,8 +1,10 @@
-import { AppError } from '@beautinique/be-classes';
-import type { Request } from 'express';
-import { Types } from 'mongoose';
 import { randomInt } from 'node:crypto';
+
+import { AppError } from '@beautinique/be-classes';
+import { Types } from 'mongoose';
 import slugify from 'slugify';
+
+import { PRODUCT_STATUS_MAP, PRODUCT_STATUSES } from '../constants/index.js';
 import type {
   IAutocompleteSearchOperator,
   ICategory,
@@ -12,7 +14,7 @@ import type {
   TId,
   TProduct,
   TProductStatus,
-} from '../types';
+} from '../types/index.js';
 
 /* ========== NULL CHECK FUNCTION ========== */
 export const isNull = (value: unknown): value is null => value === null;
@@ -43,16 +45,7 @@ export const generateSlug = (text: string, unique = true) => {
 
   if (!unique) return slug;
 
-  return `${slug}-${Date.now()}`;
-};
-
-/* ========== GET AUTH USER ========== */
-export const getUser = (req: Request) => {
-  const user = req.user;
-
-  if (!user) throw new AppError({ message: 'You are not logged in', code: 'AUTHENTICATION_ERROR' });
-
-  return user;
+  return `${slug}-${String(Date.now())}`;
 };
 
 export const getMinimalCategory = (category: ICategory): TCacheCategory => {
@@ -60,10 +53,10 @@ export const getMinimalCategory = (category: ICategory): TCacheCategory => {
   const base = { _id: _id.toString(), name, slug };
   switch (level) {
     case 3: {
-      return { ...base, level, parent: parent?.toString() || '', description: description || '' };
+      return { ...base, level, parent: parent?.toString() ?? '', description: description ?? '' };
     }
     case 2: {
-      return { ...base, level, parent: parent?.toString() || '' };
+      return { ...base, level, parent: parent?.toString() ?? '' };
     }
     case 1:
     default: {
@@ -98,23 +91,23 @@ export const getCloudinaryPublicIdFromUrl = (url: string): string => {
   try {
     const { pathname } = new URL(url);
 
-    const match = pathname.match(/\/upload\/(?:[^/]+\/)*(?:v\d+\/)?(.+)$/);
+    const match = /\/upload\/(?:[^/]+\/)*(?:v\d+\/)?(.+)$/.exec(pathname);
 
-    if (!match) {
+    if (!match?.[1]) {
       throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
     }
 
-    return match[1]?.replace(/\.[^/.]+$/, '');
+    return match[1].replace(/\.[^/.]+$/, '');
   } catch {
     throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
   }
 };
 
 export const extractImageUrlsFromHtml = (html: string): string[] => {
-  return [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)].map((match) => match[1]);
+  return [...html.matchAll(/<img[^>]+src=["']([^"']+)["']/gi)]
+    .map((match) => match[1])
+    .filter((url): url is string => Boolean(url));
 };
-
-import { PRODUCT_STATUSES, PRODUCT_STATUS_MAP } from '../constants';
 
 export const getProductSuggestionsPipeline = (query: string) => {
   const should: (
@@ -154,9 +147,9 @@ export const getProductSuggestionsPipeline = (query: string) => {
 };
 
 export const getInitialProductCountsByStatus = (): Record<TProductStatus | 'ALL', number> =>
-  [...PRODUCT_STATUSES, 'ALL'].reduce<Record<TProductStatus | 'ALL', number>>(
+  ([...PRODUCT_STATUSES, 'ALL'] as const).reduce<Record<TProductStatus | 'ALL', number>>(
     (acc, status) => {
-      acc[status as TProductStatus | 'ALL'] = 0;
+      acc[status] = 0;
       return acc;
     },
     {} as Record<TProductStatus | 'ALL', number>,

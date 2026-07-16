@@ -1,12 +1,14 @@
+import { getUser } from '@beautinique/backend-utils';
 import { AppError } from '@beautinique/be-classes';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
-import { redisCache } from '../../classes';
-import { Category } from '../../models';
-import { generateSlug, getObjId, getUser } from '../../utils';
+
+import { redisCache } from '../../classes/index.js';
+import { Category } from '../../models/index.js';
+import { generateSlug, getObjId } from '../../utils/index.js';
 
 export const addCategoryController = async (
   req: Request,
@@ -14,7 +16,7 @@ export const addCategoryController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const { _id: userId } = getUser(req);
+  const { _id: userId } = getUser(req.user);
 
   const { name, level, parent: parentId, description } = req.body as TCategory;
 
@@ -40,7 +42,7 @@ export const addCategoryController = async (
 
     if (parentCategory.level !== level - 1) {
       throw new AppError({
-        message: `Invalid parent category for level ${level}`,
+        message: `Invalid parent category for level ${String(level)}`,
         code: 'UNPROCESSABLE_ENTITY',
       });
     }

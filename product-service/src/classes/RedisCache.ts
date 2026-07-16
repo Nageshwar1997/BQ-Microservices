@@ -1,7 +1,8 @@
 import { type RedisClientType } from 'redis';
-import { logger, redisClient } from '../configs';
-import { RedisCategory } from './RedisCategory';
-import { RedisDashboard } from './RedisDashboard';
+
+import { logger, redisClient } from '../configs/index.js';
+import { RedisCategory } from './RedisCategory.js';
+import { RedisDashboard } from './RedisDashboard.js';
 
 class RedisCache {
   private readonly client: RedisClientType;
@@ -40,7 +41,7 @@ class RedisCache {
     });
 
     this.client.on('error', (err) => {
-      logger.error('❌ Redis Error:', err);
+      logger.error(err, '❌ Redis Error:');
 
       this.isReady = false;
     });
@@ -62,7 +63,7 @@ class RedisCache {
     try {
       await this.client.connect();
     } catch (err) {
-      logger.error('❌ Redis connection failed:', err);
+      logger.error(err, '❌ Redis connection failed:');
 
       this.isReady = false;
     }
@@ -76,7 +77,7 @@ class RedisCache {
 
       logger.warn('🛑 Redis Cache Connection Closed');
     } catch (err) {
-      logger.error('❌ Redis close failed:', err);
+      logger.error(err, '❌ Redis close failed:');
     }
   }
 }

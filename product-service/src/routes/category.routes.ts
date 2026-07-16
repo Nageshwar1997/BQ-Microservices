@@ -6,15 +6,16 @@ import {
 } from '@beautinique/be-middlewares';
 import { categoryUpdateZodSchema, categoryZodSchema } from '@beautinique/be-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../constants';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
 import {
   addCategoryController,
   deleteCategoryController,
   getCategoriesByHierarchy,
   getCategoriesByParentLevel,
   updateCategoryController,
-} from '../controllers';
-import { authorize } from '../middlewares';
+} from '../controllers/index.js';
+import { authorize } from '../middlewares/index.js';
 
 export const categoryRouter = Router();
 

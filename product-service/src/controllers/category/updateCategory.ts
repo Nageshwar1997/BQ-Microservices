@@ -1,13 +1,16 @@
+import { getObjId } from '@beautinique/backend-mongoose';
+import { getUser } from '@beautinique/backend-utils';
 import { AppError } from '@beautinique/be-classes';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TUpdateCategory } from '@beautinique/be-zod';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';
-import { redisCache } from '../../classes';
-import { Category } from '../../models';
-import type { ICategory } from '../../types';
-import { generateSlug, getObjId, getUser } from '../../utils';
+
+import { redisCache } from '../../classes/index.js';
+import { Category } from '../../models/index.js';
+import type { ICategory } from '../../types/index.js';
+import { generateSlug } from '../../utils/index.js';
 
 export const updateCategoryController = async (
   req: Request,
@@ -15,11 +18,11 @@ export const updateCategoryController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const userId = getUser(req)._id;
+  const { _id: userId } = getUser(req.user);
 
   const { name, parent: parentId, description } = req.body as TUpdateCategory;
 
-  const categoryId = getObjId(req.params.categoryId.toString());
+  const categoryId = getObjId(req.params.categoryId?.toString() ?? '');
 
   /* ---------------- EXISTING CATEGORY ---------------- */
 
@@ -40,7 +43,7 @@ export const updateCategoryController = async (
   if (level === CATEGORY_LEVELS_MAP.L1) {
     if (parentId || description) {
       throw new AppError({
-        message: `Level ${level} category cannot have parent or description`,
+        message: `Level ${String(level)} category cannot have parent or description`,
         code: 'UNPROCESSABLE_ENTITY',
       });
     }
@@ -49,7 +52,7 @@ export const updateCategoryController = async (
   if (level === CATEGORY_LEVELS_MAP.L2) {
     if (description) {
       throw new AppError({
-        message: `Level ${level} category cannot have description`,
+        message: `Level ${String(level)} category cannot have description`,
         code: 'UNPROCESSABLE_ENTITY',
       });
     }
@@ -89,7 +92,7 @@ export const updateCategoryController = async (
 
       if (parentCategory.level !== level - 1) {
         throw new AppError({
-          message: `Invalid parent category for level ${level}`,
+          message: `Invalid parent category for level ${String(level)}`,
           code: 'UNPROCESSABLE_ENTITY',
         });
       }

@@ -1,8 +1,9 @@
-import { parseData } from '@beautinique/be-utils';
-import { DRAFT_PRODUCT_STEP_MAP } from '../constants';
-import type { TBody, TDraftProduct } from '../controllers/product/saveDraftProduct.controller';
-import { RedisHelper } from './RedisHelper';
-import type { DashboardCacheProduct } from '../types';
+import { parseData } from '@beautinique/shared-utils';
+
+import { DRAFT_PRODUCT_STEP_MAP } from '../constants/index.js';
+import type { TBody, TDraftProduct } from '../controllers/product/saveDraftProduct.controller.js';
+import type { DashboardCacheProduct } from '../types/index.js';
+import { RedisHelper } from './RedisHelper.js';
 
 export class RedisDashboard extends RedisHelper {
   private readonly ONE_DAY_TTL = 60 * 60 * 24;
@@ -32,13 +33,19 @@ export class RedisDashboard extends RedisHelper {
     }
 
     return {
-      basicInfo: data.basicInfo ? parseData(data.basicInfo) : undefined,
-      mediaAndGallery: data.mediaAndGallery ? parseData(data.mediaAndGallery) : undefined,
-      descriptionAndContent: data.descriptionAndContent
-        ? parseData(data.descriptionAndContent)
+      basicInfo: data.basicInfo ? (parseData(data.basicInfo) ?? undefined) : undefined,
+      mediaAndGallery: data.mediaAndGallery
+        ? (parseData(data.mediaAndGallery) ?? undefined)
         : undefined,
-      stockAndVariants: data.stockAndVariants ? parseData(data.stockAndVariants) : undefined,
-      tryOnConfiguration: data.tryOnConfiguration ? parseData(data.tryOnConfiguration) : undefined,
+      descriptionAndContent: data.descriptionAndContent
+        ? (parseData(data.descriptionAndContent) ?? undefined)
+        : undefined,
+      stockAndVariants: data.stockAndVariants
+        ? (parseData(data.stockAndVariants) ?? undefined)
+        : undefined,
+      tryOnConfiguration: data.tryOnConfiguration
+        ? (parseData(data.tryOnConfiguration) ?? undefined)
+        : undefined,
     };
   }
 

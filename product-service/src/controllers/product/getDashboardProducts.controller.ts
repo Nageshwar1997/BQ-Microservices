@@ -1,27 +1,28 @@
+import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 import type { PipelineStage } from 'mongoose';
+
 import {
   PRODUCT_DASHBOARD_PROJECTION,
   ROLES_MAP,
   SORT_MAP,
   type TProductFilter,
-} from '../../constants';
-import { Product } from '../../models';
+} from '../../constants/index.js';
+import { Product } from '../../models/index.js';
 import type {
   IGetDashboardProductsQuery,
   TDashboardListProduct,
   TId,
   TProductStatus,
-} from '../../types';
+} from '../../types/index.js';
 import {
   getInitialProductCountsByStatus,
   getObjId,
-  getUser,
   populateProductCountsByStatus,
-} from '../../utils';
+} from '../../utils/index.js';
 
 export const getDashboardProductsController = async (req: Request, res: Response) => {
-  const user = getUser(req);
+  const user = getUser(req.user);
 
   const {
     page = '1',
@@ -130,7 +131,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
     ]);
 
     products = productsResult[0]?.products ?? [];
-    totalCount = productsResult[0]?.total?.[0]?.count ?? 0;
+    totalCount = productsResult[0]?.total[0]?.count ?? 0;
 
     counts = populateProductCountsByStatus(counts, statusCounts);
   } else {
@@ -155,7 +156,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
 
   res.success(200, 'Products fetched successfully', {
     data: {
-      products: products ?? [],
+      products: products,
       pagination: {
         page: currentPage,
         limit: pageSize,

@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
-import { PRODUCT_STATUS_MAP } from '../../constants';
-import { Product } from '../../models';
+
+import { PRODUCT_STATUS_MAP } from '../../constants/index.js';
+import { Product } from '../../models/index.js';
 
 export const getProductBySlugController = async (req: Request, res: Response) => {
   const slug = req.params.slug as string;
@@ -10,5 +11,5 @@ export const getProductBySlugController = async (req: Request, res: Response) =>
     .lean()
     .exec();
 
-  return res.success(200, 'Product fetched successfully', { product });
+  res.success(200, 'Product fetched successfully', { product });
 };

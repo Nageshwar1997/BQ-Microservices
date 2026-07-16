@@ -1,7 +1,8 @@
+import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
-import { redisCache } from '../../classes';
-import type { TTryOnCategoryMap } from '../../types';
-import { getUser } from '../../utils';
+
+import { redisCache } from '../../classes/index.js';
+import type { TTryOnCategoryMap } from '../../types/index.js';
 
 export interface TProductBasicInfo {
   title: string;
@@ -51,8 +52,7 @@ export interface TProductWithVariant {
 export type TProductStockAndVariants = TProductWithoutVariant | TProductWithVariant;
 
 export type TProductTryOnConfiguration =
-  | { enabled: false }
-  | { enabled: true; tryOn: TTryOnCategoryMap };
+  { enabled: false } | { enabled: true; tryOn: TTryOnCategoryMap };
 
 export type TBody =
   | (TProductBasicInfo & { step: 0 })
@@ -70,10 +70,10 @@ export interface TDraftProduct {
 }
 
 export const saveDraftProductController = async (req: Request, res: Response) => {
-  const { _id: userId } = getUser(req);
+  const { _id: userId } = getUser(req.user);
   const body = req.body as TBody;
 
   const draft = await redisCache.dashboard.saveDraftProductStep(userId.toString(), body);
 
-  return res.success(201, 'Product details saved in draft', { draft });
+  res.success(201, 'Product details saved in draft', { draft });
 };

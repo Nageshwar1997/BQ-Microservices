@@ -1,9 +1,10 @@
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
-import { redisCache } from '../../classes';
-import { PRODUCT_STATUS_MAP } from '../../constants';
-import { Product } from '../../models';
-import type { DashboardCacheProduct } from '../../types';
+
+import { redisCache } from '../../classes/index.js';
+import { PRODUCT_STATUS_MAP } from '../../constants/index.js';
+import { Product } from '../../models/index.js';
+import type { DashboardCacheProduct } from '../../types/index.js';
 
 export const getDashboardProductBySlugController = async (req: Request, res: Response) => {
   const { slug } = req.params as { slug: string };
@@ -26,5 +27,5 @@ export const getDashboardProductBySlugController = async (req: Request, res: Res
     res.locals.afterFinish?.push(() => redisCache.dashboard.setProductBySlug(slug, dbProduct));
   }
 
-  return res.success(200, 'Product fetched successfully', { product });
+  res.success(200, 'Product fetched successfully', { product });
 };

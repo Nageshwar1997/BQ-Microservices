@@ -1,8 +1,8 @@
-import { logger } from '../configs';
-import { Category } from '../models';
-import type { ICategory, TCacheCategory } from '../types';
-import { getMinimalCategory } from '../utils';
-import { RedisHelper } from './RedisHelper';
+import { logger } from '../configs/index.js';
+import { Category } from '../models/index.js';
+import type { ICategory, TCacheCategory } from '../types/index.js';
+import { getMinimalCategory } from '../utils/index.js';
+import { RedisHelper } from './RedisHelper.js';
 
 export class RedisCategory extends RedisHelper {
   private readonly KEY = 'bq:products:categories';

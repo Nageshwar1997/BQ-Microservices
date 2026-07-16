@@ -1,2 +1,2 @@
-export * from './auth.middleware';
-export * from './createPendingProductPayload.middleware';
+export * from './auth.middleware.js';
+export * from './createPendingProductPayload.middleware.js';

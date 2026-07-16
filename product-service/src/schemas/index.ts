@@ -1,2 +1,2 @@
-export * from './category.schema';
-export * from './product.schema';
+export * from './category.schema.js';
+export * from './product.schema.js';

@@ -1,15 +1,16 @@
+import { getUser } from '@beautinique/backend-utils';
 import { AppError } from '@beautinique/be-classes';
 import type { NextFunction, Request, Response } from 'express';
-import { redisCache } from '../classes';
-import type { TDraftProduct } from '../controllers';
-import { getUser } from '../utils';
+
+import { redisCache } from '../classes/index.js';
+import type { TDraftProduct } from '../controllers/index.js';
 
 export const createPendingProductPayload = async (
   req: Request,
   _res: Response,
   next: NextFunction,
 ) => {
-  const user = getUser(req);
+  const user = getUser(req.user);
   const draft = await redisCache.dashboard.getDraftProduct(user._id.toString());
 
   if (!draft) {

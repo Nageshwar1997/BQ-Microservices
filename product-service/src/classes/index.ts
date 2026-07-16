@@ -1,1 +1,1 @@
-export * from './RedisCache';
+export * from './RedisCache.js';

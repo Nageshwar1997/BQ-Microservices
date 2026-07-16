@@ -1,7 +1,8 @@
 import { AppError } from '@beautinique/be-classes';
 import type { ClientSession } from 'mongoose';
-import { Category } from '../models';
-import type { ICategory } from '../types';
+
+import { Category } from '../models/index.js';
+import type { ICategory } from '../types/index.js';
 
 export const findOrCreateCategory = async ({
   name,

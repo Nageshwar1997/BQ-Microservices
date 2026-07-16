@@ -1,5 +1,7 @@
 import { ROLES } from '@beautinique/be-constants';
-import type { TDashboardListProduct, TProduct, TSort, TTryOn, TTryOnKey } from '../types';
+
+import { envs } from '../envs/index.js';
+import type { TDashboardListProduct, TProduct, TTryOnKey } from '../types/index.js';
 
 export const METHOD_MAP = {
   GET: 'get',
@@ -7,6 +9,11 @@ export const METHOD_MAP = {
   PUT: 'put',
   PATCH: 'patch',
   DELETE: 'delete',
+} as const;
+
+export const LOGGER_BASE_OPTIONS = {
+  level: envs.is_dev ? 'debug' : 'info',
+  pretty: envs.is_dev,
 } as const;
 
 export const METHODS_AND_PATHS = {
@@ -68,7 +75,7 @@ export const TRY_ON_MAP = {
 
 export const TRY_ON_CATEGORIES = Object.keys(TRY_ON_MAP) as TTryOnKey[];
 
-export const TRY_ON_SUBCATEGORIES = Object.values(TRY_ON_MAP).flat() as TTryOn[TTryOnKey][number][];
+export const TRY_ON_SUBCATEGORIES = Object.values(TRY_ON_MAP).flat();
 
 export const HEADERS_KEYS = {
   serviceSecret: 'X-Service-Secret',
@@ -78,14 +85,13 @@ export const HEADERS_KEYS = {
 
 export const SORT = ['asc', 'desc'] as const;
 
-export const SORT_MAP = Object.fromEntries(SORT.map((sort) => [sort, sort])) as {
-  [K in TSort]: K;
-};
+export const SORT_MAP = Object.fromEntries(SORT.map((sort) => [sort, sort]));
 
 export type TProductFilter = Pick<TProduct, 'seller' | 'status' | 'category'>;
 
 export const PRODUCT_DASHBOARD_PROJECTION: Record<
-  keyof Omit<TDashboardListProduct, 'variants'> | `${keyof Pick<TDashboardListProduct, 'variants'>}.stock`,
+  | keyof Omit<TDashboardListProduct, 'variants'>
+  | `${keyof Pick<TDashboardListProduct, 'variants'>}.stock`,
   1
 > = {
   title: 1,
@@ -114,4 +120,3 @@ export const DRAFT_PRODUCT_STEP_MAP = {
   3: 'stockAndVariants',
   4: 'tryOnConfiguration',
 } as const;
-

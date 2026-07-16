@@ -1,11 +1,12 @@
+import { getUser } from '@beautinique/backend-utils';
 import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
-import { Product } from '../../models';
-import { getUser } from '../../utils';
+
+import { Product } from '../../models/index.js';
 
 export const publishPendingProductController = async (req: Request, res: Response) => {
   const { productId } = req.params;
-  const { _id: userId } = getUser(req);
+  const { _id: userId } = getUser(req.user);
 
   const product = await Product.findById(productId);
 

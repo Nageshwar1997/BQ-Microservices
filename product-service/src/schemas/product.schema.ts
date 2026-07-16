@@ -1,13 +1,14 @@
 import { AppError } from '@beautinique/be-classes';
 import { Schema } from 'mongoose';
+
 import {
-  PRODUCT_STATUSES,
   PRODUCT_STATUS_MAP,
+  PRODUCT_STATUSES,
   TRY_ON_CATEGORIES,
   TRY_ON_MAP,
   TRY_ON_SUBCATEGORIES,
-} from '../constants';
-import type { ITryOn, TTryOn, TTryOnKey } from '../types';
+} from '../constants/index.js';
+import type { ITryOn, TTryOn, TTryOnKey } from '../types/index.js';
 
 export const variantSchema = new Schema(
   {
@@ -71,14 +72,14 @@ const tryOnSchema = new Schema<ITryOn>(
       type: String,
       enum: TRY_ON_CATEGORIES,
       required: function (): boolean {
-        return this.get('configured');
+        return !!this.get('configured');
       },
     },
     subCategory: {
       type: String,
       enum: TRY_ON_SUBCATEGORIES,
       required: function (): boolean {
-        return this.get('configured');
+        return !!this.get('configured');
       },
       validate: {
         validator(value: TTryOn[TTryOnKey][number]) {
@@ -87,7 +88,7 @@ const tryOnSchema = new Schema<ITryOn>(
           }
           const category = this.get('category') as TTryOnKey;
 
-          return TRY_ON_MAP[category]?.includes(value as never);
+          return TRY_ON_MAP[category].includes(value as never);
         },
 
         message: 'Invalid sub category for selected category',
@@ -104,9 +105,9 @@ tryOnSchema.pre('validate', function () {
     return;
   }
 
-  const category = this.get('category') as TTryOnKey;
+  const category = this.get('category') as TTryOnKey | undefined;
 
-  const subCategory = this.get('subCategory') as TTryOn[TTryOnKey][number];
+  const subCategory = this.get('subCategory') as TTryOn[TTryOnKey][number] | undefined;
 
   if (!category) {
     throw new Error('Category is required');
@@ -116,7 +117,7 @@ tryOnSchema.pre('validate', function () {
     throw new Error('Sub category is required');
   }
 
-  if (!TRY_ON_MAP[category]?.includes(subCategory as never)) {
+  if (!TRY_ON_MAP[category].includes(subCategory as never)) {
     throw new Error('Invalid sub category for selected category');
   }
 });
@@ -269,13 +270,6 @@ productSchema.pre('validate', function () {
 
   if (this.tryOn?.enabled) {
     const { category, subCategory } = this.tryOn;
-
-    if (!category || !subCategory) {
-      throw new AppError({
-        message: 'Try-on category and type are required',
-        code: 'UNPROCESSABLE_ENTITY',
-      });
-    }
 
     const subcategories = TRY_ON_MAP[category];
 

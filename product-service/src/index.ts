@@ -1,3 +1,7 @@
+import 'dotenv/config';
+
+import type { Socket } from 'node:net';
+
 import { connectToDB } from '@beautinique/be-configs';
 import { bullQueue } from '@beautinique/be-jobs';
 import {
@@ -8,16 +12,15 @@ import {
   setRequestId,
   successResponse,
 } from '@beautinique/be-middlewares';
-import 'dotenv/config';
 import express from 'express';
-import type { Socket } from 'node:net';
 import path from 'path';
 import { parse } from 'qs';
-import { redisCache } from './classes';
-import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs';
-import { HEADERS_KEYS, METHODS_AND_PATHS } from './constants';
-import { envs } from './envs';
-import { router } from './routes';
+
+import { redisCache } from './classes/index.js';
+import { databaseConfigs, errorLogs, isDbConnected, logger, requestLogs } from './configs/index.js';
+import { HEADERS_KEYS, METHODS_AND_PATHS } from './constants/index.js';
+import { envs } from './envs/index.js';
+import { router } from './routes/index.js';
 
 const { base } = METHODS_AND_PATHS;
 
@@ -53,10 +56,14 @@ app.use(checkDbConnection(isDbConnected));
 /* ---------------- ROUTES ---------------- */
 
 // Home Route
-app.get('/', (_, res) => res.success(200, 'Welcome to the Product Service API'));
+app.get('/', (_, res) => {
+  res.success(200, 'Welcome to the Product Service API');
+});
 
 // Health Route
-app.get('/health', (_, res) => res.success(200, 'Product Service is healthy'));
+app.get('/health', (_, res) => {
+  res.success(200, 'Product Service is healthy');
+});
 
 // Api Routes
 app.use(
@@ -83,7 +90,7 @@ async function start() {
       const httpServer = app.listen(envs.port, () => {
         httpServer.off('error', onError);
 
-        logger.info(`🚀 Server running on port: ${envs.port}`);
+        logger.info(`🚀 Server running on port: ${String(envs.port)}`);
 
         resolve();
       });
@@ -100,7 +107,7 @@ async function start() {
     }
 
     httpServer.on('error', (err) => {
-      logger.error('❌ HTTP server error:', err);
+      logger.error(err, '❌ HTTP server error:');
     });
 
     // Track active connections
@@ -117,15 +124,12 @@ async function start() {
     httpServer.headersTimeout = 66_000;
 
     // 🔥 Start DB + Redis + Queue AFTER server starts
-    await Promise.all([
-      connectToDB(databaseConfigs),
-      redisCache.connect(),
-      bullQueue.connect(envs.redis.job),
-    ]);
+    await Promise.all([connectToDB(databaseConfigs), redisCache.connect()]);
+    bullQueue.connect(envs.redis.job);
 
     logger.info('✅ User service initialized');
   } catch (err) {
-    logger.error('❌ Failed to start server:', err);
+    logger.error(err, '❌ Failed to start server:');
 
     process.exit(1);
   }
@@ -142,7 +146,7 @@ async function shutdown(signal: string) {
 
     results.forEach((result, index) => {
       if (result.status === 'rejected') {
-        logger.error(`❌ Service ${index} failed to close:`, result.reason);
+        logger.error(result.reason, `❌ Service ${String(index)} failed to close.`);
       }
     });
 
@@ -163,7 +167,10 @@ async function shutdown(signal: string) {
         server?.close((err) => {
           clearTimeout(forceCloseTimer);
 
-          if (err) return reject(err);
+          if (err) {
+            reject(err);
+            return;
+          }
 
           logger.info('🌐 HTTP server closed');
 
@@ -176,7 +183,7 @@ async function shutdown(signal: string) {
 
     process.exit(0);
   } catch (err) {
-    logger.error('❌ Shutdown error:', err);
+    logger.error(err, '❌ Shutdown error:');
 
     process.exit(1);
   }
@@ -184,8 +191,8 @@ async function shutdown(signal: string) {
 
 /* ---------------- PROCESS SIGNALS ---------------- */
 
-process.on('SIGINT', () => shutdown('SIGINT'));
-process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => void shutdown('SIGINT'));
+process.on('SIGTERM', () => void shutdown('SIGTERM'));
 
 /* ---------------- BOOTSTRAP ---------------- */
 

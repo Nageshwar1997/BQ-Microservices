@@ -1,19 +1,20 @@
+import { getUser } from '@beautinique/backend-utils';
 import { bullQueue } from '@beautinique/be-jobs';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
-import { redisCache } from '../../classes';
-import { ROLES_MAP } from '../../constants';
-import { Product } from '../../models';
-import type { TCreateProductPayload } from '../../types';
+
+import { redisCache } from '../../classes/index.js';
+import { ROLES_MAP } from '../../constants/index.js';
+import { Product } from '../../models/index.js';
+import type { TCreateProductPayload } from '../../types/index.js';
 import {
   extractImageUrlsFromHtml,
   generateSku,
   generateSlug,
   getCloudinaryPublicIdFromUrl,
   getObjId,
-  getUser,
-} from '../../utils';
-import type { TDraftProduct } from './saveDraftProduct.controller';
+} from '../../utils/index.js';
+import type { TDraftProduct } from './saveDraftProduct.controller.js';
 
 export const publishDraftProductController = async (
   req: Request,
@@ -21,7 +22,7 @@ export const publishDraftProductController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const user = getUser(req);
+  const user = getUser(req.user);
   const draft = req.body as TDraftProduct;
 
   const isAdmin = [ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role as never);

@@ -1,11 +1,12 @@
 import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { TCategory } from '@beautinique/be-zod';
 import type { Request, Response } from 'express';
-import { redisCache } from '../../classes';
-import type { TCategoryHierarchy } from '../../types';
+
+import { redisCache } from '../../classes/index.js';
+import type { TCategoryHierarchy } from '../../types/index.js';
 
 export const getCategoriesByParentLevel = async (req: Request, res: Response) => {
-  const parentId = req.query.parent?.toString() as TCategory['parent'] | undefined;
+  const parentId = req.query.parent as string;
   const level = Number(req.query.level) as TCategory['level'] | undefined;
 
   const allCategories = await redisCache.category.getAllCategories();
@@ -50,7 +51,7 @@ export const getCategoriesByHierarchy = async (_req: Request, res: Response) => 
       parentMap.get(parentId)?.map((category) => ({
         ...category,
         subcategories: buildHierarchy(category._id),
-      })) || []
+      })) ?? []
     );
   };
 

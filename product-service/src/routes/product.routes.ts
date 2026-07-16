@@ -4,7 +4,8 @@ import {
   tryCatchSessionResponse,
 } from '@beautinique/be-middlewares';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../constants';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
 import {
   getDashboardProductBySlugController,
   getDashboardProductsController,
@@ -13,8 +14,8 @@ import {
   getProductsSuggestionsController,
   publishDraftProductController,
   saveDraftProductController,
-} from '../controllers';
-import { authorize, createPendingProductPayload } from '../middlewares';
+} from '../controllers/index.js';
+import { authorize, createPendingProductPayload } from '../middlewares/index.js';
 
 export const productRouter = Router();
 const draftRouter = Router();

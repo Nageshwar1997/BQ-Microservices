@@ -1,10 +1,11 @@
+import { getObjId } from '@beautinique/backend-mongoose';
 import { AppError } from '@beautinique/be-classes';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
-import { redisCache } from '../../classes';
-import { Category } from '../../models';
-import { getObjId } from '../../utils';
+
+import { redisCache } from '../../classes/index.js';
+import { Category } from '../../models/index.js';
 
 export const deleteCategoryController = async (
   req: Request,
@@ -12,9 +13,9 @@ export const deleteCategoryController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const categoryId = req.params?.categoryId?.toString();
+  const categoryId = req.params.categoryId?.toString();
 
-  const categoryObjId = getObjId(categoryId);
+  const categoryObjId = getObjId(String(categoryId));
 
   /* ---------------- EXISTING CATEGORY ---------------- */
 
@@ -67,7 +68,7 @@ export const deleteCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.category.deleteCategory(categoryId);
+  await redisCache.category.deleteCategory(String(categoryId));
 
   res.success(200, 'Category deleted successfully');
 };
