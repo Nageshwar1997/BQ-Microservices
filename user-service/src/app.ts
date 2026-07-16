@@ -74,10 +74,10 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
  */
 app[health.method](health.path, (_, res) => {
   res.success({
-    message: 'Media Service is healthy',
+    message: 'User Service is healthy',
     data: {
       database: getConnectionHealth(),
-      service: SERVICE_NAMES_MAP['media-service'],
+      service: SERVICE_NAMES_MAP['user-service'],
     },
   });
 });

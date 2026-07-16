@@ -29,7 +29,7 @@ export const startup = async (): Promise<void> => {
     await Promise.all([connectDb(databaseConfigs), redisCacheManager.connect()]);
     await startHttpServer();
 
-    logger.info('✅ Media service initialized');
+    logger.info('✅ User service initialized');
 
     resetShuttingDown();
   } catch (error: unknown) {
@@ -37,7 +37,7 @@ export const startup = async (): Promise<void> => {
 
     resetShuttingDown();
 
-    logger.error(`❌ Failed to start media service: ${String(error)}`);
+    logger.error(`❌ Failed to start user service: ${String(error)}`);
 
     process.exit(1);
   }
