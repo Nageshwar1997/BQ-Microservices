@@ -13,7 +13,7 @@ interface IShutdownTask {
 }
 
 const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
-  { name: 'Worker Manager', task: workerManager.stop.bind(workerManager) },
+  { task: workerManager.stop.bind(workerManager) },
 ]);
 
 /* -------------------------------------------------------------------------- */
@@ -48,7 +48,7 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
       shutdownTasks.map(async ({ name, task }) => {
         try {
           if (name) {
-            logger.info(`🛑 Stopping ${name}...`);
+            logger.warn(`🛑 Stopping ${name}...`);
           }
 
           await task();
