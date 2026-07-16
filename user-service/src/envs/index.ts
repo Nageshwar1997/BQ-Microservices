@@ -22,11 +22,9 @@ const {
 
   GITHUB_CLIENT_ID,
   GITHUB_CLIENT_SECRET,
-  GITHUB_REDIRECT_ENDPOINT,
 
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
-  GOOGLE_REDIRECT_ENDPOINT,
 
   // H
   // I
@@ -45,7 +43,6 @@ const {
 
   LINKEDIN_CLIENT_ID,
   LINKEDIN_CLIENT_SECRET,
-  LINKEDIN_REDIRECT_ENDPOINT,
 
   // M
 
@@ -105,17 +102,14 @@ export const envs = {
     github: {
       client_id: requireEnv(GITHUB_CLIENT_ID, 'GITHUB_CLIENT_ID'),
       client_secret: requireEnv(GITHUB_CLIENT_SECRET, 'GITHUB_CLIENT_SECRET'),
-      redirect_endpoint: requireEnv(GITHUB_REDIRECT_ENDPOINT, 'GITHUB_REDIRECT_ENDPOINT'),
     },
     google: {
       client_id: requireEnv(GOOGLE_CLIENT_ID, 'GOOGLE_CLIENT_ID'),
       client_secret: requireEnv(GOOGLE_CLIENT_SECRET, 'GOOGLE_CLIENT_SECRET'),
-      redirect_endpoint: requireEnv(GOOGLE_REDIRECT_ENDPOINT, 'GOOGLE_REDIRECT_ENDPOINT'),
     },
     linkedin: {
       client_id: requireEnv(LINKEDIN_CLIENT_ID, 'LINKEDIN_CLIENT_ID'),
       client_secret: requireEnv(LINKEDIN_CLIENT_SECRET, 'LINKEDIN_CLIENT_SECRET'),
-      redirect_endpoint: requireEnv(LINKEDIN_REDIRECT_ENDPOINT, 'LINKEDIN_REDIRECT_ENDPOINT'),
     },
   },
 

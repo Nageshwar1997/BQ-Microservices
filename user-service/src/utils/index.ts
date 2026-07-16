@@ -1,7 +1,8 @@
 import type { TAuthProvider } from '@beautinique/backend-types';
-import { AUTH_PROVIDER_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
+import { AUTH_PROVIDER_MAP, SERVICE_NAMES_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import { randomBytes } from 'crypto';
 
+import { METHODS_AND_PATHS } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 import type { IUser, TSocialAuthProvider } from '../types/index.js';
 
@@ -61,11 +62,18 @@ export const generateTempToken = (bytes = 32) => {
 /* ======================= User Utils End ======================= */
 
 export const getSocialAuthRedirectURL = (provider: TSocialAuthProvider) => {
-  const redirectMap: Record<TSocialAuthProvider, string> = {
-    [AUTH_PROVIDER_MAP.GOOGLE]: envs.oAuth.google.redirect_endpoint,
-    [AUTH_PROVIDER_MAP.LINKEDIN]: envs.oAuth.linkedin.redirect_endpoint,
-    [AUTH_PROVIDER_MAP.GITHUB]: envs.oAuth.github.redirect_endpoint,
-  };
+  const { base, auth } = METHODS_AND_PATHS;
+  const { base: auth_base, login } = auth;
+  const { base: login_base, oauth } = login;
+  const { github, google, linkedin } = oauth;
+  
+  const prefix = `${base}/${SERVICE_NAMES_MAP['user-service']}${auth_base}${login_base}` as const;
+
+  const redirectMap = {
+    [AUTH_PROVIDER_MAP.GOOGLE]: `${prefix}${google.callback.path}`,
+    [AUTH_PROVIDER_MAP.LINKEDIN]: `${prefix}${linkedin.callback.path}`,
+    [AUTH_PROVIDER_MAP.GITHUB]: `${prefix}${github.callback.path}`,
+  } as const;
 
   return `${envs.gateway_url}${redirectMap[provider]}`;
 };
