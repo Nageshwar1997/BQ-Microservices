@@ -1,6 +1,4 @@
-import {
-  API_METHODS_MAP
-} from '@beautinique/shared-constants';
+import { API_METHODS_MAP } from '@beautinique/shared-constants';
 
 import { envs } from '../envs/index.js';
 
