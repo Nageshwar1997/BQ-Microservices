@@ -42,7 +42,7 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     return;
   }
 
-  logger.info(`🛑 Received ${signal}. Starting graceful shutdown...`);
+  logger.warn(`🛑 Received ${signal}. Starting graceful shutdown...`);
 
   try {
     if (isServerRunning()) {
@@ -53,7 +53,7 @@ export const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
       shutdownTasks.map(async ({ name, task }) => {
         try {
           if (name) {
-            logger.info(`🛑 Stopping ${name}...`);
+            logger.warn(`🛑 Stopping ${name}...`);
           }
 
           await task();
