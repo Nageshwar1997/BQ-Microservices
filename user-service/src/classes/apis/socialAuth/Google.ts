@@ -8,12 +8,13 @@ import { ApiRequest } from '../ApiRequest.js';
 
 export class Google extends ApiRequest {
   private readonly routes = OAUTH_API_ROUTES_AND_METHODS.google;
+  private readonly REDIRECT_URI = getSocialAuthRedirectURL(AUTH_PROVIDER_MAP.GOOGLE);
 
   private getClient() {
     return new OAuth2Client(
       envs.oAuth.google.client_id,
       envs.oAuth.google.client_secret,
-      getSocialAuthRedirectURL(AUTH_PROVIDER_MAP.GOOGLE),
+      this.REDIRECT_URI,
     );
   }
 
@@ -23,8 +24,8 @@ export class Google extends ApiRequest {
     return client.generateAuthUrl({
       access_type: 'offline',
       scope: [
-        'https://www.googleapis.com/auth/userinfo.profile',
-        'https://www.googleapis.com/auth/userinfo.email',
+        `${OAUTH_API_ROUTES_AND_METHODS.google.decode.baseURL}/auth/userinfo.profile`,
+        `${OAUTH_API_ROUTES_AND_METHODS.google.decode.baseURL}/auth/userinfo.email`,
       ],
       prompt: 'consent',
     });

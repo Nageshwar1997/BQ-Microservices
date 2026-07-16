@@ -7,15 +7,16 @@ import { ApiRequest } from '../ApiRequest.js';
 
 export class Github extends ApiRequest {
   private readonly routes = OAUTH_API_ROUTES_AND_METHODS.github;
+  private readonly REDIRECT_URI = getSocialAuthRedirectURL(AUTH_PROVIDER_MAP.GITHUB);
 
   public url() {
     const params = new URLSearchParams({
       client_id: envs.oAuth.github.client_id,
-      redirect_uri: getSocialAuthRedirectURL(AUTH_PROVIDER_MAP.GITHUB),
+      redirect_uri: this.REDIRECT_URI,
       scope: 'read:user user:email',
       allow_signup: 'true',
     });
-    return `https://github.com/login/oauth/authorize?${params.toString()}`;
+    return `${OAUTH_API_ROUTES_AND_METHODS.github.access_token.baseURL}/login/oauth/authorize?${params.toString()}`;
   }
 
   public access_token(code: string) {
@@ -25,7 +26,7 @@ export class Github extends ApiRequest {
         client_id: envs.oAuth.github.client_id,
         client_secret: envs.oAuth.github.client_secret,
         code,
-        redirect_uri: getSocialAuthRedirectURL('GITHUB'),
+        redirect_uri: this.REDIRECT_URI,
       },
       headers: { Accept: 'application/json' },
     });
