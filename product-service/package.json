@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "postbuild": "node scripts/generate-html.mjs",
     "dev": "concurrently -n \"TS,APP\" -c \"yellow,cyan\" \"tsc --noEmit --watch\" \"nodemon --watch src --ext ts --exec tsx src/index.ts\"",
     "start": "node dist/index.js",
     "start:dev": "npm run build && node dist/index.js",
@@ -16,35 +17,42 @@
   "keywords": [],
   "author": "Nageshwar Pawar",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "devDependencies": {
+    "@beautinique/backend-types": "^1.0.6",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
-    "@types/multer": "^2.1.0",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.1.1",
+    "@types/swagger-ui-express": "^4.1.8",
     "concurrently": "^10.0.3",
-    "eslint": "^10.5.0",
+    "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-simple-import-sort": "^13.0.0",
     "nodemon": "^3.1.14",
-    "prettier": "^3.8.4",
-    "tsx": "^4.22.4",
+    "prettier": "^3.9.5",
+    "tsx": "^4.23.1",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.61.0"
+    "typescript-eslint": "^8.64.0"
   },
   "dependencies": {
-    "@beautinique/be-classes": "^1.0.5",
-    "@beautinique/be-configs": "^1.0.5",
-    "@beautinique/be-constants": "^1.0.9",
-    "@beautinique/be-jobs": "^1.0.6",
-    "@beautinique/be-middlewares": "^1.0.22",
-    "@beautinique/be-utils": "^1.0.4",
-    "@beautinique/be-zod": "^1.0.23",
+    "@beautinique/backend-bullmq": "^1.0.0",
+    "@beautinique/backend-classes": "^1.0.1",
+    "@beautinique/backend-logger": "^1.0.2",
+    "@beautinique/backend-mongoose": "^1.0.6",
+    "@beautinique/backend-request": "^1.0.0",
+    "@beautinique/backend-response": "^1.0.2",
+    "@beautinique/backend-utils": "^1.0.3",
+    "@beautinique/backend-zod": "^1.0.9",
+    "@beautinique/shared-constants": "^1.0.7",
+    "@beautinique/shared-markdown-to-html": "^1.0.0",
+    "@beautinique/shared-utils": "^1.0.4",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "mongodb": "^7.3.0",
-    "mongoose": "^9.7.0",
-    "redis": "^6.0.0",
-    "slugify": "^1.6.9"
+    "mongodb": "^7.5.0",
+    "mongoose": "^9.7.4",
+    "redis": "^6.1.0",
+    "slugify": "^1.6.9",
+    "swagger-ui-express": "^5.0.1"
   },
   "repository": {
     "type": "git",
@@ -54,5 +62,8 @@
   "homepage": "https://github.com/Nageshwar1997/BQ-Microservice/tree/main/product-service#readme",
   "bugs": {
     "url": "https://github.com/Nageshwar1997/BQ-Microservice/issues"
+  },
+  "optionalDependencies": {
+    "pino-pretty": "^13.1.3"
   }
 }
