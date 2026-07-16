@@ -15,9 +15,8 @@ import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './
  *
  * Startup order:
  * 1. Register MongoDB event listeners.
- * 2. Connect MongoDB.
+ * 2. Connect MongoDB and Redis in parallel.
  * 3. Start the HTTP server.
- * 4. Start background workers.
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
@@ -27,8 +26,7 @@ export const startup = async (): Promise<void> => {
   try {
     registerDatabaseEvents();
 
-    await connectDb(databaseConfigs);
-    await redisCacheManager.connect();
+    await Promise.all([connectDb(databaseConfigs), redisCacheManager.connect()]);
     await startHttpServer();
 
     logger.info('✅ Media service initialized');
