@@ -11,8 +11,9 @@ import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './
  * Safe to call multiple times.
  *
  * Startup order:
- * 1. Start the HTTP server and connect the SMTP transporter (in parallel).
- * 2. Start the BullMQ worker.
+ * 1. Connect the SMTP transporter.
+ * 2. Start the HTTP server.
+ * 3. Start the BullMQ worker.
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
@@ -20,7 +21,8 @@ export const startup = async (): Promise<void> => {
   }
 
   try {
-    await Promise.all([startHttpServer(), transporter.start()]);
+    await transporter.start();
+    await startHttpServer();
 
     workerManager.start();
 
