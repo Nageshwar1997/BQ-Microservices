@@ -49,12 +49,6 @@ const {
 
   // M
 
-  MAIL_SERVICE_DEV_URL,
-  MAIL_SERVICE_PROD_URL,
-
-  MEDIA_SERVICE_DEV_URL,
-  MEDIA_SERVICE_PROD_URL,
-
   MONGODB_URI,
 
   // N
@@ -72,10 +66,6 @@ const {
 
   // T
   // U
-
-  USER_SERVICE_DEV_URL,
-  USER_SERVICE_PROD_URL,
-
   // V
   // W
   // X
@@ -159,22 +149,9 @@ export const envs = {
   // T
   // U
 
-  url: {
-    gateway: is_dev
-      ? requireEnv(GATEWAY_DEV_URL, 'GATEWAY_DEV_URL')
-      : requireEnv(GATEWAY_PROD_URL, 'GATEWAY_PROD_URL'),
-    service: {
-      mail: is_dev
-        ? requireEnv(MAIL_SERVICE_DEV_URL, 'MAIL_SERVICE_DEV_URL')
-        : requireEnv(MAIL_SERVICE_PROD_URL, 'MAIL_SERVICE_PROD_URL'),
-      media: is_dev
-        ? requireEnv(MEDIA_SERVICE_DEV_URL, 'MEDIA_SERVICE_DEV_URL')
-        : requireEnv(MEDIA_SERVICE_PROD_URL, 'MEDIA_SERVICE_PROD_URL'),
-      user: is_dev
-        ? requireEnv(USER_SERVICE_DEV_URL, 'USER_SERVICE_DEV_URL')
-        : requireEnv(USER_SERVICE_PROD_URL, 'USER_SERVICE_PROD_URL'),
-    },
-  },
+  gateway_url: is_dev
+    ? requireEnv(GATEWAY_DEV_URL, 'GATEWAY_DEV_URL')
+    : requireEnv(GATEWAY_PROD_URL, 'GATEWAY_PROD_URL'),
 
   // V
   // W

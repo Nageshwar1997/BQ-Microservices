@@ -498,7 +498,7 @@ Factory middleware — same header extraction as `authenticate`, plus reads `X-U
 | `getMinimalUser(user)`                | Returns the sanitized client-facing user shape (`_id` as string; excludes `password`/`reason`/timestamps) |
 | `generateOtp()`                       | Returns a random 6-digit numeric OTP                                                    |
 | `generateTempToken(bytes = 32)`       | Returns a hex token (default 32 bytes = 64 hex chars)                                   |
-| `getSocialAuthRedirectURL(provider)`  | Builds the absolute OAuth callback URL (`envs.url.gateway` + the provider's redirect endpoint) |
+| `getSocialAuthRedirectURL(provider)`  | Builds the absolute OAuth callback URL (`envs.gateway_url` + the provider's redirect endpoint) |
 
 `getObjId`/`toObjectId` moved out of this service — `getObjId` is now imported directly from `@beautinique/backend-mongoose` where needed (`services/index.ts`, `password.controller.ts`).
 

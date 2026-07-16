@@ -67,5 +67,5 @@ export const getSocialAuthRedirectURL = (provider: TSocialAuthProvider) => {
     [AUTH_PROVIDER_MAP.GITHUB]: envs.oAuth.github.redirect_endpoint,
   };
 
-  return `${envs.url.gateway}${redirectMap[provider]}`;
+  return `${envs.gateway_url}${redirectMap[provider]}`;
 };
