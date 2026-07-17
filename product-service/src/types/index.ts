@@ -1,13 +1,7 @@
-import type { TUserRole } from '@beautinique/backend-types';
+import type { TProductStatus, TSort, TTryOnSelection, TUserRole } from '@beautinique/backend-types';
 import type { TCategory } from '@beautinique/be-zod';
 import type { InferSchemaType, Types } from 'mongoose';
 
-import type {
-  DRAFT_PRODUCT_STEP_MAP,
-  PRODUCT_STATUSES,
-  SORT,
-  TRY_ON_MAP,
-} from '../constants/index.js';
 import type { categorySchema, productSchema, variantSchema } from '../schemas/index.js';
 export type TId = Types.ObjectId;
 export type TStrId = string;
@@ -17,11 +11,6 @@ export interface IId {
 
 export interface IIdStr {
   _id: TStrId;
-}
-
-export interface ITimestamp {
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
@@ -53,21 +42,10 @@ export interface IUser extends IId {
   role: TUserRole;
 }
 
-export type TDraftProductStep = keyof typeof DRAFT_PRODUCT_STEP_MAP;
-
-export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
-
-export type TTryOn = typeof TRY_ON_MAP;
-export type TTryOnKey = keyof TTryOn;
-
-export type TTryOnCategoryMap = {
-  [K in TTryOnKey]: { category: K; subCategory: TTryOn[K][number] };
-}[TTryOnKey];
-
 type TTryOnDisabled =
-  { enabled: false } | ({ enabled: false; configured: boolean } & TTryOnCategoryMap);
+  { enabled: false } | ({ enabled: false; configured: boolean } & TTryOnSelection);
 
-type TTryOnEnabled = { enabled: true; configured: boolean } & TTryOnCategoryMap;
+type TTryOnEnabled = { enabled: true; configured: boolean } & TTryOnSelection;
 
 export type ITryOn = TTryOnDisabled | TTryOnEnabled;
 
@@ -92,8 +70,6 @@ export interface IAutocompleteSearchOperator<TPath extends string> {
 export interface ITextSearchOperator<TPath extends string> {
   text: TSearchOperatorBase<TPath>;
 }
-
-export type TSort = (typeof SORT)[number];
 
 export type TDashboardListProduct = Pick<
   TProduct,
@@ -133,3 +109,5 @@ export type DashboardCacheProduct = Omit<TProduct, 'category' | 'variants'> & {
   category: Pick<ICategory, 'name'>;
   variants: Omit<TVariant, 'stockThreshold'>[];
 };
+
+export type TProductFilter = Pick<TProduct, 'seller' | 'status' | 'category'>;

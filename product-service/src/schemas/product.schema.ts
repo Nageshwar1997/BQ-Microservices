@@ -1,14 +1,15 @@
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
-import { Schema } from 'mongoose';
-
+import type { TTryOnCategory, TTryOnSubCategory } from '@beautinique/backend-types';
 import {
-  PRODUCT_STATUS_MAP,
   PRODUCT_STATUSES,
+  PRODUCT_STATUSES_MAP,
+  TRY_ON_ALL_SUB_CATEGORIES,
   TRY_ON_CATEGORIES,
   TRY_ON_MAP,
-  TRY_ON_SUBCATEGORIES,
-} from '../constants/index.js';
-import type { ITryOn, TTryOn, TTryOnKey } from '../types/index.js';
+} from '@beautinique/shared-constants';
+import { Schema } from 'mongoose';
+
+import type { ITryOn } from '../types/index.js';
 
 export const variantSchema = new Schema(
   {
@@ -69,16 +70,16 @@ const tryOnSchema = new Schema<ITryOn>(
     },
     subCategory: {
       type: String,
-      enum: TRY_ON_SUBCATEGORIES,
+      enum: TRY_ON_ALL_SUB_CATEGORIES,
       required: function (): boolean {
         return !!this.get('configured');
       },
       validate: {
-        validator(value: TTryOn[TTryOnKey][number]) {
+        validator(value: TTryOnSubCategory) {
           if (!this.get('configured')) {
             return true;
           }
-          const category = this.get('category') as TTryOnKey;
+          const category = this.get('category') as TTryOnCategory;
 
           return TRY_ON_MAP[category].includes(value as never);
         },
@@ -97,9 +98,9 @@ tryOnSchema.pre('validate', function () {
     return;
   }
 
-  const category = this.get('category') as TTryOnKey | undefined;
+  const category = this.get('category') as TTryOnCategory | undefined;
 
-  const subCategory = this.get('subCategory') as TTryOn[TTryOnKey][number] | undefined;
+  const subCategory = this.get('subCategory') as TTryOnSubCategory | undefined;
 
   if (!category) {
     throw new Error('Category is required');
@@ -146,7 +147,7 @@ export const productSchema = new Schema(
     status: {
       type: String,
       enum: PRODUCT_STATUSES,
-      default: PRODUCT_STATUS_MAP.PENDING,
+      default: PRODUCT_STATUSES_MAP.PENDING,
       index: true,
     },
     history: historySchema,

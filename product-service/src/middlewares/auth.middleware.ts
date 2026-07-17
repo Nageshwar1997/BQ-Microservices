@@ -1,14 +1,13 @@
 import { AuthenticationError, AuthorizationError } from '@beautinique/backend-classes';
 import type { TUserRole } from '@beautinique/backend-types';
-import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import { HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 
-import { HEADERS_KEYS } from '../constants/index.js';
 import { getObjId } from '../utils/index.js';
 
 export const authenticate = (req: Request, _res: Response, next: NextFunction) => {
-  const userId = req.get(HEADERS_KEYS.userId);
-  const userRole = (req.get(HEADERS_KEYS.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
+  const userId = req.get(HEADERS_MAP.userId);
+  const userRole = (req.get(HEADERS_MAP.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
 
   if (!userId) {
     throw new AuthenticationError('You are not logged in');
@@ -21,13 +20,13 @@ export const authenticate = (req: Request, _res: Response, next: NextFunction) =
 
 export const authorize =
   (allowedRoles: TUserRole[]) => (req: Request, _res: Response, next: NextFunction) => {
-    const userId = req.get(HEADERS_KEYS.userId);
+    const userId = req.get(HEADERS_MAP.userId);
 
     if (!userId) {
       throw new AuthenticationError('You are not logged in');
     }
 
-    const userRole = (req.get(HEADERS_KEYS.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
+    const userRole = (req.get(HEADERS_MAP.userRole) ?? USER_ROLE_MAP.USER) as TUserRole;
 
     if (!allowedRoles.includes(userRole)) {
       throw new AuthorizationError('You are not authorized to perform this action');

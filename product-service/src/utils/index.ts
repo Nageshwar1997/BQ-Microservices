@@ -1,10 +1,11 @@
 import { randomInt } from 'node:crypto';
 
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
+import type { TProductStatus } from '@beautinique/backend-types';
+import { PRODUCT_STATUSES, PRODUCT_STATUSES_MAP } from '@beautinique/shared-constants';
 import { Types } from 'mongoose';
 import slugify from 'slugify';
 
-import { PRODUCT_STATUS_MAP, PRODUCT_STATUSES } from '../constants/index.js';
 import type {
   IAutocompleteSearchOperator,
   ICategory,
@@ -13,7 +14,6 @@ import type {
   TCacheCategory,
   TId,
   TProduct,
-  TProductStatus,
 } from '../types/index.js';
 
 /* ========== NULL CHECK FUNCTION ========== */
@@ -140,7 +140,7 @@ export const getProductSuggestionsPipeline = (query: string) => {
 
   return [
     { $search: { index: 'product-search', compound: { must, should } } },
-    { $match: { status: PRODUCT_STATUS_MAP.PUBLISHED } },
+    { $match: { status: PRODUCT_STATUSES_MAP.PUBLISHED } },
     { $project: { _id: 1, title: 1, slug: 1, thumbnail: 1, brand: 1 } },
     { $limit: 5 },
   ];

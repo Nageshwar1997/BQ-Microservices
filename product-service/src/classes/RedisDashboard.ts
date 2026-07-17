@@ -1,6 +1,6 @@
+import { DRAFT_PRODUCT_STEP_MAP } from '@beautinique/shared-constants';
 import { parseData } from '@beautinique/shared-utils';
 
-import { DRAFT_PRODUCT_STEP_MAP } from '../constants/index.js';
 import type { TBody, TDraftProduct } from '../controllers/product/saveDraftProduct.controller.js';
 import type { DashboardCacheProduct } from '../types/index.js';
 import { RedisHelper } from './RedisHelper.js';

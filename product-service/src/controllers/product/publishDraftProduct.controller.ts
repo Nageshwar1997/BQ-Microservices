@@ -1,10 +1,10 @@
 import { getUser } from '@beautinique/backend-utils';
 import { bullQueue } from '@beautinique/be-jobs';
+import { USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
 import { redisCache } from '../../classes/index.js';
-import { ROLES_MAP } from '../../constants/index.js';
 import { Product } from '../../models/index.js';
 import type { TCreateProductPayload } from '../../types/index.js';
 import {
@@ -25,7 +25,7 @@ export const publishDraftProductController = async (
   const user = getUser(req.user);
   const draft = req.body as TDraftProduct;
 
-  const isAdmin = [ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role);
+  const isAdmin = [USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER].includes(user.role as never);
 
   const productSku = generateSku({
     data: {

@@ -1,8 +1,8 @@
+import type { TTryOnSelection } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 
 import { redisCache } from '../../classes/index.js';
-import type { TTryOnCategoryMap } from '../../types/index.js';
 
 export interface TProductBasicInfo {
   title: string;
@@ -52,7 +52,7 @@ export interface TProductWithVariant {
 export type TProductStockAndVariants = TProductWithoutVariant | TProductWithVariant;
 
 export type TProductTryOnConfiguration =
-  { enabled: false } | { enabled: true; tryOn: TTryOnCategoryMap };
+  { enabled: false } | { enabled: true; tryOn: TTryOnSelection };
 
 export type TBody =
   | (TProductBasicInfo & { step: 0 })

@@ -1,19 +1,16 @@
+import type { TProductStatus } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
+import { SORT_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 import type { PipelineStage } from 'mongoose';
 
-import {
-  PRODUCT_DASHBOARD_PROJECTION,
-  ROLES_MAP,
-  SORT_MAP,
-  type TProductFilter,
-} from '../../constants/index.js';
+import { PRODUCT_DASHBOARD_PROJECTION } from '../../constants/index.js';
 import { Product } from '../../models/index.js';
 import type {
   IGetDashboardProductsQuery,
   TDashboardListProduct,
   TId,
-  TProductStatus,
+  TProductFilter,
 } from '../../types/index.js';
 import {
   getInitialProductCountsByStatus,
@@ -41,7 +38,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
 
   const statusMatch: Partial<Omit<TProductFilter, 'status'>> = {};
 
-  if (user.role === ROLES_MAP.SELLER) {
+  if (user.role === USER_ROLE_MAP.SELLER) {
     statusMatch.seller = user._id;
   }
 
@@ -52,7 +49,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
   const searchFilters: { equals: { path: keyof TProductFilter; value: TId | TProductStatus } }[] =
     [];
 
-  if (user.role === ROLES_MAP.SELLER) {
+  if (user.role === USER_ROLE_MAP.SELLER) {
     searchFilters.push({ equals: { path: 'seller', value: user._id } });
   }
 
@@ -66,7 +63,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
 
   const matchStage: Partial<TProductFilter> = {};
 
-  if (user.role === ROLES_MAP.SELLER) {
+  if (user.role === USER_ROLE_MAP.SELLER) {
     matchStage.seller = user._id;
   }
 
