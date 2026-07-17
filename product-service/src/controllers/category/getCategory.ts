@@ -25,7 +25,7 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
     return category.parent?.toString() === parentId;
   });
 
-  res.success(200, 'Categories fetched successfully', { categories });
+  res.success({ message: 'Categories fetched successfully', data: categories });
 };
 
 export const getCategoriesByHierarchy = async (_req: Request, res: Response) => {
@@ -60,5 +60,5 @@ export const getCategoriesByHierarchy = async (_req: Request, res: Response) => 
     .filter((category) => category.level === 1)
     .map((level1) => ({ ...level1, subcategories: buildHierarchy(level1._id) }));
 
-  res.success(200, 'Categories fetched successfully', { categories: hierarchy });
+  res.success({ message: 'Categories fetched successfully', data: hierarchy });
 };

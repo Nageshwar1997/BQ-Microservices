@@ -27,5 +27,5 @@ export const getDashboardProductBySlugController = async (req: Request, res: Res
     res.locals.afterFinish?.push(() => redisCache.dashboard.setProductBySlug(slug, dbProduct));
   }
 
-  res.success(200, 'Product fetched successfully', { product });
+  res.success({ message: 'Product fetched successfully', data: product });
 };

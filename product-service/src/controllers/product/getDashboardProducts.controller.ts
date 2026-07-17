@@ -154,7 +154,8 @@ export const getDashboardProductsController = async (req: Request, res: Response
     counts = populateProductCountsByStatus(counts, statusCounts);
   }
 
-  res.success(200, 'Products fetched successfully', {
+  res.success({
+    message: 'Products fetched successfully',
     data: {
       products: products,
       pagination: {

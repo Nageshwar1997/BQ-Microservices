@@ -9,7 +9,7 @@ export const getProductsSuggestionsController = async (req: Request, res: Respon
   const query = search.trim();
 
   if (!query) {
-    res.success(200, 'Suggestions fetched successfully', { suggestions: [] });
+    res.success({ message: 'Suggestions fetched successfully', data: [] });
     return;
   }
 
@@ -17,5 +17,5 @@ export const getProductsSuggestionsController = async (req: Request, res: Respon
 
   const suggestions = await Product.aggregate(pipeline);
 
-  res.success(200, 'Suggestions fetched successfully', { suggestions });
+  res.success({ message: 'Suggestions fetched successfully', data: suggestions });
 };

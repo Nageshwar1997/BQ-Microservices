@@ -137,5 +137,5 @@ export const publishDraftProductController = async (
     await redisCache.dashboard.deleteDraftProduct(user._id.toString());
   });
 
-  res.success(201, 'Product sent for review', { product: product.toObject() });
+  res.success({ statusCode: 201, message: 'Product sent for review', data: product.toObject() });
 };

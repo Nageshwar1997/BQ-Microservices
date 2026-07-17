@@ -21,5 +21,5 @@ export const publishPendingProductController = async (req: Request, res: Respons
     product.history.approvedAt = new Date();
   }
 
-  res.success(201, 'Product published successfully');
+  res.success({ statusCode: 201, message: 'Product published successfully' });
 };

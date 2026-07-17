@@ -11,5 +11,5 @@ export const getProductBySlugController = async (req: Request, res: Response) =>
     .lean()
     .exec();
 
-  res.success(200, 'Product fetched successfully', { product });
+  res.success({ message: 'Product fetched successfully', data: product });
 };

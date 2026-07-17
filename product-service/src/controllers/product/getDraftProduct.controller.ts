@@ -8,5 +8,5 @@ export const getDraftProductController = async (req: Request, res: Response) => 
 
   const draft = await redisCache.dashboard.getDraftProduct(userId.toString());
 
-  res.success(200, 'Draft product fetched successfully', { draft });
+  res.success( {message:'Draft product fetched successfully', data: draft });
 };

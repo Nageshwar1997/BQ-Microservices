@@ -70,5 +70,5 @@ export const deleteCategoryController = async (
 
   await redisCache.category.deleteCategory(String(categoryId));
 
-  res.success(200, 'Category deleted successfully');
+  res.success({ message: 'Category deleted successfully' });
 };
