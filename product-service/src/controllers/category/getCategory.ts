@@ -22,7 +22,7 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
     if (level === CATEGORY_LEVELS_MAP.L1) return true;
 
     // Level 2 & 3 → parent check required
-    return category.parent?.toString() === parentId;
+    return 'parent' in category && category.parent === parentId;
   });
 
   res.success({ message: 'Categories fetched successfully', data: categories });
@@ -36,7 +36,7 @@ export const getCategoriesByHierarchy = async (_req: Request, res: Response) => 
 
   // Prepare map
   allCategories.forEach((category) => {
-    if (!category.parent) return;
+    if (!('parent' in category)) return;
 
     if (!parentMap.has(category.parent)) {
       parentMap.set(category.parent, []);

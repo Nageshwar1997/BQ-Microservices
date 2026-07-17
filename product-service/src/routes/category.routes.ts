@@ -1,8 +1,7 @@
 import { tryCatchSession } from '@beautinique/backend-mongoose';
 import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
-import { validateZod } from '@beautinique/backend-zod';
-import { categoryUpdateZodSchema, categoryZodSchema } from '@beautinique/be-zod';
+import { categoryUpdateZodSchema, categoryZodSchema, validateZod } from '@beautinique/backend-zod';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';

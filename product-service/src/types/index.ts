@@ -1,5 +1,4 @@
-import type { TProductStatus, TSort, TTryOnSelection, TUserRole } from '@beautinique/backend-types';
-import type { TCategory } from '@beautinique/be-zod';
+import type { TCategoryZodSchema, TProductStatus, TSort, TTryOnSelection, TUserRole } from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
 
 import type { categorySchema, productSchema, variantSchema } from '../schemas/index.js';
@@ -15,7 +14,7 @@ export interface IIdStr {
 
 export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
 
-export type TCacheCategory = TCategory & IIdStr & Pick<ICategory, 'slug'>;
+export type TCacheCategory = TCategoryZodSchema & IIdStr & Pick<ICategory, 'slug'>;
 
 export type TCategoryHierarchy = TCacheCategory & { subcategories: TCategoryHierarchy[] };
 
