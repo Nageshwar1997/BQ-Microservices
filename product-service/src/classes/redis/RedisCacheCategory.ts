@@ -8,7 +8,7 @@ export class RedisCacheCategory extends RedisCacheHelper {
   private readonly CATEGORIES_KEY = 'bq:products:categories';
 
   public async getAllCategories(): Promise<TCacheCategory[]> {
-    // 1. Try Redis
+    // 1. Try cache
     const categories = Object.values(
       await this.getAllHashFields<TCacheCategory>(this.CATEGORIES_KEY),
     );

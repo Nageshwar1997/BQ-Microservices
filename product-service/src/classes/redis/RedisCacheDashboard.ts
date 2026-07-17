@@ -5,8 +5,9 @@ import type { TBody, TDraftProduct } from '../../controllers/index.js';
 import type { DashboardCacheProduct } from '../../types/index.js';
 import { RedisCacheHelper } from './RedisCacheHelper.js';
 
+const DASHBOARD_CACHE_TTL_SECONDS = 60 * 60 * 24; // 1 day
+
 export class RedisCacheDashboard extends RedisCacheHelper {
-  private readonly ONE_DAY_TTL = 60 * 60 * 24;
   private readonly DRAFT_PRODUCT_KEY = 'bq:products:draft';
   private readonly DASHBOARD_PRODUCT_KEY = 'bq:products:dashboard:product';
 
@@ -59,7 +60,7 @@ export class RedisCacheDashboard extends RedisCacheHelper {
 
     const field: keyof TDraftProduct = DRAFT_PRODUCT_STEP_MAP[step];
 
-    await this.setHashData(key, field, data, isNewDraft ? this.ONE_DAY_TTL : undefined);
+    await this.setHashData(key, field, data, isNewDraft ? DASHBOARD_CACHE_TTL_SECONDS : undefined);
 
     return this.getDraftHashData(key);
   }
@@ -79,7 +80,7 @@ export class RedisCacheDashboard extends RedisCacheHelper {
   }
 
   public async setProductBySlug(slug: string, product: DashboardCacheProduct) {
-    await this.setData(this.getProductKey(slug), this.ONE_DAY_TTL, product);
+    await this.setData(this.getProductKey(slug), DASHBOARD_CACHE_TTL_SECONDS, product);
   }
 
   public async deleteProductBySlug(slug: string) {
