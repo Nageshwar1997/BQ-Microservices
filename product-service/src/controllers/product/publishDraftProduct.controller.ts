@@ -1,11 +1,11 @@
 import { getObjId } from '@beautinique/backend-mongoose';
 import { getUser } from '@beautinique/backend-utils';
-import { bullQueue } from '@beautinique/be-jobs';
 import { USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
 import { redisCache } from '../../classes/index.js';
+import { jobProducer } from '../../configs/index.js';
 import { Product } from '../../models/index.js';
 import type { TCreateProductPayload } from '../../types/index.js';
 import {
@@ -126,12 +126,12 @@ export const publishDraftProductController = async (
 
   res.locals.afterCommit?.push(async () => {
     if (uniquePublicIds.length > 0) {
-      await bullQueue.addJob({
-        queueName: 'media-queue',
-        jobName: 'mark-multiple-media-as-used',
-        data: { publicIds: uniquePublicIds },
-        options: { attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
-      });
+      await jobProducer.addJob(
+        'media-queue',
+        'mark-multiple-media-as-used',
+        { publicIds: uniquePublicIds },
+        { attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
+      );
     }
 
     await redisCache.dashboard.deleteDraftProduct(user._id.toString());

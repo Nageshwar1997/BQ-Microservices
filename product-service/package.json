@@ -43,7 +43,6 @@
     "@beautinique/backend-response": "^1.0.2",
     "@beautinique/backend-utils": "^1.0.3",
     "@beautinique/backend-zod": "^1.0.9",
-    "@beautinique/be-jobs": "^1.0.6",
     "@beautinique/be-zod": "^1.0.23",
     "@beautinique/shared-constants": "^1.0.7",
     "@beautinique/shared-markdown-to-html": "^1.0.0",
