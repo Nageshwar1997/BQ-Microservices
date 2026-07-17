@@ -1,3 +1,4 @@
+import { getObjId } from '@beautinique/backend-mongoose';
 import type { TProductStatus } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import { SORT_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
@@ -14,7 +15,6 @@ import type {
 } from '../../types/index.js';
 import {
   getInitialProductCountsByStatus,
-  getObjId,
   populateProductCountsByStatus,
 } from '../../utils/index.js';
 

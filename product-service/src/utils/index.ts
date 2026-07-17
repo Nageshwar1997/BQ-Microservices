@@ -2,8 +2,11 @@ import { randomInt } from 'node:crypto';
 
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
 import type { TProductStatus } from '@beautinique/backend-types';
-import { PRODUCT_STATUSES, PRODUCT_STATUSES_MAP } from '@beautinique/shared-constants';
-import { Types } from 'mongoose';
+import {
+  CATEGORY_LEVELS_MAP,
+  PRODUCT_STATUSES,
+  PRODUCT_STATUSES_MAP,
+} from '@beautinique/shared-constants';
 import slugify from 'slugify';
 
 import type {
@@ -12,32 +15,8 @@ import type {
   IGenerateSku,
   ITextSearchOperator,
   TCacheCategory,
-  TId,
   TProduct,
 } from '../types/index.js';
-
-/* ========== NULL CHECK FUNCTION ========== */
-export const isNull = (value: unknown): value is null => value === null;
-/* ========== NULL CHECK FUNCTION ========== */
-export const isUndefined = (value: unknown): value is undefined => value === undefined;
-
-export const isNullOrUndefined = (value: unknown): value is null | undefined => {
-  return isNull(value) || isUndefined(value);
-};
-
-/* ========== OBJECT ID CONVERTER FUNCTION ========== */
-
-export const toObjectId = (id: string): TId => {
-  if (!Types.ObjectId.isValid(id)) {
-    throw new UnprocessableEntityError('Invalid object id');
-  }
-
-  return new Types.ObjectId(id);
-};
-
-export const getObjId = (id: string | TId): TId => {
-  return typeof id === 'string' ? toObjectId(id) : id;
-};
 
 /* ========== GENERATE SLUG ========== */
 export const generateSlug = (text: string, unique = true) => {
@@ -52,13 +31,13 @@ export const getMinimalCategory = (category: ICategory): TCacheCategory => {
   const { _id, level, description, parent, name, slug } = category;
   const base = { _id: _id.toString(), name, slug };
   switch (level) {
-    case 3: {
+    case CATEGORY_LEVELS_MAP.L3: {
       return { ...base, level, parent: parent?.toString() ?? '', description: description ?? '' };
     }
-    case 2: {
+    case CATEGORY_LEVELS_MAP.L2: {
       return { ...base, level, parent: parent?.toString() ?? '' };
     }
-    case 1:
+    case CATEGORY_LEVELS_MAP.L1:
     default: {
       return { ...base, level };
     }

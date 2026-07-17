@@ -1,3 +1,4 @@
+import { getObjId } from '@beautinique/backend-mongoose';
 import { getUser } from '@beautinique/backend-utils';
 import { bullQueue } from '@beautinique/be-jobs';
 import { USER_ROLE_MAP } from '@beautinique/shared-constants';
@@ -12,7 +13,6 @@ import {
   generateSku,
   generateSlug,
   getCloudinaryPublicIdFromUrl,
-  getObjId,
 } from '../../utils/index.js';
 import type { TDraftProduct } from './saveDraftProduct.controller.js';
 

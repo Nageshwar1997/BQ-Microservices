@@ -3,6 +3,7 @@ import {
   NotFoundError,
   UnprocessableEntityError,
 } from '@beautinique/backend-classes';
+import { getObjId } from '@beautinique/backend-mongoose';
 import { getUser } from '@beautinique/backend-utils';
 import type { TCategory } from '@beautinique/be-zod';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
@@ -12,7 +13,7 @@ import { type ClientSession } from 'mongoose';
 
 import { redisCache } from '../../classes/index.js';
 import { Category } from '../../models/index.js';
-import { generateSlug, getObjId } from '../../utils/index.js';
+import { generateSlug } from '../../utils/index.js';
 
 export const addCategoryController = async (
   req: Request,
