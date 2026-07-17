@@ -4,8 +4,8 @@ import {
   UnprocessableEntityError,
 } from '@beautinique/backend-classes';
 import { getObjId } from '@beautinique/backend-mongoose';
+import type { TCategoryUpdateZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
-import type { TUpdateCategory } from '@beautinique/be-zod';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
@@ -24,7 +24,7 @@ export const updateCategoryController = async (
 ) => {
   const { _id: userId } = getUser(req.user);
 
-  const { name, parent: parentId, description } = req.body as TUpdateCategory;
+  const { name, level, ...restBody } = req.body as TCategoryUpdateZodSchema;
 
   const categoryId = getObjId(req.params.categoryId?.toString() ?? '');
 
@@ -40,22 +40,8 @@ export const updateCategoryController = async (
     throw new NotFoundError('Category not found');
   }
 
-  const level = existingCategory.level;
-
-  /* ---------------- LEVEL FIELD VALIDATION ---------------- */
-
-  if (level === CATEGORY_LEVELS_MAP.L1) {
-    if (parentId || description) {
-      throw new UnprocessableEntityError(
-        `Level ${String(level)} category cannot have parent or description`,
-      );
-    }
-  }
-
-  if (level === CATEGORY_LEVELS_MAP.L2) {
-    if (description) {
-      throw new UnprocessableEntityError(`Level ${String(level)} category cannot have description`);
-    }
+  if (existingCategory.level !== level) {
+    throw new ConflictError('Cannot update category level');
   }
 
   /* ---------------- PARENT ---------------- */
@@ -63,8 +49,8 @@ export const updateCategoryController = async (
   let parent: ICategory['_id'] | undefined;
 
   // only validate/update parent if explicitly provided
-  if (parentId) {
-    parent = parentId ? getObjId(parentId) : undefined;
+  if ('parent' in restBody) {
+    parent = restBody.parent ? getObjId(restBody.parent) : undefined;
 
     if (parent) {
       // self parent check
@@ -102,7 +88,7 @@ export const updateCategoryController = async (
 
     const duplicateCategory = await Category.findOne({
       _id: { $ne: categoryId },
-      parent: parentId ? parent : existingCategory.parent,
+      parent: 'parent' in restBody ? parent : existingCategory.parent,
       slug,
     })
       .select('_id')
@@ -117,19 +103,19 @@ export const updateCategoryController = async (
 
   /* ---------------- UPDATE PAYLOAD ---------------- */
 
-  const payload: Partial<ICategory> = { updatedBy: userId };
+  const payload: Partial<ICategory> = { updatedBy: userId, };
 
   if (name) {
     payload.name = name;
     payload.slug = slug;
   }
 
-  if (parentId) {
+  if (!('parent' in restBody)) {
     payload.parent = parent;
   }
 
-  if (level === CATEGORY_LEVELS_MAP.L3 && description) {
-    payload.description = description;
+  if (level === CATEGORY_LEVELS_MAP.L3 && 'description' in restBody) {
+    payload.description = restBody.description;
   }
 
   /* ---------------- UPDATE ---------------- */
@@ -155,7 +141,7 @@ export const updateCategoryController = async (
   /* ---------------- PARENT LEAF SYNC ---------------- */
 
   const oldParentId = existingCategory.parent?.toString();
-  const newParentId = parentId ? parent?.toString() : oldParentId;
+  const newParentId = 'parent' in restBody ? parent?.toString() : oldParentId;
 
   if (oldParentId !== newParentId) {
     // old parent leaf check

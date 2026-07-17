@@ -1,4 +1,4 @@
-import type { TCategory } from '@beautinique/be-zod';
+import type { TCategoryLevel } from '@beautinique/backend-types';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 
@@ -7,7 +7,7 @@ import type { TCategoryHierarchy } from '../../types/index.js';
 
 export const getCategoriesByParentLevel = async (req: Request, res: Response) => {
   const parentId = req.query.parent as string;
-  const level = Number(req.query.level) as TCategory['level'] | undefined;
+  const level = Number(req.query.level) as TCategoryLevel | undefined;
 
   const allCategories = await redisCache.category.getAllCategories();
 

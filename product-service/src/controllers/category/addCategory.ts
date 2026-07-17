@@ -4,8 +4,8 @@ import {
   UnprocessableEntityError,
 } from '@beautinique/backend-classes';
 import { getObjId } from '@beautinique/backend-mongoose';
+import type { TCategoryZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
-import type { TCategory } from '@beautinique/be-zod';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
@@ -23,11 +23,11 @@ export const addCategoryController = async (
 ) => {
   const { _id: userId } = getUser(req.user);
 
-  const { name, level, parent: parentId, description } = req.body as TCategory;
+  const { name, level, ...restBody } = req.body as TCategoryZodSchema;
 
   /* ---------------- PARENT ---------------- */
 
-  const parent = parentId ? getObjId(parentId) : undefined;
+  const parent = 'parent' in restBody ? getObjId(restBody.parent) : undefined;
 
   if (parent) {
     const parentCategory = await Category.findById(parent)
@@ -69,7 +69,8 @@ export const addCategoryController = async (
     level,
     createdBy: userId,
     ...((level === CATEGORY_LEVELS_MAP.L2 || level === CATEGORY_LEVELS_MAP.L3) && { parent }),
-    ...(level === CATEGORY_LEVELS_MAP.L3 && { productCount: 0, description }),
+    ...(level === CATEGORY_LEVELS_MAP.L3 &&
+      'description' in restBody && { productCount: 0, description: restBody.description }),
   });
 
   try {
