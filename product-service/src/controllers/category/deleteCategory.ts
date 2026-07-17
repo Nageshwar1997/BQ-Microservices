@@ -13,9 +13,9 @@ export const deleteCategoryController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const categoryId = req.params.categoryId?.toString();
+  const categoryId = req.params.categoryId as string;
 
-  const categoryObjId = getObjId(String(categoryId));
+  const categoryObjId = getObjId(categoryId);
 
   /* ---------------- EXISTING CATEGORY ---------------- */
 
@@ -62,7 +62,7 @@ export const deleteCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCacheManager.category.deleteCategory(String(categoryId));
+  await redisCacheManager.category.deleteCategory(categoryId);
 
   res.success({ message: 'Category deleted successfully' });
 };
