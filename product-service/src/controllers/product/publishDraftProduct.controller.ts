@@ -1,6 +1,6 @@
 import { getObjId } from '@beautinique/backend-mongoose';
 import { getUser } from '@beautinique/backend-utils';
-import { USER_ROLE_MAP } from '@beautinique/shared-constants';
+import { PRODUCT_STATUSES_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
@@ -40,7 +40,7 @@ export const publishDraftProductController = async (
     seller: user._id,
     sku: productSku,
 
-    status: isAdmin ? 'PUBLISHED' : 'PENDING',
+    status: isAdmin ? PRODUCT_STATUSES_MAP.PUBLISHED : PRODUCT_STATUSES_MAP.PENDING,
 
     ...(isAdmin && { history: { approvedAt: new Date(), approvedBy: user._id } }),
 
