@@ -25,7 +25,7 @@ export const publishDraftProductController = async (
   const user = getUser(req.user);
   const draft = req.body as TDraftProduct;
 
-  const isAdmin = [ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role as never);
+  const isAdmin = [ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role);
 
   const productSku = generateSku({
     data: {
