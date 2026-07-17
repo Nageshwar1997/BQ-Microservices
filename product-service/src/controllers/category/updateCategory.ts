@@ -11,7 +11,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';
 
-import { redisCache } from '../../classes/index.js';
+import { redisCacheManager } from '../../configs/index.js';
 import { Category } from '../../models/index.js';
 import type { ICategory } from '../../types/index.js';
 import { generateSlug } from '../../utils/index.js';
@@ -171,7 +171,7 @@ export const updateCategoryController = async (
   /* ---------------- REDIS ---------------- */
 
   if (updatedCategory) {
-    await redisCache.category.setCategory(updatedCategory);
+    await redisCacheManager.category.setCategory(updatedCategory);;
   }
 
   res.success({ message: 'Category updated successfully' });

@@ -2,7 +2,7 @@ import type { TTryOnSelection } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 
-import { redisCache } from '../../classes/index.js';
+import { redisCacheManager } from '../../configs/index.js';
 
 export interface TProductBasicInfo {
   title: string;
@@ -73,7 +73,7 @@ export const saveDraftProductController = async (req: Request, res: Response) =>
   const { _id: userId } = getUser(req.user);
   const body = req.body as TBody;
 
-  const draft = await redisCache.dashboard.saveDraftProductStep(userId.toString(), body);
+  const draft = await redisCacheManager.dashboard.saveDraftProductStep(userId.toString(), body);
 
   res.success({ statusCode: 201, message: 'Product details saved in draft', data: draft });
 };

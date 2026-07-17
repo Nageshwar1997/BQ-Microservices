@@ -2,14 +2,14 @@ import type { TCategoryLevel } from '@beautinique/backend-types';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 
-import { redisCache } from '../../classes/index.js';
+import { redisCacheManager } from '../../configs/index.js';
 import type { TCategoryHierarchy } from '../../types/index.js';
 
 export const getCategoriesByParentLevel = async (req: Request, res: Response) => {
   const parentId = req.query.parent as string;
   const level = Number(req.query.level) as TCategoryLevel | undefined;
 
-  const allCategories = await redisCache.category.getAllCategories();
+  const allCategories = await redisCacheManager.category.getAllCategories();
 
   const categories = allCategories.filter((category) => {
     // If level is not provided → return all categories
@@ -29,7 +29,7 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
 };
 
 export const getCategoriesByHierarchy = async (_req: Request, res: Response) => {
-  const allCategories = await redisCache.category.getAllCategories();
+  const allCategories = await redisCacheManager.category.getAllCategories();
 
   // Parent wise map
   const parentMap = new Map<string, TCategoryHierarchy[]>();

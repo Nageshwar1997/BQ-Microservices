@@ -2,7 +2,7 @@ import { NotFoundError, PreconditionFailedError } from '@beautinique/backend-cla
 import { getUser } from '@beautinique/backend-utils';
 import type { NextFunction, Request, Response } from 'express';
 
-import { redisCache } from '../classes/index.js';
+import { redisCacheManager } from '../configs/index.js';
 import type { TDraftProduct } from '../controllers/index.js';
 
 export const createPendingProductPayload = async (
@@ -11,7 +11,7 @@ export const createPendingProductPayload = async (
   next: NextFunction,
 ) => {
   const user = getUser(req.user);
-  const draft = await redisCache.dashboard.getDraftProduct(user._id.toString());
+  const draft = await redisCacheManager.dashboard.getDraftProduct(user._id.toString());
 
   if (!draft) {
     throw new NotFoundError('Draft expired');

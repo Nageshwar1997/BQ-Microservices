@@ -4,8 +4,7 @@ import { USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
-import { redisCache } from '../../classes/index.js';
-import { jobProducer } from '../../configs/index.js';
+import { jobProducer, redisCacheManager } from '../../configs/index.js';
 import { Product } from '../../models/index.js';
 import type { TCreateProductPayload } from '../../types/index.js';
 import {
@@ -134,7 +133,7 @@ export const publishDraftProductController = async (
       );
     }
 
-    await redisCache.dashboard.deleteDraftProduct(user._id.toString());
+    await redisCacheManager.dashboard.deleteDraftProduct(user._id.toString());
   });
 
   res.success({ statusCode: 201, message: 'Product sent for review', data: product.toObject() });

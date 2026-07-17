@@ -4,7 +4,7 @@ import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
-import { redisCache } from '../../classes/index.js';
+import { redisCacheManager } from '../../configs/index.js';
 import { Category } from '../../models/index.js';
 
 export const deleteCategoryController = async (
@@ -62,7 +62,7 @@ export const deleteCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.category.deleteCategory(String(categoryId));
+  await redisCacheManager.category.deleteCategory(String(categoryId));
 
   res.success({ message: 'Category deleted successfully' });
 };
