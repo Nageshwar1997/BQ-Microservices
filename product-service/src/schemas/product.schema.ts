@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { UnprocessableEntityError } from '@beautinique/backend-classes';
 import { Schema } from 'mongoose';
 
 import {
@@ -29,22 +29,14 @@ export const variantSchema = new Schema(
 
 variantSchema.pre('validate', function () {
   if (this.originalPrice <= 0) {
-    throw new AppError({
-      message: 'Variant original price must be greater than zero',
-      code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        originalPrice: ['Variant original price must be greater than zero'],
-      },
+    throw new UnprocessableEntityError('Invalid original price', {
+      fieldErrors: { originalPrice: ['Variant original price must be greater than zero'] },
     });
   }
 
   if (this.sellingPrice > this.originalPrice) {
-    throw new AppError({
-      message: 'Invalid variant pricing',
-      code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        sellingPrice: ['Variant selling price cannot be greater than original price'],
-      },
+    throw new UnprocessableEntityError('Invalid variant pricing', {
+      fieldErrors: { sellingPrice: ['Variant original price must be greater than zero'] },
     });
   }
 
@@ -208,9 +200,7 @@ productSchema.pre('validate', function () {
    * PRICE VALIDATIONS
    */
   if (this.originalPrice <= 0) {
-    throw new AppError({
-      message: 'Original price must be greater than zero',
-      code: 'UNPROCESSABLE_ENTITY',
+    throw new UnprocessableEntityError('Invalid original price', {
       fieldErrors: {
         originalPrice: ['Original price must be greater than zero'],
       },
@@ -219,27 +209,18 @@ productSchema.pre('validate', function () {
 
   if (this.hasVariants) {
     if (!this.variants.length) {
-      throw new AppError({
-        message: 'At least one variant is required',
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new UnprocessableEntityError('At least one variant is required');
     }
 
     const skus = new Set<string>();
 
     for (const variant of this.variants) {
       if (!variant.sku) {
-        throw new AppError({
-          message: 'Variant SKU is required',
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new UnprocessableEntityError('Variant SKU is required');
       }
 
       if (skus.has(variant.sku)) {
-        throw new AppError({
-          message: 'Duplicate variant SKU found',
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new UnprocessableEntityError('Duplicate variant SKU found');
       }
 
       skus.add(variant.sku);
@@ -247,12 +228,8 @@ productSchema.pre('validate', function () {
   }
 
   if (this.sellingPrice > this.originalPrice) {
-    throw new AppError({
-      message: 'Incompatible selling price and original price',
-      code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        sellingPrice: ['Selling price cannot be greater than original price'],
-      },
+    throw new UnprocessableEntityError('Incompatible selling price and original price', {
+      fieldErrors: { sellingPrice: ['Selling price cannot be greater than original price'] },
     });
   }
 
@@ -274,11 +251,9 @@ productSchema.pre('validate', function () {
     const subcategories = TRY_ON_MAP[category];
 
     if (!subcategories.includes(subCategory as never)) {
-      throw new AppError({
-        message: 'Invalid try-on type',
-        code: 'UNPROCESSABLE_ENTITY',
+      throw new UnprocessableEntityError('Invalid try-on sub category', {
         fieldErrors: {
-          tryOn: [`Invalid type "${subCategory}" for category "${category}"`],
+          tryOn: [`Invalid sub category "${subCategory}" for category "${category}"`],
         },
       });
     }

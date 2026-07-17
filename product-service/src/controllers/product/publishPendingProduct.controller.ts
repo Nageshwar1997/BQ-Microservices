@@ -1,5 +1,5 @@
+import { NotFoundError } from '@beautinique/backend-classes';
 import { getUser } from '@beautinique/backend-utils';
-import { AppError } from '@beautinique/be-classes';
 import type { Request, Response } from 'express';
 
 import { Product } from '../../models/index.js';
@@ -11,7 +11,7 @@ export const publishPendingProductController = async (req: Request, res: Respons
   const product = await Product.findById(productId);
 
   if (!product) {
-    throw new AppError({ message: 'Product not found.', code: 'NOT_FOUND' });
+    throw new NotFoundError('Product not found');
   }
 
   product.status = 'PUBLISHED';

@@ -1,5 +1,9 @@
+import {
+  ConflictError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '@beautinique/backend-classes';
 import { getUser } from '@beautinique/backend-utils';
-import { AppError } from '@beautinique/be-classes';
 import type { TCategory } from '@beautinique/be-zod';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
@@ -32,7 +36,7 @@ export const addCategoryController = async (
       .exec();
 
     if (!parentCategory) {
-      throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
+      throw new NotFoundError('Parent category not found');
     }
 
     /*
@@ -41,10 +45,7 @@ export const addCategoryController = async (
     */
 
     if (parentCategory.level !== level - 1) {
-      throw new AppError({
-        message: `Invalid parent category for level ${String(level)}`,
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new UnprocessableEntityError(`Invalid parent category for level ${String(level)}`);
     }
   }
 
@@ -57,7 +58,7 @@ export const addCategoryController = async (
     .exec();
 
   if (existingCategory) {
-    throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+    throw new ConflictError('Category already exists');
   }
 
   /* ---------------- CREATE ---------------- */
@@ -74,7 +75,7 @@ export const addCategoryController = async (
     await category.save({ session });
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {
-      throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+      throw new ConflictError('Category already exists');
     }
 
     throw error;

@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { NotFoundError } from '@beautinique/backend-classes';
 import type { Request, Response } from 'express';
 
 import { redisCache } from '../../classes/index.js';
@@ -19,7 +19,7 @@ export const getDashboardProductBySlugController = async (req: Request, res: Res
       .exec();
 
     if (!dbProduct) {
-      throw new AppError({ code: 'NOT_FOUND', message: 'Product not found' });
+      throw new NotFoundError('Product not found');
     }
 
     product = dbProduct;

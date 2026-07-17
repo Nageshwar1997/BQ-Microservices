@@ -1,6 +1,10 @@
+import {
+  ConflictError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '@beautinique/backend-classes';
 import { getObjId } from '@beautinique/backend-mongoose';
 import { getUser } from '@beautinique/backend-utils';
-import { AppError } from '@beautinique/be-classes';
 import type { TUpdateCategory } from '@beautinique/be-zod';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
@@ -33,7 +37,7 @@ export const updateCategoryController = async (
     .exec();
 
   if (!existingCategory) {
-    throw new AppError({ message: 'Category not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('Category not found');
   }
 
   const level = existingCategory.level;
@@ -42,19 +46,15 @@ export const updateCategoryController = async (
 
   if (level === CATEGORY_LEVELS_MAP.L1) {
     if (parentId || description) {
-      throw new AppError({
-        message: `Level ${String(level)} category cannot have parent or description`,
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new UnprocessableEntityError(
+        `Level ${String(level)} category cannot have parent or description`,
+      );
     }
   }
 
   if (level === CATEGORY_LEVELS_MAP.L2) {
     if (description) {
-      throw new AppError({
-        message: `Level ${String(level)} category cannot have description`,
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new UnprocessableEntityError(`Level ${String(level)} category cannot have description`);
     }
   }
 
@@ -69,10 +69,7 @@ export const updateCategoryController = async (
     if (parent) {
       // self parent check
       if (parent.equals(categoryId)) {
-        throw new AppError({
-          message: 'Category cannot be its own parent',
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new ConflictError('Category cannot be its own parent');
       }
 
       const parentCategory = await Category.findById(parent)
@@ -82,7 +79,7 @@ export const updateCategoryController = async (
         .exec();
 
       if (!parentCategory) {
-        throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
+        throw new NotFoundError('Parent category not found');
       }
 
       /*
@@ -91,10 +88,7 @@ export const updateCategoryController = async (
       */
 
       if (parentCategory.level !== level - 1) {
-        throw new AppError({
-          message: `Invalid parent category for level ${String(level)}`,
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new UnprocessableEntityError(`Invalid parent category for level ${String(level)}`);
       }
     }
   }
@@ -117,7 +111,7 @@ export const updateCategoryController = async (
       .exec();
 
     if (duplicateCategory) {
-      throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+      throw new ConflictError('Category already exists');
     }
   }
 
@@ -152,7 +146,7 @@ export const updateCategoryController = async (
     }).exec();
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {
-      throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+      throw new ConflictError('Category already exists');
     }
 
     throw error;

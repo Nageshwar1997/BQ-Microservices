@@ -1,5 +1,5 @@
+import { NotFoundError, UnprocessableEntityError } from '@beautinique/backend-classes';
 import { getObjId } from '@beautinique/backend-mongoose';
-import { AppError } from '@beautinique/be-classes';
 import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
@@ -25,16 +25,13 @@ export const deleteCategoryController = async (
     .session(session);
 
   if (!category) {
-    throw new AppError({ message: 'Category not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('Category not found');
   }
 
   /* ---------------- CHILD VALIDATION ---------------- */
 
   if (!category.isLeaf) {
-    throw new AppError({
-      message: 'Cannot delete category with child categories',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new UnprocessableEntityError('Cannot delete category with child categories');
   }
 
   /* ---------------- PRODUCT VALIDATION ---------------- */
@@ -44,10 +41,7 @@ export const deleteCategoryController = async (
     category.productCount &&
     category.productCount > 0
   ) {
-    throw new AppError({
-      message: 'Cannot delete category with products',
-      code: 'UNPROCESSABLE_ENTITY',
-    });
+    throw new UnprocessableEntityError('Cannot delete category with products');
   }
 
   /* ---------------- DELETE CATEGORY ---------------- */

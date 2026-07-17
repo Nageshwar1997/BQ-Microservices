@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 
-import { AppError } from '@beautinique/be-classes';
+import { UnprocessableEntityError } from '@beautinique/backend-classes';
 import { Types } from 'mongoose';
 import slugify from 'slugify';
 
@@ -29,7 +29,7 @@ export const isNullOrUndefined = (value: unknown): value is null | undefined => 
 
 export const toObjectId = (id: string): TId => {
   if (!Types.ObjectId.isValid(id)) {
-    throw new AppError({ message: 'Invalid object id', code: 'UNPROCESSABLE_ENTITY' });
+    throw new UnprocessableEntityError('Invalid object id');
   }
 
   return new Types.ObjectId(id);
@@ -94,12 +94,12 @@ export const getCloudinaryPublicIdFromUrl = (url: string): string => {
     const match = /\/upload\/(?:[^/]+\/)*(?:v\d+\/)?(.+)$/.exec(pathname);
 
     if (!match?.[1]) {
-      throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
+      throw new UnprocessableEntityError('Invalid URL.');
     }
 
     return match[1].replace(/\.[^/.]+$/, '');
   } catch {
-    throw new AppError({ message: 'Invalid URL.', code: 'UNPROCESSABLE_ENTITY' });
+    throw new UnprocessableEntityError('Invalid URL.');
   }
 };
 

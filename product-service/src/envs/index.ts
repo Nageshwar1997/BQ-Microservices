@@ -97,7 +97,7 @@ export const envs = {
   // L
   // M
 
-  mongo_uri: MONGODB_URI,
+  mongo_uri: requireEnv(MONGODB_URI, 'MONGODB_URI'),
 
   // N
   // O

@@ -1,4 +1,4 @@
-import { AppError } from '@beautinique/be-classes';
+import { InternalServerError } from '@beautinique/backend-classes';
 import type { ClientSession } from 'mongoose';
 
 import { Category } from '../models/index.js';
@@ -20,9 +20,8 @@ export const findOrCreateCategory = async ({
 
     return category;
   } catch (error) {
-    throw new AppError({
-      message: error instanceof Error ? error.message : 'Category error',
-      code: 'INTERNAL_SERVER_ERROR',
+    throw new InternalServerError(error instanceof Error ? error.message : 'Category error', {
+      cause: error,
     });
   }
 };
