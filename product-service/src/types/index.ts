@@ -1,4 +1,15 @@
-import type { TCategoryZodSchema, TProductStatus, TSort, TTryOnSelection, TUserRole } from '@beautinique/backend-types';
+import type {
+  TCategoryZodSchema,
+  TProductBasicInfoZodSchema,
+  TProductDescriptionAndContentZodSchema,
+  TProductMediaAndGallerySchema,
+  TProductStatus,
+  TProductStockAndVariantsSchema,
+  TProductTryOnConfigurationZodSchema,
+  TSort,
+  TTryOnSelection,
+  TUserRole,
+} from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
 
 import type { categorySchema, productSchema, variantSchema } from '../schemas/index.js';
@@ -10,6 +21,21 @@ export interface IId {
 
 export interface IIdStr {
   _id: TStrId;
+}
+
+export type TDraftProductStepBody =
+  | (TProductBasicInfoZodSchema & { step: 0 })
+  | (TProductMediaAndGallerySchema & { step: 1 })
+  | (TProductDescriptionAndContentZodSchema & { step: 2 })
+  | (TProductStockAndVariantsSchema & { step: 3 })
+  | (TProductTryOnConfigurationZodSchema & { step: 4 });
+
+export interface TDraftProductDetails {
+  basicInfo: TProductBasicInfoZodSchema;
+  mediaAndGallery: TProductMediaAndGallerySchema;
+  descriptionAndContent: TProductDescriptionAndContentZodSchema;
+  stockAndVariants: TProductStockAndVariantsSchema;
+  tryOnConfiguration: TProductTryOnConfigurationZodSchema;
 }
 
 export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
@@ -41,12 +67,11 @@ export interface IUser extends IId {
   role: TUserRole;
 }
 
-type TTryOnDisabled =
-  { enabled: false } | ({ enabled: false; configured: boolean } & TTryOnSelection);
+type TDisabledTryOn = { enabled: false } & Partial<TTryOnSelection>;
 
-type TTryOnEnabled = { enabled: true; configured: boolean } & TTryOnSelection;
+type TEnabledTryOn = { enabled: true } & TTryOnSelection;
 
-export type ITryOn = TTryOnDisabled | TTryOnEnabled;
+export type ITryOn = (TDisabledTryOn | TEnabledTryOn) & { configured: boolean };
 
 export interface IGenerateSku {
   data: Record<string, string>;

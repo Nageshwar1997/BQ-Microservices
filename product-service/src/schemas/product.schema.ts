@@ -65,21 +65,26 @@ const tryOnSchema = new Schema<ITryOn>(
       type: String,
       enum: TRY_ON_CATEGORIES,
       required: function (): boolean {
-        return !!this.get('configured');
+        return this.get('configured');
       },
     },
     subCategory: {
       type: String,
       enum: TRY_ON_ALL_SUB_CATEGORIES,
       required: function (): boolean {
-        return !!this.get('configured');
+        return this.get('configured') && !!this.get('category');
       },
       validate: {
         validator(value: TTryOnSubCategory) {
           if (!this.get('configured')) {
             return true;
           }
-          const category = this.get('category') as TTryOnCategory;
+
+          const category = this.get('category') as TTryOnCategory | undefined;
+
+          if (!category) {
+            throw new UnprocessableEntityError('Category is required');
+          }
 
           return TRY_ON_MAP[category].includes(value as never);
         },
@@ -92,26 +97,26 @@ const tryOnSchema = new Schema<ITryOn>(
 );
 
 tryOnSchema.pre('validate', function () {
-  const configured = this.get('configured') as boolean;
+  const configured = this.get('configured');
 
   if (!configured) {
     return;
   }
 
-  const category = this.get('category') as TTryOnCategory | undefined;
-
-  const subCategory = this.get('subCategory') as TTryOnSubCategory | undefined;
+  const category = this.get('category');
 
   if (!category) {
-    throw new Error('Category is required');
+    throw new UnprocessableEntityError('Category is required');
   }
 
+  const subCategory = this.get('subCategory');
+
   if (!subCategory) {
-    throw new Error('Sub category is required');
+    throw new UnprocessableEntityError('Sub category is required');
   }
 
   if (!TRY_ON_MAP[category].includes(subCategory as never)) {
-    throw new Error('Invalid sub category for selected category');
+    throw new UnprocessableEntityError('Invalid sub category for selected category');
   }
 });
 

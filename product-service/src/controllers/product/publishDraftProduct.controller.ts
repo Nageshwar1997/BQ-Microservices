@@ -6,14 +6,13 @@ import type { ClientSession } from 'mongoose';
 
 import { jobProducer, redisCacheManager } from '../../configs/index.js';
 import { Product } from '../../models/index.js';
-import type { TCreateProductPayload } from '../../types/index.js';
+import type { TCreateProductPayload, TDraftProductDetails } from '../../types/index.js';
 import {
   extractImageUrlsFromHtml,
   generateSku,
   generateSlug,
   getCloudinaryPublicIdFromUrl,
 } from '../../utils/index.js';
-import type { TDraftProduct } from './saveDraftProduct.controller.js';
 
 export const publishDraftProductController = async (
   req: Request,
@@ -22,7 +21,7 @@ export const publishDraftProductController = async (
   session: ClientSession,
 ) => {
   const user = getUser(req.user);
-  const draft = req.body as TDraftProduct;
+  const draft = req.body as TDraftProductDetails;
 
   const isAdmin = [USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER].includes(user.role as never);
 
@@ -81,15 +80,19 @@ export const publishDraftProductController = async (
       'stockThreshold' in draft.stockAndVariants ? draft.stockAndVariants.stockThreshold : null,
 
     // TRY-ON CONFIGURATION
-    tryOn:
-      'tryOn' in draft.tryOnConfiguration
-        ? {
-            enabled: true,
-            configured: true,
-            category: draft.tryOnConfiguration.tryOn.category,
-            subCategory: draft.tryOnConfiguration.tryOn.subCategory as never,
-          }
-        : { enabled: false, configured: false },
+    tryOn: draft.tryOnConfiguration.enabled
+      ? {
+          enabled: true,
+          configured: true,
+          category: draft.tryOnConfiguration.tryOn.category,
+          subCategory: draft.tryOnConfiguration.tryOn.subCategory as never,
+        }
+      : {
+          enabled: false,
+          configured: false,
+          category: draft.tryOnConfiguration.tryOn?.category,
+          subCategory: draft.tryOnConfiguration.tryOn?.subCategory as never,
+        },
   };
 
   const product = new Product(payload);

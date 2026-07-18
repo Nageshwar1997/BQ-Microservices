@@ -1,8 +1,11 @@
 import { DRAFT_PRODUCT_STEP_MAP } from '@beautinique/shared-constants';
 import { parseData } from '@beautinique/shared-utils';
 
-import type { TBody, TDraftProduct } from '../../controllers/index.js';
-import type { DashboardCacheProduct } from '../../types/index.js';
+import type {
+  DashboardCacheProduct,
+  TDraftProductDetails,
+  TDraftProductStepBody,
+} from '../../types/index.js';
 import { RedisCacheHelper } from './RedisCacheHelper.js';
 
 const DASHBOARD_CACHE_TTL_SECONDS = 60 * 60 * 24; // 1 day
@@ -23,7 +26,7 @@ export class RedisCacheDashboard extends RedisCacheHelper {
 
   /* ================= DRAFT PRODUCT ================= */
 
-  private async getDraftHashData(key: string): Promise<Partial<TDraftProduct> | null> {
+  private async getDraftHashData(key: string): Promise<Partial<TDraftProductDetails> | null> {
     const data = await this.getAllHashFields<string>(key);
 
     if (Object.keys(data).length === 0) {
@@ -51,14 +54,14 @@ export class RedisCacheDashboard extends RedisCacheHelper {
     return this.getDraftHashData(this.getDraftProductKey(userId));
   }
 
-  public async saveDraftProductStep(userId: string, stepData: TBody) {
+  public async saveDraftProductStep(userId: string, stepData: TDraftProductStepBody) {
     const key = this.getDraftProductKey(userId);
 
     const isNewDraft = !(await this.exists(key));
 
     const { step, ...data } = stepData;
 
-    const field: keyof TDraftProduct = DRAFT_PRODUCT_STEP_MAP[step];
+    const field: keyof TDraftProductDetails = DRAFT_PRODUCT_STEP_MAP[step];
 
     await this.setHashData(key, field, data, isNewDraft ? DASHBOARD_CACHE_TTL_SECONDS : undefined);
 

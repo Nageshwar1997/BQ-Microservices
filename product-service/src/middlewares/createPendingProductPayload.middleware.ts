@@ -3,7 +3,7 @@ import { getUser } from '@beautinique/backend-utils';
 import type { NextFunction, Request, Response } from 'express';
 
 import { redisCacheManager } from '../configs/index.js';
-import type { TDraftProduct } from '../controllers/index.js';
+import type { TDraftProductDetails } from '../types/index.js';
 
 export const createPendingProductPayload = async (
   req: Request,
@@ -37,7 +37,7 @@ export const createPendingProductPayload = async (
     throw new PreconditionFailedError('Try-on configuration is missing');
   }
 
-  const body: TDraftProduct = {
+  const body: TDraftProductDetails = {
     basicInfo: draft.basicInfo,
     mediaAndGallery: draft.mediaAndGallery,
     descriptionAndContent: draft.descriptionAndContent,
