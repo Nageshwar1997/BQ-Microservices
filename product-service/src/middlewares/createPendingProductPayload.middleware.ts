@@ -1,5 +1,13 @@
 import { NotFoundError, PreconditionFailedError } from '@beautinique/backend-classes';
 import { getUser } from '@beautinique/backend-utils';
+import {
+  object,
+  productBasicInfoZodSchema,
+  productDescriptionAndContentZodSchema,
+  productMediaAndGallerySchema,
+  productStockAndVariantsSchema,
+  productTryOnConfigurationZodSchema,
+} from '@beautinique/backend-zod';
 import type { NextFunction, Request, Response } from 'express';
 
 import { redisCacheManager } from '../configs/index.js';
@@ -36,6 +44,14 @@ export const createPendingProductPayload = async (
   if (!draft.tryOnConfiguration) {
     throw new PreconditionFailedError('Try-on configuration is missing');
   }
+
+  const schema = object({
+    basicInfo: productBasicInfoZodSchema,
+    mediaAndGallery: productMediaAndGallerySchema,
+    descriptionAndContent: productDescriptionAndContentZodSchema,
+    stockAndVariants: productStockAndVariantsSchema,
+    tryOnConfiguration: productTryOnConfigurationZodSchema,
+  }); 
 
   const body: TDraftProductDetails = {
     basicInfo: draft.basicInfo,
