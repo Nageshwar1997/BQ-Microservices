@@ -17,10 +17,11 @@ export const publishPendingProductController = async (req: Request, res: Respons
 
   product.status = PRODUCT_STATUSES_MAP.PUBLISHED;
 
-  if (product.history) {
-    product.history.approvedBy = userId;
-    product.history.approvedAt = new Date();
-  }
+  product.history ??= {};
+  product.history.approvedBy = userId;
+  product.history.approvedAt = new Date();
+
+  await product.save();
 
   res.success({ statusCode: 201, message: 'Product published successfully' });
 };

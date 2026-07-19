@@ -103,14 +103,14 @@ export const updateCategoryController = async (
 
   /* ---------------- UPDATE PAYLOAD ---------------- */
 
-  const payload: Partial<ICategory> = { updatedBy: userId, };
+  const payload: Partial<ICategory> = { updatedBy: userId };
 
   if (name) {
     payload.name = name;
     payload.slug = slug;
   }
 
-  if (!('parent' in restBody)) {
+  if ('parent' in restBody) {
     payload.parent = parent;
   }
 
@@ -171,7 +171,9 @@ export const updateCategoryController = async (
   /* ---------------- REDIS ---------------- */
 
   if (updatedCategory) {
-    await redisCacheManager.category.setCategory(updatedCategory);;
+    res.locals.afterCommit?.push(async () => {
+      await redisCacheManager.category.setCategory(updatedCategory);
+    });
   }
 
   res.success({ message: 'Category updated successfully' });

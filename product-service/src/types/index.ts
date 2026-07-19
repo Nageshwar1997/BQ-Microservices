@@ -91,10 +91,9 @@ export type TDashboardListProduct = Pick<
   | 'tryOn'
   | 'soldCount'
   | 'hasVariants'
-  | 'variants'
   | 'createdAt'
   | 'updatedAt'
->;
+> & { variants: Pick<TVariant, '_id' | 'stock'>[] };
 
 export interface IGetDashboardProductsQuery {
   page?: string;

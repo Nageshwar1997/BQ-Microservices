@@ -37,7 +37,9 @@ variantSchema.pre('validate', function () {
 
   if (this.sellingPrice > this.originalPrice) {
     throw new UnprocessableEntityError('Invalid variant pricing', {
-      fieldErrors: { sellingPrice: ['Variant original price must be greater than zero'] },
+      fieldErrors: {
+        sellingPrice: ['Variant selling price cannot be greater than original price'],
+      },
     });
   }
 
@@ -243,25 +245,4 @@ productSchema.pre('validate', function () {
    * AUTO CALCULATE DISCOUNT
    */
   this.discount = Math.round(((this.originalPrice - this.sellingPrice) / this.originalPrice) * 100);
-
-  /*
-   * TRY-ON VALIDATIONS
-   *
-   * If try-on is enabled, make sure
-   * category and type are provided.
-   */
-
-  if (this.tryOn?.enabled) {
-    const { category, subCategory } = this.tryOn;
-
-    const subcategories = TRY_ON_MAP[category];
-
-    if (!subcategories.includes(subCategory as never)) {
-      throw new UnprocessableEntityError('Invalid try-on sub category', {
-        fieldErrors: {
-          tryOn: [`Invalid sub category "${subCategory}" for category "${category}"`],
-        },
-      });
-    }
-  }
 });

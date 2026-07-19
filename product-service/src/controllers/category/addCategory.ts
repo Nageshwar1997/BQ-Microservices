@@ -91,7 +91,9 @@ export const addCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCacheManager.category.setCategory(category);
+  res.locals.afterCommit?.push(async () => {
+    await redisCacheManager.category.setCategory(category);
+  });
 
   res.success({ statusCode: 201, message: 'Category created successfully' });
 };

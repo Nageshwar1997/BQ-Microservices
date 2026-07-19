@@ -1,16 +1,16 @@
-# User Service — Documentation
+# Product Service — Documentation
 
 **Project:** Beautinique (BQ-Microservices)
-**Service:** User Service
+**Service:** Product Service
 **Author:** Nageshwar Pawar
 **Version:** 1.0.0
-**Port:** 8081
+**Port:** configured via `PORT` (see [§4](#4-environment-variables))
 
 ---
 
 ## 1. Overview
 
-The User Service is the central identity and authentication microservice for the **Beautinique** platform. It handles manual (email/phone + password) and OAuth (Google, LinkedIn, GitHub) login, OTP-verified registration, forgot/change/set password flows, session lookup, and a Redis-backed cache for user sessions and OTP state. Password reset/registration OTPs are delivered by enqueuing `send-otp` jobs onto BullMQ's `mail-queue`, consumed end-to-end by `mail-service`. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
+The Product Service owns the product catalog and category tree for the **Beautinique** platform: a multi-step draft → review → publish flow for seller-submitted products, category CRUD with a 3-level hierarchy (L1/L2/L3), a searchable/paginated seller & admin dashboard, public product lookup, Atlas Search-powered autocomplete suggestions, and a Redis-backed cache for categories and dashboard products. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
 
 ---
 
@@ -21,11 +21,9 @@ The User Service is the central identity and authentication microservice for the
 | Runtime                    | Node.js (ES2025, ESM)                                                                       |
 | Language                   | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                      |
 | Framework                  | Express.js 5.x                                                                              |
-| Database                   | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`)                                 |
+| Database                   | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`), plus MongoDB Atlas Search (`$search`) for product/dashboard search |
 | Cache                      | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)             |
-| Background jobs / queue    | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only** (see [§16](#16-background-jobs-mail-queue-producer-only)) |
-| OAuth                      | `google-auth-library` (Google), hand-rolled REST calls via `axios` (LinkedIn, GitHub)       |
-| Password hashing           | `bcryptjs`                                                                                   |
+| Background jobs / queue    | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only**, `media-queue` (see [§16](#16-background-jobs-media-queue-producer-only)) |
 | Validation                 | Zod, via `@beautinique/backend-zod`                                                          |
 | Logging                    | Pino, via `@beautinique/backend-logger`                                                      |
 | API docs                   | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                       |
@@ -33,6 +31,7 @@ The User Service is the central identity and authentication microservice for the
 | Shared response envelope   | `@beautinique/backend-response`                                                              |
 | Shared utilities           | `@beautinique/backend-utils`, `@beautinique/backend-mongoose`, `@beautinique/shared-utils`  |
 | Shared constants/types     | `@beautinique/shared-constants`, `@beautinique/backend-types`                                |
+| Slug generation            | `slugify`                                                                                     |
 | Code quality                | ESLint (flat config, type-checked + strict), Prettier                                        |
 
 ---
@@ -40,7 +39,7 @@ The User Service is the central identity and authentication microservice for the
 ## 3. Project Structure
 
 ```
-user-service/
+product-service/
 ├── src/
 │   ├── index.ts                       # Entry point: loads env, wires SIGINT/SIGTERM, calls startup()
 │   ├── app.ts                         # Express app: middleware chain, routes, error handlers
@@ -51,65 +50,61 @@ user-service/
 │   │   └── database-events.ts         #   Mongo connection event → logger wiring
 │   ├── classes/
 │   │   ├── index.ts                   #   Re-exports
-│   │   ├── apis/
-│   │   │   ├── index.ts               #   Re-exports
-│   │   │   ├── ApiRequest.ts          #   Axios base class; wraps failures as backend-classes AppError subclasses
-│   │   │   └── socialAuth/
-│   │   │       ├── index.ts           #   Re-exports
-│   │   │       ├── Google.ts          #   Google OAuth2Client wrapper
-│   │   │       ├── Linkedin.ts        #   LinkedIn OAuth (hand-rolled REST calls)
-│   │   │       └── Github.ts          #   GitHub OAuth (hand-rolled REST calls)
 │   │   └── redis/
-│   │       ├── index.ts               #   RedisCacheManager - owns the client, connect()/close(), .user/.token
+│   │       ├── index.ts               #   RedisCacheManager - owns the client, connect()/close(), .category/.dashboard
 │   │       ├── RedisCacheHelper.ts    #   Base class: string/hash get/set/delete primitives
-│   │       ├── RedisCacheUser.ts      #   User cache (cache-aside over MongoDB)
-│   │       └── RedisCacheToken.ts     #   OTP session cache
+│   │       ├── RedisCacheCategory.ts  #   Category tree cache (cache-aside over MongoDB, 1-day self-healing TTL)
+│   │       └── RedisCacheDashboard.ts #   Draft-product + published-product-by-slug cache (1-day TTL)
 │   ├── configs/
-│   │   └── index.ts                   #   Singletons: databaseConfigs, logger, jobProducer, redisClient, redisCacheManager, google, linkedin, github
+│   │   └── index.ts                   #   Singletons: databaseConfigs, logger, jobProducer, redisClient, redisCacheManager
 │   ├── constants/
-│   │   └── index.ts                   #   LOGGER_BASE_OPTIONS, route paths, OAuth provider API routes
+│   │   └── index.ts                   #   LOGGER_BASE_OPTIONS, route paths (METHODS_AND_PATHS), PRODUCT_DASHBOARD_PROJECTION
 │   ├── controllers/
 │   │   ├── index.ts                   #   Re-exports all controllers
-│   │   ├── user.controller.ts         #   Session / get current user
-│   │   ├── login.controller.ts        #   Manual + OAuth login flows
-│   │   ├── register.controller.ts     #   OTP-based registration flow
-│   │   ├── password.controller.ts     #   Forgot/change/set password flows
-│   │   └── logout.controller.ts       #   Logout handler
+│   │   ├── category/
+│   │   │   ├── addCategory.ts         #   Create a category (L1/L2/L3)
+│   │   │   ├── updateCategory.ts      #   Update a category (name/parent/description)
+│   │   │   ├── deleteCategory.ts      #   Delete a leaf category with no products
+│   │   │   └── getCategory.ts         #   List by parent+level / full hierarchy tree
+│   │   └── product/
+│   │       ├── saveDraftProduct.controller.ts        #   Save one step of a multi-step draft (Redis hash)
+│   │       ├── publishDraftProduct.controller.ts     #   Turn a complete draft into a real Product document
+│   │       ├── publishPendingProduct.controller.ts   #   Approve a PENDING product → PUBLISHED (not yet routed, see §24)
+│   │       ├── getDraftProduct.controller.ts          #   Fetch the caller's in-progress draft
+│   │       ├── getDashboardProducts.controller.ts     #   Paginated/sortable/searchable seller+admin listing
+│   │       ├── getDashboardProductBySlug.controller.ts #  Single product lookup for the dashboard (cache-aside)
+│   │       ├── getProductBySlugController (getProductBySlug.controller.ts) # Public storefront product lookup
+│   │       └── getProductsSuggestions.controller.ts   #   Atlas Search autocomplete suggestions
 │   ├── docs/
 │   │   └── openapi.ts                 #   Hand-written OpenAPI 3.0 spec, served at /docs
 │   ├── envs/
 │   │   └── index.ts                   #   process.env → typed envs, fail-fast on missing/invalid vars
 │   ├── middlewares/
-│   │   └── index.ts                   #   authenticate, authorize
+│   │   ├── auth.middleware.ts                        #   authenticate, authorize
+│   │   └── createPendingProductPayload.middleware.ts  #   Loads the caller's Redis draft into req.body before publish
 │   ├── models/
-│   │   └── index.ts                   #   User, Seller, Wishlist (Mongoose)
+│   │   └── index.ts                   #   Category, Product (Mongoose)
 │   ├── routes/
 │   │   ├── index.ts                   #   Root router (/api/v1)
-│   │   ├── auth/
-│   │   │   ├── index.ts               #   Auth group router
-│   │   │   ├── login.route.ts         #   Login + OAuth routes
-│   │   │   ├── register.route.ts      #   Registration + OTP routes
-│   │   │   └── password.route.ts      #   Password management routes
-│   │   └── user/
-│   │       └── index.ts               #   User routes (session)
+│   │   ├── category.routes.ts         #   Category CRUD + listing routes
+│   │   └── product.routes.ts          #   Draft, dashboard, public product routes
 │   ├── schemas/                       # Mongoose schema definitions
 │   │   ├── index.ts
-│   │   ├── user.schema.ts
-│   │   ├── seller.schema.ts
-│   │   └── wishlist.schema.ts
+│   │   ├── category.schema.ts
+│   │   └── product.schema.ts          #   Also defines variantSchema, historySchema, tryOnSchema
 │   ├── services/
-│   │   └── index.ts                   #   User CRUD/query service functions
+│   │   └── index.ts                   #   findOrCreateCategory (upsert helper)
 │   ├── types/
-│   │   ├── index.ts                   #   Core interfaces (IUser, ISeller, TApiResponse, etc.)
+│   │   ├── index.ts                   #   Core interfaces (ICategory, TProduct, TDashboardListProduct, etc.)
 │   │   └── express.d.ts               #   Request.user augmentation
 │   └── utils/
-│       └── index.ts                   #   OAuth payload builder, minimal-user projector, OTP/token generators
+│       └── index.ts                   #   Slug/SKU generation, minimal-category projector, Atlas Search pipelines
 ├── scripts/
 │   └── generate-html.mjs              # Renders README.md → public/index.html, runs via "postbuild"
 ├── public/
 │   └── index.html                     # Pre-rendered README, served by GET /
 ├── dist/                              # Compiled JavaScript output (git-ignored)
-├── logs/                              # error.log, warning.log, success.log, request.log
+├── logs/                              # Pino log output
 ├── package.json
 ├── tsconfig.json
 ├── eslint.config.mjs
@@ -140,104 +135,92 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.3 Redis — Cache
 
-| Variable          | Description                          |
-| ------------------ | ------------------------------------- |
-| `CACHE_HOST`       | Redis host used for the user/OTP cache |
-| `CACHE_PORT`       | Redis port                            |
-| `CACHE_PASSWORD`   | Redis password                        |
-| `CACHE_USERNAME`   | Redis username                        |
+| Variable          | Description                                    |
+| ------------------ | ----------------------------------------------- |
+| `CACHE_HOST`       | Redis host used for the category/dashboard cache |
+| `CACHE_PORT`       | Redis port                                      |
+| `CACHE_PASSWORD`   | Redis password                                  |
+| `CACHE_USERNAME`   | Redis username                                  |
 
 ### 4.4 Redis — BullMQ
 
 | Variable            | Description                                             |
 | -------------------- | --------------------------------------------------------- |
-| `BULL_MQ_HOST`       | Redis host used for the `mail-queue` BullMQ connection    |
+| `BULL_MQ_HOST`       | Redis host used for the `media-queue` BullMQ connection    |
 | `BULL_MQ_PORT`       | Redis port                                                |
 | `BULL_MQ_PASSWORD`   | Redis password                                            |
 | `BULL_MQ_USERNAME`   | Redis username                                            |
 
-**This Redis instance is shared** with `mail-service`, which runs the `mail-queue` worker — it must point to the same instance in both services.
-
-### 4.5 OAuth Credentials
-
-| Variable                       | Description                    |
-| -------------------------------- | -------------------------------- |
-| `GOOGLE_CLIENT_ID`               | Google OAuth Client ID          |
-| `GOOGLE_CLIENT_SECRET`           | Google OAuth Client Secret      |
-| `LINKEDIN_CLIENT_ID`             | LinkedIn OAuth Client ID        |
-| `LINKEDIN_CLIENT_SECRET`         | LinkedIn OAuth Client Secret    |
-| `GITHUB_CLIENT_ID`               | GitHub OAuth Client ID          |
-| `GITHUB_CLIENT_SECRET`           | GitHub OAuth Client Secret      |
-
-There's no `*_REDIRECT_ENDPOINT` env var per provider anymore — each provider's callback URL is now derived in code (`getSocialAuthRedirectURL`, see [§13](#13-utilities-utilsindexts)) from the service's own route paths instead of being configured separately, so it can't drift out of sync with the actual routes.
-
-### 4.6 Gateway URL
-
-| Variable                                 | Description                                                                    |
-| ------------------------------------------- | ------------------------------------------------------------------------------------ |
-| `GATEWAY_DEV_URL` / `GATEWAY_PROD_URL`      | Base URL prepended to the computed OAuth callback path (dev/prod selected by `IS_DEV`), exposed as `envs.gateway_url` |
-
-`USER_SERVICE_*_URL`, `MAIL_SERVICE_*_URL`, and `MEDIA_SERVICE_*_URL` were removed — they were validated at startup but never actually read anywhere in the code. The OTP mail goes out via the `mail-queue` BullMQ job, not a direct HTTP call to `mail-service`, so no cross-service base URL is needed today.
+**This Redis instance is shared** with `media-service`, which runs the `media-queue` worker — it must point to the same instance in both services.
 
 ---
 
 ## 5. Database Models
 
-### 5.1 User Schema (`user.schema.ts`)
+### 5.1 Category Schema (`category.schema.ts`)
 
-Collection: `users`
+Collection: `categories`
 
-| Field           | Type             | Required | Default               | Notes                          |
-| ----------------- | ------------------ | ---------- | ------------------------ | --------------------------------- |
-| `firstName`      | String            | Yes       | —                        | Trimmed                          |
-| `lastName`       | String            | Yes       | —                        | Trimmed                          |
-| `phoneNumber`    | String            | No        | `""`                     | Trimmed, partial unique index    |
-| `email`          | String            | Yes       | —                        | Lowercased, trimmed              |
-| `avatar`         | String            | No        | `""`                     | Trimmed                          |
-| `role`           | String (enum)     | No        | `"USER"`                 | `USER`, `SELLER`, `ADMIN`, `MASTER` (`USER_ROLES` from `@beautinique/shared-constants`) |
-| `password`       | String            | No        | `""`                     | Bcrypt-hashed, `""` for OAuth-only accounts |
-| `providers`      | [String] (enum)   | No        | `["MANUAL"]`              | `MANUAL`, `GOOGLE`, `LINKEDIN`, `GITHUB` (`AUTH_PROVIDERS`) |
-| `status`         | String (enum)     | No        | `"ACTIVE"`                | `ACTIVE`, `INACTIVE`, `DELETED` (service-local `USER_STATUS`) |
-| `reason`         | String            | No        | —                        | Deactivation / deletion note      |
+| Field           | Type                | Required | Default   | Notes                                                        |
+| ----------------- | --------------------- | ---------- | ----------- | ---------------------------------------------------------------- |
+| `name`           | String               | Yes       | —          | Trimmed, 2–120 chars                                            |
+| `slug`           | String               | Yes       | —          | Lowercased, auto-derived from `name` on every `validate` (non-unique slug — uniqueness is enforced by the compound `{parent,slug}` index, not the slug alone) |
+| `description`    | String               | No        | —          | 10–150 chars; only meaningful for L3 (cleared for L1/L2, see below) |
+| `level`          | Number (enum)        | Yes       | —          | `1` (main), `2` (sub), `3` (final/product-facing) — `CATEGORY_LEVELS_MAP` |
+| `parent`         | ObjectId ref `Category` | No     | —          | Cleared for L1 (root categories have no parent)                  |
+| `isLeaf`         | Boolean              | No        | `true`     | Flipped to `false` when a category gains its first child, back to `true` when its last child is removed/reparented |
+| `productCount`   | Number               | No        | —          | Maintained mainly for L3 (product-facing) categories             |
+| `createdBy`      | ObjectId             | Yes       | —          | Caller's user id                                                  |
+| `updatedBy`      | ObjectId             | No        | —          | Caller's user id on update                                        |
+
+Also has `timestamps: true`, `versionKey: false`, and a case-insensitive `collation: { locale: 'en', strength: 1 }` for Atlas Search friendliness.
+
+**Pre-validate hook:** auto-derives `slug` from `name`; for `level: L1` clears both `parent` and `description`; for `level: L2` clears `description`.
+
+**Indexes:**
+- `{ parent: 1, slug: 1 }` unique — a category's slug only has to be unique among its siblings, not globally
+- `{ name: 'text', slug: 'text', description: 'text' }`
+- `{ createdBy: 1, level: 1 }`, `{ parent: 1, level: 1 }`, `{ isLeaf: 1, level: 1 }`
+- Single-field indexes on `name`, `slug`, `description`, `level`, `parent`, `isLeaf`, `productCount`, `createdBy`, `updatedBy`
+
+### 5.2 Product Schema (`product.schema.ts`)
+
+Collection: `products`
+
+| Field                | Type                        | Required | Default        | Notes                                                     |
+| ----------------------- | ----------------------------- | ---------- | ---------------- | --------------------------------------------------------------- |
+| `title`                | String                       | Yes       | —              | 2–200 chars                                                    |
+| `sku`                  | String                       | Yes       | —              | Uppercased, globally unique (own index, not just `unique: true` on the path) |
+| `brand`                | String                       | Yes       | —              | 2–100 chars                                                    |
+| `originalPrice` / `sellingPrice` | Number             | Yes       | —              | `sellingPrice` cannot exceed `originalPrice`; `originalPrice` must be > 0 |
+| `discount`             | Number                       | No        | `0`             | Auto-calculated from the two prices on every `validate`         |
+| `stock` / `stockThreshold` | Number                  | No        | `null`          | Only meaningful when `hasVariants: false`                       |
+| `shortDescription`     | String                       | Yes       | —              | 10–300 chars                                                    |
+| `description`          | String                       | Yes       | —              | ≥107 chars                                                       |
+| `instructions` / `ingredients` / `additional` | String       | No        | —              | ≥20 chars each, when present                                     |
+| `slug`                 | String                       | Yes       | —              | Globally unique                                                  |
+| `images` / `thumbnail` | [String] / String            | Yes       | —              | Cloudinary URLs                                                   |
+| `video`                | String                       | No        | —              | Cloudinary URL                                                    |
+| `category`             | ObjectId ref `Category`      | Yes       | —              | Always the deepest (L3) category                                 |
+| `seller`               | ObjectId                     | Yes       | —              | Owning seller's user id                                           |
+| `soldCount` / `returnCount` / `totalReviews` / `totalRating` | Number  | No | `0`     | —                                                                |
+| `averageRating`        | Number                       | No        | `0`             | 0–5                                                              |
+| `reviews`               | [ObjectId ref `Review`]      | No        | `[]`            | External, owned by another service                               |
+| `hasVariants`           | Boolean                      | Yes       | —              | Gates whether `stock`/`stockThreshold` or `variants` is meaningful |
+| `variants`             | [variantSchema]              | No        | `[]`            | Required (non-empty, unique SKUs) when `hasVariants: true`        |
+| `status`               | String (enum)                | No        | `"PENDING"`     | `DELETED`, `PENDING`, `PUBLISHED`, `REJECTED`, `BLOCKED` (`PRODUCT_STATUSES_MAP`) |
+| `history`              | historySchema                | No        | —              | `approvedBy`/`approvedAt`, `blockedBy`/`blockedAt`, `rejectedBy`/`rejectedAt`/`rejectReason` |
+| `tryOn`                | tryOnSchema                  | No        | —              | Virtual try-on configuration, see below                          |
 
 Also has `timestamps: true`, `versionKey: false`.
 
-**Indexes:**
-- `{ email: 1 }` unique
-- `{ phoneNumber: 1 }` unique, partial (`$exists: true, $ne: ''`)
-- `{ firstName: 1 }`, `{ lastName: 1 }`, `{ firstName: 1, lastName: 1 }` (search)
-- `{ role: 1 }`, `{ status: 1 }` (filter)
-- `{ status: 1, role: 1, createdAt: -1 }` (admin listing)
+**`variantSchema`** (subdocument): `sku`, `type` (`Color`/`Text`), `label`, `value`, `originalPrice`, `sellingPrice`, `discount` (auto-calculated), `stock`, `stockThreshold`, `images`, `thumbnail`. Its own `pre('validate')` enforces `originalPrice > 0` and `sellingPrice <= originalPrice` per variant.
 
-### 5.2 Seller Schema (`seller.schema.ts`)
+**`tryOnSchema`** (subdocument): `configured` (bool), `enabled` (bool), `category` (enum `TRY_ON_CATEGORIES`, required when `configured`), `subCategory` (enum `TRY_ON_ALL_SUB_CATEGORIES`, required when `configured` + `category` set, validated against `TRY_ON_MAP[category]`). Its own `pre('validate')` re-checks the same category/sub-category relationship — this is the **only** place that validation runs; `productSchema`'s own hook only computes `discount` and does not duplicate it (Mongoose runs a subdocument's own validators automatically as part of validating the parent).
 
-Collection: `sellers`
+**Indexes:** text search (`title`, `brand`, `shortDescription`), unique `sku`, `{category,status}`, `{seller,status,createdAt}`, `sellingPrice`, `soldCount`, `averageRating`, `{status,createdAt}`, `tryOn.configured`, `hasVariants`, and three category+status compound indexes for price/rating/sales-sorted category listings.
 
-| Field                | Type                  | Required | Notes                                             |
-| ---------------------- | ----------------------- | ---------- | ---------------------------------------------------- |
-| `user`                | ObjectId ref `User`     | Yes        | Links to user account                                |
-| `businessAddress`     | Object                  | Yes        | `address`, `landmark`, `city`, `state` (enum `STATES_AND_UTS`), `pinCode` (6-digit), `country` (enum `COUNTRIES`, default `"India"`), `pan` (10-char), `gst` (15-char) |
-| `personalDetails`     | Object                  | Yes        | `name`, `email`, `phoneNumber`                       |
-| `businessDetails`     | Object                  | Yes        | `name`, `email`, `phoneNumber`, `category` (enum `SELLER_TYPES`) |
-| `requiredDocuments`   | Object                  | Yes        | `gst`, `itr`, `geoTagging`, `addressProof` (URLs/paths) |
-| `approvalStatus`      | String (enum)           | —          | `PENDING`, `APPROVED`, `REJECTED` (default `"PENDING"`) |
-| `status`              | String (enum)           | —          | `ACTIVE`, `INACTIVE`, `DELETED` (default `"ACTIVE"`)  |
-| `reason`              | String                  | —          | —                                                    |
-
-**Indexes:** `{ email: 1 }` unique (top-level field, despite email actually living under `personalDetails`/`businessDetails` — no top-level `email` field is defined), `{ phoneNumber: 1 }` unique (same caveat).
-
-### 5.3 Wishlist Schema (`wishlist.schema.ts`)
-
-Collection: `wishlists`
-
-| Field       | Type                      | Required | Notes                       |
-| ------------- | --------------------------- | ---------- | ------------------------------ |
-| `user`       | ObjectId ref `User`         | Yes        | Unique per user                |
-| `products`   | [ObjectId ref `Product`]    | No         | Array of product references    |
-
-**Indexes:** `{ user: 1 }` unique (one wishlist per user).
-
-*Note: `Seller` and `Wishlist` models are defined but **no controllers/routes exist for them yet** in this service — they're available for other services (or a future admin surface) to use directly against the shared MongoDB.*
+*Note: there is no `Review` model in this service — `reviews` is an array of external references only.*
 
 ---
 
@@ -253,51 +236,48 @@ All `/api/v1/*` routes require the `X-Service-Secret` header and a ready MongoDB
 | GET     | `/docs`      | None  | Interactive Swagger UI (spec in `src/docs/openapi.ts`)             |
 | GET     | `/health`    | None  | Liveness + MongoDB connection status                              |
 
-### 6.2 Login — `/api/v1/auth/login`
+### 6.2 Category — `/api/v1/category`
 
-| Method | Path                                     | Auth   | Description                          |
-| -------- | ------------------------------------------- | -------- | ---------------------------------------- |
-| POST    | `/auth/login/manual`                       | None    | Manual email/phone + password login    |
-| GET     | `/auth/login/oauth/google/redirect`         | None    | Get Google OAuth consent URL           |
-| GET     | `/auth/login/oauth/google/callback`         | None    | Google OAuth callback                  |
-| GET     | `/auth/login/oauth/linkedin/redirect`       | None    | Get LinkedIn OAuth consent URL         |
-| GET     | `/auth/login/oauth/linkedin/callback`       | None    | LinkedIn OAuth callback                |
-| GET     | `/auth/login/oauth/github/redirect`         | None    | Get GitHub OAuth consent URL           |
-| GET     | `/auth/login/oauth/github/callback`         | None    | GitHub OAuth callback                  |
+| Method | Path                     | Auth                  | Description                                                    |
+| -------- | --------------------------- | ------------------------ | -------------------------------------------------------------------- |
+| POST    | `/category`                | ADMIN, MASTER          | Create a category (L1/L2/L3, with parent/level rules)                |
+| PATCH   | `/category/:categoryId`    | ADMIN, MASTER          | Update a category (name/parent/description; level is immutable)      |
+| DELETE  | `/category/:categoryId`    | ADMIN, MASTER          | Delete a leaf category with zero products                            |
+| GET     | `/category/by-parent-level`| ADMIN, MASTER, SELLER  | List categories filtered by `level` + `parent` (cache-aside)         |
+| GET     | `/category/by-hierarchy`   | None                   | Full L1→L2→L3 nested tree (cache-aside)                              |
 
-### 6.3 Register — `/api/v1/auth/register`
+### 6.3 Product — `/api/v1/product`
 
-| Method | Path                          | Auth   | Description                                        |
-| -------- | -------------------------------- | -------- | ------------------------------------------------------ |
-| POST    | `/auth/register/send-otp`       | None    | Send OTP to email (start registration)                |
-| PATCH   | `/auth/register/resend-otp`     | None    | Resend OTP (session token in `Authorization` header)   |
-| POST    | `/auth/register/verify-otp`     | None    | Verify OTP code                                        |
-| POST    | `/auth/register/save-user`      | None    | Complete registration (name, password, phone)          |
+| Method | Path                              | Auth                  | Description                                                    |
+| -------- | ------------------------------------ | ------------------------ | -------------------------------------------------------------------- |
+| POST    | `/product/draft`                   | ADMIN, SELLER, MASTER  | Save one step of a multi-step draft into the Redis draft hash         |
+| GET     | `/product/draft`                   | ADMIN, SELLER, MASTER  | Fetch the caller's current in-progress draft                          |
+| PATCH   | `/product/draft/publish`           | ADMIN, SELLER, MASTER  | Turn a **complete** draft into a real `Product` document (`PENDING` for sellers, `PUBLISHED` directly for admins) |
+| GET     | `/product/dashboard/products`      | ADMIN, SELLER, MASTER  | Paginated/sortable/Atlas-Search listing, scoped to own products for sellers |
+| GET     | `/product/dashboard/:slug`         | ADMIN, SELLER, MASTER  | Single product lookup for the dashboard (cache-aside, 1-day TTL)      |
+| GET     | `/product/:slug`                   | None                   | Public storefront lookup — only `PUBLISHED` products                 |
+| GET     | `/product/suggestions`             | None                   | Atlas Search autocomplete (title/brand/slug/shortDescription)          |
 
-### 6.4 Password — `/api/v1/auth/password`
+**Declared but not currently wired to a route** (present in `METHODS_AND_PATHS`, `src/constants/index.ts`, but with no matching route registration in `product.routes.ts`) — see [§24](#24-design-notes--known-trade-offs):
 
-| Method | Path                                | Auth   | Description                                              |
-| -------- | -------------------------------------- | -------- | -------------------------------------------------------------- |
-| POST    | `/auth/password/forgot-send-otp`      | None    | Send OTP for password reset                                    |
-| PATCH   | `/auth/password/forgot-resend-otp`    | None    | Resend OTP for password reset                                  |
-| POST    | `/auth/password/forgot-verify-otp`    | None    | Verify OTP for password reset                                  |
-| POST    | `/auth/password/forgot-save`          | None    | Save new password after OTP verify                              |
-| PATCH   | `/auth/password/change`               | User    | Change password while logged in (requires current password)    |
-| PATCH   | `/auth/password/set`                  | User    | Set an initial password for an OAuth-only account               |
+| Method | Path                    | Intended purpose (from the constant's own comment)              |
+| -------- | -------------------------- | ---------------------------------------------------------------------- |
+| DELETE  | `/product/draft`          | Discard the caller's in-progress draft                                  |
+| PATCH   | `/product/draft`          | Edit an already-published product's draft-style fields                 |
+| PATCH   | `/product/publish`        | Approve a `PENDING` product → `PUBLISHED` (controller exists: `publishPendingProductController`, just not routed) |
+| GET     | `/product/products`       | A public product listing, distinct from the dashboard one              |
 
-### 6.5 Logout — `/api/v1/auth/logout`
+### 6.4 Draft Product Steps
 
-| Method | Path              | Auth   | Description                          |
-| -------- | ------------------- | -------- | ---------------------------------------- |
-| DELETE  | `/auth/logout`     | User    | Remove the caller's cached session      |
+`POST /product/draft` accepts one step at a time, keyed by `step` in the body, and accumulates into a single Redis hash per user:
 
-### 6.6 User — `/api/v1/user`
-
-| Method | Path              | Auth   | Description                              |
-| -------- | ------------------- | -------- | -------------------------------------------- |
-| GET     | `/user/session`    | User    | Fetch the caller's own user record (cache-aside over Mongo) |
-
-"Auth: User" above means the controller itself requires `X-User-Id` (either via the `authenticate` middleware, or — for `GET /user/session` and `DELETE /auth/logout` — a direct header check in the controller/middleware; see [§11](#11-middlewares)).
+| Step | Field key               | Contents                                              |
+| ------ | -------------------------- | ---------------------------------------------------------- |
+| —     | `basicInfo`                | title, brand, prices, L1/L2/L3 category                    |
+| 1     | `mediaAndGallery`          | thumbnail, images, video                                    |
+| —     | `descriptionAndContent`    | shortDescription, description, instructions, ingredients, additional |
+| 3     | `stockAndVariants`         | hasVariants + either stock/stockThreshold or a variants array |
+| —     | `tryOnConfiguration`       | enabled + optional category/subCategory                     |
 
 ---
 
@@ -306,130 +286,113 @@ All `/api/v1/*` routes require the `X-Service-Secret` header and a ready MongoDB
 | Header               | Purpose                                                        |
 | ----------------------- | ------------------------------------------------------------------ |
 | `X-Service-Secret`     | Service-to-service authentication (`checkServiceAccess`, required on `/api/v1/*`) |
-| `X-User-Id`             | End user's id (forwarded by the gateway/caller, required wherever "Auth: User" applies) |
-| `X-User-Role`           | End user's role, defaults to `USER` if not sent (`authorize` middleware only) |
-| `X-Login-Role`          | Optional role check for `/auth/login/manual` (`MASTER` always allowed) |
-| `Authorization`         | OTP session token (raw or `Bearer <token>`) for register/forgot-password steps |
+| `X-User-Id`             | End user's id (forwarded by the gateway/caller, required wherever a role is listed under "Auth" above) |
+| `X-User-Role`           | End user's role, defaults to `USER` if not sent                    |
 
 There's no JWT here — the gateway/upstream service is expected to have already authenticated the user and forwarded their identity via `X-User-Id`/`X-User-Role`.
 
 ---
 
-## 8. Authentication Flow
+## 8. Category Management
 
-### 8.1 Manual Login (`POST /auth/login/manual`)
+### 8.1 Create (`POST /category`)
 
-1. Client sends `loginMethod` (`"email"` or `"phoneNumber"`) plus the matching `email`/`phoneNumber` and `password`.
-2. Service looks up the user by email or phone (`getUserByEmailOrPhone`), throwing `NotFoundError` with field-specific errors if nothing matches.
-3. Checks that the user has `MANUAL` in `providers` — otherwise `UnprocessableEntityError` naming the linked OAuth provider(s).
-4. If `X-Login-Role` is sent, the user's role must match it (or be `MASTER`) — otherwise `AuthorizationError`.
-5. Compares the `bcrypt` hash of the provided password — mismatch throws `ValidationError` with a `password` field error.
-6. On success, returns the minimal user object and caches it in Redis (24h TTL).
+1. If `parent` is given, it must exist and be exactly one level shallower than the new category's `level` (L2 needs an L1 parent, L3 needs an L2 parent).
+2. Duplicate check: no sibling (same `parent`) may already have the same slug.
+3. On save, a MongoDB duplicate-key error (E11000, from a concurrent create racing the same slug) is caught and converted to a friendly `ConflictError` rather than a raw 500.
+4. If a `parent` was set, that parent's `isLeaf` flips to `false`.
+5. The Redis category cache is updated **after the transaction commits** (`res.locals.afterCommit`), so a rollback never leaves a phantom category cached.
 
-### 8.2 OAuth Login (Google / LinkedIn / GitHub)
+### 8.2 Update (`PATCH /category/:categoryId`)
 
-_Redirect flow:_
-1. `GET /auth/login/oauth/{provider}/redirect` → returns the provider's OAuth consent URL.
-2. Client redirects the user to that URL.
-3. Provider redirects back to `GET /auth/login/oauth/{provider}/callback?code=...`.
-4. Service exchanges the code for an access token and fetches the user's profile (throws `BadRequestError` if `code` is missing, `NotFoundError` if the profile has no email).
-5. Looks up a user by that email:
-   - **Exists, provider not yet linked** → pushes the provider onto `providers`, backfills `avatar` if empty.
-   - **Exists, provider already linked** → returns the existing user as-is.
-   - **Doesn't exist** → creates a new user with `providers: [PROVIDER]`.
-6. Returns the minimal user object, cached in Redis.
+1. `level` is immutable — attempting to change it throws `ConflictError`.
+2. `parent` is only touched if the key is present in the request body at all (`'parent' in restBody`) — omitting it entirely leaves the existing parent untouched; sending it re-validates and re-parents (self-parent and level checks, same as create).
+3. If `name` changes, the slug is regenerated and re-checked for duplicates among the (possibly new) siblings.
+4. After the update, the **old** parent's `isLeaf` is recalculated (back to `true` if it has no children left) and the **new** parent's `isLeaf` is forced to `false` — only when the parent actually changed.
+5. Redis cache update is deferred to `res.locals.afterCommit`, same as create.
 
-### 8.3 Registration Flow
+### 8.3 Delete (`DELETE /category/:categoryId`)
 
-Four-step OTP-based registration:
+1. Only a **leaf** category (`isLeaf: true`) can be deleted — `UnprocessableEntityError` otherwise.
+2. An L3 category with `productCount > 0` cannot be deleted.
+3. If the deleted category was its parent's only child, the parent's `isLeaf` flips back to `true`.
+4. Redis cache delete is deferred to `res.locals.afterCommit` — if the Redis delete itself ever fails, it's caught and logged (`RedisCacheHelper` swallows Redis-level errors), and the categories hash's 1-day TTL (see [§10](#10-redis-cache-classesredis)) bounds how long a stale entry can survive before a full reseed from MongoDB self-heals it.
 
-| Step | Endpoint                          | Purpose                              |
-| ------ | ------------------------------------ | ---------------------------------------- |
-| 1     | `POST /auth/register/send-otp`      | Send OTP to email, returns a session `token` |
-| 2     | `PATCH /auth/register/resend-otp`   | Resend OTP (rate-limited)                |
-| 3     | `POST /auth/register/verify-otp`    | Verify the received OTP code             |
-| 4     | `POST /auth/register/save-user`     | Submit name/password/phone, creates the user |
+### 8.4 Listing
 
-- OTPs are stored in Redis with a **10-minute TTL** (`RedisCacheToken`).
-- `sanitizeToken()` (from `@beautinique/backend-utils`) strips a `Bearer ` prefix and throws `UnprocessableEntityError('Token not found')` if the `Authorization` header is missing/empty — the controllers no longer do their own presence check.
-- Resend is capped at `MAX_OTP_RESEND` (3, from `@beautinique/shared-constants`) — `sendCount` starts at 1 on the initial send and increments on every resend, so the **3rd resend call** (4th OTP send overall) throws `TooManyRequestsError` (the OTP/send-count is still rotated in Redis on the attempt that trips the limit, the email is just never enqueued).
-- On successful registration, the user is created with `providers: ["MANUAL"]`, or — if an OAuth-only account already exists for that email — `MANUAL` is added to its `providers`.
+- `GET /category/by-parent-level?level=&parent=` — filters the cached category list in memory; omitting `level` returns everything, L1 ignores `parent`.
+- `GET /category/by-hierarchy` — builds the full L1→L2→L3 tree in memory from the same cached flat list (parent-keyed map + recursive builder).
 
-### 8.4 Logout
-
-- `DELETE /auth/logout` — requires `authenticate` (reads `X-User-Id`), deletes the user's cached session from Redis. No-op (still returns success) if nothing was cached.
+Both read exclusively from `RedisCacheCategory.getAllCategories()` (cache-aside, seeds itself from MongoDB on a cold/expired cache) — neither queries MongoDB directly.
 
 ---
 
-## 9. Password Management
+## 9. Product Flow
 
-### 9.1 Forgot Password Flow
+### 9.1 Draft → Publish
 
-| Step | Endpoint                                  | Purpose            |
-| ------ | -------------------------------------------- | ---------------------- |
-| 1     | `POST /auth/password/forgot-send-otp`       | Send OTP to email      |
-| 2     | `PATCH /auth/password/forgot-resend-otp`    | Resend OTP             |
-| 3     | `POST /auth/password/forgot-verify-otp`     | Verify OTP              |
-| 4     | `POST /auth/password/forgot-save`           | Save the new password   |
+1. `POST /product/draft` is called once per step (see [§6.4](#64-draft-product-steps)), each call writing one field into a per-user Redis hash (`bq:products:draft:<userId>`), TTL fixed at 24h from the **first** step (not renewed on subsequent steps).
+2. `GET /product/draft` returns whatever has been saved so far.
+3. `PATCH /product/draft/publish`:
+   - `createPendingProductPayload` middleware loads the full draft from Redis into `req.body`, throwing `NotFoundError('Draft expired')` if nothing is cached (TTL elapsed or never started).
+   - Body is validated against `draftProductDetailsZodSchema` — every step must be present and complete.
+   - The controller builds a full `Product` payload from the draft (SKU generation, slug generation, image extraction for later cleanup, variant SKU generation), sets `status: PENDING` for sellers or `PUBLISHED` (+ `history.approvedAt/approvedBy`) for admins/masters.
+   - `product.validate()` is called explicitly before `save()` so Mongoose validation errors surface before any DB write is attempted.
+   - After commit: any image public IDs referenced by the product are marked "used" via a `media-queue` job (see [§16](#16-background-jobs-media-queue-producer-only)), and the Redis draft is deleted.
 
-- Step 1 throws `UnprocessableEntityError` if a user exists for that email but has no `MANUAL` provider.
-- Same `MAX_OTP_RESEND`/10-minute-TTL rules as registration.
-- New password cannot equal the current one (`UnprocessableEntityError`).
-- After reset, the Redis user cache is refreshed.
+### 9.2 Pending Approval (`publishPendingProductController`)
 
-### 9.2 Change Password (`PATCH /auth/password/change`)
+Approves a `PENDING` product (created by a non-admin seller) into `PUBLISHED`, stamping `history.approvedBy`/`history.approvedAt`. **Not currently wired to a route** — see [§24](#24-design-notes--known-trade-offs).
 
-- Requires `authenticate`.
-- Requires `currentPassword` (checked against the bcrypt hash — mismatch throws `ValidationError` with a field error) + a new `password`.
-- New and current passwords cannot be identical (`UnprocessableEntityError` with a field error).
+### 9.3 Dashboard Listing (`GET /product/dashboard/products`)
 
-### 9.3 Set Password (`PATCH /auth/password/set`)
+- Sellers only ever see their own products (`seller` scoped from `X-User-Id`); admins/masters see everything, optionally filtered by `status`/`category`.
+- With a non-empty `search` query, uses an Atlas Search (`$search`) pipeline (autocomplete on `title`, fuzzy-matched) with a `$facet` for paginated results + total count in one round trip; without a search term, falls back to a plain `Product.find()` + `countDocuments()`.
+- Either path also runs a separate `$group`-by-`status` aggregation (scoped by seller/category, **not** by status) to populate a status-count summary (`{ ALL, PENDING, PUBLISHED, ... }`) alongside the page of results.
+- Only projects `PRODUCT_DASHBOARD_PROJECTION` (`src/constants/index.ts`) — notably, `variants` is projected as `variants.stock` only (not the full variant subdocuments), which `TDashboardListProduct['variants']` is typed to match.
 
-- Requires `authenticate`.
-- For users who signed up via OAuth only (no password set yet).
-- Throws `UnprocessableEntityError` if `MANUAL` is already linked — use forgot-password instead.
+### 9.4 Public Lookup & Suggestions
+
+- `GET /product/:slug` — only ever returns `PUBLISHED` products, populates `category.name`, queries MongoDB directly (no cache layer).
+- `GET /product/dashboard/:slug` — cache-aside over Redis (1-day TTL, deferred cache population via `res.locals.afterFinish` so the cache write never delays the response), excludes `variants.stockThreshold`.
+- `GET /product/suggestions?search=` — Atlas Search autocomplete/fuzzy pipeline across `title` (must-match), `brand`/`slug`/`shortDescription` (should-match, weighted), limited to 5 `PUBLISHED` results.
 
 ---
 
 ## 10. Redis Cache (`classes/redis/`)
 
-A `RedisCacheManager` singleton (instantiated once in `configs/index.ts`, exported as `redisCacheManager`) wraps a single `redis` client and exposes two sub-caches, `.user` (`RedisCacheUser`) and `.token` (`RedisCacheToken`), both extending the shared `RedisCacheHelper` base class.
+A `RedisCacheManager` singleton (instantiated once in `configs/index.ts`, exported as `redisCacheManager`) wraps a single `redis` client and exposes two sub-caches, `.category` (`RedisCacheCategory`) and `.dashboard` (`RedisCacheDashboard`), both extending the shared `RedisCacheHelper` base class.
 
 ### Key Prefixes
 
-| Prefix                          | Purpose              |
-| ---------------------------------- | ------------------------ |
-| `bq:user-service:users:<id>`      | User session data       |
-| `bq:user-service:tokens:<token>`  | OTP session data         |
+| Prefix                                  | Purpose                        |
+| ------------------------------------------ | ------------------------------------- |
+| `bq:products:categories`                   | Single hash holding every category, keyed by category id |
+| `bq:products:draft:<userId>`               | One user's in-progress draft product   |
+| `bq:products:dashboard:product:<slug>`     | A single dashboard product lookup       |
 
-### `RedisCacheManager` (`classes/redis/index.ts`)
+### `RedisCacheCategory` (`classes/redis/RedisCacheCategory.ts`)
 
-| Method            | Description                                                        |
-| ------------------- | ------------------------------------------------------------------ |
-| `connect()`         | Connects the underlying client; failures are logged, not thrown (never rejects) |
-| `close()`           | Gracefully closes the connection (`client.quit()`)                 |
-| `.user`             | `RedisCacheUser` instance                                          |
-| `.token`            | `RedisCacheToken` instance                                          |
+| Method                     | Description                                                                    |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
+| `getAllCategories()`          | Cache-aside: reads the whole hash; on empty, reseeds from MongoDB               |
+| `setCategory(category)`       | Writes/overwrites one category field; sets the hash's TTL (1 day) only if the hash didn't already exist, so an active hash's expiry never keeps getting pushed out by routine writes |
+| `deleteCategory(categoryId)`  | Removes one category field from the hash                                        |
 
-An internal `isReady` flag, updated by the client's `connect`/`error`/`reconnecting`/`end` events, gates every cache operation — see [`getClient()`](#redis-fallback-behavior) below.
+The 1-day TTL means any missed/failed invalidation (e.g. a Redis delete that silently fails) self-heals within at most a day, since a fully-expired hash forces `getAllCategories()` back to MongoDB.
 
-### `RedisCacheUser` (`classes/redis/RedisCacheUser.ts`)
+### `RedisCacheDashboard` (`classes/redis/RedisCacheDashboard.ts`)
 
-| Method                 | Description                                          |
-| ------------------------- | -------------------------------------------------------- |
-| `setUser(user)`           | Cache user data (TTL: 24 hours)                         |
-| `getUser(userId)`         | Cache-aside: Redis first, falls back to MongoDB (`getUserById`) and repopulates the cache on miss |
-| `updateUser(user)`        | Alias for `setUser` — used after a mutation             |
-| `deleteUser(userId)`      | Remove a user from the cache                             |
-
-### `RedisCacheToken` (`classes/redis/RedisCacheToken.ts`)
-
-| Method                    | Description                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------------------ |
-| `setOtpData(email)`          | Generates a 6-digit OTP + a 20-byte hex token, stores `{ otp, email, sendCount: 1 }` (10 min TTL), returns `{ token, otp, email, sendCount }` |
-| `getOtpData(token)`          | Retrieve the OTP session by token                                                    |
-| `updateOtpData(token)`       | Regenerates the OTP, increments `sendCount`, re-stores (10 min TTL); throws `ValidationError` if the session doesn't exist |
-| `deleteOtpData(token)`       | Remove the OTP session                                                                |
+| Method                          | Description                                                                    |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| `getDraftProduct(userId)`           | Read the caller's in-progress draft                                              |
+| `saveDraftProductStep(userId, body)`| Write one step's field into the draft hash (24h TTL, fixed from first write)     |
+| `deleteDraftProduct(userId)`        | Remove the draft entirely (called after a successful publish)                    |
+| `hasDraftProduct(userId)`           | Existence check                                                                   |
+| `getProductBySlug(slug)`            | Cache-aside dashboard product lookup                                             |
+| `setProductBySlug(slug, product)`   | Cache a dashboard product (24h TTL)                                              |
+| `deleteProductBySlug(slug)`         | Invalidate a cached dashboard product                                            |
+| `hasProductBySlug(slug)`            | Existence check                                                                   |
 
 ### `RedisCacheHelper` (`classes/redis/RedisCacheHelper.ts`)
 
@@ -437,25 +400,31 @@ Shared low-level primitives both sub-caches build on: `setData`/`getData`/`delet
 
 ### Redis Fallback Behavior
 
-`RedisCacheManager` passes each sub-cache a `getClient()` closure that returns `null` whenever `isReady` is false (client not connected / mid-reconnect). `RedisCacheHelper`'s methods check this before every operation — `getUser()` falling through to MongoDB on a Redis outage is exactly this mechanism at work, not special-cased logic in `RedisCacheUser`.
+`RedisCacheManager` passes each sub-cache a `getClient()` closure that returns `null` whenever `isReady` is false (client not connected / mid-reconnect). `RedisCacheHelper`'s methods check this before every operation, so a Redis outage falls through to MongoDB wherever a cache-aside read exists, without any special-cased logic in the sub-caches themselves.
 
 ### Reconnection Strategy (`configs/index.ts`)
 
 The `redisClient` (used by `RedisCacheManager`) is configured with a `reconnectStrategy`: exponential-ish backoff of `min(retries * 1000ms, 10s)`, giving up after 5 retries.
 
+### Transactional Writes: `res.locals.afterCommit`
+
+Every mutating category controller (`addCategoryController`, `updateCategoryController`, `deleteCategoryController`) runs inside a Mongoose transaction (`tryCatchSession`) and defers its Redis write/delete to `res.locals.afterCommit`, which `@beautinique/backend-mongoose` only runs **after** the transaction has actually committed. This avoids the cache ever getting ahead of the database — if the transaction rolls back, the queued Redis task simply never runs.
+
 ---
 
 ## 11. Middlewares
 
-### `authenticate` (`middlewares/index.ts`)
+### `authenticate` (`middlewares/auth.middleware.ts`)
 
-Reads `X-User-Id` (throws `AuthenticationError` if missing), fetches the user via `redisCacheManager.user.getUser`, attaches it to `req.user`. Mounted in front of `/auth/logout`, `/auth/password/change`, and `/auth/password/set`.
+Reads `X-User-Id` (throws `AuthenticationError` if missing) and `X-User-Role` (defaults to `USER`), attaches `{ _id, role }` to `req.user`. Exported but not currently mounted on any route directly — `authorize` (below) is used everywhere instead, since every mutating/dashboard route also needs a role check.
 
-### `authorize(allowedRoles)` (`middlewares/index.ts`)
+### `authorize(allowedRoles)` (`middlewares/auth.middleware.ts`)
 
-Factory middleware — same header extraction as `authenticate`, plus reads `X-User-Role` (defaults to `USER`) and throws `AuthorizationError` if the role isn't in `allowedRoles` or doesn't match the header. Exported but **not currently wired into any route**.
+Factory middleware — same header extraction as `authenticate`, plus throws `AuthorizationError` if `X-User-Role` isn't in `allowedRoles`. Mounted on every category-management route and both the `/product/draft/*` and `/product/dashboard/*` route groups.
 
-*Note: `GET /user/session` does its own `X-User-Id` check directly in `getSessionUserController` rather than going through `authenticate` — same effect, different call site.*
+### `createPendingProductPayload` (`middlewares/createPendingProductPayload.middleware.ts`)
+
+Loads the caller's Redis draft (`redisCacheManager.dashboard.getDraftProduct`) and overwrites `req.body` with it before `PATCH /product/draft/publish` reaches Zod validation — throws `NotFoundError('Draft expired')` if nothing is cached.
 
 ### External Middlewares (from `@beautinique/*` packages)
 
@@ -463,9 +432,10 @@ Factory middleware — same header extraction as `authenticate`, plus reads `X-U
 | -------------------------- | -------------------------------------- | ------------------------------------------------------------------------------- |
 | `checkServiceAccess`      | `@beautinique/backend-request`         | Validates `X-Service-Secret`, timing-safe compare                              |
 | `checkDbConnection`       | `@beautinique/backend-mongoose`        | Rejects with 503 if MongoDB isn't ready (scoped to `/api/v1` only)             |
-| `checkEmptyRequest`       | `@beautinique/backend-request`         | Guards against empty request bodies/query before validation                    |
-| `validateZod`             | `@beautinique/backend-zod`             | Request body validation via Zod (`loginZodSchema`, `registerZodSchema`, etc.) |
-| `tryCatchResponse`        | `@beautinique/backend-response`        | Wraps controllers in try/catch, forwards errors to `errorResponse`             |
+| `checkEmptyRequest`       | `@beautinique/backend-request`         | Guards against empty request bodies/params before validation                    |
+| `validateZod`             | `@beautinique/backend-zod`             | Request body validation via Zod (`categoryZodSchema`, `draftProductStepBodyZodSchema`, etc.) |
+| `tryCatchResponse`        | `@beautinique/backend-response`        | Wraps non-transactional controllers in try/catch, forwards errors to `errorResponse` |
+| `tryCatchSession`         | `@beautinique/backend-mongoose`        | Wraps transactional controllers in a Mongoose session + `res.locals.afterCommit`/`afterRollback`/`afterResponse`/`afterFinish` hooks |
 | `successResponse`         | `@beautinique/backend-response`        | Attaches `res.success({ statusCode, message, data })`                          |
 | `notFoundResponse`        | `@beautinique/backend-response`        | 404 handler (branded HTML page for browser requests)                            |
 | `errorResponse`           | `@beautinique/backend-response`        | Central error handler                                                            |
@@ -475,109 +445,45 @@ Factory middleware — same header extraction as `authenticate`, plus reads `X-U
 
 ## 12. Services Layer (`services/index.ts`)
 
-| Function                       | Description                                                             |
-| --------------------------------- | ---------------------------------------------------------------------------- |
-| `getUserById(data)`               | Find user by ObjectId; `password`/`lean` options; throws `NotFoundError`    |
-| `getUserByEmail(data)`            | Find user by email (no throw on miss — callers decide)                     |
-| `getUserByPhoneNumber(data)`      | Find user by phone number (no throw on miss)                               |
-| `getUserByEmailOrPhone(data)`     | Find user by email **or** phone; throws `NotFoundError` with field-specific errors on miss |
-| `createNewUser(payload)`         | Create a new user document                                                  |
-| `updateUser(filter, payload)`    | Update via `findOneAndUpdate`; throws `NotFoundError` if nothing matched   |
+| Function                                   | Description                                                             |
+| --------------------------------------------- | ---------------------------------------------------------------------------- |
+| `findOrCreateCategory({name,slug,parent,level,session})` | Upsert helper (`findOneAndUpdate` + `$setOnInsert`, `upsert: true`) — not currently called from any controller in this service; available for cross-service or seed use |
 
 ---
 
 ## 13. Utilities (`utils/index.ts`)
 
-| Function                          | Description                                                                     |
-| -------------------------------------- | -------------------------------------------------------------------------------------- |
-| `createOAuthDbPayload(data, provider)`| Builds a new-user payload from a third-party OAuth profile                             |
-| `getMinimalUser(user)`                | Returns the sanitized client-facing user shape (`_id` as string; excludes `password`/`reason`/timestamps) |
-| `generateOtp()`                       | Returns a random 6-digit numeric OTP                                                    |
-| `generateTempToken(bytes = 32)`       | Returns a hex token (default 32 bytes = 64 hex chars)                                   |
-| `getSocialAuthRedirectURL(provider)`  | Builds the absolute OAuth callback URL: `envs.gateway_url` + `/api/v1/{SERVICE_NAMES_MAP['user-service']}/auth/login` + that provider's `callback.path` from `METHODS_AND_PATHS` |
-
-`getSocialAuthRedirectURL` no longer reads a per-provider `*_REDIRECT_ENDPOINT` env var — it derives the callback path directly from this service's own `METHODS_AND_PATHS` route constants (`constants/index.ts`) and `SERVICE_NAMES_MAP['user-service']` (`@beautinique/shared-constants`), so the URL registered with each OAuth provider can never drift out of sync with the actual route. Each `socialAuth/*.ts` class now calls this once at construction and caches it in a `REDIRECT_URI` field, rather than recomputing it on every `url()`/`access_token()` call.
-
-`getObjId`/`toObjectId` moved out of this service — `getObjId` is now imported directly from `@beautinique/backend-mongoose` where needed (`services/index.ts`, `password.controller.ts`).
-
----
-
-## 14. OAuth Integrations (`classes/apis/socialAuth/`)
-
-### Google (`Google.ts`)
-
-- Uses `google-auth-library`'s `OAuth2Client` directly (not the full `googleapis` SDK — swapped out to cut install size/type-check cost; only `OAuth2Client` was ever used).
-- `url()` generates the consent URL with `scope: [profile, email]`.
-- `decode(code)` exchanges the code for tokens, fetches the profile from `https://www.googleapis.com/oauth2/v2/userinfo`.
-
-### LinkedIn (`Linkedin.ts`)
-
-- Directly constructs the authorization URL (no SDK).
-- `access_token(code)` POSTs to `https://www.linkedin.com/oauth/v2/accessToken`.
-- `decode(access_token)` GETs `https://api.linkedin.com/v2/userinfo`.
-
-### GitHub (`Github.ts`)
-
-- Directly constructs the authorization URL.
-- `access_token(code)` POSTs to `https://github.com/login/oauth/access_token`.
-- `decode(access_token)` fetches the profile from `https://api.github.com/user`; falls back to `/user/emails` (picks the `primary` one, else the first) if the profile has no public email.
-
-All three extend `ApiRequest` (`classes/apis/ApiRequest.ts`), which wraps every request in a common `try/catch`: an `AxiosError` with a response is turned into the matching `@beautinique/backend-classes` error subclass via `createError`/`ERROR_CLASS_MAP` (falling back to `INTERNAL_SERVER_ERROR` for an unrecognized/missing error code), anything else becomes a generic `INTERNAL_SERVER_ERROR`.
+| Function                                  | Description                                                                     |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `generateSlug(text, unique = true)`            | `slugify` + optional `-<timestamp>` suffix for global uniqueness (products); categories call it with `unique: false` since sibling-scoped uniqueness comes from the compound index |
+| `getMinimalCategory(category)`                 | Client/cache-facing category shape — `_id` as string; `parent`/`description` only for L2/L3 as applicable |
+| `generateSku({data, prefix, unique})`          | Builds an uppercase SKU from the first 3 alphanumeric chars of each `data` value, joined with `-`, plus an optional prefix and a random 6-digit suffix |
+| `getCloudinaryPublicIdFromUrl(url)`            | Extracts a Cloudinary public id from a delivery URL (throws `UnprocessableEntityError` if it doesn't look like one) |
+| `extractImageUrlsFromHtml(html)`               | Regex-extracts every `<img src="...">` from a rich-text field (used to find images to mark "used" in `media-queue`) |
+| `getProductSuggestionsPipeline(query)`         | Builds the Atlas `$search` aggregation pipeline for `/product/suggestions`             |
+| `getInitialProductCountsByStatus()`            | Zero-filled `{ ALL, DELETED, PENDING, PUBLISHED, REJECTED, BLOCKED }` counter object    |
+| `populateProductCountsByStatus(counts, rows)`  | Folds a `$group`-by-status aggregation result into the counter object above             |
 
 ---
 
-## 15. External OAuth Routes (for reference)
+## 14. Error Handling
 
-Defined in `constants/index.ts` as `OAUTH_API_ROUTES_AND_METHODS`:
-
-| Provider   | Method | URL                                               | Purpose                    |
-| ------------ | -------- | ---------------------------------------------------- | ------------------------------- |
-| Google      | GET     | `https://www.googleapis.com/oauth2/v2/userinfo`     | Decode Google profile           |
-| LinkedIn    | POST    | `https://www.linkedin.com/oauth/v2/accessToken`     | Get LinkedIn access token       |
-| LinkedIn    | GET     | `https://api.linkedin.com/v2/userinfo`               | Decode LinkedIn profile         |
-| GitHub      | POST    | `https://github.com/login/oauth/access_token`        | Get GitHub access token         |
-| GitHub      | GET     | `https://api.github.com/user`                        | Decode GitHub profile           |
-| GitHub      | GET     | `https://api.github.com/user/emails`                 | Fetch GitHub user emails (fallback) |
-
----
-
-## 16. Background Jobs (`mail-queue`, producer only)
-
-This service **only produces** onto `mail-queue` — it doesn't run a worker for anything. `jobProducer` (`@beautinique/backend-bullmq`'s `JobProducer`, configured in `configs/index.ts`) is used directly from the register/password controllers.
-
-| Job name    | Enqueued from                                                                 | Consumed by                       |
-| ------------- | ---------------------------------------------------------------------------------- | -------------------------------------- |
-| `send-otp`   | `registerSendOtpController`, `registerResendOtpController`, `forgotPasswordSendOtpController`, `forgotPasswordResendOtpController` | `mail-service` (`WorkerManager`)       |
-
-**Rollback on enqueue failure:** every `jobProducer.addJob('mail-queue', 'send-otp', ...)` call is wrapped in its own `try/catch` — if enqueueing fails, the just-written OTP session is deleted from Redis (`redisCacheManager.token.deleteOtpData`) before the error is re-thrown, so a failed send doesn't leave an unreachable OTP session behind.
-
-**Retry/backoff:** configured once, at the `jobProducer` level (`configs/index.ts`): `attempts: 3`, `backoff: { type: 'exponential', delay: 2000 }`, `removeOnComplete: { age: 30, count: 5 }`, `removeOnFail: { age: 1800, count: 10 }`.
-
-The `BULL_MQ_*` env vars must point to the **same** Redis instance as `mail-service`'s BullMQ connection, or enqueued jobs will never be picked up.
-
----
-
-## 17. Error Handling
-
-All errors are thrown as `AppError` subclasses from `@beautinique/backend-classes` (e.g. `NotFoundError`, `ValidationError`, `ConflictError`) — **not** the older `@beautinique/be-classes` package, which this service no longer depends on. Standard error codes used across the service:
+All errors are thrown as `AppError` subclasses from `@beautinique/backend-classes` (e.g. `NotFoundError`, `ValidationError`, `ConflictError`, `UnprocessableEntityError`). Standard error codes used across the service:
 
 | Code                     | HTTP Equivalent | When Used                                                          |
 | --------------------------- | ------------------ | ----------------------------------------------------------------------- |
-| `BAD_REQUEST`              | 400                | Missing `code` query param on an OAuth callback                        |
-| `VALIDATION_ERROR`         | 422                | Wrong password, invalid/expired OTP                                     |
-| `NOT_FOUND`                | 404                | User not found, OAuth profile has no email                              |
-| `CONFLICT`                 | 409                | Email/phone already exists                                              |
-| `UNPROCESSABLE_ENTITY`     | 422                | Password same as current; missing/empty OTP-session token (`sanitizeToken`); OAuth/manual provider conflicts |
+| `NOT_FOUND`                | 404                | Category/parent/product not found; expired draft; parent category missing |
+| `CONFLICT`                 | 409                | Duplicate sibling category slug; category cannot be its own parent; category `level` change attempted |
+| `UNPROCESSABLE_ENTITY`     | 422                | Deleting a non-leaf category or an L3 category with products; invalid parent level; invalid prices; invalid try-on category/sub-category; malformed Cloudinary URL |
 | `AUTHENTICATION_ERROR`     | 401                | Missing `X-User-Id`                                                     |
-| `AUTHORIZATION_ERROR`      | 403                | Login-role mismatch; insufficient role (`authorize`, currently unused)  |
-| `TOO_MANY_REQUESTS`        | 429                | Max OTP resend attempts exceeded                                        |
-| `INTERNAL_SERVER_ERROR`    | 500                | Unexpected failures; unrecognized error code from an OAuth provider's API |
+| `AUTHORIZATION_ERROR`      | 403                | Caller's role isn't in the route's `allowedRoles`                       |
+| `INTERNAL_SERVER_ERROR`    | 500                | Unexpected failures; `findOrCreateCategory` upsert failure               |
 
-Errors flow through the `errorResponse` middleware (`@beautinique/backend-response`), which only forwards `message`/`code`/`statusCode`/`fieldErrors`/`globalErrors` for **operational** `AppError`s — anything else (including a non-operational `AppError`) is converted to a generic `InternalServerError` before the client ever sees it, and `envs.is_dev` controls whether a stack trace is attached.
+Errors flow through the `errorResponse` middleware (`@beautinique/backend-response`), which only forwards `message`/`code`/`statusCode`/`fieldErrors`/`globalErrors` for **operational** `AppError`s — anything else is converted to a generic `InternalServerError` before the client ever sees it, and `envs.is_dev` controls whether a stack trace is attached.
 
 ---
 
-## 18. Server Lifecycle
+## 15. Server Lifecycle
 
 ### Startup (`bootstrap/startup.ts`)
 
@@ -598,7 +504,23 @@ Idempotent (`setShuttingDown()` guards re-entry). Only the job-producer shutdown
 
 ---
 
-## 19. Build & Run Commands
+## 16. Background Jobs (`media-queue`, producer only)
+
+This service **only produces** onto `media-queue` — it doesn't run a worker for anything. `jobProducer` (`@beautinique/backend-bullmq`'s `JobProducer`, configured in `configs/index.ts`) is used from `publishDraftProductController`.
+
+| Job name                       | Enqueued from                     | Consumed by       |
+| ---------------------------------- | ------------------------------------ | ----------------------- |
+| `mark-multiple-media-as-used`      | `publishDraftProductController` (`afterCommit`) | `media-service` |
+
+Every image/thumbnail/video URL referenced by a newly-published product (including images embedded in the rich-text `description`/`ingredients`/`instructions`/`additional` fields) is resolved to a Cloudinary public id and enqueued for the media service to mark as in-use, so orphan-cleanup jobs elsewhere don't delete assets that a product is actively using.
+
+**Retry/backoff:** configured per-call for this job specifically (`attempts: 5, backoff: { type: 'exponential', delay: 5000 }`), on top of the `jobProducer`'s own defaults (`attempts: 3`, `backoff: { type: 'exponential', delay: 2000 }`, `removeOnComplete: { age: 30, count: 5 }`, `removeOnFail: { age: 1800, count: 10 }`).
+
+The `BULL_MQ_*` env vars must point to the **same** Redis instance as `media-service`'s BullMQ connection, or enqueued jobs will never be picked up.
+
+---
+
+## 17. Build & Run Commands
 
 ```bash
 npm install
@@ -625,125 +547,107 @@ Flat config: `@eslint/js` recommended → `typescript-eslint` recommended/strict
 
 ---
 
-## 20. Shared Packages (`@beautinique/*`)
+## 18. Shared Packages (`@beautinique/*`)
 
 | Package                                | Purpose                                                                                          |
 | ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | `@beautinique/backend-bullmq`            | `JobProducer` — typed BullMQ wrapper                                                                    |
-| `@beautinique/backend-classes`           | `AppError` subclasses (`NotFoundError`, `ValidationError`, ...), `createError`, `ERROR_CLASS_MAP`      |
+| `@beautinique/backend-classes`           | `AppError` subclasses (`NotFoundError`, `ValidationError`, `ConflictError`, `UnprocessableEntityError`, ...) |
 | `@beautinique/backend-logger`            | `createLogger`/`createHttpLogger` (Pino-based)                                                          |
-| `@beautinique/backend-mongoose`          | `connectDb`, `disconnectDB`, `checkDbConnection`, `getConnectionHealth`, `getObjId`, `mongoEvents`     |
+| `@beautinique/backend-mongoose`          | `connectDb`, `disconnectDB`, `checkDbConnection`, `getConnectionHealth`, `getObjId`, `mongoEvents`, `tryCatchSession` |
 | `@beautinique/backend-request`           | `checkServiceAccess`, `checkEmptyRequest`                                                                |
 | `@beautinique/backend-response`          | `successResponse`/`errorResponse`/`notFoundResponse`/`tryCatchResponse`                                  |
-| `@beautinique/backend-utils`             | `getUser`, `sanitizeToken`                                                                               |
-| `@beautinique/backend-zod`               | `validateZod` and every request Zod schema (`loginZodSchema`, `registerZodSchema`, `otpZodSchema`, ...) |
-| `@beautinique/shared-constants`          | `USER_ROLES`, `AUTH_PROVIDERS`, `HEADERS_MAP`, `MAX_OTP_RESEND`, `SERVICE_NAMES_MAP`, `STATES_AND_UTS`, `COUNTRIES`, `SELLER_TYPES`, etc. |
+| `@beautinique/backend-utils`             | `getUser`                                                                                                |
+| `@beautinique/backend-zod`               | `validateZod` and every request Zod schema (`categoryZodSchema`, `categoryUpdateZodSchema`, `draftProductStepBodyZodSchema`, `draftProductDetailsZodSchema`) |
+| `@beautinique/shared-constants`          | `CATEGORY_LEVELS(_MAP)`, `PRODUCT_STATUSES(_MAP)`, `USER_ROLES`, `SORT_MAP`, `API_METHODS_MAP`, `HEADERS_MAP`, `SERVICE_NAMES_MAP`, `TRY_ON_MAP`/`TRY_ON_CATEGORIES`/`TRY_ON_ALL_SUB_CATEGORIES` |
 | `@beautinique/shared-markdown-to-html`   | `generateHtmlFromMarkdown` — used by `scripts/generate-html.mjs`                                        |
 | `@beautinique/shared-utils`              | `requireEnv`/`requirePort`, `stringifyData`/`parseData`                                                  |
-| `@beautinique/backend-types`             | `TAuthProvider`, `TUserRole`, `TLoginZodSchema`, and other Zod-inferred/shared types                    |
-
-This service no longer depends on `@beautinique/be-classes`, `be-configs`, `be-constants`, `be-jobs`, `be-middlewares`, `be-utils`, or `be-zod` — all fully migrated to their `backend-*`/`shared-*` replacements.
+| `@beautinique/backend-types`             | `TCategoryZodSchema`, `TCategoryUpdateZodSchema`, `TDraftProductStepBodyZodSchema`, `TDraftProductDetailsZodSchema`, `TTryOnSelection`, `TUserRole`, `TProductStatus`, `TSort`, `TCategoryLevel` |
 
 ---
 
-## 21. API Response Format
+## 19. API Response Format
 
 All responses use `@beautinique/backend-response`'s envelope, attached via `app.use(successResponse({ defaultMessage: 'Success.' }))`:
 
 ```jsonc
 // success
-{ "success": true, "message": "User logged in successfully", "data": { "_id": "...", "firstName": "...", "...": "..." } }
+{ "success": true, "message": "Category created successfully", "data": { "...": "..." } }
 
 // error
-{ "success": false, "code": "VALIDATION_ERROR", "message": "...", "fieldErrors": { ... }, "globalErrors": [ ... ] }
+{ "success": false, "code": "UNPROCESSABLE_ENTITY", "message": "...", "fieldErrors": { ... }, "globalErrors": [ ... ] }
 ```
 
 `res.success({ statusCode, message, data })` — `data` is omitted entirely (not sent as `null`) when not provided; `statusCode` defaults to `200`.
 
 ---
 
-## 22. Data Flow Examples
+## 20. Data Flow Examples
 
-### Registration
-
-```
-Client → POST /auth/register/send-otp { email }
-  → GET user by email from DB
-  → Store OTP in Redis (10 min TTL) ← Returns { token, otp, sendCount: 1 }
-  → jobProducer.addJob('mail-queue', 'send-otp', { email, otp })
-  ← res.success({ data: token })
-
-Client → POST /auth/register/verify-otp { otp } [Authorization: token]
-  → Validate OTP in Redis
-
-Client → POST /auth/register/save-user { firstName, lastName, password, phoneNumber } [Authorization: token]
-  → Validate OTP session in Redis
-  → Check for email/phone conflicts in DB
-  → bcrypt.hash(password)
-  → create user in MongoDB with providers: ["MANUAL"]
-  → Delete OTP session from Redis
-  → Set user in Redis cache (24h TTL)
-  ← res.success({ data: minimalUser })
-```
-
-### Forgot Password
+### Category Creation
 
 ```
-Client → POST /auth/password/forgot-send-otp { email }
-  → Validate user has a MANUAL provider
-  → Store OTP in Redis ← Returns { token, otp }
-  → jobProducer.addJob('mail-queue', 'send-otp', { email, otp })
-
-Client → POST /auth/password/forgot-verify-otp { otp } [Authorization: token]
-  → Validate OTP in Redis
-
-Client → POST /auth/password/forgot-save { password } [Authorization: token]
-  → bcrypt.hash(new password)
-  → Update password in MongoDB
-  → Delete OTP session from Redis
-  → Update user in Redis cache
-  ← res.success({ data: minimalUser })
+Client → POST /category { name, level, parent? }
+  → Validate parent exists and is one level shallower (if provided)
+  → Check no sibling has the same slug
+  → Category.save() inside a transaction
+  → Flip parent.isLeaf = false (if parent given)
+  ← Commit
+  → afterCommit: redisCacheManager.category.setCategory(category)
+  ← res.success({ statusCode: 201 })
 ```
 
-### OAuth Login
+### Draft → Publish
 
 ```
-Client → GET /auth/login/oauth/{provider}/redirect
-  ← Returns provider consent URL
+Client → POST /product/draft { step: 'basicInfo', ... }   (repeated per step)
+  → RedisCacheDashboard.saveDraftProductStep() — writes one hash field, 24h TTL on first write
 
-User authenticates on the provider's site
-Provider redirects → GET /auth/login/oauth/{provider}/callback?code=...
+Client → PATCH /product/draft/publish
+  → createPendingProductPayload: load full draft from Redis into req.body
+  → Validate against draftProductDetailsZodSchema
+  → Build Product payload (SKU/slug generation, variant SKUs)
+  → product.validate() then product.save({ session })
+  ← Commit
+  → afterCommit: mark referenced images "used" (media-queue), delete Redis draft
+  ← res.success({ statusCode: 201, data: product })
+```
 
-Service:
-  → Exchange code for access_token
-  → Fetch user profile from the provider's API
-  → Find user by email in MongoDB
-  → IF exists + provider not linked: link provider, backfill avatar
-  → IF doesn't exist: create new user with that provider
-  → Set user in Redis cache
-  ← res.success({ data: minimalUser })
+### Dashboard Product Lookup
+
+```
+Client → GET /product/dashboard/:slug
+  → RedisCacheDashboard.getProductBySlug(slug)
+  → HIT  → return cached product
+  → MISS → Product.findOne({ slug, status: PUBLISHED }).populate('category')
+          → afterFinish: cache it (1-day TTL), response already sent
+  ← res.success({ data: product })
 ```
 
 ---
 
-## 23. Key Relationships
+## 21. Key Relationships
 
 ```
-User ──1→1─── Seller          (one seller profile per user)
-User ──1→1─── Wishlist        (one wishlist per user)
-Wishlist ──1→N─── Product     (many products per wishlist)
+Category ──1→N─── Category    (parent/children, L1 → L2 → L3)
+Category ──1→N─── Product     (a product always belongs to one L3 category)
+Product  ──N→1─── User         (seller, external — owned by user-service)
+Product  ──N→N─── Review       (external references only, no local Review model)
 ```
 
-- `Seller.user`      → ref `User`
-- `Wishlist.user`    → ref `User`
-- `Wishlist.products`→ ref `Product` (external, owned by `product-service`)
+- `Category.parent`  → self-referencing ref `Category`
+- `Product.category` → ref `Category` (always L3)
+- `Product.seller`   → external user id (no local ref/populate)
+- `Product.reviews`  → `ref: 'Review'`, but no `Review` model exists in this service
 
 ---
 
-## 24. Design Notes / Known Trade-offs
+## 22. Design Notes / Known Trade-offs
 
-- **`authorize` middleware is exported but unused.** No route currently requires role-based restriction beyond `authenticate`'s "is logged in" check.
-- **`RedisCacheUser.updateUser` is a plain alias for `setUser`.** Kept as a separate method for call-site clarity (an explicit "I'm updating an existing entry" vs "I'm setting one for the first time"), not because the implementation differs.
-- **`Seller`/`Wishlist` have no controllers yet.** The Mongoose models and indexes exist so other services (or a future admin surface) can query them directly, but nothing in this service writes to them.
-- **OAuth callback URLs are self-derived, not configured.** `getSocialAuthRedirectURL` builds each provider's callback URL from this service's own `METHODS_AND_PATHS` + `SERVICE_NAMES_MAP['user-service']` instead of a per-provider env var — the trade-off is that the URL registered with Google/LinkedIn/GitHub's OAuth console must match `{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback` exactly, and changing the route path in `constants/index.ts` now silently changes that URL too (previously it was two independent things that had to be kept in sync manually).
+- **Four routes are declared in `METHODS_AND_PATHS` but not wired up in `product.routes.ts`:** `DELETE /product/draft`, `PATCH /product/draft` (edit an already-published product), `PATCH /product/publish` (approve a `PENDING` product — the controller, `publishPendingProductController`, already exists and is fixed/save()-complete, it's just not routed), and `GET /product/products` (a public listing distinct from the dashboard one). These read as intentionally-planned, not-yet-shipped endpoints rather than accidental gaps — wire them up (with the appropriate Zod schema + session/transaction + Redis invalidation, matching the conventions used everywhere else in this service) once the corresponding feature is ready.
+- **Public vs. dashboard product lookup caching is asymmetric.** `GET /product/dashboard/:slug` is cache-aside over Redis; `GET /product/:slug` (the public storefront lookup, almost certainly the higher-traffic of the two) hits MongoDB directly on every request. Worth revisiting if storefront traffic grows.
+- **`RedisCacheCategory`/`RedisCacheDashboard` degrade gracefully, never crash.** Every Redis operation swallows its own errors and logs a warning (`RedisCacheHelper`); a Redis outage falls through to MongoDB on every cache-aside read path.
+- **Category cache writes/deletes are deferred to `res.locals.afterCommit`.** This keeps the Redis cache from ever getting ahead of a transaction that later rolls back. The categories hash also carries a 1-day TTL (set only when the hash doesn't already exist, so it isn't perpetually renewed by routine writes) specifically so that a rare failed Redis delete self-heals via a full MongoDB reseed instead of leaving a stale entry indefinitely.
+- **`findOrCreateCategory` (`services/index.ts`) is currently unused** by any controller in this service — it's an upsert helper available for future seed scripts or cross-service use, not part of the live request path today.
+- **`authenticate` is exported but unused directly** — every route that needs identity uses `authorize(allowedRoles)` instead, since role-gating is required everywhere identity is.
 - **`GET /` regenerates on `npm run build`, not `npm run dev`.** `public/index.html` is generated from `README.md` by the `postbuild` script. Editing this file while running `npm run dev` won't update `GET /` until a build actually runs.

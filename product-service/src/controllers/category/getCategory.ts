@@ -57,7 +57,7 @@ export const getCategoriesByHierarchy = async (_req: Request, res: Response) => 
 
   // Root level categories
   const hierarchy: TCategoryHierarchy[] = allCategories
-    .filter((category) => category.level === 1)
+    .filter((category) => category.level === CATEGORY_LEVELS_MAP.L1)
     .map((level1) => ({ ...level1, subcategories: buildHierarchy(level1._id) }));
 
   res.success({ message: 'Categories fetched successfully', data: hierarchy });

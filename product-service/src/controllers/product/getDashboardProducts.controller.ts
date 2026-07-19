@@ -36,14 +36,16 @@ export const getDashboardProductsController = async (req: Request, res: Response
 
   const direction = sortOrder === SORT_MAP.asc ? 1 : -1;
 
+  const categoryObjId = category ? getObjId(category) : undefined;
+
   const statusMatch: Partial<Omit<TProductFilter, 'status'>> = {};
 
   if (user.role === USER_ROLE_MAP.SELLER) {
     statusMatch.seller = user._id;
   }
 
-  if (category) {
-    statusMatch.category = getObjId(category);
+  if (categoryObjId) {
+    statusMatch.category = categoryObjId;
   }
 
   const searchFilters: { equals: { path: keyof TProductFilter; value: TId | TProductStatus } }[] =
@@ -57,8 +59,8 @@ export const getDashboardProductsController = async (req: Request, res: Response
     searchFilters.push({ equals: { path: 'status', value: status } });
   }
 
-  if (category) {
-    searchFilters.push({ equals: { path: 'category', value: getObjId(category) } });
+  if (categoryObjId) {
+    searchFilters.push({ equals: { path: 'category', value: categoryObjId } });
   }
 
   const matchStage: Partial<TProductFilter> = {};
@@ -71,8 +73,8 @@ export const getDashboardProductsController = async (req: Request, res: Response
     matchStage.status = status;
   }
 
-  if (category) {
-    matchStage.category = getObjId(category);
+  if (categoryObjId) {
+    matchStage.category = categoryObjId;
   }
 
   let products: TDashboardListProduct[];

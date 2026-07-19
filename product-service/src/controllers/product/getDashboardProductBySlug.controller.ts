@@ -9,7 +9,7 @@ import type { DashboardCacheProduct } from '../../types/index.js';
 export const getDashboardProductBySlugController = async (req: Request, res: Response) => {
   const { slug } = req.params as { slug: string };
 
-  let product = await redisCacheManager.dashboard.getProductBySlug(slug);;
+  let product = await redisCacheManager.dashboard.getProductBySlug(slug);
 
   if (!product) {
     const dbProduct = await Product.findOne({ slug, status: PRODUCT_STATUSES_MAP.PUBLISHED })
@@ -26,7 +26,7 @@ export const getDashboardProductBySlugController = async (req: Request, res: Res
 
     res.locals.afterFinish?.push(() =>
       redisCacheManager.dashboard.setProductBySlug(slug, dbProduct),
-    );;
+    );
   }
 
   res.success({ message: 'Product fetched successfully', data: product });
