@@ -83,14 +83,10 @@ export const publishDraftProductController = async (
     // TRY-ON CONFIGURATION
     tryOn: {
       enabled: draft.tryOnConfiguration.enabled,
-      configured: 'tryOn' in draft.tryOnConfiguration,
-      category: draft.tryOnConfiguration.tryOn
-        ? draft.tryOnConfiguration.tryOn.category
-        : undefined,
-      subCategory: (draft.tryOnConfiguration.tryOn
-        ? draft.tryOnConfiguration.tryOn.subCategory
-        : undefined) as never,
-    },
+      configured: Boolean(draft.tryOnConfiguration.tryOn),
+      category: draft.tryOnConfiguration.tryOn?.category,
+      subCategory: draft.tryOnConfiguration.tryOn?.subCategory,
+    } as TCreateProductPayload['tryOn'],
   };
 
   const product = new Product(payload);
