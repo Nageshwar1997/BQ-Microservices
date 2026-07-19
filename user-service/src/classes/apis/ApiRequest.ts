@@ -1,4 +1,9 @@
-import { createError, ERROR_CLASS_MAP, type TErrorCode } from '@beautinique/backend-classes';
+import {
+  createError,
+  ERROR_CLASS_MAP,
+  type IAppError,
+  type TErrorCode,
+} from '@beautinique/backend-classes';
 import axios, {
   AxiosError,
   type AxiosInstance,
@@ -8,13 +13,7 @@ import axios, {
 
 import type { TApiResponse } from '../../types/index.js';
 
-interface ErrorResponse {
-  message: string;
-  statusCode?: number;
-  code?: string;
-  globalErrors?: string[];
-  fieldErrors?: Record<string, string[]>;
-}
+type TErrorResponse = Omit<IAppError, 'cause' | 'isOperational'>;
 
 const isErrorCode = (code: string | undefined): code is TErrorCode =>
   !!code && code in ERROR_CLASS_MAP;
@@ -32,7 +31,7 @@ export class ApiRequest {
       return response.data as T;
     } catch (error) {
       if (error instanceof AxiosError) {
-        const errResp: AxiosResponse<ErrorResponse> | undefined = error.response;
+        const errResp: AxiosResponse<TErrorResponse> | undefined = error.response;
 
         const message = errResp?.data.message ?? 'API Error occurred';
         const globalErrors = errResp?.data.globalErrors;
