@@ -189,7 +189,9 @@ const statusCountsSchema = {
 
 const basicInfoSchema = {
   type: 'object',
+  description: '`step: "basicInfo"` — title/brand/pricing/category selection',
   required: [
+    'step',
     'title',
     'brand',
     'originalPrice',
@@ -199,6 +201,7 @@ const basicInfoSchema = {
     'l3Category',
   ],
   properties: {
+    step: { type: 'string', enum: ['basicInfo'] },
     title: { type: 'string', minLength: 2, maxLength: 200 },
     brand: { type: 'string', minLength: 2, maxLength: 100 },
     originalPrice: { type: 'number', exclusiveMinimum: 0 },
@@ -211,8 +214,10 @@ const basicInfoSchema = {
 
 const mediaAndGallerySchema = {
   type: 'object',
-  required: ['thumbnail', 'images'],
+  description: '`step: "mediaAndGallery"` — thumbnail/gallery/video',
+  required: ['step', 'thumbnail', 'images'],
   properties: {
+    step: { type: 'string', enum: ['mediaAndGallery'] },
     thumbnail: { type: 'string', format: 'uri' },
     images: { type: 'array', items: { type: 'string', format: 'uri' } },
     video: { type: 'string', format: 'uri' },
@@ -221,8 +226,10 @@ const mediaAndGallerySchema = {
 
 const descriptionAndContentSchema = {
   type: 'object',
-  required: ['shortDescription', 'description'],
+  description: '`step: "descriptionAndContent"` — long-form content fields',
+  required: ['step', 'shortDescription', 'description'],
   properties: {
+    step: { type: 'string', enum: ['descriptionAndContent'] },
     shortDescription: { type: 'string', minLength: 10, maxLength: 300 },
     description: { type: 'string', minLength: 107 },
     instructions: { type: 'string', minLength: 20 },
@@ -232,11 +239,13 @@ const descriptionAndContentSchema = {
 };
 
 const stockAndVariantsSchema = {
+  description: '`step: "stockAndVariants"` — discriminated on `hasVariants`',
   oneOf: [
     {
       type: 'object',
-      required: ['hasVariants', 'stock', 'stockThreshold'],
+      required: ['step', 'hasVariants', 'stock', 'stockThreshold'],
       properties: {
+        step: { type: 'string', enum: ['stockAndVariants'] },
         hasVariants: { type: 'boolean', enum: [false] },
         stock: { type: 'integer', minimum: 0 },
         stockThreshold: { type: 'integer', minimum: 0 },
@@ -244,8 +253,9 @@ const stockAndVariantsSchema = {
     },
     {
       type: 'object',
-      required: ['hasVariants', 'variants'],
+      required: ['step', 'hasVariants', 'variants'],
       properties: {
+        step: { type: 'string', enum: ['stockAndVariants'] },
         hasVariants: { type: 'boolean', enum: [true] },
         variants: { type: 'array', minItems: 1, items: variantSchema },
       },
@@ -263,16 +273,26 @@ const tryOnSelectionSchema = {
 };
 
 const tryOnConfigurationSchema = {
+  description:
+    '`step: "tryOnConfiguration"` — discriminated on `enabled`. NOTE: as published, ' +
+    '`@beautinique/backend-zod` declares `enabled: false` as the literal on *both* branches ' +
+    'of this union (the branch requiring a full `tryOn` selection should be `enabled: true`) - ' +
+    'documented here as originally intended, see README §25 for the caveat.',
   oneOf: [
     {
       type: 'object',
-      required: ['enabled'],
-      properties: { enabled: { type: 'boolean', enum: [false] } },
+      required: ['step', 'enabled'],
+      properties: {
+        step: { type: 'string', enum: ['tryOnConfiguration'] },
+        enabled: { type: 'boolean', enum: [false] },
+        tryOn: tryOnSelectionSchema,
+      },
     },
     {
       type: 'object',
-      required: ['enabled', 'tryOn'],
+      required: ['step', 'enabled', 'tryOn'],
       properties: {
+        step: { type: 'string', enum: ['tryOnConfiguration'] },
         enabled: { type: 'boolean', enum: [true] },
         tryOn: tryOnSelectionSchema,
       },
@@ -281,21 +301,16 @@ const tryOnConfigurationSchema = {
 };
 
 const draftProductStepBodySchema = {
-  type: 'object',
-  description: 'One step of the multi-step draft. `step` selects which of the fields below is required.',
-  required: ['step'],
-  properties: {
-    step: { type: 'integer', enum: [0, 1, 2, 3, 4] },
-    ...basicInfoSchema.properties,
-    ...mediaAndGallerySchema.properties,
-    ...descriptionAndContentSchema.properties,
-    hasVariants: { type: 'boolean' },
-    stock: { type: 'integer' },
-    stockThreshold: { type: 'integer' },
-    variants: { type: 'array', items: variantSchema },
-    enabled: { type: 'boolean' },
-    tryOn: tryOnSelectionSchema,
-  },
+  description:
+    'One step of the multi-step draft, discriminated by the string `step` field. ' +
+    'Exactly one of the following 5 shapes per request.',
+  oneOf: [
+    basicInfoSchema,
+    mediaAndGallerySchema,
+    descriptionAndContentSchema,
+    ...stockAndVariantsSchema.oneOf,
+    ...tryOnConfigurationSchema.oneOf,
+  ],
 };
 
 const draftProductDetailsSchema = {
