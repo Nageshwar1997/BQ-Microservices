@@ -24,19 +24,11 @@ export interface IIdStr {
 }
 
 export type TDraftProductStepBody =
-  | (TProductBasicInfoZodSchema & { step: 0 })
-  | (TProductMediaAndGallerySchema & { step: 1 })
-  | (TProductDescriptionAndContentZodSchema & { step: 2 })
-  | (TProductStockAndVariantsSchema & { step: 3 })
-  | (TProductTryOnConfigurationZodSchema & { step: 4 });
-
-export interface TDraftProductDetails {
-  basicInfo: TProductBasicInfoZodSchema;
-  mediaAndGallery: TProductMediaAndGallerySchema;
-  descriptionAndContent: TProductDescriptionAndContentZodSchema;
-  stockAndVariants: TProductStockAndVariantsSchema;
-  tryOnConfiguration: TProductTryOnConfigurationZodSchema;
-}
+  | TProductBasicInfoZodSchema
+  | TProductMediaAndGallerySchema
+  | TProductDescriptionAndContentZodSchema
+  | TProductStockAndVariantsSchema
+  | TProductTryOnConfigurationZodSchema;
 
 export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
 

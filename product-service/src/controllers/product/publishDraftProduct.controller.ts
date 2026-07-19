@@ -1,4 +1,5 @@
 import { getObjId } from '@beautinique/backend-mongoose';
+import type { TDraftProductDetailsZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import { PRODUCT_STATUSES_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
@@ -6,7 +7,7 @@ import type { ClientSession } from 'mongoose';
 
 import { jobProducer, redisCacheManager } from '../../configs/index.js';
 import { Product } from '../../models/index.js';
-import type { TCreateProductPayload, TDraftProductDetails } from '../../types/index.js';
+import type { TCreateProductPayload } from '../../types/index.js';
 import {
   extractImageUrlsFromHtml,
   generateSku,
@@ -21,7 +22,7 @@ export const publishDraftProductController = async (
   session: ClientSession,
 ) => {
   const user = getUser(req.user);
-  const draft = req.body as TDraftProductDetails;
+  const draft = req.body as TDraftProductDetailsZodSchema;
 
   const isAdmin = [USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER].includes(user.role as never);
 
@@ -80,19 +81,16 @@ export const publishDraftProductController = async (
       'stockThreshold' in draft.stockAndVariants ? draft.stockAndVariants.stockThreshold : null,
 
     // TRY-ON CONFIGURATION
-    tryOn: draft.tryOnConfiguration.enabled
-      ? {
-          enabled: true,
-          configured: true,
-          category: draft.tryOnConfiguration.tryOn.category,
-          subCategory: draft.tryOnConfiguration.tryOn.subCategory as never,
-        }
-      : {
-          enabled: false,
-          configured: false,
-          category: draft.tryOnConfiguration.tryOn?.category,
-          subCategory: draft.tryOnConfiguration.tryOn?.subCategory as never,
-        },
+    tryOn: {
+      enabled: draft.tryOnConfiguration.enabled,
+      configured: 'tryOn' in draft.tryOnConfiguration,
+      category: draft.tryOnConfiguration.tryOn
+        ? draft.tryOnConfiguration.tryOn.category
+        : undefined,
+      subCategory: (draft.tryOnConfiguration.tryOn
+        ? draft.tryOnConfiguration.tryOn.subCategory
+        : undefined) as never,
+    },
   };
 
   const product = new Product(payload);

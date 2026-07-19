@@ -1,17 +1,8 @@
-import { NotFoundError, PreconditionFailedError } from '@beautinique/backend-classes';
+import { NotFoundError } from '@beautinique/backend-classes';
 import { getUser } from '@beautinique/backend-utils';
-import {
-  object,
-  productBasicInfoZodSchema,
-  productDescriptionAndContentZodSchema,
-  productMediaAndGallerySchema,
-  productStockAndVariantsSchema,
-  productTryOnConfigurationZodSchema,
-} from '@beautinique/backend-zod';
 import type { NextFunction, Request, Response } from 'express';
 
 import { redisCacheManager } from '../configs/index.js';
-import type { TDraftProductDetails } from '../types/index.js';
 
 export const createPendingProductPayload = async (
   req: Request,
@@ -25,43 +16,7 @@ export const createPendingProductPayload = async (
     throw new NotFoundError('Draft expired');
   }
 
-  if (!draft.basicInfo) {
-    throw new PreconditionFailedError('Basic info is missing');
-  }
-
-  if (!draft.descriptionAndContent) {
-    throw new PreconditionFailedError('Description and content is missing');
-  }
-
-  if (!draft.stockAndVariants) {
-    throw new PreconditionFailedError('Stock and variants configuration is missing');
-  }
-
-  if (!draft.mediaAndGallery) {
-    throw new PreconditionFailedError('Product media is missing');
-  }
-
-  if (!draft.tryOnConfiguration) {
-    throw new PreconditionFailedError('Try-on configuration is missing');
-  }
-
-  const schema = object({
-    basicInfo: productBasicInfoZodSchema,
-    mediaAndGallery: productMediaAndGallerySchema,
-    descriptionAndContent: productDescriptionAndContentZodSchema,
-    stockAndVariants: productStockAndVariantsSchema,
-    tryOnConfiguration: productTryOnConfigurationZodSchema,
-  }); 
-
-  const body: TDraftProductDetails = {
-    basicInfo: draft.basicInfo,
-    mediaAndGallery: draft.mediaAndGallery,
-    descriptionAndContent: draft.descriptionAndContent,
-    stockAndVariants: draft.stockAndVariants,
-    tryOnConfiguration: draft.tryOnConfiguration,
-  };
-
-  req.body = body;
+  req.body = draft;
 
   next();
 };
