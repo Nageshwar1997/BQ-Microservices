@@ -1,7 +1,10 @@
-import type { TDraftProductDetailsZodSchema } from '@beautinique/backend-types';
+import type {
+  TDraftProductDetailsZodSchema,
+  TDraftProductStepBodyZodSchema,
+} from '@beautinique/backend-types';
 import { parseData } from '@beautinique/shared-utils';
 
-import type { DashboardCacheProduct, TDraftProductStepBody } from '../../types/index.js';
+import type { DashboardCacheProduct } from '../../types/index.js';
 import { RedisCacheHelper } from './RedisCacheHelper.js';
 
 const DASHBOARD_CACHE_TTL_SECONDS = 60 * 60 * 24; // 1 day
@@ -52,7 +55,7 @@ export class RedisCacheDashboard extends RedisCacheHelper {
     return this.getDraftHashData(this.getDraftProductKey(userId));
   }
 
-  public async saveDraftProductStep(userId: string, stepData: TDraftProductStepBody) {
+  public async saveDraftProductStep(userId: string, stepData: TDraftProductStepBodyZodSchema) {
     const key = this.getDraftProductKey(userId);
 
     const isNewDraft = !(await this.exists(key));

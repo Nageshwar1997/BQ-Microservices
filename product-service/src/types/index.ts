@@ -1,11 +1,6 @@
 import type {
   TCategoryZodSchema,
-  TProductBasicInfoZodSchema,
-  TProductDescriptionAndContentZodSchema,
-  TProductMediaAndGallerySchema,
   TProductStatus,
-  TProductStockAndVariantsSchema,
-  TProductTryOnConfigurationZodSchema,
   TSort,
   TTryOnSelection,
   TUserRole,
@@ -22,13 +17,6 @@ export interface IId {
 export interface IIdStr {
   _id: TStrId;
 }
-
-export type TDraftProductStepBody =
-  | TProductBasicInfoZodSchema
-  | TProductMediaAndGallerySchema
-  | TProductDescriptionAndContentZodSchema
-  | TProductStockAndVariantsSchema
-  | TProductTryOnConfigurationZodSchema;
 
 export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
 
