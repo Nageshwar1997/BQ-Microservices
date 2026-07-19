@@ -1,7 +1,11 @@
 import { tryCatchSession } from '@beautinique/backend-mongoose';
 import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
-import { draftProductDetailsZodSchema, validateZod } from '@beautinique/backend-zod';
+import {
+  draftProductDetailsZodSchema,
+  draftProductStepBodyZodSchema,
+  validateZod,
+} from '@beautinique/backend-zod';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
@@ -26,6 +30,7 @@ const { draft, get } = METHODS_AND_PATHS.product;
 draftRouter[draft.save.method](
   draft.save.path,
   checkEmptyRequest({ body: true }),
+  validateZod({ body: draftProductStepBodyZodSchema }),
   tryCatchResponse(saveDraftProductController),
 );
 
