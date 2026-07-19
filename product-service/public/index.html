@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product Service</title>
+    <style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --fg: #1f2328;
+    --muted: #59636e;
+    --border: #d1d9e0;
+    --code-bg: #f6f8fa;
+    --link: #0969da;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117;
+      --fg: #e6edf3;
+      --muted: #9198a1;
+      --border: #30363d;
+      --code-bg: #161b22;
+      --link: #4493f8;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+
+  main {
+    max-width: 1024px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 1.6em 0 0.6em;
+  }
+  h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+  h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 1.25em; }
+  h4 { font-size: 1.05em; }
+  h1:first-child { margin-top: 0; }
+
+  p, ul, ol, table, blockquote { margin: 0 0 1em; }
+  ul, ol { padding-left: 1.6em; }
+  li + li { margin-top: 0.2em; }
+
+  a { color: var(--link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  code {
+    font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 6px;
+  }
+
+  pre {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  pre code { background: none; padding: 0; font-size: 0.85em; }
+
+  blockquote {
+    margin-left: 0;
+    padding: 0 1em;
+    color: var(--muted);
+    border-left: 0.25em solid var(--border);
+  }
+
+  table { display: block; overflow-x: auto; border-collapse: collapse; margin: 0 0 1em; }
+  th, td { border: 1px solid var(--border); padding: 6px 13px; text-align: left; }
+  th { background: var(--code-bg); font-weight: 600; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
+  img { max-width: 100%; }
+</style>
+  </head>
+  <body>
+    <main><h1>Product Service — Documentation</h1>
+<p><strong>Project:</strong> Beautinique (BQ-Microservices)
+<strong>Service:</strong> Product Service
+<strong>Author:</strong> Nageshwar Pawar
+<strong>Version:</strong> 1.0.0
+<strong>Port:</strong> configured via <code>PORT</code> (see <a href="#4-environment-variables">§4</a>)</p>
+<hr>
+<h2>1. Overview</h2>
+<p>The Product Service owns the product catalog and category tree for the <strong>Beautinique</strong> platform: a multi-step draft → review → publish flow for seller-submitted products, category CRUD with a 3-level hierarchy (L1/L2/L3), a searchable/paginated seller &amp; admin dashboard, public product lookup, Atlas Search-powered autocomplete suggestions, and a Redis-backed cache for categories and dashboard products. It also serves its own documentation: <code>GET /</code> renders this README as HTML, and <code>GET /docs</code> serves an interactive Swagger UI.</p>
+<hr>
+<h2>2. Technology Stack</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Technology</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Runtime</td>
+<td>Node.js (ES2025, ESM)</td>
+</tr>
+<tr>
+<td>Language</td>
+<td>TypeScript 6.x (<code>strict</code>, <code>noUncheckedIndexedAccess</code>, <code>noEmitOnError</code>)</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>Express.js 5.x</td>
+</tr>
+<tr>
+<td>Database</td>
+<td>MongoDB (via Mongoose 9.x, <code>@beautinique/backend-mongoose</code>), plus MongoDB Atlas Search (<code>$search</code>) for product/dashboard search</td>
+</tr>
+<tr>
+<td>Cache</td>
+<td>Redis, via the <code>redis</code> client (custom <code>RedisCacheManager</code>, not a shared package)</td>
+</tr>
+<tr>
+<td>Background jobs / queue</td>
+<td>BullMQ (Redis), via <code>@beautinique/backend-bullmq</code> — <strong>producer only</strong>, <code>media-queue</code> (see <a href="#19-background-jobs-media-queue-producer-only">§19</a>)</td>
+</tr>
+<tr>
+<td>Validation</td>
+<td>Zod, via <code>@beautinique/backend-zod</code> (schemas defined and versioned in a separate <code>BQ-Packages</code> repo, not here — see <a href="#6-request-validation-zod-schemas">§6</a>)</td>
+</tr>
+<tr>
+<td>Logging</td>
+<td>Pino, via <code>@beautinique/backend-logger</code></td>
+</tr>
+<tr>
+<td>API docs</td>
+<td>OpenAPI 3.0 spec (hand-written) + <code>swagger-ui-express</code></td>
+</tr>
+<tr>
+<td>README rendering</td>
+<td><code>@beautinique/shared-markdown-to-html</code> (markdown → HTML)</td>
+</tr>
+<tr>
+<td>Shared response envelope</td>
+<td><code>@beautinique/backend-response</code></td>
+</tr>
+<tr>
+<td>Shared utilities</td>
+<td><code>@beautinique/backend-utils</code>, <code>@beautinique/backend-mongoose</code>, <code>@beautinique/shared-utils</code></td>
+</tr>
+<tr>
+<td>Shared constants/types</td>
+<td><code>@beautinique/shared-constants</code>, <code>@beautinique/backend-types</code></td>
+</tr>
+<tr>
+<td>Slug generation</td>
+<td><code>slugify</code></td>
+</tr>
+<tr>
+<td>Code quality</td>
+<td>ESLint (flat config, type-checked + strict), Prettier</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>3. Project Structure</h2>
+<pre><code>product-service/
+├── src/
+│   ├── index.ts                       # Entry point: loads env, wires SIGINT/SIGTERM, calls startup()
+│   ├── app.ts                         # Express app: middleware chain, routes, error handlers
+│   ├── bootstrap/                     # Startup/shutdown orchestration
+│   │   ├── startup.ts                 #   Mongo+Redis (parallel) → HTTP server, in order
+│   │   ├── shutdown.ts                #   HTTP server → job producer/Redis/Mongo (parallel) → sockets, in order
+│   │   ├── server.ts                  #   Low-level HTTP server lifecycle + connection tracking
+│   │   └── database-events.ts         #   Mongo connection event → logger wiring
+│   ├── classes/
+│   │   ├── index.ts                   #   Re-exports
+│   │   └── redis/
+│   │       ├── index.ts               #   RedisCacheManager - owns the client, connect()/close(), .category/.dashboard
+│   │       ├── RedisCacheHelper.ts    #   Base class: string/hash get/set/delete primitives
+│   │       ├── RedisCacheCategory.ts  #   Category tree cache (cache-aside over MongoDB, 1-day self-healing TTL)
+│   │       └── RedisCacheDashboard.ts #   Draft-product + published-product-by-slug cache (1-day TTL)
+│   ├── configs/
+│   │   └── index.ts                   #   Singletons: databaseConfigs, logger, jobProducer, redisClient, redisCacheManager
+│   ├── constants/
+│   │   └── index.ts                   #   LOGGER_BASE_OPTIONS, route paths (METHODS_AND_PATHS), PRODUCT_DASHBOARD_PROJECTION
+│   ├── controllers/
+│   │   ├── index.ts                   #   Re-exports all controllers
+│   │   ├── category/
+│   │   │   ├── addCategory.ts         #   Create a category (L1/L2/L3)
+│   │   │   ├── updateCategory.ts      #   Update a category (name/parent/description)
+│   │   │   ├── deleteCategory.ts      #   Delete a leaf category with no products
+│   │   │   └── getCategory.ts         #   List by parent+level / full hierarchy tree
+│   │   └── product/
+│   │       ├── saveDraftProduct.controller.ts        #   Save one step of a multi-step draft (Redis hash)
+│   │       ├── publishDraftProduct.controller.ts     #   Turn a complete draft into a real Product document
+│   │       ├── publishPendingProduct.controller.ts   #   Approve a PENDING product → PUBLISHED (not yet routed, see §25)
+│   │       ├── getDraftProduct.controller.ts          #   Fetch the caller&#39;s in-progress draft
+│   │       ├── getDashboardProducts.controller.ts     #   Paginated/sortable/searchable seller+admin listing
+│   │       ├── getDashboardProductBySlug.controller.ts #  Single product lookup for the dashboard (cache-aside)
+│   │       ├── getProductBySlug.controller.ts          #  Public storefront product lookup
+│   │       └── getProductsSuggestions.controller.ts   #   Atlas Search autocomplete suggestions
+│   ├── docs/
+│   │   └── openapi.ts                 #   Hand-written OpenAPI 3.0 spec, served at /docs
+│   ├── envs/
+│   │   └── index.ts                   #   process.env → typed envs, fail-fast on missing/invalid vars
+│   ├── middlewares/
+│   │   ├── auth.middleware.ts                        #   authenticate, authorize
+│   │   └── createPendingProductPayload.middleware.ts  #   Loads the caller&#39;s Redis draft into req.body before publish
+│   ├── models/
+│   │   └── index.ts                   #   Category, Product (Mongoose)
+│   ├── routes/
+│   │   ├── index.ts                   #   Root router (/api/v1)
+│   │   ├── category.routes.ts         #   Category CRUD + listing routes
+│   │   └── product.routes.ts          #   Draft, dashboard, public product routes
+│   ├── schemas/                       # Mongoose schema definitions
+│   │   ├── index.ts
+│   │   ├── category.schema.ts
+│   │   └── product.schema.ts          #   Also defines variantSchema, historySchema, tryOnSchema
+│   ├── services/
+│   │   └── index.ts                   #   findOrCreateCategory (upsert helper)
+│   ├── types/
+│   │   ├── index.ts                   #   Core interfaces (ICategory, TProduct, TDashboardListProduct, etc.)
+│   │   └── express.d.ts               #   Request.user augmentation
+│   └── utils/
+│       └── index.ts                   #   Slug/SKU generation, minimal-category projector, Atlas Search pipelines
+├── scripts/
+│   └── generate-html.mjs              # Renders README.md → public/index.html, runs via &quot;postbuild&quot;
+├── public/
+│   └── index.html                     # Pre-rendered README, served by GET /
+├── dist/                              # Compiled JavaScript output (git-ignored)
+├── logs/                              # Pino log output
+├── package.json
+├── tsconfig.json
+├── eslint.config.mjs
+└── .env
+</code></pre>
+<hr>
+<h2>4. Environment Variables</h2>
+<p>All environment variables are loaded via <code>dotenv</code> and validated in <code>src/envs/index.ts</code> — every required variable is checked with <code>requireEnv</code>/<code>requirePort</code> at startup, so a missing or invalid value throws a clear error immediately instead of failing confusingly later. There is no fallback/default for any of these — every one is <code>required</code>.</p>
+<h3>4.1 Server &amp; App</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PORT</code></td>
+<td>HTTP port to listen on</td>
+</tr>
+<tr>
+<td><code>IS_DEV</code></td>
+<td><code>&quot;true&quot;</code> enables pretty logging (<code>LOGGER_BASE_OPTIONS.pretty</code>) and stack traces in error responses (<code>errorResponse({ includeStack: envs.is_dev })</code>)</td>
+</tr>
+<tr>
+<td><code>SERVICE_NAME</code></td>
+<td>Name tag attached to every log line via <code>createLogger</code></td>
+</tr>
+<tr>
+<td><code>SERVICE_SECRET</code></td>
+<td>Shared secret required in the <code>X-Service-Secret</code> header on every <code>/api/v1/*</code> request</td>
+</tr>
+<tr>
+<td><code>DATABASE_NAME</code></td>
+<td>MongoDB database name, passed to <code>connectDb</code> as <code>options.dbName</code></td>
+</tr>
+</tbody></table>
+<h3>4.2 MongoDB</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>MONGODB_URI</code></td>
+<td>MongoDB connection string</td>
+</tr>
+</tbody></table>
+<p><code>databaseConfigs.enableGlobalCache</code> is wired to <code>envs.is_dev</code> — Mongoose&#39;s global model cache behaves differently in dev vs. production, matching the pattern <code>@beautinique/backend-mongoose</code> expects.</p>
+<h3>4.3 Redis — Cache</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>CACHE_HOST</code></td>
+<td>Redis host used for the category/dashboard cache</td>
+</tr>
+<tr>
+<td><code>CACHE_PORT</code></td>
+<td>Redis port</td>
+</tr>
+<tr>
+<td><code>CACHE_PASSWORD</code></td>
+<td>Redis password</td>
+</tr>
+<tr>
+<td><code>CACHE_USERNAME</code></td>
+<td>Redis username</td>
+</tr>
+</tbody></table>
+<h3>4.4 Redis — BullMQ</h3>
+<table>
+<thead>
+<tr>
+<th>Variable</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>BULL_MQ_HOST</code></td>
+<td>Redis host used for the <code>media-queue</code> BullMQ connection</td>
+</tr>
+<tr>
+<td><code>BULL_MQ_PORT</code></td>
+<td>Redis port</td>
+</tr>
+<tr>
+<td><code>BULL_MQ_PASSWORD</code></td>
+<td>Redis password</td>
+</tr>
+<tr>
+<td><code>BULL_MQ_USERNAME</code></td>
+<td>Redis username</td>
+</tr>
+</tbody></table>
+<p><strong>This Redis instance is shared</strong> with <code>media-service</code>, which runs the <code>media-queue</code> worker — it must point to the same instance in both services. Note that the cache Redis (§4.3) and the BullMQ Redis (§4.4) are configured as two entirely independent connections in <code>configs/index.ts</code> (<code>redisClient</code> vs. <code>jobProducer</code>&#39;s <code>connection</code>) — they are allowed to point at different physical Redis instances/databases, and typically do in production (cache data is disposable, queue data is not).</p>
+<hr>
+<h2>5. Database Models</h2>
+<h3>5.1 Category Schema (<code>category.schema.ts</code>)</h3>
+<p>Collection: <code>categories</code></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Trimmed, 2–120 chars</td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Lowercased, auto-derived from <code>name</code> on every <code>validate</code> (non-unique on its own — uniqueness is enforced by the compound <code>{parent,slug}</code> index)</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>String</td>
+<td>No</td>
+<td>—</td>
+<td>10–150 chars; only meaningful for L3 (force-cleared to <code>undefined</code> for L1/L2 on every validate, see below)</td>
+</tr>
+<tr>
+<td><code>level</code></td>
+<td>Number (enum)</td>
+<td>Yes</td>
+<td>—</td>
+<td><code>1</code> (main), <code>2</code> (sub), <code>3</code> (final/product-facing) — <code>CATEGORY_LEVELS_MAP</code> from <code>@beautinique/shared-constants</code></td>
+</tr>
+<tr>
+<td><code>parent</code></td>
+<td>ObjectId ref <code>Category</code></td>
+<td>No</td>
+<td>—</td>
+<td>Force-cleared to <code>undefined</code> for L1 (root categories have no parent)</td>
+</tr>
+<tr>
+<td><code>isLeaf</code></td>
+<td>Boolean</td>
+<td>No</td>
+<td><code>true</code></td>
+<td>Flipped to <code>false</code> when a category gains its first child, back to <code>true</code> when its last child is removed/reparented — maintained entirely by the category controllers, never set directly by the client</td>
+</tr>
+<tr>
+<td><code>productCount</code></td>
+<td>Number</td>
+<td>No</td>
+<td>—</td>
+<td>Maintained mainly for L3 (product-facing) categories; not currently written to by any controller in this service (see <a href="#25-design-notes--known-trade-offs">§25</a>)</td>
+</tr>
+<tr>
+<td><code>createdBy</code></td>
+<td>ObjectId</td>
+<td>Yes</td>
+<td>—</td>
+<td>Caller&#39;s user id, taken from <code>X-User-Id</code> at creation time</td>
+</tr>
+<tr>
+<td><code>updatedBy</code></td>
+<td>ObjectId</td>
+<td>No</td>
+<td>—</td>
+<td>Caller&#39;s user id, set on every update</td>
+</tr>
+</tbody></table>
+<p>Also has <code>timestamps: true</code> (<code>createdAt</code>/<code>updatedAt</code>), <code>versionKey: false</code> (no <code>__v</code>), and a case-insensitive <code>collation: { locale: &#39;en&#39;, strength: 1 }</code> — <code>strength: 1</code> means comparisons ignore case <em>and</em> diacritics, which keeps text search and the sibling-uniqueness index forgiving of casing differences.</p>
+<p><strong>Pre-<code>validate</code> hook</strong> (<code>categorySchema.pre(&#39;validate&#39;, ...)</code>), runs on every <code>save()</code>/<code>validate()</code>:</p>
+<ol>
+<li>If <code>name</code> is present, regenerate <code>slug = generateSlug(name, unique: false)</code> — i.e. the slug is <em>always</em> recomputed from the current <code>name</code>, never trusted from client input.</li>
+<li>If <code>level === L1</code>: force <code>parent = undefined</code> and <code>description = undefined</code>.</li>
+<li>If <code>level === L2</code>: force <code>description = undefined</code> (parent is left as-is; L2 requires a parent, enforced at the controller level, not the schema level).</li>
+</ol>
+<p><strong>Indexes:</strong></p>
+<ul>
+<li><code>{ parent: 1, slug: 1 }</code> <strong>unique</strong> — a category&#39;s slug only has to be unique among its siblings (same <code>parent</code>), not globally. Two different L2 categories under different L1 parents can share the slug <code>accessories</code>, for example.</li>
+<li><code>{ name: &#39;text&#39;, slug: &#39;text&#39;, description: &#39;text&#39; }</code> — full-text search index (not currently queried by any controller in this service — available for a future admin search UI)</li>
+<li><code>{ createdBy: 1, level: 1 }</code>, <code>{ parent: 1, level: 1 }</code>, <code>{ isLeaf: 1, level: 1 }</code> — compound filter indexes</li>
+<li>Single-field indexes on <code>name</code>, <code>slug</code>, <code>description</code>, <code>level</code>, <code>parent</code>, <code>isLeaf</code>, <code>productCount</code>, <code>createdBy</code>, <code>updatedBy</code></li>
+</ul>
+<h3>5.2 Product Schema (<code>product.schema.ts</code>)</h3>
+<p>Collection: <code>products</code></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Default</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>title</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Trimmed, 2–200 chars</td>
+</tr>
+<tr>
+<td><code>sku</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Trimmed, uppercased, globally unique (own <code>productSchema.index({ sku: 1 }, { unique: true })</code>, in addition to the <code>unique: true</code> implicitly declared on the path)</td>
+</tr>
+<tr>
+<td><code>brand</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Trimmed, 2–100 chars</td>
+</tr>
+<tr>
+<td><code>originalPrice</code> / <code>sellingPrice</code></td>
+<td>Number</td>
+<td>Yes</td>
+<td>—</td>
+<td>Both <code>min: 0</code> at the schema level; the <em>stronger</em> rules (<code>originalPrice &gt; 0</code> strictly, <code>sellingPrice &lt;= originalPrice</code>) are enforced in the <code>pre(&#39;validate&#39;)</code> hook below, not by <code>min</code>/<code>max</code></td>
+</tr>
+<tr>
+<td><code>discount</code></td>
+<td>Number</td>
+<td>No</td>
+<td><code>0</code></td>
+<td><code>min: 0, max: 100</code> — auto-calculated from the two prices on every <code>validate</code>, never trusted from client input</td>
+</tr>
+<tr>
+<td><code>stock</code> / <code>stockThreshold</code></td>
+<td>Number</td>
+<td>No</td>
+<td><code>null</code></td>
+<td>Only meaningful when <code>hasVariants: false</code>; left <code>null</code> for variant products (each variant carries its own <code>stock</code>/<code>stockThreshold</code> instead)</td>
+</tr>
+<tr>
+<td><code>shortDescription</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Trimmed, 10–300 chars</td>
+</tr>
+<tr>
+<td><code>description</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Trimmed, <strong>≥107 chars</strong> — the one unusually strict minimum in this schema, presumably to force a substantive product description</td>
+</tr>
+<tr>
+<td><code>instructions</code> / <code>ingredients</code> / <code>additional</code></td>
+<td>String</td>
+<td>No</td>
+<td>—</td>
+<td>Trimmed, ≥20 chars each, only when present</td>
+</tr>
+<tr>
+<td><code>slug</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Trimmed, lowercased, globally unique, generated by the controller (<code>generateSlug(title + &#39; &#39; + l3Category.name)</code>, unique suffix) — <strong>not</strong> auto-derived by a schema hook the way category&#39;s slug is</td>
+</tr>
+<tr>
+<td><code>images</code> / <code>thumbnail</code></td>
+<td>[String] / String</td>
+<td>Yes</td>
+<td>—</td>
+<td>Cloudinary delivery URLs</td>
+</tr>
+<tr>
+<td><code>video</code></td>
+<td>String</td>
+<td>No</td>
+<td>—</td>
+<td>Cloudinary delivery URL</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>ObjectId ref <code>Category</code></td>
+<td>Yes</td>
+<td>—</td>
+<td>Always the deepest (L3) category — enforced by the controller, not the schema</td>
+</tr>
+<tr>
+<td><code>seller</code></td>
+<td>ObjectId</td>
+<td>Yes</td>
+<td>—</td>
+<td>Owning seller&#39;s user id (external — no local <code>User</code> model, no <code>ref</code>)</td>
+</tr>
+<tr>
+<td><code>soldCount</code> / <code>returnCount</code> / <code>totalReviews</code> / <code>totalRating</code></td>
+<td>Number</td>
+<td>No</td>
+<td><code>0</code></td>
+<td><code>min: 0</code>; not written to by any controller in this service today — reserved for order/review services to update directly</td>
+</tr>
+<tr>
+<td><code>averageRating</code></td>
+<td>Number</td>
+<td>No</td>
+<td><code>0</code></td>
+<td><code>min: 0, max: 5</code>; same as above — reserved for a review service</td>
+</tr>
+<tr>
+<td><code>reviews</code></td>
+<td>[ObjectId ref <code>Review</code>]</td>
+<td>No</td>
+<td><code>[]</code></td>
+<td>External references only — <strong>there is no <code>Review</code> model in this service</strong>, <code>ref: &#39;Review&#39;</code> only matters if/when <code>.populate(&#39;reviews&#39;)</code> is called against a connection where that model is registered</td>
+</tr>
+<tr>
+<td><code>hasVariants</code></td>
+<td>Boolean</td>
+<td>Yes</td>
+<td>—</td>
+<td>Gates whether <code>stock</code>/<code>stockThreshold</code> or <code>variants</code> is the source of truth for inventory</td>
+</tr>
+<tr>
+<td><code>variants</code></td>
+<td>[variantSchema]</td>
+<td>No</td>
+<td><code>[]</code></td>
+<td>Required to be non-empty, with unique SKUs, when <code>hasVariants: true</code> (enforced in the <code>pre(&#39;validate&#39;)</code> hook, not by <code>required</code>/<code>minlength</code> on the array path itself)</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>String (enum)</td>
+<td>No</td>
+<td><code>&quot;PENDING&quot;</code></td>
+<td><code>DELETED</code>, <code>PENDING</code>, <code>PUBLISHED</code>, <code>REJECTED</code>, <code>BLOCKED</code> — <code>PRODUCT_STATUSES_MAP</code> from <code>@beautinique/shared-constants</code></td>
+</tr>
+<tr>
+<td><code>history</code></td>
+<td>historySchema</td>
+<td>No</td>
+<td>—</td>
+<td><code>approvedBy</code>/<code>approvedAt</code>, <code>blockedBy</code>/<code>blockedAt</code>, <code>rejectedBy</code>/<code>rejectedAt</code>/<code>rejectReason</code> — populated piecemeal as a product moves through moderation, never all at once</td>
+</tr>
+<tr>
+<td><code>tryOn</code></td>
+<td>tryOnSchema</td>
+<td>No</td>
+<td>—</td>
+<td>Virtual try-on configuration, see <a href="#522-tryonschema-subdocument">§5.2.2</a> below</td>
+</tr>
+</tbody></table>
+<p>Also has <code>timestamps: true</code>, <code>versionKey: false</code>.</p>
+<h4>5.2.1 <code>variantSchema</code> (subdocument)</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>sku</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Trimmed, uppercased — generated by the controller (<code>generateSku</code>), not the schema</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>String (enum)</td>
+<td>Yes</td>
+<td><code>Color</code> | <code>Text</code> — governs whether the storefront renders <code>value</code> as a swatch or a text chip</td>
+</tr>
+<tr>
+<td><code>label</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Trimmed, e.g. <code>&quot;Ruby Red&quot;</code></td>
+</tr>
+<tr>
+<td><code>value</code></td>
+<td>String</td>
+<td>Yes</td>
+<td>Trimmed — a hex code for <code>Color</code>, free text for <code>Text</code></td>
+</tr>
+<tr>
+<td><code>originalPrice</code> / <code>sellingPrice</code></td>
+<td>Number</td>
+<td>Yes</td>
+<td><code>min: 0</code> at the schema level, plus the same &quot;greater than zero&quot; / &quot;selling ≤ original&quot; rule as the product level, enforced per-variant</td>
+</tr>
+<tr>
+<td><code>discount</code></td>
+<td>Number</td>
+<td>No</td>
+<td><code>min:0, max:100, default:0</code> — auto-calculated per variant</td>
+</tr>
+<tr>
+<td><code>stock</code></td>
+<td>Number</td>
+<td>Yes</td>
+<td><code>min: 0</code></td>
+</tr>
+<tr>
+<td><code>stockThreshold</code></td>
+<td>Number</td>
+<td>Yes</td>
+<td><code>min: 0</code> — low-stock alert threshold</td>
+</tr>
+<tr>
+<td><code>images</code></td>
+<td>[String]</td>
+<td>Yes</td>
+<td><code>default: undefined</code> (explicitly, so an empty <code>[]</code> doesn&#39;t silently satisfy <code>required</code> — Mongoose treats <code>[]</code> as satisfying <code>required</code> on an array path by default; this default override is what forces a real value)</td>
+</tr>
+<tr>
+<td><code>thumbnail</code></td>
+<td>String</td>
+<td>No</td>
+<td>—</td>
+</tr>
+</tbody></table>
+<p><code>variantSchema.pre(&#39;validate&#39;)</code>: throws <code>UnprocessableEntityError</code> if <code>originalPrice &lt;= 0</code>, or if <code>sellingPrice &gt; originalPrice</code>; then computes <code>discount = round((originalPrice - sellingPrice) / originalPrice * 100)</code>.</p>
+<h4>5.2.2 <code>tryOnSchema</code> (subdocument)</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>configured</code></td>
+<td>Boolean</td>
+<td>Yes, <code>default: false</code></td>
+<td>Whether the seller has walked through try-on setup at all</td>
+</tr>
+<tr>
+<td><code>enabled</code></td>
+<td>Boolean</td>
+<td>No, <code>default: false</code></td>
+<td>Whether try-on is actually turned on for this product</td>
+</tr>
+<tr>
+<td><code>category</code></td>
+<td>String (enum)</td>
+<td>Only when <code>configured</code></td>
+<td>One of <code>TRY_ON_CATEGORIES</code>: <code>LIP</code>, <code>EYE</code>, <code>HAIR</code>, <code>FACE</code>, <code>NAIL</code>, <code>SKIN</code></td>
+</tr>
+<tr>
+<td><code>subCategory</code></td>
+<td>String (enum)</td>
+<td>Only when <code>configured</code> <strong>and</strong> <code>category</code> set</td>
+<td>One of <code>TRY_ON_ALL_SUB_CATEGORIES</code>, validated against <code>TRY_ON_MAP[category]</code> (see table below)</td>
+</tr>
+</tbody></table>
+<p><code>TRY_ON_MAP</code> (from <code>@beautinique/shared-constants</code>) — the category → allowed-sub-category relationship enforced by both the path-level <code>validate</code> function and the schema&#39;s own <code>pre(&#39;validate&#39;)</code> hook:</p>
+<table>
+<thead>
+<tr>
+<th>Category</th>
+<th>Allowed sub-categories</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>LIP</code></td>
+<td><code>MATTE</code>, <code>GLOSS</code>, <code>SHIMMER</code>, <code>CRAYON</code></td>
+</tr>
+<tr>
+<td><code>EYE</code></td>
+<td><code>EYEBROW</code>, <code>EYELINER</code>, <code>KAJAL</code>, <code>EYESHADOW</code></td>
+</tr>
+<tr>
+<td><code>HAIR</code></td>
+<td><code>COLOR</code></td>
+</tr>
+<tr>
+<td><code>FACE</code></td>
+<td><code>CONCEALER</code>, <code>FOUNDATION</code>, <code>HIGHLIGHTER</code>, <code>BLUSH</code></td>
+</tr>
+<tr>
+<td><code>NAIL</code></td>
+<td><code>GEL</code>, <code>LIQUID</code></td>
+</tr>
+<tr>
+<td><code>SKIN</code></td>
+<td><code>MOISTURIZER</code>, <code>SERUM</code>, <code>TONER</code>, <code>CLEANSER</code></td>
+</tr>
+</tbody></table>
+<p><code>tryOnSchema.pre(&#39;validate&#39;)</code> is the <strong>only</strong> place this relationship is actually checked at save time: if <code>configured</code>, it requires both <code>category</code> and <code>subCategory</code> to be present and requires <code>subCategory</code> to be a member of <code>TRY_ON_MAP[category]</code>, throwing <code>UnprocessableEntityError</code> otherwise. (<code>productSchema</code>&#39;s own <code>pre(&#39;validate&#39;)</code> hook does <strong>not</strong> duplicate this check — Mongoose runs a single-nested subdocument&#39;s own validators automatically as part of validating the parent, so a second check there would be redundant. An earlier version of this file <em>did</em> duplicate it, keyed off <code>enabled</code> instead of <code>configured</code>, and could throw an unhandled <code>TypeError</code> instead of a clean <code>UnprocessableEntityError</code> if <code>enabled: true</code> was ever reachable without <code>configured: true</code> — see <a href="#25-design-notes--known-trade-offs">§25</a> for why that combination is more reachable than it looks.)</p>
+<h4>5.2.3 <code>historySchema</code> (subdocument)</h4>
+<p>Purely a bag of optional audit fields — <code>{ _id: false, versionKey: false }</code>, no validation of its own: <code>approvedBy</code>/<code>approvedAt</code> (ObjectId/Date), <code>blockedBy</code>/<code>blockedAt</code>, <code>rejectedBy</code>/<code>rejectedAt</code>/<code>rejectReason</code> (String). Nothing in this schema enforces that only one of &quot;approved&quot;/&quot;blocked&quot;/&quot;rejected&quot; is ever set — a product&#39;s history could in principle accumulate all three sets of fields across its lifecycle (approved once, later blocked), which is presumably intentional as an audit trail rather than a &quot;current state&quot; snapshot (<code>status</code> is the current state).</p>
+<h4>5.2.4 <code>productSchema.pre(&#39;validate&#39;)</code> — top-level rules</h4>
+<p>Runs after all subdocuments have already run their own <code>pre(&#39;validate&#39;)</code> hooks:</p>
+<ol>
+<li><strong>Price</strong>: <code>originalPrice &lt;= 0</code> → <code>UnprocessableEntityError</code>.</li>
+<li><strong>Variants</strong>: if <code>hasVariants</code>, requires <code>variants.length &gt; 0</code>, requires every variant to have a <code>sku</code>, and rejects duplicate SKUs within the same product (<code>Set</code>-based check, first duplicate throws immediately).</li>
+<li><strong>Price relationship</strong>: <code>sellingPrice &gt; originalPrice</code> → <code>UnprocessableEntityError</code>.</li>
+<li><strong>Discount</strong>: <code>discount = round((originalPrice - sellingPrice) / originalPrice * 100)</code> — see <a href="#101-discount-calculation-worked-example">§10.1</a> for a worked example.</li>
+</ol>
+<p>Try-on validation is <em>not</em> part of this hook (see §5.2.2 above).</p>
+<h4>5.2.5 Indexes</h4>
+<p>Text search (<code>title</code>, <code>brand</code>, <code>shortDescription</code>), unique <code>sku</code>, <code>{category,status}</code>, <code>{seller,status,createdAt}</code>, <code>sellingPrice</code>, <code>soldCount</code> (descending), <code>averageRating</code> (descending), <code>{status,createdAt}</code> (descending), <code>tryOn.configured</code>, <code>hasVariants</code>, and three category+status compound indexes (<code>+sellingPrice</code>, <code>+averageRating</code>, <code>+soldCount</code>) built specifically to serve category-scoped, price/rating/sales-sorted storefront listings without an in-memory sort.</p>
+<hr>
+<h2>6. Request Validation (Zod Schemas)</h2>
+<p>Every mutating route&#39;s request body is validated by <code>validateZod({ body: &lt;schema&gt; })</code> (<code>@beautinique/backend-zod</code>) <strong>before</strong> the controller runs. The schemas themselves live in a separate published package (<code>@beautinique/backend-zod</code>, versioned independently in the <code>BQ-Packages</code> repo) — this section documents the <em>shape</em> they currently enforce, inferred from the package&#39;s own type declarations, so a reader doesn&#39;t have to leave this repo to know what a valid request body looks like.</p>
+<h3>6.1 <code>categoryZodSchema</code> — <code>POST /category</code></h3>
+<pre><code class="language-jsonc">{
+  &quot;name&quot;: &quot;string, 2-120 chars&quot;,
+  &quot;level&quot;: 1 | 2 | 3,
+  &quot;parent&quot;: &quot;ObjectId string — required for level 2/3, absent for level 1&quot;,
+  &quot;description&quot;: &quot;string, 10-150 chars — level 3 only&quot;
+}
+</code></pre>
+<h3>6.2 <code>categoryUpdateZodSchema</code> — <code>PATCH /category/:categoryId</code></h3>
+<p>Same shape as above, but every field is optional <strong>except</strong> <code>level</code> (which the controller uses purely to confirm you&#39;re not trying to change it — see <a href="#92-update-patch-categorycategoryid">§9.2</a>). Whether the <code>parent</code> <em>key</em> is present at all in the JSON body (as opposed to what its value is) changes controller behavior — see §9.2.</p>
+<h3>6.3 <code>draftProductStepBodyZodSchema</code> — <code>POST /product/draft</code></h3>
+<p>A discriminated union on a <strong>string</strong> <code>step</code> field — the request body for <code>POST /product/draft</code> is always exactly one of these five shapes, not a numbered/partial step:</p>
+<table>
+<thead>
+<tr>
+<th><code>step</code> value</th>
+<th>Body shape</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&quot;basicInfo&quot;</code></td>
+<td><code>{ step, title, brand, originalPrice, sellingPrice, l1Category:{_id,name}, l2Category:{_id,name}, l3Category:{_id,name} }</code></td>
+</tr>
+<tr>
+<td><code>&quot;mediaAndGallery&quot;</code></td>
+<td><code>{ step, thumbnail: url, images: url[], video?: url }</code></td>
+</tr>
+<tr>
+<td><code>&quot;descriptionAndContent&quot;</code></td>
+<td><code>{ step, shortDescription, description, instructions?, ingredients?, additional? }</code> — <code>description</code>/<code>instructions</code>/<code>ingredients</code>/<code>additional</code> each pass through a Zod transform before reaching the controller (almost certainly trimming/sanitizing rich-text HTML, not just validating it)</td>
+</tr>
+<tr>
+<td><code>&quot;stockAndVariants&quot;</code></td>
+<td>Discriminated union on <code>hasVariants</code>: <code>{ step, hasVariants:false, stock, stockThreshold }</code> <strong>or</strong> <code>{ step, hasVariants:true, variants:[{type,label,value,originalPrice,sellingPrice,stock,stockThreshold,images,thumbnail?}] }</code></td>
+</tr>
+<tr>
+<td><code>&quot;tryOnConfiguration&quot;</code></td>
+<td>Discriminated union on <code>enabled</code>: <code>{ step, enabled:false, tryOn?:{category,subCategory} }</code> <strong>or</strong> <code>{ step, enabled:true, tryOn:{category,subCategory} }</code> — see the caveat in <a href="#25-design-notes--known-trade-offs">§25</a> about this specific union in the published package</td>
+</tr>
+</tbody></table>
+<p><code>RedisCacheDashboard.saveDraftProductStep</code> (see <a href="#13-redis-cache-classesredis">§13</a>) uses <code>stepData.step</code> <strong>directly</strong> as the Redis hash field name — so the five <code>step</code> values above are literally the five hash field names inside <code>bq:products:draft:&lt;userId&gt;</code>.</p>
+<h3>6.4 <code>draftProductDetailsZodSchema</code> — <code>PATCH /product/draft/publish</code></h3>
+<p>The full, assembled draft — an object with all five keys from §6.3 required simultaneously (<code>basicInfo</code>, <code>mediaAndGallery</code>, <code>descriptionAndContent</code>, <code>stockAndVariants</code>, <code>tryOnConfiguration</code>), each shaped exactly as its corresponding step body above (minus the discriminant&#39;s role as a top-level field — it&#39;s nested under its own key here instead of being the request&#39;s own discriminant). The client never actually sends this body directly for <code>PATCH /product/draft/publish</code> — <code>createPendingProductPayload</code> middleware assembles it from the Redis draft hash and overwrites <code>req.body</code> with it before validation runs (see <a href="#14-middlewares">§14</a>).</p>
+<hr>
+<h2>7. API Routes</h2>
+<p>All <code>/api/v1/*</code> routes require the <code>X-Service-Secret</code> header and a ready MongoDB connection (<code>checkServiceAccess</code> + <code>checkDbConnection</code>, both mounted in <code>app.ts</code>, scoped to <code>/api/v1</code>). <code>/</code>, <code>/docs</code>, and <code>/health</code> are intentionally outside that and reachable without either.</p>
+<h3>7.1 Home, Docs &amp; Health</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GET</td>
+<td><code>/</code></td>
+<td>None</td>
+<td>This README, pre-rendered to HTML by <code>scripts/generate-html.mjs</code></td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/docs</code></td>
+<td>None</td>
+<td>Interactive Swagger UI (spec in <code>src/docs/openapi.ts</code>)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/health</code></td>
+<td>None</td>
+<td>Liveness + MongoDB connection status</td>
+</tr>
+</tbody></table>
+<h3>7.2 Category — <code>/api/v1/category</code></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/category</code></td>
+<td>ADMIN, MASTER</td>
+<td>Create a category (L1/L2/L3, with parent/level rules)</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/category/:categoryId</code></td>
+<td>ADMIN, MASTER</td>
+<td>Update a category (name/parent/description; level is immutable)</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td><code>/category/:categoryId</code></td>
+<td>ADMIN, MASTER</td>
+<td>Delete a leaf category with zero products</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/category/by-parent-level</code></td>
+<td>ADMIN, MASTER, SELLER</td>
+<td>List categories filtered by <code>level</code> + <code>parent</code> (cache-aside)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/category/by-hierarchy</code></td>
+<td>None</td>
+<td>Full L1→L2→L3 nested tree (cache-aside)</td>
+</tr>
+</tbody></table>
+<h3>7.3 Product — <code>/api/v1/product</code></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Auth</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td><code>/product/draft</code></td>
+<td>ADMIN, SELLER, MASTER</td>
+<td>Save one step of a multi-step draft into the Redis draft hash</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/product/draft</code></td>
+<td>ADMIN, SELLER, MASTER</td>
+<td>Fetch the caller&#39;s current in-progress draft</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/product/draft/publish</code></td>
+<td>ADMIN, SELLER, MASTER</td>
+<td>Turn a <strong>complete</strong> draft into a real <code>Product</code> document (<code>PENDING</code> for sellers, <code>PUBLISHED</code> directly for admins)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/product/dashboard/products</code></td>
+<td>ADMIN, SELLER, MASTER</td>
+<td>Paginated/sortable/Atlas-Search listing, scoped to own products for sellers</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/product/dashboard/:slug</code></td>
+<td>ADMIN, SELLER, MASTER</td>
+<td>Single product lookup for the dashboard (cache-aside, 1-day TTL)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/product/:slug</code></td>
+<td>None</td>
+<td>Public storefront lookup — only <code>PUBLISHED</code> products</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/product/suggestions</code></td>
+<td>None</td>
+<td>Atlas Search autocomplete (title/brand/slug/shortDescription)</td>
+</tr>
+</tbody></table>
+<p><strong>Declared but not currently wired to a route</strong> (present in <code>METHODS_AND_PATHS</code>, <code>src/constants/index.ts</code>, but with no matching route registration in <code>product.routes.ts</code>) — see <a href="#25-design-notes--known-trade-offs">§25</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Path</th>
+<th>Intended purpose (from the constant&#39;s own comment)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>DELETE</td>
+<td><code>/product/draft</code></td>
+<td>Discard the caller&#39;s in-progress draft</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/product/draft</code></td>
+<td>Edit an already-published product&#39;s draft-style fields</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td><code>/product/publish</code></td>
+<td>Approve a <code>PENDING</code> product → <code>PUBLISHED</code> (controller exists: <code>publishPendingProductController</code>, just not routed)</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/product/products</code></td>
+<td>A public product listing, distinct from the dashboard one</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>8. Request Headers</h2>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>X-Service-Secret</code></td>
+<td>Service-to-service authentication (<code>checkServiceAccess</code>, required on <code>/api/v1/*</code>)</td>
+</tr>
+<tr>
+<td><code>X-User-Id</code></td>
+<td>End user&#39;s id (forwarded by the gateway/caller, required wherever a role is listed under &quot;Auth&quot; in <a href="#7-api-routes">§7</a>)</td>
+</tr>
+<tr>
+<td><code>X-User-Role</code></td>
+<td>End user&#39;s role, defaults to <code>USER</code> if not sent</td>
+</tr>
+</tbody></table>
+<p>There&#39;s no JWT here — the gateway/upstream service is expected to have already authenticated the user and forwarded their identity via <code>X-User-Id</code>/<code>X-User-Role</code>. Unlike <code>user-service</code>, there is no <code>Authorization</code>/OTP-session-token header in this service — nothing here issues or checks temporary tokens.</p>
+<hr>
+<h2>9. Category Management</h2>
+<h3>9.1 Create (<code>POST /category</code>)</h3>
+<ol>
+<li>If <code>parent</code> is given, it must exist and be exactly one level shallower than the new category&#39;s <code>level</code> (L2 needs an L1 parent, L3 needs an L2 parent) — checked via a direct <code>Category.findById(parent).select(&#39;level&#39;)</code> inside the same transaction, throwing <code>NotFoundError</code>/<code>UnprocessableEntityError</code> as appropriate.</li>
+<li>Duplicate check: <code>Category.findOne({ parent, slug: generateSlug(name, false) })</code> — no sibling (same <code>parent</code>) may already have the same slug.</li>
+<li><code>new Category({...}).save({ session })</code> — on a MongoDB duplicate-key error (E11000, from a concurrent create racing the same slug between the check in step 2 and the actual insert) the error is caught and converted to a friendly <code>ConflictError</code> rather than a raw 500.</li>
+<li>If a <code>parent</code> was set, that parent&#39;s <code>isLeaf</code> flips to <code>false</code> via a second <code>findByIdAndUpdate</code> in the same transaction.</li>
+<li>The Redis category cache is updated <strong>after the transaction commits</strong> (<code>res.locals.afterCommit</code>), so a rollback never leaves a phantom category cached.</li>
+<li>Response: <code>201</code>, <code>{ message: &#39;Category created successfully&#39; }</code> (the created category itself is <strong>not</strong> echoed back in <code>data</code>).</li>
+</ol>
+<h3>9.2 Update (<code>PATCH /category/:categoryId</code>)</h3>
+<ol>
+<li><code>level</code> is immutable — the request body&#39;s <code>level</code> is compared against the existing document&#39;s; a mismatch throws <code>ConflictError</code>, before anything else runs.</li>
+<li><code>parent</code> is only touched <strong>if the key is present in the request body at all</strong> (<code>&#39;parent&#39; in restBody</code>) — this is a deliberate &quot;partial update&quot; pattern: omitting <code>parent</code> entirely leaves the existing parent completely untouched, while explicitly sending it (even as an empty/falsy value) triggers full re-validation (self-parent check, level-shallower-by-one check) and reparenting.</li>
+<li>If <code>name</code> changes, the slug is regenerated (<code>generateSlug(name, false)</code>) and re-checked for duplicates among the (possibly new) siblings — <code>_id: { $ne: categoryId }</code> excludes the document being updated itself from the duplicate check.</li>
+<li><code>Category.findByIdAndUpdate(categoryId, payload, { session, new: true, lean: true, runValidators: true })</code> — <code>runValidators: true</code> matters here since <code>findByIdAndUpdate</code> otherwise bypasses Mongoose validators by default.</li>
+<li>After the update, if the parent actually changed: the <strong>old</strong> parent&#39;s <code>isLeaf</code> is recalculated (back to <code>true</code> if <code>countDocuments({ parent: oldParent, _id: {$ne: categoryId} }) === 0</code>) and the <strong>new</strong> parent&#39;s <code>isLeaf</code> is unconditionally forced to <code>false</code>.</li>
+<li>Redis cache update is deferred to <code>res.locals.afterCommit</code>, same as create.</li>
+<li>Response: <code>200</code>, <code>{ message: &#39;Category updated successfully&#39; }</code>.</li>
+</ol>
+<h3>9.3 Delete (<code>DELETE /category/:categoryId</code>)</h3>
+<ol>
+<li>Only a <strong>leaf</strong> category (<code>isLeaf: true</code>) can be deleted — <code>UnprocessableEntityError(&#39;Cannot delete category with child categories&#39;)</code> otherwise.</li>
+<li>An L3 category with <code>productCount &gt; 0</code> cannot be deleted — <code>UnprocessableEntityError(&#39;Cannot delete category with products&#39;)</code>. (Levels 1/2 don&#39;t carry a meaningful <code>productCount</code>, so this check only fires for <code>level === L3</code>.)</li>
+<li><code>Category.findByIdAndDelete(categoryObjId, { session })</code>.</li>
+<li>If the deleted category was its parent&#39;s only child (<code>countDocuments({ parent }) === 0</code> after the delete), the parent&#39;s <code>isLeaf</code> flips back to <code>true</code>.</li>
+<li>Redis cache delete is deferred to <code>res.locals.afterCommit</code> — if the Redis delete itself ever fails, it&#39;s caught and logged (<code>RedisCacheHelper</code> swallows Redis-level errors), and the categories hash&#39;s 1-day TTL (see <a href="#13-redis-cache-classesredis">§13</a>) bounds how long a stale entry can survive before a full reseed from MongoDB self-heals it.</li>
+<li>Response: <code>200</code>, <code>{ message: &#39;Category deleted successfully&#39; }</code>.</li>
+</ol>
+<h3>9.4 Listing</h3>
+<ul>
+<li><code>GET /category/by-parent-level?level=&amp;parent=</code> — filters the cached category list in memory; omitting <code>level</code> returns everything, L1 ignores <code>parent</code> entirely (every L1 category is returned regardless of the <code>parent</code> query param).</li>
+<li><code>GET /category/by-hierarchy</code> — builds the full L1→L2→L3 tree in memory: groups the flat cached list into a <code>Map&lt;parentId, category[]&gt;</code>, then recursively attaches each node&#39;s children under a <code>subcategories</code> key, starting from the L1 roots.</li>
+</ul>
+<p>Both read exclusively from <code>RedisCacheCategory.getAllCategories()</code> (cache-aside, seeds itself from MongoDB on a cold/expired cache) — neither queries MongoDB directly, and neither requires the <code>X-Service-Secret</code>+DB-ready gate to behave any differently than a normal <code>/api/v1/*</code> route.</p>
+<hr>
+<h2>10. Product Flow</h2>
+<h3>10.1 Discount Calculation (worked example)</h3>
+<p>Both <code>productSchema</code> and <code>variantSchema</code> compute <code>discount</code> identically:</p>
+<pre><code>discount = round( (originalPrice - sellingPrice) / originalPrice × 100 )
+</code></pre>
+<p>Example: <code>originalPrice = 999</code>, <code>sellingPrice = 799</code> → <code>(999 - 799) / 999 × 100 = 20.02...</code> → rounds to <strong><code>20</code></strong>.</p>
+<h3>10.2 SKU Generation (worked example)</h3>
+<p><code>generateSku({ data, prefix?, unique = true })</code> (<code>utils/index.ts</code>) takes each value in <code>data</code>, strips non-alphanumeric characters, takes the first 3 characters, uppercases it, and joins the results with <code>-</code>; if <code>unique</code> (the default), it appends a random 6-digit, zero-padded suffix.</p>
+<p><strong>Product SKU</strong> — called from <code>publishDraftProductController</code> with <code>{ title, brand, l1Cat: l1Category.name, l2Cat: l2Category.name, l3Cat: l3Category.name }</code>:</p>
+<pre><code>title = &quot;Ruby Red Lipstick&quot;   → &quot;Rub&quot; → &quot;RUB&quot;
+brand = &quot;MAC Cosmetics&quot;       → &quot;MAC&quot; → &quot;MAC&quot;
+l1Cat = &quot;Makeup&quot;              → &quot;Mak&quot; → &quot;MAK&quot;
+l2Cat = &quot;Lips&quot;                → &quot;Lip&quot; → &quot;LIP&quot;
+l3Cat = &quot;Lipstick&quot;            → &quot;Lip&quot; → &quot;LIP&quot;
+
+joined:      RUB-MAC-MAK-LIP-LIP
++ random:    RUB-MAC-MAK-LIP-LIP-042817
+</code></pre>
+<p><strong>Variant SKU</strong> — called per-variant with <code>{ data: { label: variant.label }, prefix: productSku }</code>, e.g. <code>label = &quot;Ruby Red&quot;</code> → <code>&quot;Rub&quot;</code> → <code>&quot;RUB&quot;</code>, prefixed with the product SKU: <code>RUB-MAC-MAK-LIP-LIP-042817-RUB-583910</code>.</p>
+<h3>10.3 Slug Generation</h3>
+<p><code>generateSlug(text, unique = true)</code> runs <code>slugify(text, { lower: true, strict: true, trim: true })</code> and, when <code>unique</code>, appends <code>-${Date.now()}</code>.</p>
+<ul>
+<li><strong>Products</strong> always use <code>unique: true</code> (the default): <code>generateSlug(</code>${title} ${l3Category.name}<code>)</code> → e.g. <code>&quot;Ruby Red Lipstick&quot; + &quot;Lipstick&quot;</code> → <code>ruby-red-lipstick-lipstick-1737270000000</code>.</li>
+<li><strong>Categories</strong> always call it with <code>unique: false</code>: <code>generateSlug(name, false)</code> → e.g. <code>&quot;Lip Care&quot;</code> → <code>lip-care</code> — no timestamp, because sibling-scoped uniqueness is already guaranteed by the <code>{parent,slug}</code> compound index, so a random/time suffix would only make URLs uglier for no benefit.</li>
+</ul>
+<h3>10.4 Draft → Publish</h3>
+<ol>
+<li><code>POST /product/draft</code> is called once per step (see <a href="#63-draftproductstepbodyzodschema--post-productdraft">§6.3</a>), each call writing one field — keyed by the literal <code>step</code> string (<code>basicInfo</code>, <code>mediaAndGallery</code>, <code>descriptionAndContent</code>, <code>stockAndVariants</code>, or <code>tryOnConfiguration</code>) — into a per-user Redis hash (<code>bq:products:draft:&lt;userId&gt;</code>). TTL is fixed at 24h from the <strong>first</strong> step written for a fresh draft, and is <strong>not</strong> renewed on subsequent steps — a slow multi-day form-fill will still expire 24h after it was started, not 24h after the last edit.</li>
+<li><code>GET /product/draft</code> returns whatever has been saved so far, with any never-touched step keys coming back as <code>undefined</code>.</li>
+<li><code>PATCH /product/draft/publish</code>:<ul>
+<li><code>createPendingProductPayload</code> middleware loads the full draft from Redis into <code>req.body</code>, throwing <code>NotFoundError(&#39;Draft expired&#39;)</code> if nothing is cached (TTL elapsed or the draft was never started) — the client sends <strong>no body</strong> of its own for this request.</li>
+<li>The assembled body is validated against <code>draftProductDetailsZodSchema</code> — every one of the five steps must be present and individually valid, or Zod rejects the whole request before the controller runs.</li>
+<li>The controller builds a full <code>Product</code> payload from the draft: SKU generation (§10.2), slug generation (§10.3), image-URL extraction from rich-text fields (for later &quot;mark as used&quot; cleanup, see <a href="#19-background-jobs-media-queue-producer-only">§19</a>), and per-variant SKU generation.</li>
+<li><code>status</code> is set to <code>PENDING</code> for a <code>SELLER</code> caller, or <code>PUBLISHED</code> (with <code>history.approvedAt</code>/<code>history.approvedBy</code> stamped immediately) for <code>ADMIN</code>/<code>MASTER</code>.</li>
+<li><code>product.validate()</code> is called <strong>explicitly</strong> before <code>save()</code>, so Mongoose validation errors surface as a clean response before any DB write is even attempted (rather than surfacing from inside <code>save()</code> itself, which would behave identically here but is worth calling out as a deliberate style choice — it separates &quot;is this data valid&quot; from &quot;did the write succeed&quot;).</li>
+<li>After commit: every image/thumbnail/video URL referenced by the product (including images embedded inside the rich-text <code>description</code>/<code>ingredients</code>/<code>instructions</code>/<code>additional</code> fields, extracted via a <code>&lt;img src=&quot;...&quot;&gt;</code> regex) is resolved to a Cloudinary public id and enqueued as a <code>mark-multiple-media-as-used</code> job, and the Redis draft is deleted.</li>
+</ul>
+</li>
+<li>Response: <code>201</code>, <code>{ message: &#39;Product sent for review&#39;, data: product.toObject() }</code>.</li>
+</ol>
+<h3>10.5 Pending Approval (<code>publishPendingProductController</code>)</h3>
+<p>Approves a <code>PENDING</code> product (created by a non-admin seller) into <code>PUBLISHED</code>: sets <code>status = PUBLISHED</code>, initializes <code>history</code> if it doesn&#39;t already exist (a seller-created <code>PENDING</code> product has no <code>history</code> subdocument at all until it&#39;s first approved/blocked/rejected), then stamps <code>history.approvedBy</code>/<code>history.approvedAt</code> and calls <code>product.save()</code>. <strong>Not currently wired to a route</strong> — see <a href="#25-design-notes--known-trade-offs">§25</a>.</p>
+<h3>10.6 Dashboard Listing (<code>GET /product/dashboard/products</code>)</h3>
+<ul>
+<li>Sellers only ever see their own products (<code>seller</code> scoped from <code>X-User-Id</code>); admins/masters see everything, optionally filtered by <code>status</code>/<code>category</code> query params.</li>
+<li>Pagination: <code>page</code> (default <code>1</code>), <code>limit</code> (default <code>10</code>), both clamped to a minimum of <code>1</code>.</li>
+<li>Sorting: <code>sortBy</code> (one of <code>createdAt</code>, <code>updatedAt</code>, <code>title</code>, <code>sellingPrice</code>, <code>originalPrice</code>, <code>soldCount</code>; default <code>createdAt</code>), <code>sortOrder</code> (<code>asc</code>/<code>desc</code>, default <code>desc</code>).</li>
+<li>With a non-empty <code>search</code> query, uses an Atlas Search (<code>$search</code>) pipeline against the <code>dashboard-products</code> index (autocomplete on <code>title</code>, fuzzy-matched with <code>maxEdits: 1, prefixLength: 2</code>, plus an <code>equals</code>-filter array built from the same seller/status/category scoping) with a <code>$facet</code> stage producing paginated results + total count in a single round trip. Without a search term, falls back to a plain <code>Product.find(matchStage).sort().skip().limit()</code> + <code>Product.countDocuments(matchStage)</code>.</li>
+<li>Either path also runs a separate <code>$group</code>-by-<code>status</code> aggregation (scoped by seller/category, deliberately <strong>not</strong> by status) to populate a status-count summary (<code>{ ALL, DELETED, PENDING, PUBLISHED, REJECTED, BLOCKED }</code>) alongside the page of results — this is why the count query and the listing query use two <em>different</em> match objects (<code>statusMatch</code> excludes <code>status</code>, <code>matchStage</code> includes it): the counts need to reflect all statuses simultaneously, the listing needs to reflect only the requested one.</li>
+<li>Only projects <code>PRODUCT_DASHBOARD_PROJECTION</code> (<code>src/constants/index.ts</code>) — notably, <code>variants</code> is projected as <code>variants.stock</code> only (each returned variant is just <code>{ _id, stock }</code>, not the full variant subdocument), which <code>TDashboardListProduct[&#39;variants&#39;]</code> is typed to match exactly, so the API&#39;s advertised response shape and its actual runtime shape agree.</li>
+</ul>
+<h3>10.7 Public Lookup &amp; Suggestions</h3>
+<ul>
+<li><code>GET /product/:slug</code> — only ever returns <code>PUBLISHED</code> products, populates <code>category.name</code> (excluding <code>category._id</code> via the <code>&#39;name -_id&#39;</code> projection string), queries MongoDB directly on every request (no cache layer — see <a href="#25-design-notes--known-trade-offs">§25</a>).</li>
+<li><code>GET /product/dashboard/:slug</code> — cache-aside over Redis (1-day TTL, deferred cache population via <code>res.locals.afterFinish</code> so the cache write happens after the response has already been sent, never delaying it), excludes <code>variants.stockThreshold</code> from the DB projection (an internal restock-alert number the dashboard consumer doesn&#39;t need).</li>
+<li><code>GET /product/suggestions?search=</code> — Atlas Search pipeline against the <code>product-search</code> index: a <code>must</code> clause requiring a sequential, fuzzy-matched (<code>maxEdits: 1</code>) autocomplete hit on <code>title</code> (weight <code>10</code>), plus a <code>should</code> clause of autocomplete on <code>brand</code> (weight <code>5</code>) and <code>slug</code> (weight <code>2</code>) and a fuzzy <code>text</code> match on <code>shortDescription</code> (weight <code>1</code>); post-filtered to <code>status: PUBLISHED</code>, projected to <code>{_id, title, slug, thumbnail, brand}</code>, and capped at <code>5</code> results. An empty/whitespace-only <code>search</code> short-circuits to <code>{ data: [] }</code> without ever touching MongoDB.</li>
+</ul>
+<hr>
+<h2>11. Validation Rules Deep-Dive</h2>
+<p>A consolidated view of every business rule enforced somewhere between the Zod layer (§6) and the Mongoose layer (§5), organized by entity rather than by file, since the two layers interleave:</p>
+<h3>11.1 Category</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Failure</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>name</code> 2–120 chars</td>
+<td>Mongoose (<code>minlength</code>/<code>maxlength</code>)</td>
+<td>Mongoose <code>ValidationError</code></td>
+</tr>
+<tr>
+<td><code>slug</code> unique per sibling (<code>parent</code>+<code>slug</code>)</td>
+<td>Mongo unique index + a pre-flight <code>findOne</code> duplicate check</td>
+<td><code>ConflictError</code></td>
+</tr>
+<tr>
+<td><code>level</code> immutable after creation</td>
+<td>Controller-level comparison (<code>updateCategoryController</code>)</td>
+<td><code>ConflictError</code></td>
+</tr>
+<tr>
+<td>L2 parent must be an L1 category; L3 parent must be an L2 category</td>
+<td>Controller-level <code>findById(parent).level</code> check</td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td>A category cannot be its own parent</td>
+<td>Controller-level <code>parent.equals(categoryId)</code> check (update only)</td>
+<td><code>ConflictError</code></td>
+</tr>
+<tr>
+<td>Only a leaf category (<code>isLeaf</code>) can be deleted</td>
+<td>Controller-level check</td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td>An L3 category with <code>productCount &gt; 0</code> cannot be deleted</td>
+<td>Controller-level check</td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td>L1 categories never have a <code>parent</code> or <code>description</code></td>
+<td>Mongoose <code>pre(&#39;validate&#39;)</code> (force-cleared, not rejected)</td>
+<td>— (silently normalized)</td>
+</tr>
+<tr>
+<td>L2 categories never have a <code>description</code></td>
+<td>Mongoose <code>pre(&#39;validate&#39;)</code> (force-cleared)</td>
+<td>— (silently normalized)</td>
+</tr>
+</tbody></table>
+<h3>11.2 Product</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Failure</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>originalPrice &gt; 0</code></td>
+<td>Mongoose <code>pre(&#39;validate&#39;)</code></td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td><code>sellingPrice &lt;= originalPrice</code></td>
+<td>Mongoose <code>pre(&#39;validate&#39;)</code></td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td><code>description</code> ≥ 107 chars</td>
+<td>Mongoose <code>minlength</code></td>
+<td>Mongoose <code>ValidationError</code></td>
+</tr>
+<tr>
+<td><code>hasVariants: true</code> requires ≥1 variant</td>
+<td>Mongoose <code>pre(&#39;validate&#39;)</code></td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td>Variant SKUs unique within a product</td>
+<td>Mongoose <code>pre(&#39;validate&#39;)</code> (<code>Set</code>-based check)</td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td><code>sku</code> globally unique</td>
+<td>Mongo unique index</td>
+<td>Mongo <code>E11000</code> (not currently translated to a friendly error by any product controller — see <a href="#25-design-notes--known-trade-offs">§25</a>)</td>
+</tr>
+<tr>
+<td><code>slug</code> globally unique</td>
+<td>Mongo unique index, plus timestamp-suffixed generation making a collision astronomically unlikely</td>
+<td>Mongo <code>E11000</code></td>
+</tr>
+</tbody></table>
+<h3>11.3 Variant (per-item, inside <code>hasVariants: true</code> products)</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Failure</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>originalPrice &gt; 0</code></td>
+<td><code>variantSchema.pre(&#39;validate&#39;)</code></td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td><code>sellingPrice &lt;= originalPrice</code></td>
+<td><code>variantSchema.pre(&#39;validate&#39;)</code></td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+<tr>
+<td><code>images</code> must be a real, non-empty array</td>
+<td><code>default: undefined</code> override on the array path</td>
+<td>Mongoose <code>ValidationError</code> (required)</td>
+</tr>
+</tbody></table>
+<h3>11.4 Try-On</h3>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Enforced by</th>
+<th>Failure</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>category</code>/<code>subCategory</code> required when <code>configured: true</code></td>
+<td><code>tryOnSchema</code> path-level <code>required</code> functions</td>
+<td>Mongoose <code>ValidationError</code></td>
+</tr>
+<tr>
+<td><code>subCategory</code> must belong to <code>TRY_ON_MAP[category]</code></td>
+<td><code>tryOnSchema</code> path-level <code>validate</code>, re-checked in <code>tryOnSchema.pre(&#39;validate&#39;)</code></td>
+<td><code>UnprocessableEntityError</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2>12. Search Infrastructure — Atlas Search Indexes</h2>
+<p>Two named MongoDB Atlas Search indexes are referenced <strong>by name only</strong> in application code (<code>utils/index.ts</code>, <code>getDashboardProducts.controller.ts</code>) — they must exist and be configured directly in Atlas; nothing in this repository creates or manages them.</p>
+<table>
+<thead>
+<tr>
+<th>Index name</th>
+<th>Used by</th>
+<th>Indexed fields (as used in queries)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>product-search</code></td>
+<td><code>GET /product/suggestions</code></td>
+<td><code>title</code> (autocomplete), <code>brand</code> (autocomplete), <code>slug</code> (autocomplete), <code>shortDescription</code> (text)</td>
+</tr>
+<tr>
+<td><code>dashboard-products</code></td>
+<td><code>GET /product/dashboard/products</code> (only when <code>search</code> is provided)</td>
+<td><code>title</code> (autocomplete), plus <code>equals</code>-filterable <code>seller</code>, <code>status</code>, <code>category</code></td>
+</tr>
+</tbody></table>
+<p>If either index is missing, renamed, or out of sync with the fields above in the actual MongoDB Atlas cluster, the corresponding <code>$search</code> aggregation stage will fail at query time with a MongoDB error — this is not something <code>tsc</code>, <code>eslint</code>, or a local MongoDB instance (Atlas Search is an Atlas-only feature, unavailable against a plain self-hosted <code>mongod</code>) can catch ahead of time.</p>
+<hr>
+<h2>13. Redis Cache (<code>classes/redis/</code>)</h2>
+<p>A <code>RedisCacheManager</code> singleton (instantiated once in <code>configs/index.ts</code>, exported as <code>redisCacheManager</code>) wraps a single <code>redis</code> client and exposes two sub-caches, <code>.category</code> (<code>RedisCacheCategory</code>) and <code>.dashboard</code> (<code>RedisCacheDashboard</code>), both extending the shared <code>RedisCacheHelper</code> base class.</p>
+<h3>Key Prefixes</h3>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>bq:products:categories</code></td>
+<td>Single hash holding every category, keyed by category id</td>
+</tr>
+<tr>
+<td><code>bq:products:draft:&lt;userId&gt;</code></td>
+<td>One user&#39;s in-progress draft product, keyed by step name (§6.3)</td>
+</tr>
+<tr>
+<td><code>bq:products:dashboard:product:&lt;slug&gt;</code></td>
+<td>A single dashboard product lookup</td>
+</tr>
+</tbody></table>
+<h3><code>RedisCacheCategory</code> (<code>classes/redis/RedisCacheCategory.ts</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getAllCategories()</code></td>
+<td>Cache-aside: reads the whole hash; on empty, reseeds from MongoDB</td>
+</tr>
+<tr>
+<td><code>setCategory(category)</code></td>
+<td>Writes/overwrites one category field; sets the hash&#39;s TTL (1 day) only if the hash didn&#39;t already exist, so an active hash&#39;s expiry never keeps getting pushed out by routine writes</td>
+</tr>
+<tr>
+<td><code>deleteCategory(categoryId)</code></td>
+<td>Removes one category field from the hash</td>
+</tr>
+</tbody></table>
+<p>The 1-day TTL means any missed/failed invalidation (e.g. a Redis delete that silently fails) self-heals within at most a day, since a fully-expired hash forces <code>getAllCategories()</code> back to MongoDB.</p>
+<h3><code>RedisCacheDashboard</code> (<code>classes/redis/RedisCacheDashboard.ts</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>getDraftProduct(userId)</code></td>
+<td>Read the caller&#39;s in-progress draft</td>
+</tr>
+<tr>
+<td><code>saveDraftProductStep(userId, body)</code></td>
+<td>Write one step&#39;s field (<code>body.step</code>) into the draft hash (24h TTL, fixed from first write)</td>
+</tr>
+<tr>
+<td><code>deleteDraftProduct(userId)</code></td>
+<td>Remove the draft entirely (called after a successful publish)</td>
+</tr>
+<tr>
+<td><code>hasDraftProduct(userId)</code></td>
+<td>Existence check</td>
+</tr>
+<tr>
+<td><code>getProductBySlug(slug)</code></td>
+<td>Cache-aside dashboard product lookup</td>
+</tr>
+<tr>
+<td><code>setProductBySlug(slug, product)</code></td>
+<td>Cache a dashboard product (24h TTL)</td>
+</tr>
+<tr>
+<td><code>deleteProductBySlug(slug)</code></td>
+<td>Invalidate a cached dashboard product</td>
+</tr>
+<tr>
+<td><code>hasProductBySlug(slug)</code></td>
+<td>Existence check</td>
+</tr>
+</tbody></table>
+<h3><code>RedisCacheHelper</code> (<code>classes/redis/RedisCacheHelper.ts</code>)</h3>
+<p>Shared low-level primitives both sub-caches build on: <code>setData</code>/<code>getData</code>/<code>deleteData</code> (string), <code>setHashData</code>/<code>getHashField</code>/<code>getAllHashFields</code>/<code>deleteHashField</code>/<code>deleteHashData</code> (hash), <code>exists</code>/<code>hasHashField</code>. Every method resolves to a safe default (<code>null</code>, <code>false</code>, <code>{}</code>, or simply returns) and logs a warning instead of throwing on a Redis-level failure — a Redis outage degrades the service, it doesn&#39;t crash it.</p>
+<h3>Redis Fallback Behavior</h3>
+<p><code>RedisCacheManager</code> passes each sub-cache a <code>getClient()</code> closure that returns <code>null</code> whenever <code>isReady</code> is false (client not connected / mid-reconnect). <code>RedisCacheHelper</code>&#39;s methods check this before every operation, so a Redis outage falls through to MongoDB wherever a cache-aside read exists, without any special-cased logic in the sub-caches themselves.</p>
+<h3>Reconnection Strategy (<code>configs/index.ts</code>)</h3>
+<p>The <code>redisClient</code> (used by <code>RedisCacheManager</code>) is configured with a <code>reconnectStrategy</code>: exponential-ish backoff of <code>min(retries * 1000ms, 10s)</code>, giving up after 5 retries.</p>
+<h3>Transactional Writes: <code>res.locals.afterCommit</code></h3>
+<p>Every mutating category controller (<code>addCategoryController</code>, <code>updateCategoryController</code>, <code>deleteCategoryController</code>) runs inside a Mongoose transaction (<code>tryCatchSession</code>) and defers its Redis write/delete to <code>res.locals.afterCommit</code>, which <code>@beautinique/backend-mongoose</code> only runs <strong>after</strong> the transaction has actually committed. This avoids the cache ever getting ahead of the database — if the transaction rolls back, the queued Redis task simply never runs.</p>
+<hr>
+<h2>14. Middlewares</h2>
+<h3><code>authenticate</code> (<code>middlewares/auth.middleware.ts</code>)</h3>
+<p>Reads <code>X-User-Id</code> (throws <code>AuthenticationError</code> if missing) and <code>X-User-Role</code> (defaults to <code>USER</code>), attaches <code>{ _id, role }</code> to <code>req.user</code>. Exported but not currently mounted on any route directly — <code>authorize</code> (below) is used everywhere instead, since every mutating/dashboard route also needs a role check.</p>
+<h3><code>authorize(allowedRoles)</code> (<code>middlewares/auth.middleware.ts</code>)</h3>
+<p>Factory middleware — same header extraction as <code>authenticate</code>, plus throws <code>AuthorizationError</code> if <code>X-User-Role</code> isn&#39;t in <code>allowedRoles</code>. Mounted on every category-management route and both the <code>/product/draft/*</code> and <code>/product/dashboard/*</code> route groups.</p>
+<h3><code>createPendingProductPayload</code> (<code>middlewares/createPendingProductPayload.middleware.ts</code>)</h3>
+<p>Loads the caller&#39;s Redis draft (<code>redisCacheManager.dashboard.getDraftProduct</code>) and overwrites <code>req.body</code> with it before <code>PATCH /product/draft/publish</code> reaches Zod validation — throws <code>NotFoundError(&#39;Draft expired&#39;)</code> if nothing is cached. This runs <strong>before</strong> <code>checkEmptyRequest</code>/<code>validateZod</code> in the route chain, which is why the client can call this endpoint with an empty body: by the time the emptiness/validation checks run, <code>req.body</code> already holds the assembled draft, not whatever (if anything) the client actually sent.</p>
+<h3>External Middlewares (from <code>@beautinique/*</code> packages)</h3>
+<table>
+<thead>
+<tr>
+<th>Middleware</th>
+<th>Package</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>checkServiceAccess</code></td>
+<td><code>@beautinique/backend-request</code></td>
+<td>Validates <code>X-Service-Secret</code>, timing-safe compare</td>
+</tr>
+<tr>
+<td><code>checkDbConnection</code></td>
+<td><code>@beautinique/backend-mongoose</code></td>
+<td>Rejects with 503 if MongoDB isn&#39;t ready (scoped to <code>/api/v1</code> only)</td>
+</tr>
+<tr>
+<td><code>checkEmptyRequest</code></td>
+<td><code>@beautinique/backend-request</code></td>
+<td>Guards against empty request bodies/params before validation</td>
+</tr>
+<tr>
+<td><code>validateZod</code></td>
+<td><code>@beautinique/backend-zod</code></td>
+<td>Request body validation via Zod (<code>categoryZodSchema</code>, <code>draftProductStepBodyZodSchema</code>, etc.)</td>
+</tr>
+<tr>
+<td><code>tryCatchResponse</code></td>
+<td><code>@beautinique/backend-response</code></td>
+<td>Wraps non-transactional controllers in try/catch, forwards errors to <code>errorResponse</code></td>
+</tr>
+<tr>
+<td><code>tryCatchSession</code></td>
+<td><code>@beautinique/backend-mongoose</code></td>
+<td>Wraps transactional controllers in a Mongoose session + <code>res.locals.afterCommit</code>/<code>afterRollback</code>/<code>afterResponse</code>/<code>afterFinish</code> hooks</td>
+</tr>
+<tr>
+<td><code>successResponse</code></td>
+<td><code>@beautinique/backend-response</code></td>
+<td>Attaches <code>res.success({ statusCode, message, data })</code></td>
+</tr>
+<tr>
+<td><code>notFoundResponse</code></td>
+<td><code>@beautinique/backend-response</code></td>
+<td>404 handler (branded HTML page for browser requests)</td>
+</tr>
+<tr>
+<td><code>errorResponse</code></td>
+<td><code>@beautinique/backend-response</code></td>
+<td>Central error handler</td>
+</tr>
+<tr>
+<td><code>createHttpLogger</code></td>
+<td><code>@beautinique/backend-logger</code></td>
+<td>Per-request Pino logging</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>15. Services Layer (<code>services/index.ts</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>findOrCreateCategory({name,slug,parent,level,session})</code></td>
+<td>Upsert helper (<code>findOneAndUpdate</code> + <code>$setOnInsert</code>, <code>upsert: true</code>) — not currently called from any controller in this service; available for cross-service or seed use</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>16. Utilities (<code>utils/index.ts</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>generateSlug(text, unique = true)</code></td>
+<td><code>slugify</code> + optional <code>-&lt;timestamp&gt;</code> suffix — see <a href="#103-slug-generation">§10.3</a></td>
+</tr>
+<tr>
+<td><code>getMinimalCategory(category)</code></td>
+<td>Client/cache-facing category shape — <code>_id</code> as string; <code>parent</code>/<code>description</code> only included for L2/L3 as applicable</td>
+</tr>
+<tr>
+<td><code>generateSku({data, prefix, unique})</code></td>
+<td>Builds an uppercase SKU — see <a href="#102-sku-generation-worked-example">§10.2</a></td>
+</tr>
+<tr>
+<td><code>getCloudinaryPublicIdFromUrl(url)</code></td>
+<td>Extracts a Cloudinary public id from a delivery URL. Example: <code>https://res.cloudinary.com/demo/image/upload/v1690000000/products/lipstick_red.jpg</code> → pathname <code>/demo/image/upload/v1690000000/products/lipstick_red.jpg</code> → regex captures <code>products/lipstick_red.jpg</code> (skipping any transformation segments and the <code>v&lt;digits&gt;/</code> version prefix) → strips the extension → <code>products/lipstick_red</code>. Throws <code>UnprocessableEntityError</code> if the URL doesn&#39;t match the expected <code>/upload/.../...</code> shape.</td>
+</tr>
+<tr>
+<td><code>extractImageUrlsFromHtml(html)</code></td>
+<td>Regex-extracts every <code>&lt;img src=&quot;...&quot;&gt;</code> from a rich-text field (used to find images to mark &quot;used&quot; in <code>media-queue</code>)</td>
+</tr>
+<tr>
+<td><code>getProductSuggestionsPipeline(query)</code></td>
+<td>Builds the Atlas <code>$search</code> aggregation pipeline for <code>/product/suggestions</code> — see <a href="#12-search-infrastructure--atlas-search-indexes">§12</a></td>
+</tr>
+<tr>
+<td><code>getInitialProductCountsByStatus()</code></td>
+<td>Zero-filled <code>{ ALL, DELETED, PENDING, PUBLISHED, REJECTED, BLOCKED }</code> counter object</td>
+</tr>
+<tr>
+<td><code>populateProductCountsByStatus(counts, rows)</code></td>
+<td>Folds a <code>$group</code>-by-status aggregation result into the counter object above</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>17. Error Handling</h2>
+<p>All errors are thrown as <code>AppError</code> subclasses from <code>@beautinique/backend-classes</code> (e.g. <code>NotFoundError</code>, <code>ValidationError</code>, <code>ConflictError</code>, <code>UnprocessableEntityError</code>). Standard error codes used across the service:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>HTTP Equivalent</th>
+<th>When Used</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>NOT_FOUND</code></td>
+<td>404</td>
+<td>Category/parent/product not found; expired draft; parent category missing</td>
+</tr>
+<tr>
+<td><code>CONFLICT</code></td>
+<td>409</td>
+<td>Duplicate sibling category slug; category cannot be its own parent; category <code>level</code> change attempted</td>
+</tr>
+<tr>
+<td><code>UNPROCESSABLE_ENTITY</code></td>
+<td>422</td>
+<td>Deleting a non-leaf category or an L3 category with products; invalid parent level; invalid prices; invalid try-on category/sub-category; malformed Cloudinary URL</td>
+</tr>
+<tr>
+<td><code>AUTHENTICATION_ERROR</code></td>
+<td>401</td>
+<td>Missing <code>X-User-Id</code></td>
+</tr>
+<tr>
+<td><code>AUTHORIZATION_ERROR</code></td>
+<td>403</td>
+<td>Caller&#39;s role isn&#39;t in the route&#39;s <code>allowedRoles</code></td>
+</tr>
+<tr>
+<td><code>INTERNAL_SERVER_ERROR</code></td>
+<td>500</td>
+<td>Unexpected failures; <code>findOrCreateCategory</code> upsert failure</td>
+</tr>
+</tbody></table>
+<p>Errors flow through the <code>errorResponse</code> middleware (<code>@beautinique/backend-response</code>), which only forwards <code>message</code>/<code>code</code>/<code>statusCode</code>/<code>fieldErrors</code>/<code>globalErrors</code> for <strong>operational</strong> <code>AppError</code>s — anything else is converted to a generic <code>InternalServerError</code> before the client ever sees it, and <code>envs.is_dev</code> controls whether a stack trace is attached.</p>
+<hr>
+<h2>18. Server Lifecycle</h2>
+<h3>Startup (<code>bootstrap/startup.ts</code>)</h3>
+<ol>
+<li>Register MongoDB event listeners (<code>registerDatabaseEvents</code>).</li>
+<li>Connect MongoDB and Redis <strong>in parallel</strong> (<code>Promise.all([connectDb(...), redisCacheManager.connect()])</code>) — safe because <code>redisCacheManager.connect()</code> never rejects (it swallows its own errors internally); a Mongo failure still aborts startup via the outer <code>catch</code>.</li>
+<li>Start the HTTP server (<code>startHttpServer</code>) — only after both connection attempts above have settled, so the service never opens its port while a dependency is still connecting.</li>
+</ol>
+<p>Idempotent (<code>setStarted()</code> guards re-entry). On any failure, logs and calls <code>process.exit(1)</code>.</p>
+<h3>Graceful Shutdown (<code>bootstrap/shutdown.ts</code>, <code>SIGINT</code>/<code>SIGTERM</code>)</h3>
+<ol>
+<li>Stop accepting new HTTP requests (<code>stopHttpServer</code>, existing requests finish first).</li>
+<li>Close the job producer, the Redis cache, and disconnect MongoDB — <strong>in parallel</strong> (<code>Promise.all</code> over per-task <code>try/catch</code>, so one failing doesn&#39;t block the others).</li>
+<li>Destroy any remaining open sockets.</li>
+<li>Exit <code>0</code> on success, <code>1</code> on failure.</li>
+</ol>
+<p>Idempotent (<code>setShuttingDown()</code> guards re-entry). Only the job-producer shutdown task is named for per-step success/failure logging today — the Redis/Mongo tasks in the same list run and are awaited, but aren&#39;t individually logged by name.</p>
+<p><code>server.ts</code> also configures <code>keepAliveTimeout</code> (65s) and <code>headersTimeout</code> (66s, always 1s ahead of <code>keepAliveTimeout</code>) — the standard fix for the race condition where a load balancer&#39;s own keep-alive timeout is shorter than Node&#39;s, which otherwise intermittently kills in-flight requests right as they arrive.</p>
+<hr>
+<h2>19. Background Jobs (<code>media-queue</code>, producer only)</h2>
+<p>This service <strong>only produces</strong> onto <code>media-queue</code> — it doesn&#39;t run a worker for anything. <code>jobProducer</code> (<code>@beautinique/backend-bullmq</code>&#39;s <code>JobProducer</code>, configured in <code>configs/index.ts</code>) is used from <code>publishDraftProductController</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Job name</th>
+<th>Enqueued from</th>
+<th>Consumed by</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>mark-multiple-media-as-used</code></td>
+<td><code>publishDraftProductController</code> (<code>afterCommit</code>)</td>
+<td><code>media-service</code></td>
+</tr>
+</tbody></table>
+<p>Every image/thumbnail/video URL referenced by a newly-published product (including images embedded in the rich-text <code>description</code>/<code>ingredients</code>/<code>instructions</code>/<code>additional</code> fields) is resolved to a Cloudinary public id and enqueued for the media service to mark as in-use, so orphan-cleanup jobs elsewhere don&#39;t delete assets that a product is actively using. If <code>uniquePublicIds.length === 0</code> (a product with no extractable images, which shouldn&#39;t happen given <code>images</code>/<code>thumbnail</code> are required, but could for a product with no rich-text-embedded images), the job simply isn&#39;t enqueued — the <code>afterCommit</code> task still runs to delete the Redis draft either way.</p>
+<p><strong>Retry/backoff:</strong> configured per-call for this job specifically (<code>attempts: 5, backoff: { type: &#39;exponential&#39;, delay: 5000 }</code>), on top of the <code>jobProducer</code>&#39;s own defaults (<code>attempts: 3</code>, <code>backoff: { type: &#39;exponential&#39;, delay: 2000 }</code>, <code>removeOnComplete: { age: 30, count: 5 }</code>, <code>removeOnFail: { age: 1800, count: 10 }</code>).</p>
+<p>The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance as <code>media-service</code>&#39;s BullMQ connection, or enqueued jobs will never be picked up.</p>
+<hr>
+<h2>20. Build &amp; Run Commands</h2>
+<pre><code class="language-bash">npm install
+npm run dev            # tsc --noEmit --watch + nodemon (tsx) — development, auto-restarts on src changes
+npm run build           # tsc → dist/, then auto-regenerates public/index.html (see &quot;postbuild&quot; below)
+npm run start            # node dist/index.js — production (run build first)
+npm run start:dev        # build + start in one step
+npm run lint              # eslint src
+npm run lint:fix
+npm run clean              # remove dist/
+</code></pre>
+<p><strong><code>postbuild</code></strong> (<code>node scripts/generate-html.mjs</code>) runs automatically after every <code>npm run build</code> — it re-renders <code>README.md</code> → <code>public/index.html</code> using <code>@beautinique/shared-markdown-to-html</code>, so <code>GET /</code> stays in sync with the latest <code>README.md</code> after a build.</p>
+<p><strong>Note:</strong> this only fires on <code>npm run build</code> — <code>npm run dev</code> runs <code>tsx</code> directly and never touches <code>tsc</code>/<code>postbuild</code>, so editing <code>README.md</code> during <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build actually runs.</p>
+<h3>TypeScript strictness (<code>tsconfig.json</code>)</h3>
+<p>Beyond <code>strict: true</code>: <code>noUncheckedIndexedAccess</code> (indexed access is <code>T | undefined</code>, not <code>T</code>), <code>noEmitOnError</code> (a broken build produces no <code>dist/</code> output), <code>noUnusedLocals</code>/<code>noUnusedParameters</code>, <code>noImplicitReturns</code>, <code>noFallthroughCasesInSwitch</code>, <code>noUncheckedSideEffectImports</code>. <code>declaration</code>/<code>declarationMap</code> are deliberately <strong>off</strong> — this is an application, not a package anything imports.</p>
+<h3>ESLint (<code>eslint.config.mjs</code>)</h3>
+<p>Flat config: <code>@eslint/js</code> recommended → <code>typescript-eslint</code> recommended/strict/stylistic → type-checked variants (<code>recommendedTypeChecked</code>/<code>strictTypeChecked</code>/<code>stylisticTypeChecked</code> via <code>projectService</code>) → <code>simple-import-sort</code> → Prettier (last, disables conflicting stylistic rules). Notable custom rules: <code>no-floating-promises</code>/<code>no-misused-promises</code>/<code>require-await</code>/<code>await-thenable</code>/<code>eqeqeq</code>/<code>curly</code> (error), <code>no-explicit-any</code>/<code>no-unused-vars</code> (warn), <code>reportUnusedDisableDirectives</code> (error).</p>
+<hr>
+<h2>21. Shared Packages (<code>@beautinique/*</code>)</h2>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>@beautinique/backend-bullmq</code></td>
+<td><code>JobProducer</code> — typed BullMQ wrapper</td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-classes</code></td>
+<td><code>AppError</code> subclasses (<code>NotFoundError</code>, <code>ValidationError</code>, <code>ConflictError</code>, <code>UnprocessableEntityError</code>, ...)</td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-logger</code></td>
+<td><code>createLogger</code>/<code>createHttpLogger</code> (Pino-based)</td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-mongoose</code></td>
+<td><code>connectDb</code>, <code>disconnectDB</code>, <code>checkDbConnection</code>, <code>getConnectionHealth</code>, <code>getObjId</code>, <code>mongoEvents</code>, <code>tryCatchSession</code></td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-request</code></td>
+<td><code>checkServiceAccess</code>, <code>checkEmptyRequest</code></td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-response</code></td>
+<td><code>successResponse</code>/<code>errorResponse</code>/<code>notFoundResponse</code>/<code>tryCatchResponse</code></td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-utils</code></td>
+<td><code>getUser</code></td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-zod</code></td>
+<td><code>validateZod</code> and every request Zod schema (<code>categoryZodSchema</code>, <code>categoryUpdateZodSchema</code>, <code>draftProductStepBodyZodSchema</code>, <code>draftProductDetailsZodSchema</code>, plus the smaller per-field schemas — <code>productMediaAndGallerySchema</code>, <code>productVariantZodSchema</code>, <code>productStockAndVariantsSchema</code>, etc. — that those two are assembled from)</td>
+</tr>
+<tr>
+<td><code>@beautinique/shared-constants</code></td>
+<td><code>CATEGORY_LEVELS(_MAP)</code>, <code>PRODUCT_STATUSES(_MAP)</code>, <code>USER_ROLES</code>, <code>SORT_MAP</code>, <code>API_METHODS_MAP</code>, <code>HEADERS_MAP</code>, <code>SERVICE_NAMES_MAP</code>, <code>TRY_ON_MAP</code>/<code>TRY_ON_CATEGORIES</code>/<code>TRY_ON_ALL_SUB_CATEGORIES</code></td>
+</tr>
+<tr>
+<td><code>@beautinique/shared-markdown-to-html</code></td>
+<td><code>generateHtmlFromMarkdown</code> — used by <code>scripts/generate-html.mjs</code></td>
+</tr>
+<tr>
+<td><code>@beautinique/shared-utils</code></td>
+<td><code>requireEnv</code>/<code>requirePort</code>, <code>stringifyData</code>/<code>parseData</code></td>
+</tr>
+<tr>
+<td><code>@beautinique/backend-types</code></td>
+<td><code>TCategoryZodSchema</code>, <code>TCategoryUpdateZodSchema</code>, <code>TDraftProductStepBodyZodSchema</code>, <code>TDraftProductDetailsZodSchema</code>, <code>TTryOnSelection</code>, <code>TUserRole</code>, <code>TProductStatus</code>, <code>TSort</code>, <code>TCategoryLevel</code> — all <code>TInfer&lt;typeof ...ZodSchema&gt;</code> re-exports, so this package and <code>@beautinique/backend-zod</code> must always be upgraded together (a version of one that&#39;s out of sync with the other is exactly the class of bug that showed up mid-development on this service — see <a href="#25-design-notes--known-trade-offs">§25</a>)</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>22. API Response Format</h2>
+<p>All responses use <code>@beautinique/backend-response</code>&#39;s envelope, attached via <code>app.use(successResponse({ defaultMessage: &#39;Success.&#39; }))</code>:</p>
+<pre><code class="language-jsonc">// success
+{ &quot;success&quot;: true, &quot;message&quot;: &quot;Category created successfully&quot;, &quot;data&quot;: { &quot;...&quot;: &quot;...&quot; } }
+
+// error
+{ &quot;success&quot;: false, &quot;code&quot;: &quot;UNPROCESSABLE_ENTITY&quot;, &quot;message&quot;: &quot;...&quot;, &quot;fieldErrors&quot;: { ... }, &quot;globalErrors&quot;: [ ... ] }
+</code></pre>
+<p><code>res.success({ statusCode, message, data })</code> — <code>data</code> is omitted entirely (not sent as <code>null</code>) when not provided; <code>statusCode</code> defaults to <code>200</code>.</p>
+<hr>
+<h2>23. Data Flow Examples</h2>
+<h3>Category Creation</h3>
+<pre><code>Client → POST /category { name, level, parent? }
+  → Validate parent exists and is one level shallower (if provided)
+  → Check no sibling has the same slug
+  → Category.save() inside a transaction
+  → Flip parent.isLeaf = false (if parent given)
+  ← Commit
+  → afterCommit: redisCacheManager.category.setCategory(category)
+  ← res.success({ statusCode: 201 })
+</code></pre>
+<h3>Category Update (parent change)</h3>
+<pre><code>Client → PATCH /category/:id { name?, level, parent? }
+  → level must match existing (else ConflictError)
+  → IF &#39;parent&#39; in body: validate new parent (self-check, level-shallower-by-one check)
+  → IF name given: regenerate slug, re-check duplicate among (new) siblings
+  → Category.findByIdAndUpdate(..., { runValidators: true }) inside a transaction
+  → IF parent changed: recalc old parent&#39;s isLeaf, force new parent&#39;s isLeaf = false
+  ← Commit
+  → afterCommit: redisCacheManager.category.setCategory(updatedCategory)
+  ← res.success({ message: &#39;Category updated successfully&#39; })
+</code></pre>
+<h3>Draft → Publish</h3>
+<pre><code>Client → POST /product/draft { step: &#39;basicInfo&#39;, title, brand, originalPrice, sellingPrice, l1Category, l2Category, l3Category }
+Client → POST /product/draft { step: &#39;mediaAndGallery&#39;, thumbnail, images, video? }
+Client → POST /product/draft { step: &#39;descriptionAndContent&#39;, shortDescription, description, ... }
+Client → POST /product/draft { step: &#39;stockAndVariants&#39;, hasVariants, ... }
+Client → POST /product/draft { step: &#39;tryOnConfiguration&#39;, enabled, tryOn? }
+  → each call: RedisCacheDashboard.saveDraftProductStep() — writes one hash field, 24h TTL fixed from first write
+
+Client → PATCH /product/draft/publish   (no request body)
+  → createPendingProductPayload: load full draft from Redis into req.body
+  → Validate against draftProductDetailsZodSchema (all 5 steps required)
+  → Build Product payload (SKU/slug generation, variant SKUs)
+  → product.validate() then product.save({ session })
+  ← Commit
+  → afterCommit: mark referenced images &quot;used&quot; (media-queue), delete Redis draft
+  ← res.success({ statusCode: 201, data: product })
+</code></pre>
+<h3>Dashboard Product Search</h3>
+<pre><code>Client → GET /product/dashboard/products?search=lipstick&amp;page=1&amp;limit=10
+  → Atlas $search on &#39;dashboard-products&#39; index: autocomplete(title) + equals-filter(seller/status/category)
+  → $facet: paginated products (projected via PRODUCT_DASHBOARD_PROJECTION) + total count
+  → separate $group-by-status aggregation for the counts summary (not filtered by status)
+  ← res.success({ data: { products, pagination, counts } })
+</code></pre>
+<h3>Dashboard Product Lookup</h3>
+<pre><code>Client → GET /product/dashboard/:slug
+  → RedisCacheDashboard.getProductBySlug(slug)
+  → HIT  → return cached product
+  → MISS → Product.findOne({ slug, status: PUBLISHED }).populate(&#39;category&#39;)
+          → afterFinish: cache it (1-day TTL), response already sent
+  ← res.success({ data: product })
+</code></pre>
+<hr>
+<h2>24. Key Relationships</h2>
+<pre><code>Category ──1→N─── Category    (parent/children, L1 → L2 → L3)
+Category ──1→N─── Product     (a product always belongs to one L3 category)
+Product  ──N→1─── User         (seller, external — owned by user-service)
+Product  ──N→N─── Review       (external references only, no local Review model)
+</code></pre>
+<ul>
+<li><code>Category.parent</code>  → self-referencing ref <code>Category</code></li>
+<li><code>Product.category</code> → ref <code>Category</code> (always L3)</li>
+<li><code>Product.seller</code>   → external user id (no local ref/populate)</li>
+<li><code>Product.reviews</code>  → <code>ref: &#39;Review&#39;</code>, but no <code>Review</code> model exists in this service</li>
+</ul>
+<hr>
+<h2>25. Design Notes / Known Trade-offs</h2>
+<ul>
+<li><strong>Four routes are declared in <code>METHODS_AND_PATHS</code> but not wired up in <code>product.routes.ts</code>:</strong> <code>DELETE /product/draft</code>, <code>PATCH /product/draft</code> (edit an already-published product), <code>PATCH /product/publish</code> (approve a <code>PENDING</code> product — the controller, <code>publishPendingProductController</code>, already exists and is fixed/<code>save()</code>-complete, it&#39;s just not routed), and <code>GET /product/products</code> (a public listing distinct from the dashboard one). These read as intentionally-planned, not-yet-shipped endpoints rather than accidental gaps — wire them up (with the appropriate Zod schema + session/transaction + Redis invalidation, matching the conventions used everywhere else in this service) once the corresponding feature is ready.</li>
+<li><strong>A possible bug in the external <code>@beautinique/backend-zod</code> package&#39;s <code>tryOnConfiguration</code> schema.</strong> Both <code>draftProductStepBodyZodSchema</code> and <code>draftProductDetailsZodSchema</code> define <code>tryOnConfiguration</code> as a discriminated union keyed on <code>enabled</code>, but per the package&#39;s own published type declarations, <strong>both union branches currently declare <code>enabled: ZodLiteral&lt;false&gt;</code></strong> (the branch that requires a full, non-optional <code>tryOn</code> selection almost certainly should be <code>ZodLiteral&lt;true&gt;</code>). This lives in a separate repo/package (<code>BQ-Packages</code>), not this one, so it isn&#39;t something to fix here — but it&#39;s worth knowing about if try-on validation ever behaves unexpectedly at the API boundary, since it means Zod may not actually be able to distinguish the two <code>tryOnConfiguration</code> variants as designed. This is also part of why the Mongoose-level <code>tryOnSchema</code> validation (§5.2.2, §11.4) matters as a real second line of defense rather than a redundant belt-and-braces check — it&#39;s the layer that still enforces the category/sub-category relationship correctly regardless of what happens upstream in Zod.</li>
+<li><strong>Public vs. dashboard product lookup caching is asymmetric.</strong> <code>GET /product/dashboard/:slug</code> is cache-aside over Redis; <code>GET /product/:slug</code> (the public storefront lookup, almost certainly the higher-traffic of the two) hits MongoDB directly on every request. Worth revisiting if storefront traffic grows.</li>
+<li><strong>A Mongo <code>E11000</code> duplicate-key error on <code>Product.slug</code>/<code>Product.sku</code></strong> (from <code>publishDraftProductController</code>&#39;s <code>product.save({ session })</code>) is not currently caught and translated into a friendly <code>ConflictError</code> the way the category controllers do for their own duplicate-key races — a collision here (astronomically unlikely given both are timestamp/random-suffixed, but not impossible under concurrent publishes) would surface as a generic <code>InternalServerError</code> instead.</li>
+<li><strong><code>RedisCacheCategory</code>/<code>RedisCacheDashboard</code> degrade gracefully, never crash.</strong> Every Redis operation swallows its own errors and logs a warning (<code>RedisCacheHelper</code>); a Redis outage falls through to MongoDB on every cache-aside read path.</li>
+<li><strong>Category cache writes/deletes are deferred to <code>res.locals.afterCommit</code>.</strong> This keeps the Redis cache from ever getting ahead of a transaction that later rolls back. The categories hash also carries a 1-day TTL (set only when the hash doesn&#39;t already exist, so it isn&#39;t perpetually renewed by routine writes) specifically so that a rare failed Redis delete self-heals via a full MongoDB reseed instead of leaving a stale entry indefinitely.</li>
+<li><strong><code>findOrCreateCategory</code> (<code>services/index.ts</code>) is currently unused</strong> by any controller in this service — it&#39;s an upsert helper available for future seed scripts or cross-service use, not part of the live request path today.</li>
+<li><strong><code>productCount</code> on a category is never written to</strong> by any controller in this service — the field exists on the schema and is read by <code>deleteCategoryController</code>&#39;s L3 product-count guard, but nothing here increments/decrements it (presumably maintained by whichever controller actually creates/deletes/re-categorizes a product — worth confirming <code>publishDraftProductController</code>/a future product-deletion flow actually does this, since a permanently-stale <code>productCount</code> would make the delete-guard in §9.3 unreliable in either direction).</li>
+<li><strong><code>authenticate</code> is exported but unused directly</strong> — every route that needs identity uses <code>authorize(allowedRoles)</code> instead, since role-gating is required everywhere identity is.</li>
+<li><strong><code>GET /</code> regenerates on <code>npm run build</code>, not <code>npm run dev</code>.</strong> <code>public/index.html</code> is generated from <code>README.md</code> by the <code>postbuild</code> script. Editing this file while running <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build actually runs.</li>
+</ul>
+</main>
+  </body>
+</html>

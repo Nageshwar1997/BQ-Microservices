@@ -1,12 +1,19 @@
-import { AppError } from '@beautinique/be-classes';
-import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
-import type { TCategory } from '@beautinique/be-zod';
+import {
+  ConflictError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '@beautinique/backend-classes';
+import { getObjId } from '@beautinique/backend-mongoose';
+import type { TCategoryZodSchema } from '@beautinique/backend-types';
+import { getUser } from '@beautinique/backend-utils';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import { type ClientSession } from 'mongoose';
-import { redisCache } from '../../classes';
-import { Category } from '../../models';
-import { generateSlug, getObjId, getUser } from '../../utils';
+
+import { redisCacheManager } from '../../configs/index.js';
+import { Category } from '../../models/index.js';
+import { generateSlug } from '../../utils/index.js';
 
 export const addCategoryController = async (
   req: Request,
@@ -14,13 +21,13 @@ export const addCategoryController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const { _id: userId } = getUser(req);
+  const { _id: userId } = getUser(req.user);
 
-  const { name, level, parent: parentId, description } = req.body as TCategory;
+  const { name, level, ...restBody } = req.body as TCategoryZodSchema;
 
   /* ---------------- PARENT ---------------- */
 
-  const parent = parentId ? getObjId(parentId) : undefined;
+  const parent = 'parent' in restBody ? getObjId(restBody.parent) : undefined;
 
   if (parent) {
     const parentCategory = await Category.findById(parent)
@@ -30,7 +37,7 @@ export const addCategoryController = async (
       .exec();
 
     if (!parentCategory) {
-      throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
+      throw new NotFoundError('Parent category not found');
     }
 
     /*
@@ -39,10 +46,7 @@ export const addCategoryController = async (
     */
 
     if (parentCategory.level !== level - 1) {
-      throw new AppError({
-        message: `Invalid parent category for level ${level}`,
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new UnprocessableEntityError(`Invalid parent category for level ${String(level)}`);
     }
   }
 
@@ -55,7 +59,7 @@ export const addCategoryController = async (
     .exec();
 
   if (existingCategory) {
-    throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+    throw new ConflictError('Category already exists');
   }
 
   /* ---------------- CREATE ---------------- */
@@ -65,14 +69,15 @@ export const addCategoryController = async (
     level,
     createdBy: userId,
     ...((level === CATEGORY_LEVELS_MAP.L2 || level === CATEGORY_LEVELS_MAP.L3) && { parent }),
-    ...(level === CATEGORY_LEVELS_MAP.L3 && { productCount: 0, description }),
+    ...(level === CATEGORY_LEVELS_MAP.L3 &&
+      'description' in restBody && { productCount: 0, description: restBody.description }),
   });
 
   try {
     await category.save({ session });
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {
-      throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+      throw new ConflictError('Category already exists');
     }
 
     throw error;
@@ -86,7 +91,9 @@ export const addCategoryController = async (
 
   /* ---------------- REDIS ---------------- */
 
-  await redisCache.category.setCategory(category);
+  res.locals.afterCommit?.push(async () => {
+    await redisCacheManager.category.setCategory(category);
+  });
 
-  res.success(201, 'Category created successfully');
+  res.success({ statusCode: 201, message: 'Category created successfully' });
 };

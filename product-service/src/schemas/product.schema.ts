@@ -1,13 +1,15 @@
-import { AppError } from '@beautinique/be-classes';
-import { Schema } from 'mongoose';
+import { UnprocessableEntityError } from '@beautinique/backend-classes';
+import type { TTryOnCategory, TTryOnSubCategory } from '@beautinique/backend-types';
 import {
   PRODUCT_STATUSES,
-  PRODUCT_STATUS_MAP,
+  PRODUCT_STATUSES_MAP,
+  TRY_ON_ALL_SUB_CATEGORIES,
   TRY_ON_CATEGORIES,
   TRY_ON_MAP,
-  TRY_ON_SUBCATEGORIES,
-} from '../constants';
-import type { ITryOn, TTryOn, TTryOnKey } from '../types';
+} from '@beautinique/shared-constants';
+import { Schema } from 'mongoose';
+
+import type { ITryOn } from '../types/index.js';
 
 export const variantSchema = new Schema(
   {
@@ -28,19 +30,13 @@ export const variantSchema = new Schema(
 
 variantSchema.pre('validate', function () {
   if (this.originalPrice <= 0) {
-    throw new AppError({
-      message: 'Variant original price must be greater than zero',
-      code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        originalPrice: ['Variant original price must be greater than zero'],
-      },
+    throw new UnprocessableEntityError('Invalid original price', {
+      fieldErrors: { originalPrice: ['Variant original price must be greater than zero'] },
     });
   }
 
   if (this.sellingPrice > this.originalPrice) {
-    throw new AppError({
-      message: 'Invalid variant pricing',
-      code: 'UNPROCESSABLE_ENTITY',
+    throw new UnprocessableEntityError('Invalid variant pricing', {
       fieldErrors: {
         sellingPrice: ['Variant selling price cannot be greater than original price'],
       },
@@ -76,18 +72,23 @@ const tryOnSchema = new Schema<ITryOn>(
     },
     subCategory: {
       type: String,
-      enum: TRY_ON_SUBCATEGORIES,
+      enum: TRY_ON_ALL_SUB_CATEGORIES,
       required: function (): boolean {
-        return this.get('configured');
+        return this.get('configured') && !!this.get('category');
       },
       validate: {
-        validator(value: TTryOn[TTryOnKey][number]) {
+        validator(value: TTryOnSubCategory) {
           if (!this.get('configured')) {
             return true;
           }
-          const category = this.get('category') as TTryOnKey;
 
-          return TRY_ON_MAP[category]?.includes(value as never);
+          const category = this.get('category') as TTryOnCategory | undefined;
+
+          if (!category) {
+            throw new UnprocessableEntityError('Category is required');
+          }
+
+          return TRY_ON_MAP[category].includes(value as never);
         },
 
         message: 'Invalid sub category for selected category',
@@ -98,26 +99,26 @@ const tryOnSchema = new Schema<ITryOn>(
 );
 
 tryOnSchema.pre('validate', function () {
-  const configured = this.get('configured') as boolean;
+  const configured = this.get('configured');
 
   if (!configured) {
     return;
   }
 
-  const category = this.get('category') as TTryOnKey;
-
-  const subCategory = this.get('subCategory') as TTryOn[TTryOnKey][number];
+  const category = this.get('category');
 
   if (!category) {
-    throw new Error('Category is required');
+    throw new UnprocessableEntityError('Category is required');
   }
+
+  const subCategory = this.get('subCategory');
 
   if (!subCategory) {
-    throw new Error('Sub category is required');
+    throw new UnprocessableEntityError('Sub category is required');
   }
 
-  if (!TRY_ON_MAP[category]?.includes(subCategory as never)) {
-    throw new Error('Invalid sub category for selected category');
+  if (!TRY_ON_MAP[category].includes(subCategory as never)) {
+    throw new UnprocessableEntityError('Invalid sub category for selected category');
   }
 });
 
@@ -153,7 +154,7 @@ export const productSchema = new Schema(
     status: {
       type: String,
       enum: PRODUCT_STATUSES,
-      default: PRODUCT_STATUS_MAP.PENDING,
+      default: PRODUCT_STATUSES_MAP.PENDING,
       index: true,
     },
     history: historySchema,
@@ -207,9 +208,7 @@ productSchema.pre('validate', function () {
    * PRICE VALIDATIONS
    */
   if (this.originalPrice <= 0) {
-    throw new AppError({
-      message: 'Original price must be greater than zero',
-      code: 'UNPROCESSABLE_ENTITY',
+    throw new UnprocessableEntityError('Invalid original price', {
       fieldErrors: {
         originalPrice: ['Original price must be greater than zero'],
       },
@@ -218,27 +217,18 @@ productSchema.pre('validate', function () {
 
   if (this.hasVariants) {
     if (!this.variants.length) {
-      throw new AppError({
-        message: 'At least one variant is required',
-        code: 'UNPROCESSABLE_ENTITY',
-      });
+      throw new UnprocessableEntityError('At least one variant is required');
     }
 
     const skus = new Set<string>();
 
     for (const variant of this.variants) {
       if (!variant.sku) {
-        throw new AppError({
-          message: 'Variant SKU is required',
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new UnprocessableEntityError('Variant SKU is required');
       }
 
       if (skus.has(variant.sku)) {
-        throw new AppError({
-          message: 'Duplicate variant SKU found',
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new UnprocessableEntityError('Duplicate variant SKU found');
       }
 
       skus.add(variant.sku);
@@ -246,12 +236,8 @@ productSchema.pre('validate', function () {
   }
 
   if (this.sellingPrice > this.originalPrice) {
-    throw new AppError({
-      message: 'Incompatible selling price and original price',
-      code: 'UNPROCESSABLE_ENTITY',
-      fieldErrors: {
-        sellingPrice: ['Selling price cannot be greater than original price'],
-      },
+    throw new UnprocessableEntityError('Incompatible selling price and original price', {
+      fieldErrors: { sellingPrice: ['Selling price cannot be greater than original price'] },
     });
   }
 
@@ -259,34 +245,4 @@ productSchema.pre('validate', function () {
    * AUTO CALCULATE DISCOUNT
    */
   this.discount = Math.round(((this.originalPrice - this.sellingPrice) / this.originalPrice) * 100);
-
-  /*
-   * TRY-ON VALIDATIONS
-   *
-   * If try-on is enabled, make sure
-   * category and type are provided.
-   */
-
-  if (this.tryOn?.enabled) {
-    const { category, subCategory } = this.tryOn;
-
-    if (!category || !subCategory) {
-      throw new AppError({
-        message: 'Try-on category and type are required',
-        code: 'UNPROCESSABLE_ENTITY',
-      });
-    }
-
-    const subcategories = TRY_ON_MAP[category];
-
-    if (!subcategories.includes(subCategory as never)) {
-      throw new AppError({
-        message: 'Invalid try-on type',
-        code: 'UNPROCESSABLE_ENTITY',
-        fieldErrors: {
-          tryOn: [`Invalid type "${subCategory}" for category "${category}"`],
-        },
-      });
-    }
-  }
 });

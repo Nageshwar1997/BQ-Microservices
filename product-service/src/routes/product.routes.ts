@@ -1,10 +1,14 @@
+import { tryCatchSession } from '@beautinique/backend-mongoose';
+import { checkEmptyRequest } from '@beautinique/backend-request';
+import { tryCatchResponse } from '@beautinique/backend-response';
 import {
-  checkEmptyRequest,
-  tryCatchResponse,
-  tryCatchSessionResponse,
-} from '@beautinique/be-middlewares';
+  draftProductDetailsZodSchema,
+  draftProductStepBodyZodSchema,
+  validateZod,
+} from '@beautinique/backend-zod';
 import { Router } from 'express';
-import { METHODS_AND_PATHS } from '../constants';
+
+import { METHODS_AND_PATHS } from '../constants/index.js';
 import {
   getDashboardProductBySlugController,
   getDashboardProductsController,
@@ -13,8 +17,8 @@ import {
   getProductsSuggestionsController,
   publishDraftProductController,
   saveDraftProductController,
-} from '../controllers';
-import { authorize, createPendingProductPayload } from '../middlewares';
+} from '../controllers/index.js';
+import { authorize, createPendingProductPayload } from '../middlewares/index.js';
 
 export const productRouter = Router();
 const draftRouter = Router();
@@ -26,6 +30,7 @@ const { draft, get } = METHODS_AND_PATHS.product;
 draftRouter[draft.save.method](
   draft.save.path,
   checkEmptyRequest({ body: true }),
+  validateZod({ body: draftProductStepBodyZodSchema }),
   tryCatchResponse(saveDraftProductController),
 );
 
@@ -33,7 +38,8 @@ draftRouter[draft.publish.method](
   draft.publish.path,
   createPendingProductPayload,
   checkEmptyRequest({ body: true }),
-  tryCatchSessionResponse(publishDraftProductController),
+  validateZod({ body: draftProductDetailsZodSchema }),
+  tryCatchSession(publishDraftProductController),
 );
 
 draftRouter[draft.get.method](draft.get.path, tryCatchResponse(getDraftProductController));

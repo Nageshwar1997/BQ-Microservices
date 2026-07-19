@@ -1,19 +1,19 @@
-import { bullQueue } from '@beautinique/be-jobs';
+import { getObjId } from '@beautinique/backend-mongoose';
+import type { TDraftProductDetailsZodSchema } from '@beautinique/backend-types';
+import { getUser } from '@beautinique/backend-utils';
+import { PRODUCT_STATUSES_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
-import { redisCache } from '../../classes';
-import { ROLES_MAP } from '../../constants';
-import { Product } from '../../models';
-import type { TCreateProductPayload } from '../../types';
+
+import { jobProducer, redisCacheManager } from '../../configs/index.js';
+import { Product } from '../../models/index.js';
+import type { TCreateProductPayload } from '../../types/index.js';
 import {
   extractImageUrlsFromHtml,
   generateSku,
   generateSlug,
   getCloudinaryPublicIdFromUrl,
-  getObjId,
-  getUser,
-} from '../../utils';
-import type { TDraftProduct } from './saveDraftProduct.controller';
+} from '../../utils/index.js';
 
 export const publishDraftProductController = async (
   req: Request,
@@ -21,10 +21,10 @@ export const publishDraftProductController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const user = getUser(req);
-  const draft = req.body as TDraftProduct;
+  const user = getUser(req.user);
+  const draft = req.body as TDraftProductDetailsZodSchema;
 
-  const isAdmin = [ROLES_MAP.ADMIN, ROLES_MAP.MASTER].includes(user.role as never);
+  const isAdmin = [USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER].includes(user.role as never);
 
   const productSku = generateSku({
     data: {
@@ -40,7 +40,7 @@ export const publishDraftProductController = async (
     seller: user._id,
     sku: productSku,
 
-    status: isAdmin ? 'PUBLISHED' : 'PENDING',
+    status: isAdmin ? PRODUCT_STATUSES_MAP.PUBLISHED : PRODUCT_STATUSES_MAP.PENDING,
 
     ...(isAdmin && { history: { approvedAt: new Date(), approvedBy: user._id } }),
 
@@ -81,15 +81,12 @@ export const publishDraftProductController = async (
       'stockThreshold' in draft.stockAndVariants ? draft.stockAndVariants.stockThreshold : null,
 
     // TRY-ON CONFIGURATION
-    tryOn:
-      'tryOn' in draft.tryOnConfiguration
-        ? {
-            enabled: true,
-            configured: true,
-            category: draft.tryOnConfiguration.tryOn.category,
-            subCategory: draft.tryOnConfiguration.tryOn.subCategory as never,
-          }
-        : { enabled: false, configured: false },
+    tryOn: {
+      enabled: draft.tryOnConfiguration.enabled,
+      configured: Boolean(draft.tryOnConfiguration.tryOn),
+      category: draft.tryOnConfiguration.tryOn?.category,
+      subCategory: draft.tryOnConfiguration.tryOn?.subCategory,
+    } as TCreateProductPayload['tryOn'],
   };
 
   const product = new Product(payload);
@@ -125,16 +122,16 @@ export const publishDraftProductController = async (
 
   res.locals.afterCommit?.push(async () => {
     if (uniquePublicIds.length > 0) {
-      await bullQueue.addJob({
-        queueName: 'media-queue',
-        jobName: 'mark-multiple-media-as-used',
-        data: { publicIds: uniquePublicIds },
-        options: { attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
-      });
+      await jobProducer.addJob(
+        'media-queue',
+        'mark-multiple-media-as-used',
+        { publicIds: uniquePublicIds },
+        { attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
+      );
     }
 
-    await redisCache.dashboard.deleteDraftProduct(user._id.toString());
+    await redisCacheManager.dashboard.deleteDraftProduct(user._id.toString());
   });
 
-  res.success(201, 'Product sent for review', { product: product.toObject() });
+  res.success({ statusCode: 201, message: 'Product sent for review', data: product.toObject() });
 };

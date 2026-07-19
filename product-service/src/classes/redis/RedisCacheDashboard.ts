@@ -1,0 +1,98 @@
+import type {
+  TDraftProductDetailsZodSchema,
+  TDraftProductStepBodyZodSchema,
+} from '@beautinique/backend-types';
+import { parseData } from '@beautinique/shared-utils';
+
+import type { DashboardCacheProduct } from '../../types/index.js';
+import { RedisCacheHelper } from './RedisCacheHelper.js';
+
+const DASHBOARD_CACHE_TTL_SECONDS = 60 * 60 * 24; // 1 day
+
+export class RedisCacheDashboard extends RedisCacheHelper {
+  private readonly DRAFT_PRODUCT_KEY = 'bq:products:draft';
+  private readonly DASHBOARD_PRODUCT_KEY = 'bq:products:dashboard:product';
+
+  /* ================= KEYS ================= */
+
+  private getDraftProductKey(userId: string) {
+    return `${this.DRAFT_PRODUCT_KEY}:${userId}`;
+  }
+
+  private getProductKey(slug: string) {
+    return `${this.DASHBOARD_PRODUCT_KEY}:${slug}`;
+  }
+
+  /* ================= DRAFT PRODUCT ================= */
+
+  private async getDraftHashData(
+    key: string,
+  ): Promise<Partial<TDraftProductDetailsZodSchema> | null> {
+    const data = await this.getAllHashFields<string>(key);
+
+    if (Object.keys(data).length === 0) {
+      return null;
+    }
+
+    return {
+      basicInfo: data.basicInfo ? (parseData(data.basicInfo) ?? undefined) : undefined,
+      mediaAndGallery: data.mediaAndGallery
+        ? (parseData(data.mediaAndGallery) ?? undefined)
+        : undefined,
+      descriptionAndContent: data.descriptionAndContent
+        ? (parseData(data.descriptionAndContent) ?? undefined)
+        : undefined,
+      stockAndVariants: data.stockAndVariants
+        ? (parseData(data.stockAndVariants) ?? undefined)
+        : undefined,
+      tryOnConfiguration: data.tryOnConfiguration
+        ? (parseData(data.tryOnConfiguration) ?? undefined)
+        : undefined,
+    };
+  }
+
+  public async getDraftProduct(userId: string) {
+    return this.getDraftHashData(this.getDraftProductKey(userId));
+  }
+
+  public async saveDraftProductStep(userId: string, stepData: TDraftProductStepBodyZodSchema) {
+    const key = this.getDraftProductKey(userId);
+
+    const isNewDraft = !(await this.exists(key));
+
+    await this.setHashData(
+      key,
+      stepData.step,
+      stepData,
+      isNewDraft ? DASHBOARD_CACHE_TTL_SECONDS : undefined,
+    );
+
+    return this.getDraftHashData(key);
+  }
+
+  public async deleteDraftProduct(userId: string) {
+    await this.deleteData(this.getDraftProductKey(userId));
+  }
+
+  public async hasDraftProduct(userId: string) {
+    return this.exists(this.getDraftProductKey(userId));
+  }
+
+  /* ================= PRODUCT ================= */
+
+  public async getProductBySlug(slug: string) {
+    return this.getData<DashboardCacheProduct>(this.getProductKey(slug));
+  }
+
+  public async setProductBySlug(slug: string, product: DashboardCacheProduct) {
+    await this.setData(this.getProductKey(slug), DASHBOARD_CACHE_TTL_SECONDS, product);
+  }
+
+  public async deleteProductBySlug(slug: string) {
+    await this.deleteData(this.getProductKey(slug));
+  }
+
+  public async hasProductBySlug(slug: string) {
+    return this.exists(this.getProductKey(slug));
+  }
+}

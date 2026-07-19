@@ -1,13 +1,20 @@
-import { AppError } from '@beautinique/be-classes';
-import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
-import type { TUpdateCategory } from '@beautinique/be-zod';
+import {
+  ConflictError,
+  NotFoundError,
+  UnprocessableEntityError,
+} from '@beautinique/backend-classes';
+import { getObjId } from '@beautinique/backend-mongoose';
+import type { TCategoryUpdateZodSchema } from '@beautinique/backend-types';
+import { getUser } from '@beautinique/backend-utils';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';
-import { redisCache } from '../../classes';
-import { Category } from '../../models';
-import type { ICategory } from '../../types';
-import { generateSlug, getObjId, getUser } from '../../utils';
+
+import { redisCacheManager } from '../../configs/index.js';
+import { Category } from '../../models/index.js';
+import type { ICategory } from '../../types/index.js';
+import { generateSlug } from '../../utils/index.js';
 
 export const updateCategoryController = async (
   req: Request,
@@ -15,11 +22,11 @@ export const updateCategoryController = async (
   _next: NextFunction,
   session: ClientSession,
 ) => {
-  const userId = getUser(req)._id;
+  const { _id: userId } = getUser(req.user);
 
-  const { name, parent: parentId, description } = req.body as TUpdateCategory;
+  const { name, level, ...restBody } = req.body as TCategoryUpdateZodSchema;
 
-  const categoryId = getObjId(req.params.categoryId.toString());
+  const categoryId = getObjId(req.params.categoryId?.toString() ?? '');
 
   /* ---------------- EXISTING CATEGORY ---------------- */
 
@@ -30,29 +37,11 @@ export const updateCategoryController = async (
     .exec();
 
   if (!existingCategory) {
-    throw new AppError({ message: 'Category not found', code: 'NOT_FOUND' });
+    throw new NotFoundError('Category not found');
   }
 
-  const level = existingCategory.level;
-
-  /* ---------------- LEVEL FIELD VALIDATION ---------------- */
-
-  if (level === CATEGORY_LEVELS_MAP.L1) {
-    if (parentId || description) {
-      throw new AppError({
-        message: `Level ${level} category cannot have parent or description`,
-        code: 'UNPROCESSABLE_ENTITY',
-      });
-    }
-  }
-
-  if (level === CATEGORY_LEVELS_MAP.L2) {
-    if (description) {
-      throw new AppError({
-        message: `Level ${level} category cannot have description`,
-        code: 'UNPROCESSABLE_ENTITY',
-      });
-    }
+  if (existingCategory.level !== level) {
+    throw new ConflictError('Cannot update category level');
   }
 
   /* ---------------- PARENT ---------------- */
@@ -60,16 +49,13 @@ export const updateCategoryController = async (
   let parent: ICategory['_id'] | undefined;
 
   // only validate/update parent if explicitly provided
-  if (parentId) {
-    parent = parentId ? getObjId(parentId) : undefined;
+  if ('parent' in restBody) {
+    parent = restBody.parent ? getObjId(restBody.parent) : undefined;
 
     if (parent) {
       // self parent check
       if (parent.equals(categoryId)) {
-        throw new AppError({
-          message: 'Category cannot be its own parent',
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new ConflictError('Category cannot be its own parent');
       }
 
       const parentCategory = await Category.findById(parent)
@@ -79,7 +65,7 @@ export const updateCategoryController = async (
         .exec();
 
       if (!parentCategory) {
-        throw new AppError({ message: 'Parent category not found', code: 'NOT_FOUND' });
+        throw new NotFoundError('Parent category not found');
       }
 
       /*
@@ -88,10 +74,7 @@ export const updateCategoryController = async (
       */
 
       if (parentCategory.level !== level - 1) {
-        throw new AppError({
-          message: `Invalid parent category for level ${level}`,
-          code: 'UNPROCESSABLE_ENTITY',
-        });
+        throw new UnprocessableEntityError(`Invalid parent category for level ${String(level)}`);
       }
     }
   }
@@ -105,7 +88,7 @@ export const updateCategoryController = async (
 
     const duplicateCategory = await Category.findOne({
       _id: { $ne: categoryId },
-      parent: parentId ? parent : existingCategory.parent,
+      parent: 'parent' in restBody ? parent : existingCategory.parent,
       slug,
     })
       .select('_id')
@@ -114,7 +97,7 @@ export const updateCategoryController = async (
       .exec();
 
     if (duplicateCategory) {
-      throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+      throw new ConflictError('Category already exists');
     }
   }
 
@@ -127,12 +110,12 @@ export const updateCategoryController = async (
     payload.slug = slug;
   }
 
-  if (parentId) {
+  if ('parent' in restBody) {
     payload.parent = parent;
   }
 
-  if (level === CATEGORY_LEVELS_MAP.L3 && description) {
-    payload.description = description;
+  if (level === CATEGORY_LEVELS_MAP.L3 && 'description' in restBody) {
+    payload.description = restBody.description;
   }
 
   /* ---------------- UPDATE ---------------- */
@@ -149,7 +132,7 @@ export const updateCategoryController = async (
     }).exec();
   } catch (error) {
     if (error instanceof MongoServerError && error.code === 11000) {
-      throw new AppError({ message: 'Category already exists', code: 'CONFLICT' });
+      throw new ConflictError('Category already exists');
     }
 
     throw error;
@@ -158,7 +141,7 @@ export const updateCategoryController = async (
   /* ---------------- PARENT LEAF SYNC ---------------- */
 
   const oldParentId = existingCategory.parent?.toString();
-  const newParentId = parentId ? parent?.toString() : oldParentId;
+  const newParentId = 'parent' in restBody ? parent?.toString() : oldParentId;
 
   if (oldParentId !== newParentId) {
     // old parent leaf check
@@ -188,8 +171,10 @@ export const updateCategoryController = async (
   /* ---------------- REDIS ---------------- */
 
   if (updatedCategory) {
-    await redisCache.category.setCategory(updatedCategory);
+    res.locals.afterCommit?.push(async () => {
+      await redisCacheManager.category.setCategory(updatedCategory);
+    });
   }
 
-  res.success(200, 'Category updated successfully');
+  res.success({ message: 'Category updated successfully' });
 };

@@ -1,8 +1,9 @@
-import { parseData, stringifyData } from '@beautinique/be-utils';
+import { parseData, stringifyData } from '@beautinique/shared-utils';
 import type { RedisClientType } from 'redis';
-import { logger } from '../configs';
 
-export class RedisHelper {
+import { logger } from '../../configs/index.js';
+
+export class RedisCacheHelper {
   protected readonly client: RedisClientType;
   protected readonly getClient: () => RedisClientType | null;
 
@@ -20,12 +21,12 @@ export class RedisHelper {
 
     try {
       await client.setEx(key, ttl, typeof data === 'string' ? data : stringifyData(data));
-    } catch (err) {
-      logger.warn('⚠️ Redis set failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️  Redis set failed:');
     }
   }
 
-  protected async getData<T>(key: string): Promise<T | null> {
+  protected async getData<T = unknown>(key: string): Promise<T | null> {
     const client = this.getClient();
 
     if (!client) return null;
@@ -33,9 +34,9 @@ export class RedisHelper {
     try {
       const data = await client.get(key);
 
-      return data ? (parseData(data) as T) : null;
-    } catch (err) {
-      logger.warn('⚠️ Redis get failed:', err);
+      return data ? parseData<T>(data) : null;
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis get failed:');
 
       return null;
     }
@@ -48,8 +49,8 @@ export class RedisHelper {
 
     try {
       await client.del(key);
-    } catch (err) {
-      logger.warn('⚠️ Redis delete failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis delete failed:');
     }
   }
 
@@ -66,12 +67,12 @@ export class RedisHelper {
       if (ttl) {
         await client.expire(key, ttl);
       }
-    } catch (err) {
-      logger.warn('⚠️ Redis hSet failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis hSet failed:');
     }
   }
 
-  protected async getHashField<T>(key: string, field: string): Promise<T | null> {
+  protected async getHashField<T = unknown>(key: string, field: string): Promise<T | null> {
     const client = this.getClient();
 
     if (!client) return null;
@@ -79,15 +80,15 @@ export class RedisHelper {
     try {
       const data = await client.hGet(key, field);
 
-      return data ? (parseData(data) as T) : null;
-    } catch (err) {
-      logger.warn('⚠️ Redis hGet failed:', err);
+      return data ? parseData<T>(data) : null;
+    } catch (error) {
+      logger.warn(error, '⚠️  Redis hGet failed:');
 
       return null;
     }
   }
 
-  protected async getAllHashFields<T>(key: string): Promise<Record<string, T>> {
+  protected async getAllHashFields<T = unknown>(key: string): Promise<Record<string, T>> {
     const client = this.getClient();
 
     if (!client) return {};
@@ -98,8 +99,8 @@ export class RedisHelper {
       return Object.fromEntries(
         Object.entries(data).map(([field, value]) => [field, parseData(value) as T]),
       );
-    } catch (err) {
-      logger.warn('⚠️ Redis hGetAll failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis hGetAll failed:');
 
       return {};
     }
@@ -112,8 +113,8 @@ export class RedisHelper {
 
     try {
       await client.hDel(key, field);
-    } catch (err) {
-      logger.warn('⚠️ Redis hDel failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis hDel failed:');
     }
   }
 
@@ -124,8 +125,8 @@ export class RedisHelper {
 
     try {
       await client.del(key);
-    } catch (err) {
-      logger.warn('⚠️ Redis hash delete failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis hash delete failed:');
     }
   }
 
@@ -138,8 +139,8 @@ export class RedisHelper {
 
     try {
       return (await client.exists(key)) === 1;
-    } catch (err) {
-      logger.warn('⚠️ Redis exists failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis exists failed:');
 
       return false;
     }
@@ -152,8 +153,8 @@ export class RedisHelper {
 
     try {
       return (await client.hExists(key, field)) === 1;
-    } catch (err) {
-      logger.warn('⚠️ Redis hExists failed:', err);
+    } catch (error) {
+      logger.warn(error, '⚠️ Redis hExists failed:');
 
       return false;
     }

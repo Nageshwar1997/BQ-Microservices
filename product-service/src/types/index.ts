@@ -1,9 +1,13 @@
-import type { TRole } from '@beautinique/be-constants';
-import type { TCategory } from '@beautinique/be-zod';
+import type {
+  TCategoryZodSchema,
+  TProductStatus,
+  TSort,
+  TTryOnSelection,
+  TUserRole,
+} from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
-import type { DRAFT_PRODUCT_STEP_MAP, PRODUCT_STATUSES, SORT, TRY_ON_MAP } from '../constants';
-import type { categorySchema, productSchema, variantSchema,  } from '../schemas';
 
+import type { categorySchema, productSchema, variantSchema } from '../schemas/index.js';
 export type TId = Types.ObjectId;
 export type TStrId = string;
 export interface IId {
@@ -14,14 +18,9 @@ export interface IIdStr {
   _id: TStrId;
 }
 
-export interface ITimestamp {
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 export interface ICategory extends IId, InferSchemaType<typeof categorySchema> {}
 
-export type TCacheCategory = TCategory & IIdStr & Pick<ICategory, 'slug'>;
+export type TCacheCategory = TCategoryZodSchema & IIdStr & Pick<ICategory, 'slug'>;
 
 export type TCategoryHierarchy = TCacheCategory & { subcategories: TCategoryHierarchy[] };
 
@@ -45,27 +44,14 @@ export type TCreateProductPayload = Omit<
 > & { variants: Omit<TVariant, '_id' | 'discount'>[] };
 
 export interface IUser extends IId {
-  role: TRole;
+  role: TUserRole;
 }
 
-export type TDraftProductStep = keyof typeof DRAFT_PRODUCT_STEP_MAP;
+type TDisabledTryOn = { enabled: false } & Partial<TTryOnSelection>;
 
-export type TProductStatus = (typeof PRODUCT_STATUSES)[number];
+type TEnabledTryOn = { enabled: true } & TTryOnSelection;
 
-export type TTryOn = typeof TRY_ON_MAP;
-export type TTryOnKey = keyof TTryOn;
-
-export type TTryOnCategoryMap = {
-  [K in TTryOnKey]: { category: K; subCategory: TTryOn[K][number] };
-}[TTryOnKey];
-
-type TTryOnDisabled =
-  | { enabled: false }
-  | ({ enabled: false; configured: boolean } & TTryOnCategoryMap);
-
-type TTryOnEnabled = { enabled: true; configured: boolean } & TTryOnCategoryMap;
-
-export type ITryOn = TTryOnDisabled | TTryOnEnabled;
+export type ITryOn = (TDisabledTryOn | TEnabledTryOn) & { configured: boolean };
 
 export interface IGenerateSku {
   data: Record<string, string>;
@@ -89,8 +75,6 @@ export interface ITextSearchOperator<TPath extends string> {
   text: TSearchOperatorBase<TPath>;
 }
 
-export type TSort = (typeof SORT)[number];
-
 export type TDashboardListProduct = Pick<
   TProduct,
   | 'title'
@@ -107,10 +91,9 @@ export type TDashboardListProduct = Pick<
   | 'tryOn'
   | 'soldCount'
   | 'hasVariants'
-  | 'variants'
   | 'createdAt'
   | 'updatedAt'
->;
+> & { variants: Pick<TVariant, '_id' | 'stock'>[] };
 
 export interface IGetDashboardProductsQuery {
   page?: string;
@@ -129,3 +112,5 @@ export type DashboardCacheProduct = Omit<TProduct, 'category' | 'variants'> & {
   category: Pick<ICategory, 'name'>;
   variants: Omit<TVariant, 'stockThreshold'>[];
 };
+
+export type TProductFilter = Pick<TProduct, 'seller' | 'status' | 'category'>;

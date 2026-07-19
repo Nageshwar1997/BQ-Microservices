@@ -1,27 +1,25 @@
+import { getObjId } from '@beautinique/backend-mongoose';
+import type { TProductStatus } from '@beautinique/backend-types';
+import { getUser } from '@beautinique/backend-utils';
+import { SORT_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 import type { PipelineStage } from 'mongoose';
-import {
-  PRODUCT_DASHBOARD_PROJECTION,
-  ROLES_MAP,
-  SORT_MAP,
-  type TProductFilter,
-} from '../../constants';
-import { Product } from '../../models';
+
+import { PRODUCT_DASHBOARD_PROJECTION } from '../../constants/index.js';
+import { Product } from '../../models/index.js';
 import type {
   IGetDashboardProductsQuery,
   TDashboardListProduct,
   TId,
-  TProductStatus,
-} from '../../types';
+  TProductFilter,
+} from '../../types/index.js';
 import {
   getInitialProductCountsByStatus,
-  getObjId,
-  getUser,
   populateProductCountsByStatus,
-} from '../../utils';
+} from '../../utils/index.js';
 
 export const getDashboardProductsController = async (req: Request, res: Response) => {
-  const user = getUser(req);
+  const user = getUser(req.user);
 
   const {
     page = '1',
@@ -38,20 +36,22 @@ export const getDashboardProductsController = async (req: Request, res: Response
 
   const direction = sortOrder === SORT_MAP.asc ? 1 : -1;
 
+  const categoryObjId = category ? getObjId(category) : undefined;
+
   const statusMatch: Partial<Omit<TProductFilter, 'status'>> = {};
 
-  if (user.role === ROLES_MAP.SELLER) {
+  if (user.role === USER_ROLE_MAP.SELLER) {
     statusMatch.seller = user._id;
   }
 
-  if (category) {
-    statusMatch.category = getObjId(category);
+  if (categoryObjId) {
+    statusMatch.category = categoryObjId;
   }
 
   const searchFilters: { equals: { path: keyof TProductFilter; value: TId | TProductStatus } }[] =
     [];
 
-  if (user.role === ROLES_MAP.SELLER) {
+  if (user.role === USER_ROLE_MAP.SELLER) {
     searchFilters.push({ equals: { path: 'seller', value: user._id } });
   }
 
@@ -59,13 +59,13 @@ export const getDashboardProductsController = async (req: Request, res: Response
     searchFilters.push({ equals: { path: 'status', value: status } });
   }
 
-  if (category) {
-    searchFilters.push({ equals: { path: 'category', value: getObjId(category) } });
+  if (categoryObjId) {
+    searchFilters.push({ equals: { path: 'category', value: categoryObjId } });
   }
 
   const matchStage: Partial<TProductFilter> = {};
 
-  if (user.role === ROLES_MAP.SELLER) {
+  if (user.role === USER_ROLE_MAP.SELLER) {
     matchStage.seller = user._id;
   }
 
@@ -73,8 +73,8 @@ export const getDashboardProductsController = async (req: Request, res: Response
     matchStage.status = status;
   }
 
-  if (category) {
-    matchStage.category = getObjId(category);
+  if (categoryObjId) {
+    matchStage.category = categoryObjId;
   }
 
   let products: TDashboardListProduct[];
@@ -130,7 +130,7 @@ export const getDashboardProductsController = async (req: Request, res: Response
     ]);
 
     products = productsResult[0]?.products ?? [];
-    totalCount = productsResult[0]?.total?.[0]?.count ?? 0;
+    totalCount = productsResult[0]?.total[0]?.count ?? 0;
 
     counts = populateProductCountsByStatus(counts, statusCounts);
   } else {
@@ -153,9 +153,10 @@ export const getDashboardProductsController = async (req: Request, res: Response
     counts = populateProductCountsByStatus(counts, statusCounts);
   }
 
-  res.success(200, 'Products fetched successfully', {
+  res.success({
+    message: 'Products fetched successfully',
     data: {
-      products: products ?? [],
+      products: products,
       pagination: {
         page: currentPage,
         limit: pageSize,

@@ -1,14 +1,15 @@
-import { CATEGORY_LEVELS_MAP } from '@beautinique/be-constants';
-import type { TCategory } from '@beautinique/be-zod';
+import type { TCategoryLevel } from '@beautinique/backend-types';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
-import { redisCache } from '../../classes';
-import type { TCategoryHierarchy } from '../../types';
+
+import { redisCacheManager } from '../../configs/index.js';
+import type { TCategoryHierarchy } from '../../types/index.js';
 
 export const getCategoriesByParentLevel = async (req: Request, res: Response) => {
-  const parentId = req.query.parent?.toString() as TCategory['parent'] | undefined;
-  const level = Number(req.query.level) as TCategory['level'] | undefined;
+  const parentId = req.query.parent as string;
+  const level = Number(req.query.level) as TCategoryLevel | undefined;
 
-  const allCategories = await redisCache.category.getAllCategories();
+  const allCategories = await redisCacheManager.category.getAllCategories();
 
   const categories = allCategories.filter((category) => {
     // If level is not provided → return all categories
@@ -21,21 +22,21 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
     if (level === CATEGORY_LEVELS_MAP.L1) return true;
 
     // Level 2 & 3 → parent check required
-    return category.parent?.toString() === parentId;
+    return 'parent' in category && category.parent === parentId;
   });
 
-  res.success(200, 'Categories fetched successfully', { categories });
+  res.success({ message: 'Categories fetched successfully', data: categories });
 };
 
 export const getCategoriesByHierarchy = async (_req: Request, res: Response) => {
-  const allCategories = await redisCache.category.getAllCategories();
+  const allCategories = await redisCacheManager.category.getAllCategories();
 
   // Parent wise map
   const parentMap = new Map<string, TCategoryHierarchy[]>();
 
   // Prepare map
   allCategories.forEach((category) => {
-    if (!category.parent) return;
+    if (!('parent' in category)) return;
 
     if (!parentMap.has(category.parent)) {
       parentMap.set(category.parent, []);
@@ -50,14 +51,14 @@ export const getCategoriesByHierarchy = async (_req: Request, res: Response) => 
       parentMap.get(parentId)?.map((category) => ({
         ...category,
         subcategories: buildHierarchy(category._id),
-      })) || []
+      })) ?? []
     );
   };
 
   // Root level categories
   const hierarchy: TCategoryHierarchy[] = allCategories
-    .filter((category) => category.level === 1)
+    .filter((category) => category.level === CATEGORY_LEVELS_MAP.L1)
     .map((level1) => ({ ...level1, subcategories: buildHierarchy(level1._id) }));
 
-  res.success(200, 'Categories fetched successfully', { categories: hierarchy });
+  res.success({ message: 'Categories fetched successfully', data: hierarchy });
 };

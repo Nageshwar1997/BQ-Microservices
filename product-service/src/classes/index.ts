@@ -1,1 +1,1 @@
-export * from './RedisCache';
+export { RedisCacheManager } from './redis/index.js';
