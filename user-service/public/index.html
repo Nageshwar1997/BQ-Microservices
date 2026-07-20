@@ -5,179 +5,268 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>User Service</title>
     <style>
-  :root {
-    color-scheme: light dark;
-    --bg: #ffffff;
-    --fg: #1f2328;
-    --muted: #59636e;
-    --border: #d1d9e0;
-    --code-bg: #f6f8fa;
-    --link: #0969da;
-  }
+      :root {
+        color-scheme: light dark;
+        --bg: #ffffff;
+        --fg: #1f2328;
+        --muted: #59636e;
+        --border: #d1d9e0;
+        --code-bg: #f6f8fa;
+        --link: #0969da;
+      }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0d1117;
-      --fg: #e6edf3;
-      --muted: #9198a1;
-      --border: #30363d;
-      --code-bg: #161b22;
-      --link: #4493f8;
-    }
-  }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0d1117;
+          --fg: #e6edf3;
+          --muted: #9198a1;
+          --border: #30363d;
+          --code-bg: #161b22;
+          --link: #4493f8;
+        }
+      }
 
-  * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
 
-  body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--fg);
-    font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-  }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+      }
 
-  main {
-    max-width: 1024px;
-    margin: 0 auto;
-    padding: 48px 24px 96px;
-  }
+      main {
+        max-width: 1024px;
+        margin: 0 auto;
+        padding: 48px 24px 96px;
+      }
 
-  h1, h2, h3, h4 {
-    font-weight: 600;
-    line-height: 1.25;
-    margin: 1.6em 0 0.6em;
-  }
-  h1 { font-size: 2em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
-  h2 { font-size: 1.5em; padding-bottom: 0.3em; border-bottom: 1px solid var(--border); }
-  h3 { font-size: 1.25em; }
-  h4 { font-size: 1.05em; }
-  h1:first-child { margin-top: 0; }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-weight: 600;
+        line-height: 1.25;
+        margin: 1.6em 0 0.6em;
+      }
+      h1 {
+        font-size: 2em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid var(--border);
+      }
+      h2 {
+        font-size: 1.5em;
+        padding-bottom: 0.3em;
+        border-bottom: 1px solid var(--border);
+      }
+      h3 {
+        font-size: 1.25em;
+      }
+      h4 {
+        font-size: 1.05em;
+      }
+      h1:first-child {
+        margin-top: 0;
+      }
 
-  p, ul, ol, table, blockquote { margin: 0 0 1em; }
-  ul, ol { padding-left: 1.6em; }
-  li + li { margin-top: 0.2em; }
+      p,
+      ul,
+      ol,
+      table,
+      blockquote {
+        margin: 0 0 1em;
+      }
+      ul,
+      ol {
+        padding-left: 1.6em;
+      }
+      li + li {
+        margin-top: 0.2em;
+      }
 
-  a { color: var(--link); text-decoration: none; }
-  a:hover { text-decoration: underline; }
+      a {
+        color: var(--link);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
 
-  code {
-    font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
-    font-size: 0.88em;
-    background: var(--code-bg);
-    padding: 0.15em 0.4em;
-    border-radius: 6px;
-  }
+      code {
+        font-family: 'Cascadia Code', 'SFMono-Regular', Consolas, monospace;
+        font-size: 0.88em;
+        background: var(--code-bg);
+        padding: 0.15em 0.4em;
+        border-radius: 6px;
+      }
 
-  pre {
-    background: var(--code-bg);
-    border-radius: 8px;
-    padding: 16px;
-    overflow-x: auto;
-  }
-  pre code { background: none; padding: 0; font-size: 0.85em; }
+      pre {
+        background: var(--code-bg);
+        border-radius: 8px;
+        padding: 16px;
+        overflow-x: auto;
+      }
+      pre code {
+        background: none;
+        padding: 0;
+        font-size: 0.85em;
+      }
 
-  blockquote {
-    margin-left: 0;
-    padding: 0 1em;
-    color: var(--muted);
-    border-left: 0.25em solid var(--border);
-  }
+      blockquote {
+        margin-left: 0;
+        padding: 0 1em;
+        color: var(--muted);
+        border-left: 0.25em solid var(--border);
+      }
 
-  table { display: block; overflow-x: auto; border-collapse: collapse; margin: 0 0 1em; }
-  th, td { border: 1px solid var(--border); padding: 6px 13px; text-align: left; }
-  th { background: var(--code-bg); font-weight: 600; }
+      table {
+        display: block;
+        overflow-x: auto;
+        border-collapse: collapse;
+        margin: 0 0 1em;
+      }
+      th,
+      td {
+        border: 1px solid var(--border);
+        padding: 6px 13px;
+        text-align: left;
+      }
+      th {
+        background: var(--code-bg);
+        font-weight: 600;
+      }
 
-  hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
-  img { max-width: 100%; }
-</style>
+      hr {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 2em 0;
+      }
+      img {
+        max-width: 100%;
+      }
+    </style>
   </head>
   <body>
-    <main><h1>User Service — Documentation</h1>
-<p><strong>Project:</strong> Beautinique (BQ-Microservices)
-<strong>Service:</strong> User Service
-<strong>Author:</strong> Nageshwar Pawar
-<strong>Version:</strong> 1.0.0
-<strong>Port:</strong> 8081</p>
-<hr>
-<h2>1. Overview</h2>
-<p>The User Service is the central identity and authentication microservice for the <strong>Beautinique</strong> platform. It handles manual (email/phone + password) and OAuth (Google, LinkedIn, GitHub) login, OTP-verified registration, forgot/change/set password flows, session lookup, and a Redis-backed cache for user sessions and OTP state. Password reset/registration OTPs are delivered by enqueuing <code>send-otp</code> jobs onto BullMQ&#39;s <code>mail-queue</code>, consumed end-to-end by <code>mail-service</code>. It also serves its own documentation: <code>GET /</code> renders this README as HTML, and <code>GET /docs</code> serves an interactive Swagger UI.</p>
-<hr>
-<h2>2. Technology Stack</h2>
-<table>
-<thead>
-<tr>
-<th>Layer</th>
-<th>Technology</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Runtime</td>
-<td>Node.js (ES2025, ESM)</td>
-</tr>
-<tr>
-<td>Language</td>
-<td>TypeScript 6.x (<code>strict</code>, <code>noUncheckedIndexedAccess</code>, <code>noEmitOnError</code>)</td>
-</tr>
-<tr>
-<td>Framework</td>
-<td>Express.js 5.x</td>
-</tr>
-<tr>
-<td>Database</td>
-<td>MongoDB (via Mongoose 9.x, <code>@beautinique/backend-mongoose</code>)</td>
-</tr>
-<tr>
-<td>Cache</td>
-<td>Redis, via the <code>redis</code> client (custom <code>RedisCacheManager</code>, not a shared package)</td>
-</tr>
-<tr>
-<td>Background jobs / queue</td>
-<td>BullMQ (Redis), via <code>@beautinique/backend-bullmq</code> — <strong>producer only</strong> (see <a href="#16-background-jobs-mail-queue-producer-only">§16</a>)</td>
-</tr>
-<tr>
-<td>OAuth</td>
-<td><code>google-auth-library</code> (Google), hand-rolled REST calls via <code>axios</code> (LinkedIn, GitHub)</td>
-</tr>
-<tr>
-<td>Password hashing</td>
-<td><code>bcryptjs</code></td>
-</tr>
-<tr>
-<td>Validation</td>
-<td>Zod, via <code>@beautinique/backend-zod</code></td>
-</tr>
-<tr>
-<td>Logging</td>
-<td>Pino, via <code>@beautinique/backend-logger</code></td>
-</tr>
-<tr>
-<td>API docs</td>
-<td>OpenAPI 3.0 spec (hand-written) + <code>swagger-ui-express</code></td>
-</tr>
-<tr>
-<td>README rendering</td>
-<td><code>@beautinique/shared-markdown-to-html</code> (markdown → HTML)</td>
-</tr>
-<tr>
-<td>Shared response envelope</td>
-<td><code>@beautinique/backend-response</code></td>
-</tr>
-<tr>
-<td>Shared utilities</td>
-<td><code>@beautinique/backend-utils</code>, <code>@beautinique/backend-mongoose</code>, <code>@beautinique/shared-utils</code></td>
-</tr>
-<tr>
-<td>Shared constants/types</td>
-<td><code>@beautinique/shared-constants</code>, <code>@beautinique/backend-types</code></td>
-</tr>
-<tr>
-<td>Code quality</td>
-<td>ESLint (flat config, type-checked + strict), Prettier</td>
-</tr>
-</tbody></table>
-<hr>
-<h2>3. Project Structure</h2>
-<pre><code>user-service/
+    <main>
+      <h1>User Service — Documentation</h1>
+      <p>
+        <strong>Project:</strong> Beautinique (BQ-Microservices) <strong>Service:</strong> User
+        Service <strong>Author:</strong> Nageshwar Pawar <strong>Version:</strong> 1.0.0
+        <strong>Port:</strong> configured via <code>PORT</code> (see
+        <a href="#4-environment-variables">§4</a>)
+      </p>
+      <hr />
+      <h2>1. Overview</h2>
+      <p>
+        The User Service is the central identity and authentication microservice for the
+        <strong>Beautinique</strong> platform. It handles manual (email/phone + password) and OAuth
+        (Google, LinkedIn, GitHub) login, OTP-verified registration, forgot/change/set password
+        flows, session lookup, and a Redis-backed cache for user sessions and OTP state. Password
+        reset/registration OTPs are delivered by enqueuing <code>send-otp</code> jobs onto
+        BullMQ&#39;s <code>mail-queue</code>, consumed end-to-end by <code>mail-service</code>. It
+        also serves its own documentation: <code>GET /</code> renders this README as HTML, and
+        <code>GET /docs</code> serves an interactive Swagger UI.
+      </p>
+      <hr />
+      <h2>2. Technology Stack</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Runtime</td>
+            <td>Node.js (ES2025, ESM)</td>
+          </tr>
+          <tr>
+            <td>Language</td>
+            <td>
+              TypeScript 6.x (<code>strict</code>, <code>noUncheckedIndexedAccess</code>,
+              <code>noEmitOnError</code>)
+            </td>
+          </tr>
+          <tr>
+            <td>Framework</td>
+            <td>Express.js 5.x</td>
+          </tr>
+          <tr>
+            <td>Database</td>
+            <td>MongoDB (via Mongoose 9.x, <code>@beautinique/backend-mongoose</code>)</td>
+          </tr>
+          <tr>
+            <td>Cache</td>
+            <td>
+              Redis, via the <code>redis</code> client (custom <code>RedisCacheManager</code>, not a
+              shared package)
+            </td>
+          </tr>
+          <tr>
+            <td>Background jobs / queue</td>
+            <td>
+              BullMQ (Redis), via <code>@beautinique/backend-bullmq</code> —
+              <strong>producer only</strong> (see
+              <a href="#16-background-jobs-mail-queue-producer-only">§16</a>)
+            </td>
+          </tr>
+          <tr>
+            <td>OAuth</td>
+            <td>
+              <code>google-auth-library</code> (Google), hand-rolled REST calls via
+              <code>axios</code> (LinkedIn, GitHub)
+            </td>
+          </tr>
+          <tr>
+            <td>Password hashing</td>
+            <td><code>bcryptjs</code></td>
+          </tr>
+          <tr>
+            <td>Validation</td>
+            <td>Zod, via <code>@beautinique/backend-zod</code></td>
+          </tr>
+          <tr>
+            <td>Logging</td>
+            <td>Pino, via <code>@beautinique/backend-logger</code></td>
+          </tr>
+          <tr>
+            <td>API docs</td>
+            <td>OpenAPI 3.0 spec (hand-written) + <code>swagger-ui-express</code></td>
+          </tr>
+          <tr>
+            <td>README rendering</td>
+            <td><code>@beautinique/shared-markdown-to-html</code> (markdown → HTML)</td>
+          </tr>
+          <tr>
+            <td>Shared response envelope</td>
+            <td><code>@beautinique/backend-response</code></td>
+          </tr>
+          <tr>
+            <td>Shared utilities</td>
+            <td>
+              <code>@beautinique/backend-utils</code>, <code>@beautinique/backend-mongoose</code>,
+              <code>@beautinique/shared-utils</code>
+            </td>
+          </tr>
+          <tr>
+            <td>Shared constants/types</td>
+            <td>
+              <code>@beautinique/shared-constants</code>, <code>@beautinique/backend-types</code>
+            </td>
+          </tr>
+          <tr>
+            <td>Code quality</td>
+            <td>ESLint (flat config, type-checked + strict), Prettier</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>3. Project Structure</h2>
+      <pre><code>user-service/
 ├── src/
 │   ├── index.ts                       # Entry point: loads env, wires SIGINT/SIGTERM, calls startup()
 │   ├── app.ts                         # Express app: middleware chain, routes, error handlers
@@ -252,1079 +341,1510 @@
 ├── eslint.config.mjs
 └── .env
 </code></pre>
-<hr>
-<h2>4. Environment Variables</h2>
-<p>All environment variables are loaded via <code>dotenv</code> and validated in <code>src/envs/index.ts</code> — every required variable is checked with <code>requireEnv</code>/<code>requirePort</code> at startup, so a missing or invalid value throws a clear error immediately instead of failing confusingly later.</p>
-<h3>4.1 Server &amp; App</h3>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>PORT</code></td>
-<td>HTTP port to listen on</td>
-</tr>
-<tr>
-<td><code>IS_DEV</code></td>
-<td><code>&quot;true&quot;</code> enables pretty logging and stack traces in error responses</td>
-</tr>
-<tr>
-<td><code>SERVICE_NAME</code></td>
-<td>Name tag attached to every log line</td>
-</tr>
-<tr>
-<td><code>SERVICE_SECRET</code></td>
-<td>Shared secret required in the <code>X-Service-Secret</code> header on every <code>/api/v1/*</code> request</td>
-</tr>
-<tr>
-<td><code>DATABASE_NAME</code></td>
-<td>MongoDB database name</td>
-</tr>
-</tbody></table>
-<h3>4.2 MongoDB</h3>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>MONGODB_URI</code></td>
-<td>MongoDB connection string</td>
-</tr>
-</tbody></table>
-<h3>4.3 Redis — Cache</h3>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>CACHE_HOST</code></td>
-<td>Redis host used for the user/OTP cache</td>
-</tr>
-<tr>
-<td><code>CACHE_PORT</code></td>
-<td>Redis port</td>
-</tr>
-<tr>
-<td><code>CACHE_PASSWORD</code></td>
-<td>Redis password</td>
-</tr>
-<tr>
-<td><code>CACHE_USERNAME</code></td>
-<td>Redis username</td>
-</tr>
-</tbody></table>
-<h3>4.4 Redis — BullMQ</h3>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>BULL_MQ_HOST</code></td>
-<td>Redis host used for the <code>mail-queue</code> BullMQ connection</td>
-</tr>
-<tr>
-<td><code>BULL_MQ_PORT</code></td>
-<td>Redis port</td>
-</tr>
-<tr>
-<td><code>BULL_MQ_PASSWORD</code></td>
-<td>Redis password</td>
-</tr>
-<tr>
-<td><code>BULL_MQ_USERNAME</code></td>
-<td>Redis username</td>
-</tr>
-</tbody></table>
-<p><strong>This Redis instance is shared</strong> with <code>mail-service</code>, which runs the <code>mail-queue</code> worker — it must point to the same instance in both services.</p>
-<h3>4.5 OAuth Credentials</h3>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>GOOGLE_CLIENT_ID</code></td>
-<td>Google OAuth Client ID</td>
-</tr>
-<tr>
-<td><code>GOOGLE_CLIENT_SECRET</code></td>
-<td>Google OAuth Client Secret</td>
-</tr>
-<tr>
-<td><code>LINKEDIN_CLIENT_ID</code></td>
-<td>LinkedIn OAuth Client ID</td>
-</tr>
-<tr>
-<td><code>LINKEDIN_CLIENT_SECRET</code></td>
-<td>LinkedIn OAuth Client Secret</td>
-</tr>
-<tr>
-<td><code>GITHUB_CLIENT_ID</code></td>
-<td>GitHub OAuth Client ID</td>
-</tr>
-<tr>
-<td><code>GITHUB_CLIENT_SECRET</code></td>
-<td>GitHub OAuth Client Secret</td>
-</tr>
-</tbody></table>
-<p>There&#39;s no <code>*_REDIRECT_ENDPOINT</code> env var per provider anymore — each provider&#39;s callback URL is now derived in code (<code>getSocialAuthRedirectURL</code>, see <a href="#13-utilities-utilsindexts">§13</a>) from the service&#39;s own route paths instead of being configured separately, so it can&#39;t drift out of sync with the actual routes.</p>
-<h3>4.6 Gateway URL</h3>
-<table>
-<thead>
-<tr>
-<th>Variable</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>GATEWAY_DEV_URL</code> / <code>GATEWAY_PROD_URL</code></td>
-<td>Base URL prepended to the computed OAuth callback path (dev/prod selected by <code>IS_DEV</code>), exposed as <code>envs.gateway_url</code></td>
-</tr>
-</tbody></table>
-<p><code>USER_SERVICE_*_URL</code>, <code>MAIL_SERVICE_*_URL</code>, and <code>MEDIA_SERVICE_*_URL</code> were removed — they were validated at startup but never actually read anywhere in the code. The OTP mail goes out via the <code>mail-queue</code> BullMQ job, not a direct HTTP call to <code>mail-service</code>, so no cross-service base URL is needed today.</p>
-<hr>
-<h2>5. Database Models</h2>
-<h3>5.1 User Schema (<code>user.schema.ts</code>)</h3>
-<p>Collection: <code>users</code></p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Type</th>
-<th>Required</th>
-<th>Default</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>firstName</code></td>
-<td>String</td>
-<td>Yes</td>
-<td>—</td>
-<td>Trimmed</td>
-</tr>
-<tr>
-<td><code>lastName</code></td>
-<td>String</td>
-<td>Yes</td>
-<td>—</td>
-<td>Trimmed</td>
-</tr>
-<tr>
-<td><code>phoneNumber</code></td>
-<td>String</td>
-<td>No</td>
-<td><code>&quot;&quot;</code></td>
-<td>Trimmed, partial unique index</td>
-</tr>
-<tr>
-<td><code>email</code></td>
-<td>String</td>
-<td>Yes</td>
-<td>—</td>
-<td>Lowercased, trimmed</td>
-</tr>
-<tr>
-<td><code>avatar</code></td>
-<td>String</td>
-<td>No</td>
-<td><code>&quot;&quot;</code></td>
-<td>Trimmed</td>
-</tr>
-<tr>
-<td><code>role</code></td>
-<td>String (enum)</td>
-<td>No</td>
-<td><code>&quot;USER&quot;</code></td>
-<td><code>USER</code>, <code>SELLER</code>, <code>ADMIN</code>, <code>MASTER</code> (<code>USER_ROLES</code> from <code>@beautinique/shared-constants</code>)</td>
-</tr>
-<tr>
-<td><code>password</code></td>
-<td>String</td>
-<td>No</td>
-<td><code>&quot;&quot;</code></td>
-<td>Bcrypt-hashed, <code>&quot;&quot;</code> for OAuth-only accounts</td>
-</tr>
-<tr>
-<td><code>providers</code></td>
-<td>[String] (enum)</td>
-<td>No</td>
-<td><code>[&quot;MANUAL&quot;]</code></td>
-<td><code>MANUAL</code>, <code>GOOGLE</code>, <code>LINKEDIN</code>, <code>GITHUB</code> (<code>AUTH_PROVIDERS</code>)</td>
-</tr>
-<tr>
-<td><code>status</code></td>
-<td>String (enum)</td>
-<td>No</td>
-<td><code>&quot;ACTIVE&quot;</code></td>
-<td><code>ACTIVE</code>, <code>INACTIVE</code>, <code>DELETED</code> (service-local <code>USER_STATUS</code>)</td>
-</tr>
-<tr>
-<td><code>reason</code></td>
-<td>String</td>
-<td>No</td>
-<td>—</td>
-<td>Deactivation / deletion note</td>
-</tr>
-</tbody></table>
-<p>Also has <code>timestamps: true</code>, <code>versionKey: false</code>.</p>
-<p><strong>Indexes:</strong></p>
-<ul>
-<li><code>{ email: 1 }</code> unique</li>
-<li><code>{ phoneNumber: 1 }</code> unique, partial (<code>$exists: true, $ne: &#39;&#39;</code>)</li>
-<li><code>{ firstName: 1 }</code>, <code>{ lastName: 1 }</code>, <code>{ firstName: 1, lastName: 1 }</code> (search)</li>
-<li><code>{ role: 1 }</code>, <code>{ status: 1 }</code> (filter)</li>
-<li><code>{ status: 1, role: 1, createdAt: -1 }</code> (admin listing)</li>
-</ul>
-<h3>5.2 Seller Schema (<code>seller.schema.ts</code>)</h3>
-<p>Collection: <code>sellers</code></p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Type</th>
-<th>Required</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>user</code></td>
-<td>ObjectId ref <code>User</code></td>
-<td>Yes</td>
-<td>Links to user account</td>
-</tr>
-<tr>
-<td><code>businessAddress</code></td>
-<td>Object</td>
-<td>Yes</td>
-<td><code>address</code>, <code>landmark</code>, <code>city</code>, <code>state</code> (enum <code>STATES_AND_UTS</code>), <code>pinCode</code> (6-digit), <code>country</code> (enum <code>COUNTRIES</code>, default <code>&quot;India&quot;</code>), <code>pan</code> (10-char), <code>gst</code> (15-char)</td>
-</tr>
-<tr>
-<td><code>personalDetails</code></td>
-<td>Object</td>
-<td>Yes</td>
-<td><code>name</code>, <code>email</code>, <code>phoneNumber</code></td>
-</tr>
-<tr>
-<td><code>businessDetails</code></td>
-<td>Object</td>
-<td>Yes</td>
-<td><code>name</code>, <code>email</code>, <code>phoneNumber</code>, <code>category</code> (enum <code>SELLER_TYPES</code>)</td>
-</tr>
-<tr>
-<td><code>requiredDocuments</code></td>
-<td>Object</td>
-<td>Yes</td>
-<td><code>gst</code>, <code>itr</code>, <code>geoTagging</code>, <code>addressProof</code> (URLs/paths)</td>
-</tr>
-<tr>
-<td><code>approvalStatus</code></td>
-<td>String (enum)</td>
-<td>—</td>
-<td><code>PENDING</code>, <code>APPROVED</code>, <code>REJECTED</code> (default <code>&quot;PENDING&quot;</code>)</td>
-</tr>
-<tr>
-<td><code>status</code></td>
-<td>String (enum)</td>
-<td>—</td>
-<td><code>ACTIVE</code>, <code>INACTIVE</code>, <code>DELETED</code> (default <code>&quot;ACTIVE&quot;</code>)</td>
-</tr>
-<tr>
-<td><code>reason</code></td>
-<td>String</td>
-<td>—</td>
-<td>—</td>
-</tr>
-</tbody></table>
-<p><strong>Indexes:</strong> <code>{ email: 1 }</code> unique (top-level field, despite email actually living under <code>personalDetails</code>/<code>businessDetails</code> — no top-level <code>email</code> field is defined), <code>{ phoneNumber: 1 }</code> unique (same caveat).</p>
-<h3>5.3 Wishlist Schema (<code>wishlist.schema.ts</code>)</h3>
-<p>Collection: <code>wishlists</code></p>
-<table>
-<thead>
-<tr>
-<th>Field</th>
-<th>Type</th>
-<th>Required</th>
-<th>Notes</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>user</code></td>
-<td>ObjectId ref <code>User</code></td>
-<td>Yes</td>
-<td>Unique per user</td>
-</tr>
-<tr>
-<td><code>products</code></td>
-<td>[ObjectId ref <code>Product</code>]</td>
-<td>No</td>
-<td>Array of product references</td>
-</tr>
-</tbody></table>
-<p><strong>Indexes:</strong> <code>{ user: 1 }</code> unique (one wishlist per user).</p>
-<p><em>Note: <code>Seller</code> and <code>Wishlist</code> models are defined but <strong>no controllers/routes exist for them yet</strong> in this service — they&#39;re available for other services (or a future admin surface) to use directly against the shared MongoDB.</em></p>
-<hr>
-<h2>6. API Routes</h2>
-<p>All <code>/api/v1/*</code> routes require the <code>X-Service-Secret</code> header and a ready MongoDB connection (<code>checkServiceAccess</code> + <code>checkDbConnection</code>, both mounted in <code>app.ts</code>, scoped to <code>/api/v1</code>). <code>/</code>, <code>/docs</code>, and <code>/health</code> are intentionally outside that and reachable without either.</p>
-<h3>6.1 Home, Docs &amp; Health</h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GET</td>
-<td><code>/</code></td>
-<td>None</td>
-<td>This README, pre-rendered to HTML by <code>scripts/generate-html.mjs</code></td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/docs</code></td>
-<td>None</td>
-<td>Interactive Swagger UI (spec in <code>src/docs/openapi.ts</code>)</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/health</code></td>
-<td>None</td>
-<td>Liveness + MongoDB connection status</td>
-</tr>
-</tbody></table>
-<h3>6.2 Login — <code>/api/v1/auth/login</code></h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>POST</td>
-<td><code>/auth/login/manual</code></td>
-<td>None</td>
-<td>Manual email/phone + password login</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/auth/login/oauth/google/redirect</code></td>
-<td>None</td>
-<td>Get Google OAuth consent URL</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/auth/login/oauth/google/callback</code></td>
-<td>None</td>
-<td>Google OAuth callback</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/auth/login/oauth/linkedin/redirect</code></td>
-<td>None</td>
-<td>Get LinkedIn OAuth consent URL</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/auth/login/oauth/linkedin/callback</code></td>
-<td>None</td>
-<td>LinkedIn OAuth callback</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/auth/login/oauth/github/redirect</code></td>
-<td>None</td>
-<td>Get GitHub OAuth consent URL</td>
-</tr>
-<tr>
-<td>GET</td>
-<td><code>/auth/login/oauth/github/callback</code></td>
-<td>None</td>
-<td>GitHub OAuth callback</td>
-</tr>
-</tbody></table>
-<h3>6.3 Register — <code>/api/v1/auth/register</code></h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>POST</td>
-<td><code>/auth/register/send-otp</code></td>
-<td>None</td>
-<td>Send OTP to email (start registration)</td>
-</tr>
-<tr>
-<td>PATCH</td>
-<td><code>/auth/register/resend-otp</code></td>
-<td>None</td>
-<td>Resend OTP (session token in <code>Authorization</code> header)</td>
-</tr>
-<tr>
-<td>POST</td>
-<td><code>/auth/register/verify-otp</code></td>
-<td>None</td>
-<td>Verify OTP code</td>
-</tr>
-<tr>
-<td>POST</td>
-<td><code>/auth/register/save-user</code></td>
-<td>None</td>
-<td>Complete registration (name, password, phone)</td>
-</tr>
-</tbody></table>
-<h3>6.4 Password — <code>/api/v1/auth/password</code></h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>POST</td>
-<td><code>/auth/password/forgot-send-otp</code></td>
-<td>None</td>
-<td>Send OTP for password reset</td>
-</tr>
-<tr>
-<td>PATCH</td>
-<td><code>/auth/password/forgot-resend-otp</code></td>
-<td>None</td>
-<td>Resend OTP for password reset</td>
-</tr>
-<tr>
-<td>POST</td>
-<td><code>/auth/password/forgot-verify-otp</code></td>
-<td>None</td>
-<td>Verify OTP for password reset</td>
-</tr>
-<tr>
-<td>POST</td>
-<td><code>/auth/password/forgot-save</code></td>
-<td>None</td>
-<td>Save new password after OTP verify</td>
-</tr>
-<tr>
-<td>PATCH</td>
-<td><code>/auth/password/change</code></td>
-<td>User</td>
-<td>Change password while logged in (requires current password)</td>
-</tr>
-<tr>
-<td>PATCH</td>
-<td><code>/auth/password/set</code></td>
-<td>User</td>
-<td>Set an initial password for an OAuth-only account</td>
-</tr>
-</tbody></table>
-<h3>6.5 Logout — <code>/api/v1/auth/logout</code></h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>DELETE</td>
-<td><code>/auth/logout</code></td>
-<td>User</td>
-<td>Remove the caller&#39;s cached session</td>
-</tr>
-</tbody></table>
-<h3>6.6 User — <code>/api/v1/user</code></h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Path</th>
-<th>Auth</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>GET</td>
-<td><code>/user/session</code></td>
-<td>User</td>
-<td>Fetch the caller&#39;s own user record (cache-aside over Mongo)</td>
-</tr>
-</tbody></table>
-<p>&quot;Auth: User&quot; above means the controller itself requires <code>X-User-Id</code> (either via the <code>authenticate</code> middleware, or — for <code>GET /user/session</code> and <code>DELETE /auth/logout</code> — a direct header check in the controller/middleware; see <a href="#11-middlewares">§11</a>).</p>
-<hr>
-<h2>7. Request Headers</h2>
-<table>
-<thead>
-<tr>
-<th>Header</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>X-Service-Secret</code></td>
-<td>Service-to-service authentication (<code>checkServiceAccess</code>, required on <code>/api/v1/*</code>)</td>
-</tr>
-<tr>
-<td><code>X-User-Id</code></td>
-<td>End user&#39;s id (forwarded by the gateway/caller, required wherever &quot;Auth: User&quot; applies)</td>
-</tr>
-<tr>
-<td><code>X-User-Role</code></td>
-<td>End user&#39;s role, defaults to <code>USER</code> if not sent (<code>authorize</code> middleware only)</td>
-</tr>
-<tr>
-<td><code>X-Login-Role</code></td>
-<td>Optional role check for <code>/auth/login/manual</code> (<code>MASTER</code> always allowed)</td>
-</tr>
-<tr>
-<td><code>Authorization</code></td>
-<td>OTP session token (raw or <code>Bearer &lt;token&gt;</code>) for register/forgot-password steps</td>
-</tr>
-</tbody></table>
-<p>There&#39;s no JWT here — the gateway/upstream service is expected to have already authenticated the user and forwarded their identity via <code>X-User-Id</code>/<code>X-User-Role</code>.</p>
-<hr>
-<h2>8. Authentication Flow</h2>
-<h3>8.1 Manual Login (<code>POST /auth/login/manual</code>)</h3>
-<ol>
-<li>Client sends <code>loginMethod</code> (<code>&quot;email&quot;</code> or <code>&quot;phoneNumber&quot;</code>) plus the matching <code>email</code>/<code>phoneNumber</code> and <code>password</code>.</li>
-<li>Service looks up the user by email or phone (<code>getUserByEmailOrPhone</code>), throwing <code>NotFoundError</code> with field-specific errors if nothing matches.</li>
-<li>Checks that the user has <code>MANUAL</code> in <code>providers</code> — otherwise <code>UnprocessableEntityError</code> naming the linked OAuth provider(s).</li>
-<li>If <code>X-Login-Role</code> is sent, the user&#39;s role must match it (or be <code>MASTER</code>) — otherwise <code>AuthorizationError</code>.</li>
-<li>Compares the <code>bcrypt</code> hash of the provided password — mismatch throws <code>ValidationError</code> with a <code>password</code> field error.</li>
-<li>On success, returns the minimal user object and caches it in Redis (24h TTL).</li>
-</ol>
-<h3>8.2 OAuth Login (Google / LinkedIn / GitHub)</h3>
-<p><em>Redirect flow:</em></p>
-<ol>
-<li><code>GET /auth/login/oauth/{provider}/redirect</code> → returns the provider&#39;s OAuth consent URL.</li>
-<li>Client redirects the user to that URL.</li>
-<li>Provider redirects back to <code>GET /auth/login/oauth/{provider}/callback?code=...</code>.</li>
-<li>Service exchanges the code for an access token and fetches the user&#39;s profile (throws <code>BadRequestError</code> if <code>code</code> is missing, <code>NotFoundError</code> if the profile has no email).</li>
-<li>Looks up a user by that email:<ul>
-<li><strong>Exists, provider not yet linked</strong> → pushes the provider onto <code>providers</code>, backfills <code>avatar</code> if empty.</li>
-<li><strong>Exists, provider already linked</strong> → returns the existing user as-is.</li>
-<li><strong>Doesn&#39;t exist</strong> → creates a new user with <code>providers: [PROVIDER]</code>.</li>
-</ul>
-</li>
-<li>Returns the minimal user object, cached in Redis.</li>
-</ol>
-<h3>8.3 Registration Flow</h3>
-<p>Four-step OTP-based registration:</p>
-<table>
-<thead>
-<tr>
-<th>Step</th>
-<th>Endpoint</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>1</td>
-<td><code>POST /auth/register/send-otp</code></td>
-<td>Send OTP to email, returns a session <code>token</code></td>
-</tr>
-<tr>
-<td>2</td>
-<td><code>PATCH /auth/register/resend-otp</code></td>
-<td>Resend OTP (rate-limited)</td>
-</tr>
-<tr>
-<td>3</td>
-<td><code>POST /auth/register/verify-otp</code></td>
-<td>Verify the received OTP code</td>
-</tr>
-<tr>
-<td>4</td>
-<td><code>POST /auth/register/save-user</code></td>
-<td>Submit name/password/phone, creates the user</td>
-</tr>
-</tbody></table>
-<ul>
-<li>OTPs are stored in Redis with a <strong>10-minute TTL</strong> (<code>RedisCacheToken</code>).</li>
-<li><code>sanitizeToken()</code> (from <code>@beautinique/backend-utils</code>) strips a <code>Bearer </code> prefix and throws <code>UnprocessableEntityError(&#39;Token not found&#39;)</code> if the <code>Authorization</code> header is missing/empty — the controllers no longer do their own presence check.</li>
-<li>Resend is capped at <code>MAX_OTP_RESEND</code> (3, from <code>@beautinique/shared-constants</code>) — <code>sendCount</code> starts at 1 on the initial send and increments on every resend, so the <strong>3rd resend call</strong> (4th OTP send overall) throws <code>TooManyRequestsError</code> (the OTP/send-count is still rotated in Redis on the attempt that trips the limit, the email is just never enqueued).</li>
-<li>On successful registration, the user is created with <code>providers: [&quot;MANUAL&quot;]</code>, or — if an OAuth-only account already exists for that email — <code>MANUAL</code> is added to its <code>providers</code>.</li>
-</ul>
-<h3>8.4 Logout</h3>
-<ul>
-<li><code>DELETE /auth/logout</code> — requires <code>authenticate</code> (reads <code>X-User-Id</code>), deletes the user&#39;s cached session from Redis. No-op (still returns success) if nothing was cached.</li>
-</ul>
-<hr>
-<h2>9. Password Management</h2>
-<h3>9.1 Forgot Password Flow</h3>
-<table>
-<thead>
-<tr>
-<th>Step</th>
-<th>Endpoint</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>1</td>
-<td><code>POST /auth/password/forgot-send-otp</code></td>
-<td>Send OTP to email</td>
-</tr>
-<tr>
-<td>2</td>
-<td><code>PATCH /auth/password/forgot-resend-otp</code></td>
-<td>Resend OTP</td>
-</tr>
-<tr>
-<td>3</td>
-<td><code>POST /auth/password/forgot-verify-otp</code></td>
-<td>Verify OTP</td>
-</tr>
-<tr>
-<td>4</td>
-<td><code>POST /auth/password/forgot-save</code></td>
-<td>Save the new password</td>
-</tr>
-</tbody></table>
-<ul>
-<li>Step 1 throws <code>UnprocessableEntityError</code> if a user exists for that email but has no <code>MANUAL</code> provider.</li>
-<li>Same <code>MAX_OTP_RESEND</code>/10-minute-TTL rules as registration.</li>
-<li>New password cannot equal the current one (<code>UnprocessableEntityError</code>).</li>
-<li>After reset, the Redis user cache is refreshed.</li>
-</ul>
-<h3>9.2 Change Password (<code>PATCH /auth/password/change</code>)</h3>
-<ul>
-<li>Requires <code>authenticate</code>.</li>
-<li>Requires <code>currentPassword</code> (checked against the bcrypt hash — mismatch throws <code>ValidationError</code> with a field error) + a new <code>password</code>.</li>
-<li>New and current passwords cannot be identical (<code>UnprocessableEntityError</code> with a field error).</li>
-</ul>
-<h3>9.3 Set Password (<code>PATCH /auth/password/set</code>)</h3>
-<ul>
-<li>Requires <code>authenticate</code>.</li>
-<li>For users who signed up via OAuth only (no password set yet).</li>
-<li>Throws <code>UnprocessableEntityError</code> if <code>MANUAL</code> is already linked — use forgot-password instead.</li>
-</ul>
-<hr>
-<h2>10. Redis Cache (<code>classes/redis/</code>)</h2>
-<p>A <code>RedisCacheManager</code> singleton (instantiated once in <code>configs/index.ts</code>, exported as <code>redisCacheManager</code>) wraps a single <code>redis</code> client and exposes two sub-caches, <code>.user</code> (<code>RedisCacheUser</code>) and <code>.token</code> (<code>RedisCacheToken</code>), both extending the shared <code>RedisCacheHelper</code> base class.</p>
-<h3>Key Prefixes</h3>
-<table>
-<thead>
-<tr>
-<th>Prefix</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>bq:user-service:users:&lt;id&gt;</code></td>
-<td>User session data</td>
-</tr>
-<tr>
-<td><code>bq:user-service:tokens:&lt;token&gt;</code></td>
-<td>OTP session data</td>
-</tr>
-</tbody></table>
-<h3><code>RedisCacheManager</code> (<code>classes/redis/index.ts</code>)</h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>connect()</code></td>
-<td>Connects the underlying client; failures are logged, not thrown (never rejects)</td>
-</tr>
-<tr>
-<td><code>close()</code></td>
-<td>Gracefully closes the connection (<code>client.quit()</code>)</td>
-</tr>
-<tr>
-<td><code>.user</code></td>
-<td><code>RedisCacheUser</code> instance</td>
-</tr>
-<tr>
-<td><code>.token</code></td>
-<td><code>RedisCacheToken</code> instance</td>
-</tr>
-</tbody></table>
-<p>An internal <code>isReady</code> flag, updated by the client&#39;s <code>connect</code>/<code>error</code>/<code>reconnecting</code>/<code>end</code> events, gates every cache operation — see <a href="#redis-fallback-behavior"><code>getClient()</code></a> below.</p>
-<h3><code>RedisCacheUser</code> (<code>classes/redis/RedisCacheUser.ts</code>)</h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>setUser(user)</code></td>
-<td>Cache user data (TTL: 24 hours)</td>
-</tr>
-<tr>
-<td><code>getUser(userId)</code></td>
-<td>Cache-aside: Redis first, falls back to MongoDB (<code>getUserById</code>) and repopulates the cache on miss</td>
-</tr>
-<tr>
-<td><code>updateUser(user)</code></td>
-<td>Alias for <code>setUser</code> — used after a mutation</td>
-</tr>
-<tr>
-<td><code>deleteUser(userId)</code></td>
-<td>Remove a user from the cache</td>
-</tr>
-</tbody></table>
-<h3><code>RedisCacheToken</code> (<code>classes/redis/RedisCacheToken.ts</code>)</h3>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>setOtpData(email)</code></td>
-<td>Generates a 6-digit OTP + a 20-byte hex token, stores <code>{ otp, email, sendCount: 1 }</code> (10 min TTL), returns <code>{ token, otp, email, sendCount }</code></td>
-</tr>
-<tr>
-<td><code>getOtpData(token)</code></td>
-<td>Retrieve the OTP session by token</td>
-</tr>
-<tr>
-<td><code>updateOtpData(token)</code></td>
-<td>Regenerates the OTP, increments <code>sendCount</code>, re-stores (10 min TTL); throws <code>ValidationError</code> if the session doesn&#39;t exist</td>
-</tr>
-<tr>
-<td><code>deleteOtpData(token)</code></td>
-<td>Remove the OTP session</td>
-</tr>
-</tbody></table>
-<h3><code>RedisCacheHelper</code> (<code>classes/redis/RedisCacheHelper.ts</code>)</h3>
-<p>Shared low-level primitives both sub-caches build on: <code>setData</code>/<code>getData</code>/<code>deleteData</code> (string), <code>setHashData</code>/<code>getHashField</code>/<code>getAllHashFields</code>/<code>deleteHashField</code>/<code>deleteHashData</code> (hash), <code>exists</code>/<code>hasHashField</code>. Every method resolves to a safe default (<code>null</code>, <code>false</code>, <code>{}</code>, or simply returns) and logs a warning instead of throwing on a Redis-level failure — a Redis outage degrades the service, it doesn&#39;t crash it.</p>
-<h3>Redis Fallback Behavior</h3>
-<p><code>RedisCacheManager</code> passes each sub-cache a <code>getClient()</code> closure that returns <code>null</code> whenever <code>isReady</code> is false (client not connected / mid-reconnect). <code>RedisCacheHelper</code>&#39;s methods check this before every operation — <code>getUser()</code> falling through to MongoDB on a Redis outage is exactly this mechanism at work, not special-cased logic in <code>RedisCacheUser</code>.</p>
-<h3>Reconnection Strategy (<code>configs/index.ts</code>)</h3>
-<p>The <code>redisClient</code> (used by <code>RedisCacheManager</code>) is configured with a <code>reconnectStrategy</code>: exponential-ish backoff of <code>min(retries * 1000ms, 10s)</code>, giving up after 5 retries.</p>
-<hr>
-<h2>11. Middlewares</h2>
-<h3><code>authenticate</code> (<code>middlewares/index.ts</code>)</h3>
-<p>Reads <code>X-User-Id</code> (throws <code>AuthenticationError</code> if missing), fetches the user via <code>redisCacheManager.user.getUser</code>, attaches it to <code>req.user</code>. Mounted in front of <code>/auth/logout</code>, <code>/auth/password/change</code>, and <code>/auth/password/set</code>.</p>
-<h3><code>authorize(allowedRoles)</code> (<code>middlewares/index.ts</code>)</h3>
-<p>Factory middleware — same header extraction as <code>authenticate</code>, plus reads <code>X-User-Role</code> (defaults to <code>USER</code>) and throws <code>AuthorizationError</code> if the role isn&#39;t in <code>allowedRoles</code> or doesn&#39;t match the header. Exported but <strong>not currently wired into any route</strong>.</p>
-<p><em>Note: <code>GET /user/session</code> does its own <code>X-User-Id</code> check directly in <code>getSessionUserController</code> rather than going through <code>authenticate</code> — same effect, different call site.</em></p>
-<h3>External Middlewares (from <code>@beautinique/*</code> packages)</h3>
-<table>
-<thead>
-<tr>
-<th>Middleware</th>
-<th>Package</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>checkServiceAccess</code></td>
-<td><code>@beautinique/backend-request</code></td>
-<td>Validates <code>X-Service-Secret</code>, timing-safe compare</td>
-</tr>
-<tr>
-<td><code>checkDbConnection</code></td>
-<td><code>@beautinique/backend-mongoose</code></td>
-<td>Rejects with 503 if MongoDB isn&#39;t ready (scoped to <code>/api/v1</code> only)</td>
-</tr>
-<tr>
-<td><code>checkEmptyRequest</code></td>
-<td><code>@beautinique/backend-request</code></td>
-<td>Guards against empty request bodies/query before validation</td>
-</tr>
-<tr>
-<td><code>validateZod</code></td>
-<td><code>@beautinique/backend-zod</code></td>
-<td>Request body validation via Zod (<code>loginZodSchema</code>, <code>registerZodSchema</code>, etc.)</td>
-</tr>
-<tr>
-<td><code>tryCatchResponse</code></td>
-<td><code>@beautinique/backend-response</code></td>
-<td>Wraps controllers in try/catch, forwards errors to <code>errorResponse</code></td>
-</tr>
-<tr>
-<td><code>successResponse</code></td>
-<td><code>@beautinique/backend-response</code></td>
-<td>Attaches <code>res.success({ statusCode, message, data })</code></td>
-</tr>
-<tr>
-<td><code>notFoundResponse</code></td>
-<td><code>@beautinique/backend-response</code></td>
-<td>404 handler (branded HTML page for browser requests)</td>
-</tr>
-<tr>
-<td><code>errorResponse</code></td>
-<td><code>@beautinique/backend-response</code></td>
-<td>Central error handler</td>
-</tr>
-<tr>
-<td><code>createHttpLogger</code></td>
-<td><code>@beautinique/backend-logger</code></td>
-<td>Per-request Pino logging</td>
-</tr>
-</tbody></table>
-<hr>
-<h2>12. Services Layer (<code>services/index.ts</code>)</h2>
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>getUserById(data)</code></td>
-<td>Find user by ObjectId; <code>password</code>/<code>lean</code> options; throws <code>NotFoundError</code></td>
-</tr>
-<tr>
-<td><code>getUserByEmail(data)</code></td>
-<td>Find user by email (no throw on miss — callers decide)</td>
-</tr>
-<tr>
-<td><code>getUserByPhoneNumber(data)</code></td>
-<td>Find user by phone number (no throw on miss)</td>
-</tr>
-<tr>
-<td><code>getUserByEmailOrPhone(data)</code></td>
-<td>Find user by email <strong>or</strong> phone; throws <code>NotFoundError</code> with field-specific errors on miss</td>
-</tr>
-<tr>
-<td><code>createNewUser(payload)</code></td>
-<td>Create a new user document</td>
-</tr>
-<tr>
-<td><code>updateUser(filter, payload)</code></td>
-<td>Update via <code>findOneAndUpdate</code>; throws <code>NotFoundError</code> if nothing matched</td>
-</tr>
-</tbody></table>
-<hr>
-<h2>13. Utilities (<code>utils/index.ts</code>)</h2>
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>createOAuthDbPayload(data, provider)</code></td>
-<td>Builds a new-user payload from a third-party OAuth profile</td>
-</tr>
-<tr>
-<td><code>getMinimalUser(user)</code></td>
-<td>Returns the sanitized client-facing user shape (<code>_id</code> as string; excludes <code>password</code>/<code>reason</code>/timestamps)</td>
-</tr>
-<tr>
-<td><code>generateOtp()</code></td>
-<td>Returns a random 6-digit numeric OTP</td>
-</tr>
-<tr>
-<td><code>generateTempToken(bytes = 32)</code></td>
-<td>Returns a hex token (default 32 bytes = 64 hex chars)</td>
-</tr>
-<tr>
-<td><code>getSocialAuthRedirectURL(provider)</code></td>
-<td>Builds the absolute OAuth callback URL: <code>envs.gateway_url</code> + <code>/api/v1/{SERVICE_NAMES_MAP[&#39;user-service&#39;]}/auth/login</code> + that provider&#39;s <code>callback.path</code> from <code>METHODS_AND_PATHS</code></td>
-</tr>
-</tbody></table>
-<p><code>getSocialAuthRedirectURL</code> no longer reads a per-provider <code>*_REDIRECT_ENDPOINT</code> env var — it derives the callback path directly from this service&#39;s own <code>METHODS_AND_PATHS</code> route constants (<code>constants/index.ts</code>) and <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code> (<code>@beautinique/shared-constants</code>), so the URL registered with each OAuth provider can never drift out of sync with the actual route. Each <code>socialAuth/*.ts</code> class now calls this once at construction and caches it in a <code>REDIRECT_URI</code> field, rather than recomputing it on every <code>url()</code>/<code>access_token()</code> call.</p>
-<p><code>getObjId</code>/<code>toObjectId</code> moved out of this service — <code>getObjId</code> is now imported directly from <code>@beautinique/backend-mongoose</code> where needed (<code>services/index.ts</code>, <code>password.controller.ts</code>).</p>
-<hr>
-<h2>14. OAuth Integrations (<code>classes/apis/socialAuth/</code>)</h2>
-<h3>Google (<code>Google.ts</code>)</h3>
-<ul>
-<li>Uses <code>google-auth-library</code>&#39;s <code>OAuth2Client</code> directly (not the full <code>googleapis</code> SDK — swapped out to cut install size/type-check cost; only <code>OAuth2Client</code> was ever used).</li>
-<li><code>url()</code> generates the consent URL with <code>scope: [profile, email]</code>.</li>
-<li><code>decode(code)</code> exchanges the code for tokens, fetches the profile from <code>https://www.googleapis.com/oauth2/v2/userinfo</code>.</li>
-</ul>
-<h3>LinkedIn (<code>Linkedin.ts</code>)</h3>
-<ul>
-<li>Directly constructs the authorization URL (no SDK).</li>
-<li><code>access_token(code)</code> POSTs to <code>https://www.linkedin.com/oauth/v2/accessToken</code>.</li>
-<li><code>decode(access_token)</code> GETs <code>https://api.linkedin.com/v2/userinfo</code>.</li>
-</ul>
-<h3>GitHub (<code>Github.ts</code>)</h3>
-<ul>
-<li>Directly constructs the authorization URL.</li>
-<li><code>access_token(code)</code> POSTs to <code>https://github.com/login/oauth/access_token</code>.</li>
-<li><code>decode(access_token)</code> fetches the profile from <code>https://api.github.com/user</code>; falls back to <code>/user/emails</code> (picks the <code>primary</code> one, else the first) if the profile has no public email.</li>
-</ul>
-<p>All three extend <code>ApiRequest</code> (<code>classes/apis/ApiRequest.ts</code>), which wraps every request in a common <code>try/catch</code>: an <code>AxiosError</code> with a response is turned into the matching <code>@beautinique/backend-classes</code> error subclass via <code>createError</code>/<code>ERROR_CLASS_MAP</code> (falling back to <code>INTERNAL_SERVER_ERROR</code> for an unrecognized/missing error code), anything else becomes a generic <code>INTERNAL_SERVER_ERROR</code>.</p>
-<hr>
-<h2>15. External OAuth Routes (for reference)</h2>
-<p>Defined in <code>constants/index.ts</code> as <code>OAUTH_API_ROUTES_AND_METHODS</code>:</p>
-<table>
-<thead>
-<tr>
-<th>Provider</th>
-<th>Method</th>
-<th>URL</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Google</td>
-<td>GET</td>
-<td><code>https://www.googleapis.com/oauth2/v2/userinfo</code></td>
-<td>Decode Google profile</td>
-</tr>
-<tr>
-<td>LinkedIn</td>
-<td>POST</td>
-<td><code>https://www.linkedin.com/oauth/v2/accessToken</code></td>
-<td>Get LinkedIn access token</td>
-</tr>
-<tr>
-<td>LinkedIn</td>
-<td>GET</td>
-<td><code>https://api.linkedin.com/v2/userinfo</code></td>
-<td>Decode LinkedIn profile</td>
-</tr>
-<tr>
-<td>GitHub</td>
-<td>POST</td>
-<td><code>https://github.com/login/oauth/access_token</code></td>
-<td>Get GitHub access token</td>
-</tr>
-<tr>
-<td>GitHub</td>
-<td>GET</td>
-<td><code>https://api.github.com/user</code></td>
-<td>Decode GitHub profile</td>
-</tr>
-<tr>
-<td>GitHub</td>
-<td>GET</td>
-<td><code>https://api.github.com/user/emails</code></td>
-<td>Fetch GitHub user emails (fallback)</td>
-</tr>
-</tbody></table>
-<hr>
-<h2>16. Background Jobs (<code>mail-queue</code>, producer only)</h2>
-<p>This service <strong>only produces</strong> onto <code>mail-queue</code> — it doesn&#39;t run a worker for anything. <code>jobProducer</code> (<code>@beautinique/backend-bullmq</code>&#39;s <code>JobProducer</code>, configured in <code>configs/index.ts</code>) is used directly from the register/password controllers.</p>
-<table>
-<thead>
-<tr>
-<th>Job name</th>
-<th>Enqueued from</th>
-<th>Consumed by</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>send-otp</code></td>
-<td><code>registerSendOtpController</code>, <code>registerResendOtpController</code>, <code>forgotPasswordSendOtpController</code>, <code>forgotPasswordResendOtpController</code></td>
-<td><code>mail-service</code> (<code>WorkerManager</code>)</td>
-</tr>
-</tbody></table>
-<p><strong>Rollback on enqueue failure:</strong> every <code>jobProducer.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, ...)</code> call is wrapped in its own <code>try/catch</code> — if enqueueing fails, the just-written OTP session is deleted from Redis (<code>redisCacheManager.token.deleteOtpData</code>) before the error is re-thrown, so a failed send doesn&#39;t leave an unreachable OTP session behind.</p>
-<p><strong>Retry/backoff:</strong> configured once, at the <code>jobProducer</code> level (<code>configs/index.ts</code>): <code>attempts: 3</code>, <code>backoff: { type: &#39;exponential&#39;, delay: 2000 }</code>, <code>removeOnComplete: { age: 30, count: 5 }</code>, <code>removeOnFail: { age: 1800, count: 10 }</code>.</p>
-<p>The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance as <code>mail-service</code>&#39;s BullMQ connection, or enqueued jobs will never be picked up.</p>
-<hr>
-<h2>17. Error Handling</h2>
-<p>All errors are thrown as <code>AppError</code> subclasses from <code>@beautinique/backend-classes</code> (e.g. <code>NotFoundError</code>, <code>ValidationError</code>, <code>ConflictError</code>) — <strong>not</strong> the older <code>@beautinique/be-classes</code> package, which this service no longer depends on. Standard error codes used across the service:</p>
-<table>
-<thead>
-<tr>
-<th>Code</th>
-<th>HTTP Equivalent</th>
-<th>When Used</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>BAD_REQUEST</code></td>
-<td>400</td>
-<td>Missing <code>code</code> query param on an OAuth callback</td>
-</tr>
-<tr>
-<td><code>VALIDATION_ERROR</code></td>
-<td>422</td>
-<td>Wrong password, invalid/expired OTP</td>
-</tr>
-<tr>
-<td><code>NOT_FOUND</code></td>
-<td>404</td>
-<td>User not found, OAuth profile has no email</td>
-</tr>
-<tr>
-<td><code>CONFLICT</code></td>
-<td>409</td>
-<td>Email/phone already exists</td>
-</tr>
-<tr>
-<td><code>UNPROCESSABLE_ENTITY</code></td>
-<td>422</td>
-<td>Password same as current; missing/empty OTP-session token (<code>sanitizeToken</code>); OAuth/manual provider conflicts</td>
-</tr>
-<tr>
-<td><code>AUTHENTICATION_ERROR</code></td>
-<td>401</td>
-<td>Missing <code>X-User-Id</code></td>
-</tr>
-<tr>
-<td><code>AUTHORIZATION_ERROR</code></td>
-<td>403</td>
-<td>Login-role mismatch; insufficient role (<code>authorize</code>, currently unused)</td>
-</tr>
-<tr>
-<td><code>TOO_MANY_REQUESTS</code></td>
-<td>429</td>
-<td>Max OTP resend attempts exceeded</td>
-</tr>
-<tr>
-<td><code>INTERNAL_SERVER_ERROR</code></td>
-<td>500</td>
-<td>Unexpected failures; unrecognized error code from an OAuth provider&#39;s API</td>
-</tr>
-</tbody></table>
-<p>Errors flow through the <code>errorResponse</code> middleware (<code>@beautinique/backend-response</code>), which only forwards <code>message</code>/<code>code</code>/<code>statusCode</code>/<code>fieldErrors</code>/<code>globalErrors</code> for <strong>operational</strong> <code>AppError</code>s — anything else (including a non-operational <code>AppError</code>) is converted to a generic <code>InternalServerError</code> before the client ever sees it, and <code>envs.is_dev</code> controls whether a stack trace is attached.</p>
-<hr>
-<h2>18. Server Lifecycle</h2>
-<h3>Startup (<code>bootstrap/startup.ts</code>)</h3>
-<ol>
-<li>Register MongoDB event listeners (<code>registerDatabaseEvents</code>).</li>
-<li>Connect MongoDB and Redis <strong>in parallel</strong> (<code>Promise.all([connectDb(...), redisCacheManager.connect()])</code>) — safe because <code>redisCacheManager.connect()</code> never rejects (it swallows its own errors internally); a Mongo failure still aborts startup via the outer <code>catch</code>.</li>
-<li>Start the HTTP server (<code>startHttpServer</code>) — only after both connection attempts above have settled, so the service never opens its port while a dependency is still connecting.</li>
-</ol>
-<p>Idempotent (<code>setStarted()</code> guards re-entry). On any failure, logs and calls <code>process.exit(1)</code>.</p>
-<h3>Graceful Shutdown (<code>bootstrap/shutdown.ts</code>, <code>SIGINT</code>/<code>SIGTERM</code>)</h3>
-<ol>
-<li>Stop accepting new HTTP requests (<code>stopHttpServer</code>, existing requests finish first).</li>
-<li>Close the job producer, the Redis cache, and disconnect MongoDB — <strong>in parallel</strong> (<code>Promise.all</code> over per-task <code>try/catch</code>, so one failing doesn&#39;t block the others).</li>
-<li>Destroy any remaining open sockets.</li>
-<li>Exit <code>0</code> on success, <code>1</code> on failure.</li>
-</ol>
-<p>Idempotent (<code>setShuttingDown()</code> guards re-entry). Only the job-producer shutdown task is named for per-step success/failure logging today — the Redis/Mongo tasks in the same list run and are awaited, but aren&#39;t individually logged by name.</p>
-<hr>
-<h2>19. Build &amp; Run Commands</h2>
-<pre><code class="language-bash">npm install
+      <hr />
+      <h2>4. Environment Variables</h2>
+      <p>
+        All environment variables are loaded via <code>dotenv</code> and validated in
+        <code>src/envs/index.ts</code> — every required variable is checked with
+        <code>requireEnv</code>/<code>requirePort</code> at startup, so a missing or invalid value
+        throws a clear error immediately instead of failing confusingly later.
+      </p>
+      <h3>4.1 Server &amp; App</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>PORT</code></td>
+            <td>HTTP port to listen on</td>
+          </tr>
+          <tr>
+            <td><code>NODE_ENV</code></td>
+            <td>
+              <code>&quot;development&quot;</code> enables pretty logging and stack traces in error
+              responses
+            </td>
+          </tr>
+          <tr>
+            <td><code>SERVICE_NAME</code></td>
+            <td>Name tag attached to every log line</td>
+          </tr>
+          <tr>
+            <td><code>SERVICE_SECRET</code></td>
+            <td>
+              Shared secret required in the <code>X-Service-Secret</code> header on every
+              <code>/api/v1/*</code> request
+            </td>
+          </tr>
+          <tr>
+            <td><code>DATABASE_NAME</code></td>
+            <td>MongoDB database name</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>4.2 MongoDB</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>MONGODB_URI</code></td>
+            <td>MongoDB connection string</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>4.3 Redis — Cache</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>CACHE_HOST</code></td>
+            <td>Redis host used for the user/OTP cache</td>
+          </tr>
+          <tr>
+            <td><code>CACHE_PORT</code></td>
+            <td>Redis port</td>
+          </tr>
+          <tr>
+            <td><code>CACHE_PASSWORD</code></td>
+            <td>Redis password</td>
+          </tr>
+          <tr>
+            <td><code>CACHE_USERNAME</code></td>
+            <td>Redis username</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>4.4 Redis — BullMQ</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>BULL_MQ_HOST</code></td>
+            <td>Redis host used for the <code>mail-queue</code> BullMQ connection</td>
+          </tr>
+          <tr>
+            <td><code>BULL_MQ_PORT</code></td>
+            <td>Redis port</td>
+          </tr>
+          <tr>
+            <td><code>BULL_MQ_PASSWORD</code></td>
+            <td>Redis password</td>
+          </tr>
+          <tr>
+            <td><code>BULL_MQ_USERNAME</code></td>
+            <td>Redis username</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>This Redis instance is shared</strong> with <code>mail-service</code>, which runs
+        the <code>mail-queue</code> worker — it must point to the same instance in both services.
+      </p>
+      <h3>4.5 OAuth Credentials</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GOOGLE_CLIENT_ID</code></td>
+            <td>Google OAuth Client ID</td>
+          </tr>
+          <tr>
+            <td><code>GOOGLE_CLIENT_SECRET</code></td>
+            <td>Google OAuth Client Secret</td>
+          </tr>
+          <tr>
+            <td><code>LINKEDIN_CLIENT_ID</code></td>
+            <td>LinkedIn OAuth Client ID</td>
+          </tr>
+          <tr>
+            <td><code>LINKEDIN_CLIENT_SECRET</code></td>
+            <td>LinkedIn OAuth Client Secret</td>
+          </tr>
+          <tr>
+            <td><code>GITHUB_CLIENT_ID</code></td>
+            <td>GitHub OAuth Client ID</td>
+          </tr>
+          <tr>
+            <td><code>GITHUB_CLIENT_SECRET</code></td>
+            <td>GitHub OAuth Client Secret</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        There&#39;s no <code>*_REDIRECT_ENDPOINT</code> env var per provider anymore — each
+        provider&#39;s callback URL is now derived in code (<code>getSocialAuthRedirectURL</code>,
+        see <a href="#13-utilities-utilsindexts">§13</a>) from the service&#39;s own route paths
+        instead of being configured separately, so it can&#39;t drift out of sync with the actual
+        routes.
+      </p>
+      <h3>4.6 Gateway URL</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Variable</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>GATEWAY_BASE_URL</code></td>
+            <td>
+              Base URL prepended to the computed OAuth callback path, exposed as
+              <code>envs.gateway_url</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>5. Database Models</h2>
+      <h3>5.1 User Schema (<code>user.schema.ts</code>)</h3>
+      <p>Collection: <code>users</code></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Default</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>firstName</code></td>
+            <td>String</td>
+            <td>Yes</td>
+            <td>—</td>
+            <td>Trimmed</td>
+          </tr>
+          <tr>
+            <td><code>lastName</code></td>
+            <td>String</td>
+            <td>Yes</td>
+            <td>—</td>
+            <td>Trimmed</td>
+          </tr>
+          <tr>
+            <td><code>phoneNumber</code></td>
+            <td>String</td>
+            <td>No</td>
+            <td><code>&quot;&quot;</code></td>
+            <td>Trimmed, partial unique index</td>
+          </tr>
+          <tr>
+            <td><code>email</code></td>
+            <td>String</td>
+            <td>Yes</td>
+            <td>—</td>
+            <td>Lowercased, trimmed</td>
+          </tr>
+          <tr>
+            <td><code>avatar</code></td>
+            <td>String</td>
+            <td>No</td>
+            <td><code>&quot;&quot;</code></td>
+            <td>Trimmed</td>
+          </tr>
+          <tr>
+            <td><code>role</code></td>
+            <td>String (enum)</td>
+            <td>No</td>
+            <td><code>&quot;USER&quot;</code></td>
+            <td>
+              <code>USER</code>, <code>SELLER</code>, <code>ADMIN</code>, <code>MASTER</code> (<code
+                >USER_ROLES</code
+              >
+              from <code>@beautinique/shared-constants</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>password</code></td>
+            <td>String</td>
+            <td>No</td>
+            <td><code>&quot;&quot;</code></td>
+            <td>Bcrypt-hashed, <code>&quot;&quot;</code> for OAuth-only accounts</td>
+          </tr>
+          <tr>
+            <td><code>providers</code></td>
+            <td>[String] (enum)</td>
+            <td>No</td>
+            <td><code>[&quot;MANUAL&quot;]</code></td>
+            <td>
+              <code>MANUAL</code>, <code>GOOGLE</code>, <code>LINKEDIN</code>,
+              <code>GITHUB</code> (<code>AUTH_PROVIDERS</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>status</code></td>
+            <td>String (enum)</td>
+            <td>No</td>
+            <td><code>&quot;ACTIVE&quot;</code></td>
+            <td>
+              <code>ACTIVE</code>, <code>INACTIVE</code>, <code>DELETED</code> (service-local
+              <code>USER_STATUS</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>reason</code></td>
+            <td>String</td>
+            <td>No</td>
+            <td>—</td>
+            <td>Deactivation / deletion note</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>Also has <code>timestamps: true</code>, <code>versionKey: false</code>.</p>
+      <p><strong>Indexes:</strong></p>
+      <ul>
+        <li><code>{ email: 1 }</code> unique</li>
+        <li>
+          <code>{ phoneNumber: 1 }</code> unique, partial (<code
+            >$exists: true, $ne: &#39;&#39;</code
+          >)
+        </li>
+        <li>
+          <code>{ firstName: 1 }</code>, <code>{ lastName: 1 }</code>,
+          <code>{ firstName: 1, lastName: 1 }</code> (search)
+        </li>
+        <li><code>{ role: 1 }</code>, <code>{ status: 1 }</code> (filter)</li>
+        <li><code>{ status: 1, role: 1, createdAt: -1 }</code> (admin listing)</li>
+      </ul>
+      <h3>5.2 Seller Schema (<code>seller.schema.ts</code>)</h3>
+      <p>Collection: <code>sellers</code></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>user</code></td>
+            <td>ObjectId ref <code>User</code></td>
+            <td>Yes</td>
+            <td>Links to user account</td>
+          </tr>
+          <tr>
+            <td><code>businessAddress</code></td>
+            <td>Object</td>
+            <td>Yes</td>
+            <td>
+              <code>address</code>, <code>landmark</code>, <code>city</code>,
+              <code>state</code> (enum <code>STATES_AND_UTS</code>), <code>pinCode</code> (6-digit),
+              <code>country</code> (enum <code>COUNTRIES</code>, default
+              <code>&quot;India&quot;</code>), <code>pan</code> (10-char),
+              <code>gst</code> (15-char)
+            </td>
+          </tr>
+          <tr>
+            <td><code>personalDetails</code></td>
+            <td>Object</td>
+            <td>Yes</td>
+            <td><code>name</code>, <code>email</code>, <code>phoneNumber</code></td>
+          </tr>
+          <tr>
+            <td><code>businessDetails</code></td>
+            <td>Object</td>
+            <td>Yes</td>
+            <td>
+              <code>name</code>, <code>email</code>, <code>phoneNumber</code>,
+              <code>category</code> (enum <code>SELLER_TYPES</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>requiredDocuments</code></td>
+            <td>Object</td>
+            <td>Yes</td>
+            <td>
+              <code>gst</code>, <code>itr</code>, <code>geoTagging</code>,
+              <code>addressProof</code> (URLs/paths)
+            </td>
+          </tr>
+          <tr>
+            <td><code>approvalStatus</code></td>
+            <td>String (enum)</td>
+            <td>—</td>
+            <td>
+              <code>PENDING</code>, <code>APPROVED</code>, <code>REJECTED</code> (default
+              <code>&quot;PENDING&quot;</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>status</code></td>
+            <td>String (enum)</td>
+            <td>—</td>
+            <td>
+              <code>ACTIVE</code>, <code>INACTIVE</code>, <code>DELETED</code> (default
+              <code>&quot;ACTIVE&quot;</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>reason</code></td>
+            <td>String</td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Indexes:</strong> <code>{ email: 1 }</code> unique (top-level field, despite email
+        actually living under <code>personalDetails</code>/<code>businessDetails</code> — no
+        top-level <code>email</code> field is defined), <code>{ phoneNumber: 1 }</code> unique (same
+        caveat).
+      </p>
+      <h3>5.3 Wishlist Schema (<code>wishlist.schema.ts</code>)</h3>
+      <p>Collection: <code>wishlists</code></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Required</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>user</code></td>
+            <td>ObjectId ref <code>User</code></td>
+            <td>Yes</td>
+            <td>Unique per user</td>
+          </tr>
+          <tr>
+            <td><code>products</code></td>
+            <td>[ObjectId ref <code>Product</code>]</td>
+            <td>No</td>
+            <td>Array of product references</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Indexes:</strong> <code>{ user: 1 }</code> unique (one wishlist per user).</p>
+      <p>
+        <em
+          >Note: <code>Seller</code> and <code>Wishlist</code> models are defined but
+          <strong>no controllers/routes exist for them yet</strong> in this service — they&#39;re
+          available for other services (or a future admin surface) to use directly against the
+          shared MongoDB.</em
+        >
+      </p>
+      <hr />
+      <h2>6. API Routes</h2>
+      <p>
+        All <code>/api/v1/*</code> routes require the <code>X-Service-Secret</code> header and a
+        ready MongoDB connection (<code>checkServiceAccess</code> + <code>checkDbConnection</code>,
+        both mounted in <code>app.ts</code>, scoped to <code>/api/v1</code>). <code>/</code>,
+        <code>/docs</code>, and <code>/health</code> are intentionally outside that and reachable
+        without either.
+      </p>
+      <h3>6.1 Home, Docs &amp; Health</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GET</td>
+            <td><code>/</code></td>
+            <td>None</td>
+            <td>This README, pre-rendered to HTML by <code>scripts/generate-html.mjs</code></td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/docs</code></td>
+            <td>None</td>
+            <td>Interactive Swagger UI (spec in <code>src/docs/openapi.ts</code>)</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/health</code></td>
+            <td>None</td>
+            <td>Liveness + MongoDB connection status</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>6.2 Login — <code>/api/v1/auth/login</code></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>POST</td>
+            <td><code>/auth/login/manual</code></td>
+            <td>None</td>
+            <td>Manual email/phone + password login</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/auth/login/oauth/google/redirect</code></td>
+            <td>None</td>
+            <td>Get Google OAuth consent URL</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/auth/login/oauth/google/callback</code></td>
+            <td>None</td>
+            <td>Google OAuth callback</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/auth/login/oauth/linkedin/redirect</code></td>
+            <td>None</td>
+            <td>Get LinkedIn OAuth consent URL</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/auth/login/oauth/linkedin/callback</code></td>
+            <td>None</td>
+            <td>LinkedIn OAuth callback</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/auth/login/oauth/github/redirect</code></td>
+            <td>None</td>
+            <td>Get GitHub OAuth consent URL</td>
+          </tr>
+          <tr>
+            <td>GET</td>
+            <td><code>/auth/login/oauth/github/callback</code></td>
+            <td>None</td>
+            <td>GitHub OAuth callback</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>6.3 Register — <code>/api/v1/auth/register</code></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>POST</td>
+            <td><code>/auth/register/send-otp</code></td>
+            <td>None</td>
+            <td>Send OTP to email (start registration)</td>
+          </tr>
+          <tr>
+            <td>PATCH</td>
+            <td><code>/auth/register/resend-otp</code></td>
+            <td>None</td>
+            <td>Resend OTP (session token in <code>Authorization</code> header)</td>
+          </tr>
+          <tr>
+            <td>POST</td>
+            <td><code>/auth/register/verify-otp</code></td>
+            <td>None</td>
+            <td>Verify OTP code</td>
+          </tr>
+          <tr>
+            <td>POST</td>
+            <td><code>/auth/register/save-user</code></td>
+            <td>None</td>
+            <td>Complete registration (name, password, phone)</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>6.4 Password — <code>/api/v1/auth/password</code></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>POST</td>
+            <td><code>/auth/password/forgot-send-otp</code></td>
+            <td>None</td>
+            <td>Send OTP for password reset</td>
+          </tr>
+          <tr>
+            <td>PATCH</td>
+            <td><code>/auth/password/forgot-resend-otp</code></td>
+            <td>None</td>
+            <td>Resend OTP for password reset</td>
+          </tr>
+          <tr>
+            <td>POST</td>
+            <td><code>/auth/password/forgot-verify-otp</code></td>
+            <td>None</td>
+            <td>Verify OTP for password reset</td>
+          </tr>
+          <tr>
+            <td>POST</td>
+            <td><code>/auth/password/forgot-save</code></td>
+            <td>None</td>
+            <td>Save new password after OTP verify</td>
+          </tr>
+          <tr>
+            <td>PATCH</td>
+            <td><code>/auth/password/change</code></td>
+            <td>User</td>
+            <td>Change password while logged in (requires current password)</td>
+          </tr>
+          <tr>
+            <td>PATCH</td>
+            <td><code>/auth/password/set</code></td>
+            <td>User</td>
+            <td>Set an initial password for an OAuth-only account</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>6.5 Logout — <code>/api/v1/auth/logout</code></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>DELETE</td>
+            <td><code>/auth/logout</code></td>
+            <td>User</td>
+            <td>Remove the caller&#39;s cached session</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>6.6 User — <code>/api/v1/user</code></h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Path</th>
+            <th>Auth</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GET</td>
+            <td><code>/user/session</code></td>
+            <td>User</td>
+            <td>Fetch the caller&#39;s own user record (cache-aside over Mongo)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        &quot;Auth: User&quot; above means the controller itself requires
+        <code>X-User-Id</code> (either via the <code>authenticate</code> middleware, or — for
+        <code>GET /user/session</code> and <code>DELETE /auth/logout</code> — a direct header check
+        in the controller/middleware; see <a href="#11-middlewares">§11</a>).
+      </p>
+      <hr />
+      <h2>7. Request Headers</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Header</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>X-Service-Secret</code></td>
+            <td>
+              Service-to-service authentication (<code>checkServiceAccess</code>, required on
+              <code>/api/v1/*</code>)
+            </td>
+          </tr>
+          <tr>
+            <td><code>X-User-Id</code></td>
+            <td>
+              End user&#39;s id (forwarded by the gateway/caller, required wherever &quot;Auth:
+              User&quot; applies)
+            </td>
+          </tr>
+          <tr>
+            <td><code>X-User-Role</code></td>
+            <td>
+              End user&#39;s role, defaults to <code>USER</code> if not sent (<code>authorize</code>
+              middleware only)
+            </td>
+          </tr>
+          <tr>
+            <td><code>X-Login-Role</code></td>
+            <td>
+              Optional role check for <code>/auth/login/manual</code> (<code>MASTER</code> always
+              allowed)
+            </td>
+          </tr>
+          <tr>
+            <td><code>Authorization</code></td>
+            <td>
+              OTP session token (raw or <code>Bearer &lt;token&gt;</code>) for
+              register/forgot-password steps
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        There&#39;s no JWT here — the gateway/upstream service is expected to have already
+        authenticated the user and forwarded their identity via
+        <code>X-User-Id</code>/<code>X-User-Role</code>.
+      </p>
+      <hr />
+      <h2>8. Authentication Flow</h2>
+      <h3>8.1 Manual Login (<code>POST /auth/login/manual</code>)</h3>
+      <ol>
+        <li>
+          Client sends <code>loginMethod</code> (<code>&quot;email&quot;</code> or
+          <code>&quot;phoneNumber&quot;</code>) plus the matching <code>email</code>/<code
+            >phoneNumber</code
+          >
+          and <code>password</code>.
+        </li>
+        <li>
+          Service looks up the user by email or phone (<code>getUserByEmailOrPhone</code>), throwing
+          <code>NotFoundError</code> with field-specific errors if nothing matches.
+        </li>
+        <li>
+          Checks that the user has <code>MANUAL</code> in <code>providers</code> — otherwise
+          <code>UnprocessableEntityError</code> naming the linked OAuth provider(s).
+        </li>
+        <li>
+          If <code>X-Login-Role</code> is sent, the user&#39;s role must match it (or be
+          <code>MASTER</code>) — otherwise <code>AuthorizationError</code>.
+        </li>
+        <li>
+          Compares the <code>bcrypt</code> hash of the provided password — mismatch throws
+          <code>ValidationError</code> with a <code>password</code> field error.
+        </li>
+        <li>On success, returns the minimal user object and caches it in Redis (24h TTL).</li>
+      </ol>
+      <h3>8.2 OAuth Login (Google / LinkedIn / GitHub)</h3>
+      <p><em>Redirect flow:</em></p>
+      <ol>
+        <li>
+          <code>GET /auth/login/oauth/{provider}/redirect</code> → returns the provider&#39;s OAuth
+          consent URL.
+        </li>
+        <li>Client redirects the user to that URL.</li>
+        <li>
+          Provider redirects back to
+          <code>GET /auth/login/oauth/{provider}/callback?code=...</code>.
+        </li>
+        <li>
+          Service exchanges the code for an access token and fetches the user&#39;s profile (throws
+          <code>BadRequestError</code> if <code>code</code> is missing,
+          <code>NotFoundError</code> if the profile has no email).
+        </li>
+        <li>
+          Looks up a user by that email:
+          <ul>
+            <li>
+              <strong>Exists, provider not yet linked</strong> → pushes the provider onto
+              <code>providers</code>, backfills <code>avatar</code> if empty.
+            </li>
+            <li>
+              <strong>Exists, provider already linked</strong> → returns the existing user as-is.
+            </li>
+            <li>
+              <strong>Doesn&#39;t exist</strong> → creates a new user with
+              <code>providers: [PROVIDER]</code>.
+            </li>
+          </ul>
+        </li>
+        <li>Returns the minimal user object, cached in Redis.</li>
+      </ol>
+      <h3>8.3 Registration Flow</h3>
+      <p>Four-step OTP-based registration:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><code>POST /auth/register/send-otp</code></td>
+            <td>Send OTP to email, returns a session <code>token</code></td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><code>PATCH /auth/register/resend-otp</code></td>
+            <td>Resend OTP (rate-limited)</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><code>POST /auth/register/verify-otp</code></td>
+            <td>Verify the received OTP code</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><code>POST /auth/register/save-user</code></td>
+            <td>Submit name/password/phone, creates the user</td>
+          </tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>
+          OTPs are stored in Redis with a
+          <strong>10-minute TTL</strong> (<code>RedisCacheToken</code>).
+        </li>
+        <li>
+          <code>sanitizeToken()</code> (from <code>@beautinique/backend-utils</code>) strips a
+          <code>Bearer </code> prefix and throws
+          <code>UnprocessableEntityError(&#39;Token not found&#39;)</code> if the
+          <code>Authorization</code> header is missing/empty — the controllers no longer do their
+          own presence check.
+        </li>
+        <li>
+          Resend is capped at <code>MAX_OTP_RESEND</code> (3, from
+          <code>@beautinique/shared-constants</code>) — <code>sendCount</code> starts at 1 on the
+          initial send and increments on every resend, so the <strong>3rd resend call</strong> (4th
+          OTP send overall) throws <code>TooManyRequestsError</code> (the OTP/send-count is still
+          rotated in Redis on the attempt that trips the limit, the email is just never enqueued).
+        </li>
+        <li>
+          On successful registration, the user is created with
+          <code>providers: [&quot;MANUAL&quot;]</code>, or — if an OAuth-only account already exists
+          for that email — <code>MANUAL</code> is added to its <code>providers</code>.
+        </li>
+      </ul>
+      <h3>8.4 Logout</h3>
+      <ul>
+        <li>
+          <code>DELETE /auth/logout</code> — requires <code>authenticate</code> (reads
+          <code>X-User-Id</code>), deletes the user&#39;s cached session from Redis. No-op (still
+          returns success) if nothing was cached.
+        </li>
+      </ul>
+      <hr />
+      <h2>9. Password Management</h2>
+      <h3>9.1 Forgot Password Flow</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><code>POST /auth/password/forgot-send-otp</code></td>
+            <td>Send OTP to email</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><code>PATCH /auth/password/forgot-resend-otp</code></td>
+            <td>Resend OTP</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><code>POST /auth/password/forgot-verify-otp</code></td>
+            <td>Verify OTP</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><code>POST /auth/password/forgot-save</code></td>
+            <td>Save the new password</td>
+          </tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>
+          Step 1 throws <code>UnprocessableEntityError</code> if a user exists for that email but
+          has no <code>MANUAL</code> provider.
+        </li>
+        <li>Same <code>MAX_OTP_RESEND</code>/10-minute-TTL rules as registration.</li>
+        <li>New password cannot equal the current one (<code>UnprocessableEntityError</code>).</li>
+        <li>After reset, the Redis user cache is refreshed.</li>
+      </ul>
+      <h3>9.2 Change Password (<code>PATCH /auth/password/change</code>)</h3>
+      <ul>
+        <li>Requires <code>authenticate</code>.</li>
+        <li>
+          Requires <code>currentPassword</code> (checked against the bcrypt hash — mismatch throws
+          <code>ValidationError</code> with a field error) + a new <code>password</code>.
+        </li>
+        <li>
+          New and current passwords cannot be identical (<code>UnprocessableEntityError</code> with
+          a field error).
+        </li>
+      </ul>
+      <h3>9.3 Set Password (<code>PATCH /auth/password/set</code>)</h3>
+      <ul>
+        <li>Requires <code>authenticate</code>.</li>
+        <li>For users who signed up via OAuth only (no password set yet).</li>
+        <li>
+          Throws <code>UnprocessableEntityError</code> if <code>MANUAL</code> is already linked —
+          use forgot-password instead.
+        </li>
+      </ul>
+      <hr />
+      <h2>10. Redis Cache (<code>classes/redis/</code>)</h2>
+      <p>
+        A <code>RedisCacheManager</code> singleton (instantiated once in
+        <code>configs/index.ts</code>, exported as <code>redisCacheManager</code>) wraps a single
+        <code>redis</code> client and exposes two sub-caches,
+        <code>.user</code> (<code>RedisCacheUser</code>) and
+        <code>.token</code> (<code>RedisCacheToken</code>), both extending the shared
+        <code>RedisCacheHelper</code> base class.
+      </p>
+      <h3>Key Prefixes</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Prefix</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>bq:user-service:users:&lt;id&gt;</code></td>
+            <td>User session data</td>
+          </tr>
+          <tr>
+            <td><code>bq:user-service:tokens:&lt;token&gt;</code></td>
+            <td>OTP session data</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3><code>RedisCacheManager</code> (<code>classes/redis/index.ts</code>)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>connect()</code></td>
+            <td>Connects the underlying client; failures are logged, not thrown (never rejects)</td>
+          </tr>
+          <tr>
+            <td><code>close()</code></td>
+            <td>Gracefully closes the connection (<code>client.quit()</code>)</td>
+          </tr>
+          <tr>
+            <td><code>.user</code></td>
+            <td><code>RedisCacheUser</code> instance</td>
+          </tr>
+          <tr>
+            <td><code>.token</code></td>
+            <td><code>RedisCacheToken</code> instance</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        An internal <code>isReady</code> flag, updated by the client&#39;s
+        <code>connect</code>/<code>error</code>/<code>reconnecting</code>/<code>end</code> events,
+        gates every cache operation — see
+        <a href="#redis-fallback-behavior"><code>getClient()</code></a> below.
+      </p>
+      <h3><code>RedisCacheUser</code> (<code>classes/redis/RedisCacheUser.ts</code>)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>setUser(user)</code></td>
+            <td>Cache user data (TTL: 24 hours)</td>
+          </tr>
+          <tr>
+            <td><code>getUser(userId)</code></td>
+            <td>
+              Cache-aside: Redis first, falls back to MongoDB (<code>getUserById</code>) and
+              repopulates the cache on miss
+            </td>
+          </tr>
+          <tr>
+            <td><code>updateUser(user)</code></td>
+            <td>Alias for <code>setUser</code> — used after a mutation</td>
+          </tr>
+          <tr>
+            <td><code>deleteUser(userId)</code></td>
+            <td>Remove a user from the cache</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3><code>RedisCacheToken</code> (<code>classes/redis/RedisCacheToken.ts</code>)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>setOtpData(email)</code></td>
+            <td>
+              Generates a 6-digit OTP + a 20-byte hex token, stores
+              <code>{ otp, email, sendCount: 1 }</code> (10 min TTL), returns
+              <code>{ token, otp, email, sendCount }</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>getOtpData(token)</code></td>
+            <td>Retrieve the OTP session by token</td>
+          </tr>
+          <tr>
+            <td><code>updateOtpData(token)</code></td>
+            <td>
+              Regenerates the OTP, increments <code>sendCount</code>, re-stores (10 min TTL); throws
+              <code>ValidationError</code> if the session doesn&#39;t exist
+            </td>
+          </tr>
+          <tr>
+            <td><code>deleteOtpData(token)</code></td>
+            <td>Remove the OTP session</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3><code>RedisCacheHelper</code> (<code>classes/redis/RedisCacheHelper.ts</code>)</h3>
+      <p>
+        Shared low-level primitives both sub-caches build on:
+        <code>setData</code>/<code>getData</code>/<code>deleteData</code> (string),
+        <code>setHashData</code
+        >/<code>getHashField</code>/<code>getAllHashFields</code>/<code>deleteHashField</code>/<code
+          >deleteHashData</code
+        >
+        (hash), <code>exists</code>/<code>hasHashField</code>. Every method resolves to a safe
+        default (<code>null</code>, <code>false</code>, <code>{}</code>, or simply returns) and logs
+        a warning instead of throwing on a Redis-level failure — a Redis outage degrades the
+        service, it doesn&#39;t crash it.
+      </p>
+      <h3>Redis Fallback Behavior</h3>
+      <p>
+        <code>RedisCacheManager</code> passes each sub-cache a <code>getClient()</code> closure that
+        returns <code>null</code> whenever <code>isReady</code> is false (client not connected /
+        mid-reconnect). <code>RedisCacheHelper</code>&#39;s methods check this before every
+        operation — <code>getUser()</code> falling through to MongoDB on a Redis outage is exactly
+        this mechanism at work, not special-cased logic in <code>RedisCacheUser</code>.
+      </p>
+      <h3>Reconnection Strategy (<code>configs/index.ts</code>)</h3>
+      <p>
+        The <code>redisClient</code> (used by <code>RedisCacheManager</code>) is configured with a
+        <code>reconnectStrategy</code>: exponential-ish backoff of
+        <code>min(retries * 1000ms, 10s)</code>, giving up after 5 retries.
+      </p>
+      <hr />
+      <h2>11. Middlewares</h2>
+      <h3><code>authenticate</code> (<code>middlewares/index.ts</code>)</h3>
+      <p>
+        Reads <code>X-User-Id</code> (throws <code>AuthenticationError</code> if missing), fetches
+        the user via <code>redisCacheManager.user.getUser</code>, attaches it to
+        <code>req.user</code>. Mounted in front of <code>/auth/logout</code>,
+        <code>/auth/password/change</code>, and <code>/auth/password/set</code>.
+      </p>
+      <h3><code>authorize(allowedRoles)</code> (<code>middlewares/index.ts</code>)</h3>
+      <p>
+        Factory middleware — same header extraction as <code>authenticate</code>, plus reads
+        <code>X-User-Role</code> (defaults to <code>USER</code>) and throws
+        <code>AuthorizationError</code> if the role isn&#39;t in <code>allowedRoles</code> or
+        doesn&#39;t match the header. Exported but
+        <strong>not currently wired into any route</strong>.
+      </p>
+      <p>
+        <em
+          >Note: <code>GET /user/session</code> does its own <code>X-User-Id</code> check directly
+          in <code>getSessionUserController</code> rather than going through
+          <code>authenticate</code> — same effect, different call site.</em
+        >
+      </p>
+      <h3>External Middlewares (from <code>@beautinique/*</code> packages)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Middleware</th>
+            <th>Package</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>checkServiceAccess</code></td>
+            <td><code>@beautinique/backend-request</code></td>
+            <td>Validates <code>X-Service-Secret</code>, timing-safe compare</td>
+          </tr>
+          <tr>
+            <td><code>checkDbConnection</code></td>
+            <td><code>@beautinique/backend-mongoose</code></td>
+            <td>
+              Rejects with 503 if MongoDB isn&#39;t ready (scoped to <code>/api/v1</code> only)
+            </td>
+          </tr>
+          <tr>
+            <td><code>checkEmptyRequest</code></td>
+            <td><code>@beautinique/backend-request</code></td>
+            <td>Guards against empty request bodies/query before validation</td>
+          </tr>
+          <tr>
+            <td><code>validateZod</code></td>
+            <td><code>@beautinique/backend-zod</code></td>
+            <td>
+              Request body validation via Zod (<code>loginZodSchema</code>,
+              <code>registerZodSchema</code>, etc.)
+            </td>
+          </tr>
+          <tr>
+            <td><code>tryCatchResponse</code></td>
+            <td><code>@beautinique/backend-response</code></td>
+            <td>Wraps controllers in try/catch, forwards errors to <code>errorResponse</code></td>
+          </tr>
+          <tr>
+            <td><code>successResponse</code></td>
+            <td><code>@beautinique/backend-response</code></td>
+            <td>Attaches <code>res.success({ statusCode, message, data })</code></td>
+          </tr>
+          <tr>
+            <td><code>notFoundResponse</code></td>
+            <td><code>@beautinique/backend-response</code></td>
+            <td>404 handler (branded HTML page for browser requests)</td>
+          </tr>
+          <tr>
+            <td><code>errorResponse</code></td>
+            <td><code>@beautinique/backend-response</code></td>
+            <td>Central error handler</td>
+          </tr>
+          <tr>
+            <td><code>createHttpLogger</code></td>
+            <td><code>@beautinique/backend-logger</code></td>
+            <td>Per-request Pino logging</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>12. Services Layer (<code>services/index.ts</code>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>getUserById(data)</code></td>
+            <td>
+              Find user by ObjectId; <code>password</code>/<code>lean</code> options; throws
+              <code>NotFoundError</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>getUserByEmail(data)</code></td>
+            <td>Find user by email (no throw on miss — callers decide)</td>
+          </tr>
+          <tr>
+            <td><code>getUserByPhoneNumber(data)</code></td>
+            <td>Find user by phone number (no throw on miss)</td>
+          </tr>
+          <tr>
+            <td><code>getUserByEmailOrPhone(data)</code></td>
+            <td>
+              Find user by email <strong>or</strong> phone; throws <code>NotFoundError</code> with
+              field-specific errors on miss
+            </td>
+          </tr>
+          <tr>
+            <td><code>createNewUser(payload)</code></td>
+            <td>Create a new user document</td>
+          </tr>
+          <tr>
+            <td><code>updateUser(filter, payload)</code></td>
+            <td>
+              Update via <code>findOneAndUpdate</code>; throws <code>NotFoundError</code> if nothing
+              matched
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>13. Utilities (<code>utils/index.ts</code>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Function</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>createOAuthDbPayload(data, provider)</code></td>
+            <td>Builds a new-user payload from a third-party OAuth profile</td>
+          </tr>
+          <tr>
+            <td><code>getMinimalUser(user)</code></td>
+            <td>
+              Returns the sanitized client-facing user shape (<code>_id</code> as string; excludes
+              <code>password</code>/<code>reason</code>/timestamps)
+            </td>
+          </tr>
+          <tr>
+            <td><code>generateOtp()</code></td>
+            <td>Returns a random 6-digit numeric OTP</td>
+          </tr>
+          <tr>
+            <td><code>generateTempToken(bytes = 32)</code></td>
+            <td>Returns a hex token (default 32 bytes = 64 hex chars)</td>
+          </tr>
+          <tr>
+            <td><code>getSocialAuthRedirectURL(provider)</code></td>
+            <td>
+              Builds the absolute OAuth callback URL: <code>envs.gateway_url</code> +
+              <code>/api/v1/{SERVICE_NAMES_MAP[&#39;user-service&#39;]}/auth/login</code> + that
+              provider&#39;s <code>callback.path</code> from <code>METHODS_AND_PATHS</code>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <code>getSocialAuthRedirectURL</code> no longer reads a per-provider
+        <code>*_REDIRECT_ENDPOINT</code> env var — it derives the callback path directly from this
+        service&#39;s own <code>METHODS_AND_PATHS</code> route constants
+        (<code>constants/index.ts</code>) and
+        <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code>
+        (<code>@beautinique/shared-constants</code>), so the URL registered with each OAuth provider
+        can never drift out of sync with the actual route. Each <code>socialAuth/*.ts</code> class
+        now calls this once at construction and caches it in a <code>REDIRECT_URI</code> field,
+        rather than recomputing it on every <code>url()</code>/<code>access_token()</code> call.
+      </p>
+      <p>
+        <code>getObjId</code>/<code>toObjectId</code> moved out of this service —
+        <code>getObjId</code> is now imported directly from
+        <code>@beautinique/backend-mongoose</code> where needed (<code>services/index.ts</code>,
+        <code>password.controller.ts</code>).
+      </p>
+      <hr />
+      <h2>14. OAuth Integrations (<code>classes/apis/socialAuth/</code>)</h2>
+      <h3>Google (<code>Google.ts</code>)</h3>
+      <ul>
+        <li>
+          Uses <code>google-auth-library</code>&#39;s <code>OAuth2Client</code> directly (not the
+          full <code>googleapis</code> SDK — swapped out to cut install size/type-check cost; only
+          <code>OAuth2Client</code> was ever used).
+        </li>
+        <li>
+          <code>url()</code> generates the consent URL with <code>scope: [profile, email]</code>.
+        </li>
+        <li>
+          <code>decode(code)</code> exchanges the code for tokens, fetches the profile from
+          <code>https://www.googleapis.com/oauth2/v2/userinfo</code>.
+        </li>
+      </ul>
+      <h3>LinkedIn (<code>Linkedin.ts</code>)</h3>
+      <ul>
+        <li>Directly constructs the authorization URL (no SDK).</li>
+        <li>
+          <code>access_token(code)</code> POSTs to
+          <code>https://www.linkedin.com/oauth/v2/accessToken</code>.
+        </li>
+        <li>
+          <code>decode(access_token)</code> GETs <code>https://api.linkedin.com/v2/userinfo</code>.
+        </li>
+      </ul>
+      <h3>GitHub (<code>Github.ts</code>)</h3>
+      <ul>
+        <li>Directly constructs the authorization URL.</li>
+        <li>
+          <code>access_token(code)</code> POSTs to
+          <code>https://github.com/login/oauth/access_token</code>.
+        </li>
+        <li>
+          <code>decode(access_token)</code> fetches the profile from
+          <code>https://api.github.com/user</code>; falls back to <code>/user/emails</code> (picks
+          the <code>primary</code> one, else the first) if the profile has no public email.
+        </li>
+      </ul>
+      <p>
+        All three extend <code>ApiRequest</code> (<code>classes/apis/ApiRequest.ts</code>), which
+        wraps every request in a common <code>try/catch</code>: an <code>AxiosError</code> with a
+        response is turned into the matching <code>@beautinique/backend-classes</code> error
+        subclass via <code>createError</code>/<code>ERROR_CLASS_MAP</code> (falling back to
+        <code>INTERNAL_SERVER_ERROR</code> for an unrecognized/missing error code), anything else
+        becomes a generic <code>INTERNAL_SERVER_ERROR</code>.
+      </p>
+      <hr />
+      <h2>15. External OAuth Routes (for reference)</h2>
+      <p>
+        Defined in <code>constants/index.ts</code> as <code>OAUTH_API_ROUTES_AND_METHODS</code>:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Method</th>
+            <th>URL</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Google</td>
+            <td>GET</td>
+            <td><code>https://www.googleapis.com/oauth2/v2/userinfo</code></td>
+            <td>Decode Google profile</td>
+          </tr>
+          <tr>
+            <td>LinkedIn</td>
+            <td>POST</td>
+            <td><code>https://www.linkedin.com/oauth/v2/accessToken</code></td>
+            <td>Get LinkedIn access token</td>
+          </tr>
+          <tr>
+            <td>LinkedIn</td>
+            <td>GET</td>
+            <td><code>https://api.linkedin.com/v2/userinfo</code></td>
+            <td>Decode LinkedIn profile</td>
+          </tr>
+          <tr>
+            <td>GitHub</td>
+            <td>POST</td>
+            <td><code>https://github.com/login/oauth/access_token</code></td>
+            <td>Get GitHub access token</td>
+          </tr>
+          <tr>
+            <td>GitHub</td>
+            <td>GET</td>
+            <td><code>https://api.github.com/user</code></td>
+            <td>Decode GitHub profile</td>
+          </tr>
+          <tr>
+            <td>GitHub</td>
+            <td>GET</td>
+            <td><code>https://api.github.com/user/emails</code></td>
+            <td>Fetch GitHub user emails (fallback)</td>
+          </tr>
+        </tbody>
+      </table>
+      <hr />
+      <h2>16. Background Jobs (<code>mail-queue</code>, producer only)</h2>
+      <p>
+        This service <strong>only produces</strong> onto <code>mail-queue</code> — it doesn&#39;t
+        run a worker for anything.
+        <code>jobProducer</code> (<code>@beautinique/backend-bullmq</code>&#39;s
+        <code>JobProducer</code>, configured in <code>configs/index.ts</code>) is used directly from
+        the register/password controllers.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Job name</th>
+            <th>Enqueued from</th>
+            <th>Consumed by</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>send-otp</code></td>
+            <td>
+              <code>registerSendOtpController</code>, <code>registerResendOtpController</code>,
+              <code>forgotPasswordSendOtpController</code>,
+              <code>forgotPasswordResendOtpController</code>
+            </td>
+            <td><code>mail-service</code> (<code>WorkerManager</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <strong>Rollback on enqueue failure:</strong> every
+        <code>jobProducer.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, ...)</code> call is
+        wrapped in its own <code>try/catch</code> — if enqueueing fails, the just-written OTP
+        session is deleted from Redis (<code>redisCacheManager.token.deleteOtpData</code>) before
+        the error is re-thrown, so a failed send doesn&#39;t leave an unreachable OTP session
+        behind.
+      </p>
+      <p>
+        <strong>Retry/backoff:</strong> configured once, at the <code>jobProducer</code> level
+        (<code>configs/index.ts</code>): <code>attempts: 3</code>,
+        <code>backoff: { type: &#39;exponential&#39;, delay: 2000 }</code>,
+        <code>removeOnComplete: { age: 30, count: 5 }</code>,
+        <code>removeOnFail: { age: 1800, count: 10 }</code>.
+      </p>
+      <p>
+        The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance
+        as <code>mail-service</code>&#39;s BullMQ connection, or enqueued jobs will never be picked
+        up.
+      </p>
+      <hr />
+      <h2>17. Error Handling</h2>
+      <p>
+        All errors are thrown as <code>AppError</code> subclasses from
+        <code>@beautinique/backend-classes</code> (e.g. <code>NotFoundError</code>,
+        <code>ValidationError</code>, <code>ConflictError</code>) — <strong>not</strong> the older
+        <code>@beautinique/be-classes</code> package, which this service no longer depends on.
+        Standard error codes used across the service:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>HTTP Equivalent</th>
+            <th>When Used</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>BAD_REQUEST</code></td>
+            <td>400</td>
+            <td>Missing <code>code</code> query param on an OAuth callback</td>
+          </tr>
+          <tr>
+            <td><code>VALIDATION_ERROR</code></td>
+            <td>422</td>
+            <td>Wrong password, invalid/expired OTP</td>
+          </tr>
+          <tr>
+            <td><code>NOT_FOUND</code></td>
+            <td>404</td>
+            <td>User not found, OAuth profile has no email</td>
+          </tr>
+          <tr>
+            <td><code>CONFLICT</code></td>
+            <td>409</td>
+            <td>Email/phone already exists</td>
+          </tr>
+          <tr>
+            <td><code>UNPROCESSABLE_ENTITY</code></td>
+            <td>422</td>
+            <td>
+              Password same as current; missing/empty OTP-session token
+              (<code>sanitizeToken</code>); OAuth/manual provider conflicts
+            </td>
+          </tr>
+          <tr>
+            <td><code>AUTHENTICATION_ERROR</code></td>
+            <td>401</td>
+            <td>Missing <code>X-User-Id</code></td>
+          </tr>
+          <tr>
+            <td><code>AUTHORIZATION_ERROR</code></td>
+            <td>403</td>
+            <td>
+              Login-role mismatch; insufficient role (<code>authorize</code>, currently unused)
+            </td>
+          </tr>
+          <tr>
+            <td><code>TOO_MANY_REQUESTS</code></td>
+            <td>429</td>
+            <td>Max OTP resend attempts exceeded</td>
+          </tr>
+          <tr>
+            <td><code>INTERNAL_SERVER_ERROR</code></td>
+            <td>500</td>
+            <td>Unexpected failures; unrecognized error code from an OAuth provider&#39;s API</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Errors flow through the <code>errorResponse</code> middleware
+        (<code>@beautinique/backend-response</code>), which only forwards
+        <code>message</code
+        >/<code>code</code>/<code>statusCode</code>/<code>fieldErrors</code>/<code
+          >globalErrors</code
+        >
+        for <strong>operational</strong> <code>AppError</code>s — anything else (including a
+        non-operational <code>AppError</code>) is converted to a generic
+        <code>InternalServerError</code> before the client ever sees it, and
+        <code>envs.is_dev</code> controls whether a stack trace is attached.
+      </p>
+      <hr />
+      <h2>18. Server Lifecycle</h2>
+      <h3>Startup (<code>bootstrap/startup.ts</code>)</h3>
+      <ol>
+        <li>Register MongoDB event listeners (<code>registerDatabaseEvents</code>).</li>
+        <li>
+          Connect MongoDB and Redis <strong>in parallel</strong> (<code
+            >Promise.all([connectDb(...), redisCacheManager.connect()])</code
+          >) — safe because <code>redisCacheManager.connect()</code> never rejects (it swallows its
+          own errors internally); a Mongo failure still aborts startup via the outer
+          <code>catch</code>.
+        </li>
+        <li>
+          Start the HTTP server (<code>startHttpServer</code>) — only after both connection attempts
+          above have settled, so the service never opens its port while a dependency is still
+          connecting.
+        </li>
+      </ol>
+      <p>
+        Idempotent (<code>setStarted()</code> guards re-entry). On any failure, logs and calls
+        <code>process.exit(1)</code>.
+      </p>
+      <h3>
+        Graceful Shutdown (<code>bootstrap/shutdown.ts</code>,
+        <code>SIGINT</code>/<code>SIGTERM</code>)
+      </h3>
+      <ol>
+        <li>
+          Stop accepting new HTTP requests (<code>stopHttpServer</code>, existing requests finish
+          first).
+        </li>
+        <li>
+          Close the job producer, the Redis cache, and disconnect MongoDB —
+          <strong>in parallel</strong> (<code>Promise.all</code> over per-task
+          <code>try/catch</code>, so one failing doesn&#39;t block the others).
+        </li>
+        <li>Destroy any remaining open sockets.</li>
+        <li>Exit <code>0</code> on success, <code>1</code> on failure.</li>
+      </ol>
+      <p>
+        Idempotent (<code>setShuttingDown()</code> guards re-entry). Only the job-producer shutdown
+        task is named for per-step success/failure logging today — the Redis/Mongo tasks in the same
+        list run and are awaited, but aren&#39;t individually logged by name.
+      </p>
+      <hr />
+      <h2>19. Build &amp; Run Commands</h2>
+      <pre><code class="language-bash">npm install
 npm run dev            # tsc --noEmit --watch + nodemon (tsx) — development, auto-restarts on src changes
 npm run build           # tsc → dist/, then auto-regenerates public/index.html (see &quot;postbuild&quot; below)
 npm run start            # node dist/index.js — production (run build first)
@@ -1333,85 +1853,160 @@ npm run lint              # eslint src
 npm run lint:fix
 npm run clean              # remove dist/
 </code></pre>
-<p><strong><code>postbuild</code></strong> (<code>node scripts/generate-html.mjs</code>) runs automatically after every <code>npm run build</code> — it re-renders <code>README.md</code> → <code>public/index.html</code> using <code>@beautinique/shared-markdown-to-html</code>, so <code>GET /</code> stays in sync with the latest <code>README.md</code> after a build.</p>
-<p><strong>Note:</strong> this only fires on <code>npm run build</code> — <code>npm run dev</code> runs <code>tsx</code> directly and never touches <code>tsc</code>/<code>postbuild</code>, so editing <code>README.md</code> during <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build actually runs.</p>
-<h3>TypeScript strictness (<code>tsconfig.json</code>)</h3>
-<p>Beyond <code>strict: true</code>: <code>noUncheckedIndexedAccess</code> (indexed access is <code>T | undefined</code>, not <code>T</code>), <code>noEmitOnError</code> (a broken build produces no <code>dist/</code> output), <code>noUnusedLocals</code>/<code>noUnusedParameters</code>, <code>noImplicitReturns</code>, <code>noFallthroughCasesInSwitch</code>, <code>noUncheckedSideEffectImports</code>. <code>declaration</code>/<code>declarationMap</code> are deliberately <strong>off</strong> — this is an application, not a package anything imports.</p>
-<h3>ESLint (<code>eslint.config.mjs</code>)</h3>
-<p>Flat config: <code>@eslint/js</code> recommended → <code>typescript-eslint</code> recommended/strict/stylistic → type-checked variants (<code>recommendedTypeChecked</code>/<code>strictTypeChecked</code>/<code>stylisticTypeChecked</code> via <code>projectService</code>) → <code>simple-import-sort</code> → Prettier (last, disables conflicting stylistic rules). Notable custom rules: <code>no-floating-promises</code>/<code>no-misused-promises</code>/<code>require-await</code>/<code>await-thenable</code>/<code>eqeqeq</code>/<code>curly</code> (error), <code>no-explicit-any</code>/<code>no-unused-vars</code> (warn), <code>reportUnusedDisableDirectives</code> (error).</p>
-<hr>
-<h2>20. Shared Packages (<code>@beautinique/*</code>)</h2>
-<table>
-<thead>
-<tr>
-<th>Package</th>
-<th>Purpose</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>@beautinique/backend-bullmq</code></td>
-<td><code>JobProducer</code> — typed BullMQ wrapper</td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-classes</code></td>
-<td><code>AppError</code> subclasses (<code>NotFoundError</code>, <code>ValidationError</code>, ...), <code>createError</code>, <code>ERROR_CLASS_MAP</code></td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-logger</code></td>
-<td><code>createLogger</code>/<code>createHttpLogger</code> (Pino-based)</td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-mongoose</code></td>
-<td><code>connectDb</code>, <code>disconnectDB</code>, <code>checkDbConnection</code>, <code>getConnectionHealth</code>, <code>getObjId</code>, <code>mongoEvents</code></td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-request</code></td>
-<td><code>checkServiceAccess</code>, <code>checkEmptyRequest</code></td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-response</code></td>
-<td><code>successResponse</code>/<code>errorResponse</code>/<code>notFoundResponse</code>/<code>tryCatchResponse</code></td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-utils</code></td>
-<td><code>getUser</code>, <code>sanitizeToken</code></td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-zod</code></td>
-<td><code>validateZod</code> and every request Zod schema (<code>loginZodSchema</code>, <code>registerZodSchema</code>, <code>otpZodSchema</code>, ...)</td>
-</tr>
-<tr>
-<td><code>@beautinique/shared-constants</code></td>
-<td><code>USER_ROLES</code>, <code>AUTH_PROVIDERS</code>, <code>HEADERS_MAP</code>, <code>MAX_OTP_RESEND</code>, <code>SERVICE_NAMES_MAP</code>, <code>STATES_AND_UTS</code>, <code>COUNTRIES</code>, <code>SELLER_TYPES</code>, etc.</td>
-</tr>
-<tr>
-<td><code>@beautinique/shared-markdown-to-html</code></td>
-<td><code>generateHtmlFromMarkdown</code> — used by <code>scripts/generate-html.mjs</code></td>
-</tr>
-<tr>
-<td><code>@beautinique/shared-utils</code></td>
-<td><code>requireEnv</code>/<code>requirePort</code>, <code>stringifyData</code>/<code>parseData</code></td>
-</tr>
-<tr>
-<td><code>@beautinique/backend-types</code></td>
-<td><code>TAuthProvider</code>, <code>TUserRole</code>, <code>TLoginZodSchema</code>, and other Zod-inferred/shared types</td>
-</tr>
-</tbody></table>
-<p>This service no longer depends on <code>@beautinique/be-classes</code>, <code>be-configs</code>, <code>be-constants</code>, <code>be-jobs</code>, <code>be-middlewares</code>, <code>be-utils</code>, or <code>be-zod</code> — all fully migrated to their <code>backend-*</code>/<code>shared-*</code> replacements.</p>
-<hr>
-<h2>21. API Response Format</h2>
-<p>All responses use <code>@beautinique/backend-response</code>&#39;s envelope, attached via <code>app.use(successResponse({ defaultMessage: &#39;Success.&#39; }))</code>:</p>
-<pre><code class="language-jsonc">// success
+      <p>
+        <strong><code>postbuild</code></strong> (<code>node scripts/generate-html.mjs</code>) runs
+        automatically after every <code>npm run build</code> — it re-renders
+        <code>README.md</code> → <code>public/index.html</code> using
+        <code>@beautinique/shared-markdown-to-html</code>, so <code>GET /</code> stays in sync with
+        the latest <code>README.md</code> after a build.
+      </p>
+      <p>
+        <strong>Note:</strong> this only fires on <code>npm run build</code> —
+        <code>npm run dev</code> runs <code>tsx</code> directly and never touches
+        <code>tsc</code>/<code>postbuild</code>, so editing <code>README.md</code> during
+        <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build actually runs.
+      </p>
+      <h3>TypeScript strictness (<code>tsconfig.json</code>)</h3>
+      <p>
+        Beyond <code>strict: true</code>: <code>noUncheckedIndexedAccess</code> (indexed access is
+        <code>T | undefined</code>, not <code>T</code>), <code>noEmitOnError</code> (a broken build
+        produces no <code>dist/</code> output),
+        <code>noUnusedLocals</code>/<code>noUnusedParameters</code>, <code>noImplicitReturns</code>,
+        <code>noFallthroughCasesInSwitch</code>, <code>noUncheckedSideEffectImports</code>.
+        <code>declaration</code>/<code>declarationMap</code> are deliberately <strong>off</strong> —
+        this is an application, not a package anything imports.
+      </p>
+      <h3>ESLint (<code>eslint.config.mjs</code>)</h3>
+      <p>
+        Flat config: <code>@eslint/js</code> recommended →
+        <code>typescript-eslint</code> recommended/strict/stylistic → type-checked variants
+        (<code>recommendedTypeChecked</code>/<code>strictTypeChecked</code>/<code
+          >stylisticTypeChecked</code
+        >
+        via <code>projectService</code>) → <code>simple-import-sort</code> → Prettier (last,
+        disables conflicting stylistic rules). Notable custom rules:
+        <code>no-floating-promises</code
+        >/<code>no-misused-promises</code>/<code>require-await</code>/<code>await-thenable</code>/<code>eqeqeq</code>/<code
+          >curly</code
+        >
+        (error), <code>no-explicit-any</code>/<code>no-unused-vars</code> (warn),
+        <code>reportUnusedDisableDirectives</code> (error).
+      </p>
+      <hr />
+      <h2>20. Shared Packages (<code>@beautinique/*</code>)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Package</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>@beautinique/backend-bullmq</code></td>
+            <td><code>JobProducer</code> — typed BullMQ wrapper</td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-classes</code></td>
+            <td>
+              <code>AppError</code> subclasses (<code>NotFoundError</code>,
+              <code>ValidationError</code>, ...), <code>createError</code>,
+              <code>ERROR_CLASS_MAP</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-logger</code></td>
+            <td><code>createLogger</code>/<code>createHttpLogger</code> (Pino-based)</td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-mongoose</code></td>
+            <td>
+              <code>connectDb</code>, <code>disconnectDB</code>, <code>checkDbConnection</code>,
+              <code>getConnectionHealth</code>, <code>getObjId</code>, <code>mongoEvents</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-request</code></td>
+            <td><code>checkServiceAccess</code>, <code>checkEmptyRequest</code></td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-response</code></td>
+            <td>
+              <code>successResponse</code
+              >/<code>errorResponse</code>/<code>notFoundResponse</code>/<code
+                >tryCatchResponse</code
+              >
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-utils</code></td>
+            <td><code>getUser</code>, <code>sanitizeToken</code></td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-zod</code></td>
+            <td>
+              <code>validateZod</code> and every request Zod schema (<code>loginZodSchema</code>,
+              <code>registerZodSchema</code>, <code>otpZodSchema</code>, ...)
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/shared-constants</code></td>
+            <td>
+              <code>USER_ROLES</code>, <code>AUTH_PROVIDERS</code>, <code>HEADERS_MAP</code>,
+              <code>MAX_OTP_RESEND</code>, <code>SERVICE_NAMES_MAP</code>,
+              <code>STATES_AND_UTS</code>, <code>COUNTRIES</code>, <code>SELLER_TYPES</code>, etc.
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/shared-markdown-to-html</code></td>
+            <td>
+              <code>generateHtmlFromMarkdown</code> — used by <code>scripts/generate-html.mjs</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/shared-utils</code></td>
+            <td>
+              <code>requireEnv</code>/<code>requirePort</code>, <code>stringifyData</code>/<code
+                >parseData</code
+              >
+            </td>
+          </tr>
+          <tr>
+            <td><code>@beautinique/backend-types</code></td>
+            <td>
+              <code>TAuthProvider</code>, <code>TUserRole</code>, <code>TLoginZodSchema</code>, and
+              other Zod-inferred/shared types
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        This service no longer depends on <code>@beautinique/be-classes</code>,
+        <code>be-configs</code>, <code>be-constants</code>, <code>be-jobs</code>,
+        <code>be-middlewares</code>, <code>be-utils</code>, or <code>be-zod</code> — all fully
+        migrated to their <code>backend-*</code>/<code>shared-*</code> replacements.
+      </p>
+      <hr />
+      <h2>21. API Response Format</h2>
+      <p>
+        All responses use <code>@beautinique/backend-response</code>&#39;s envelope, attached via
+        <code>app.use(successResponse({ defaultMessage: &#39;Success.&#39; }))</code>:
+      </p>
+      <pre><code class="language-jsonc">// success
 { &quot;success&quot;: true, &quot;message&quot;: &quot;User logged in successfully&quot;, &quot;data&quot;: { &quot;_id&quot;: &quot;...&quot;, &quot;firstName&quot;: &quot;...&quot;, &quot;...&quot;: &quot;...&quot; } }
 
 // error
 { &quot;success&quot;: false, &quot;code&quot;: &quot;VALIDATION_ERROR&quot;, &quot;message&quot;: &quot;...&quot;, &quot;fieldErrors&quot;: { ... }, &quot;globalErrors&quot;: [ ... ] }
 </code></pre>
-<p><code>res.success({ statusCode, message, data })</code> — <code>data</code> is omitted entirely (not sent as <code>null</code>) when not provided; <code>statusCode</code> defaults to <code>200</code>.</p>
-<hr>
-<h2>22. Data Flow Examples</h2>
-<h3>Registration</h3>
-<pre><code>Client → POST /auth/register/send-otp { email }
+      <p>
+        <code>res.success({ statusCode, message, data })</code> — <code>data</code> is omitted
+        entirely (not sent as <code>null</code>) when not provided; <code>statusCode</code> defaults
+        to <code>200</code>.
+      </p>
+      <hr />
+      <h2>22. Data Flow Examples</h2>
+      <h3>Registration</h3>
+      <pre><code>Client → POST /auth/register/send-otp { email }
   → GET user by email from DB
   → Store OTP in Redis (10 min TTL) ← Returns { token, otp, sendCount: 1 }
   → jobProducer.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, { email, otp })
@@ -1429,8 +2024,8 @@ Client → POST /auth/register/save-user { firstName, lastName, password, phoneN
   → Set user in Redis cache (24h TTL)
   ← res.success({ data: minimalUser })
 </code></pre>
-<h3>Forgot Password</h3>
-<pre><code>Client → POST /auth/password/forgot-send-otp { email }
+      <h3>Forgot Password</h3>
+      <pre><code>Client → POST /auth/password/forgot-send-otp { email }
   → Validate user has a MANUAL provider
   → Store OTP in Redis ← Returns { token, otp }
   → jobProducer.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, { email, otp })
@@ -1445,8 +2040,8 @@ Client → POST /auth/password/forgot-save { password } [Authorization: token]
   → Update user in Redis cache
   ← res.success({ data: minimalUser })
 </code></pre>
-<h3>OAuth Login</h3>
-<pre><code>Client → GET /auth/login/oauth/{provider}/redirect
+      <h3>OAuth Login</h3>
+      <pre><code>Client → GET /auth/login/oauth/{provider}/redirect
   ← Returns provider consent URL
 
 User authenticates on the provider&#39;s site
@@ -1461,26 +2056,64 @@ Service:
   → Set user in Redis cache
   ← res.success({ data: minimalUser })
 </code></pre>
-<hr>
-<h2>23. Key Relationships</h2>
-<pre><code>User ──1→1─── Seller          (one seller profile per user)
+      <hr />
+      <h2>23. Key Relationships</h2>
+      <pre><code>User ──1→1─── Seller          (one seller profile per user)
 User ──1→1─── Wishlist        (one wishlist per user)
 Wishlist ──1→N─── Product     (many products per wishlist)
 </code></pre>
-<ul>
-<li><code>Seller.user</code>      → ref <code>User</code></li>
-<li><code>Wishlist.user</code>    → ref <code>User</code></li>
-<li><code>Wishlist.products</code>→ ref <code>Product</code> (external, owned by <code>product-service</code>)</li>
-</ul>
-<hr>
-<h2>24. Design Notes / Known Trade-offs</h2>
-<ul>
-<li><strong><code>authorize</code> middleware is exported but unused.</strong> No route currently requires role-based restriction beyond <code>authenticate</code>&#39;s &quot;is logged in&quot; check.</li>
-<li><strong><code>RedisCacheUser.updateUser</code> is a plain alias for <code>setUser</code>.</strong> Kept as a separate method for call-site clarity (an explicit &quot;I&#39;m updating an existing entry&quot; vs &quot;I&#39;m setting one for the first time&quot;), not because the implementation differs.</li>
-<li><strong><code>Seller</code>/<code>Wishlist</code> have no controllers yet.</strong> The Mongoose models and indexes exist so other services (or a future admin surface) can query them directly, but nothing in this service writes to them.</li>
-<li><strong>OAuth callback URLs are self-derived, not configured.</strong> <code>getSocialAuthRedirectURL</code> builds each provider&#39;s callback URL from this service&#39;s own <code>METHODS_AND_PATHS</code> + <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code> instead of a per-provider env var — the trade-off is that the URL registered with Google/LinkedIn/GitHub&#39;s OAuth console must match <code>{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback</code> exactly, and changing the route path in <code>constants/index.ts</code> now silently changes that URL too (previously it was two independent things that had to be kept in sync manually).</li>
-<li><strong><code>GET /</code> regenerates on <code>npm run build</code>, not <code>npm run dev</code>.</strong> <code>public/index.html</code> is generated from <code>README.md</code> by the <code>postbuild</code> script. Editing this file while running <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build actually runs.</li>
-</ul>
-</main>
+      <ul>
+        <li><code>Seller.user</code> → ref <code>User</code></li>
+        <li><code>Wishlist.user</code> → ref <code>User</code></li>
+        <li>
+          <code>Wishlist.products</code>→ ref <code>Product</code> (external, owned by
+          <code>product-service</code>)
+        </li>
+      </ul>
+      <hr />
+      <h2>24. Design Notes / Known Trade-offs</h2>
+      <ul>
+        <li>
+          <strong><code>authorize</code> middleware is exported but unused.</strong> No route
+          currently requires role-based restriction beyond <code>authenticate</code>&#39;s &quot;is
+          logged in&quot; check.
+        </li>
+        <li>
+          <strong
+            ><code>RedisCacheUser.updateUser</code> is a plain alias for
+            <code>setUser</code>.</strong
+          >
+          Kept as a separate method for call-site clarity (an explicit &quot;I&#39;m updating an
+          existing entry&quot; vs &quot;I&#39;m setting one for the first time&quot;), not because
+          the implementation differs.
+        </li>
+        <li>
+          <strong><code>Seller</code>/<code>Wishlist</code> have no controllers yet.</strong> The
+          Mongoose models and indexes exist so other services (or a future admin surface) can query
+          them directly, but nothing in this service writes to them.
+        </li>
+        <li>
+          <strong>OAuth callback URLs are self-derived, not configured.</strong>
+          <code>getSocialAuthRedirectURL</code> builds each provider&#39;s callback URL from this
+          service&#39;s own <code>METHODS_AND_PATHS</code> +
+          <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code> instead of a per-provider env var —
+          the trade-off is that the URL registered with Google/LinkedIn/GitHub&#39;s OAuth console
+          must match
+          <code>{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback</code>
+          exactly, and changing the route path in <code>constants/index.ts</code> now silently
+          changes that URL too (previously it was two independent things that had to be kept in sync
+          manually).
+        </li>
+        <li>
+          <strong
+            ><code>GET /</code> regenerates on <code>npm run build</code>, not
+            <code>npm run dev</code>.</strong
+          >
+          <code>public/index.html</code> is generated from <code>README.md</code> by the
+          <code>postbuild</code> script. Editing this file while running
+          <code>npm run dev</code> won&#39;t update <code>GET /</code> until a build actually runs.
+        </li>
+      </ul>
+    </main>
   </body>
 </html>

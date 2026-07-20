@@ -155,7 +155,8 @@
       <p>
         <strong>Project:</strong> Beautinique (BQ-Microservices) <strong>Service:</strong> Mail
         Service <strong>Author:</strong> Nageshwar Pawar <strong>Version:</strong> 1.0.0
-        <strong>Port:</strong> 8083
+        <strong>Port:</strong> configured via <code>PORT</code> (see
+        <a href="#4-environment-variables">§4</a>)
       </p>
       <hr />
       <h2>1. Overview</h2>
@@ -298,10 +299,10 @@
             <td>HTTP port to listen on (must be a positive integer)</td>
           </tr>
           <tr>
-            <td><code>IS_DEV</code></td>
+            <td><code>NODE_ENV</code></td>
             <td>No</td>
             <td>
-              <code>&quot;true&quot;</code> enables pretty logging and stack traces in error
+              <code>&quot;development&quot;</code> enables pretty logging and stack traces in error
               responses
             </td>
           </tr>
