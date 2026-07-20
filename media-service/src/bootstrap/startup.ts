@@ -51,6 +51,10 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
  * 2. Start the HTTP server.
  * 3. Start background workers.
  * 4. Connect MongoDB (non-blocking, retried in the background).
+ *
+ * Workers start before MongoDB is connected - each job handler checks
+ * readiness itself (`ensureDbReady`) and fails fast, letting BullMQ's own
+ * retry/backoff pick the job back up once MongoDB is ready.
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {

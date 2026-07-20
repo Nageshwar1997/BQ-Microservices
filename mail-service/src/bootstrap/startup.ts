@@ -43,6 +43,10 @@ const connectTransporterWithRetry = async (): Promise<void> => {
  * 1. Start the HTTP server.
  * 2. Start the BullMQ worker.
  * 3. Connect the SMTP transporter (non-blocking, retried in the background).
+ *
+ * The worker starts before the transporter is connected - each job handler
+ * checks readiness itself and fails fast, letting BullMQ's own retry/backoff
+ * pick the job back up once the transporter is ready.
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
