@@ -2,7 +2,40 @@ import { connectDb } from '@beautinique/backend-mongoose';
 
 import { databaseConfigs, logger, workerManager } from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
-import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './server.js';
+import {
+  isShuttingDown,
+  resetShuttingDown,
+  resetStarted,
+  setStarted,
+  startHttpServer,
+} from './server.js';
+
+const DB_RETRY_DELAY_MS = 30_000;
+
+/* -------------------------------------------------------------------------- */
+/*                               MongoDB Connect                              */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Connects MongoDB, retrying in the background on failure.
+ *
+ * Runs independently of the HTTP server so a slow or unreachable database
+ * never blocks the service from binding its port.
+ */
+const connectDatabaseWithRetry = async (): Promise<void> => {
+  while (!isShuttingDown()) {
+    try {
+      await connectDb(databaseConfigs);
+      return;
+    } catch (error) {
+      logger.error(
+        `❌ MongoDB connection failed, retrying in ${String(DB_RETRY_DELAY_MS / 1000)}s: ${String(error)}`,
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, DB_RETRY_DELAY_MS));
+    }
+  }
+};
 
 /* -------------------------------------------------------------------------- */
 /*                              Startup Sequence                              */
@@ -15,9 +48,9 @@ import { resetShuttingDown, resetStarted, setStarted, startHttpServer } from './
  *
  * Startup order:
  * 1. Register MongoDB event listeners.
- * 2. Connect MongoDB.
- * 3. Start the HTTP server.
- * 4. Start background workers.
+ * 2. Start the HTTP server.
+ * 3. Start background workers.
+ * 4. Connect MongoDB (non-blocking, retried in the background).
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
@@ -27,11 +60,11 @@ export const startup = async (): Promise<void> => {
   try {
     registerDatabaseEvents();
 
-    await connectDb(databaseConfigs);
-
     await startHttpServer();
 
     workerManager.start();
+
+    void connectDatabaseWithRetry();
 
     logger.info('✅ Media service initialized');
 

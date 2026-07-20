@@ -40,6 +40,11 @@ let shuttingDown = false;
  */
 export const isServerRunning = (): boolean => server?.listening ?? false;
 
+/**
+ * Returns whether a graceful shutdown is currently in progress.
+ */
+export const isShuttingDown = (): boolean => shuttingDown;
+
 /* -------------------------------------------------------------------------- */
 /*                              Start HTTP Server                             */
 /* -------------------------------------------------------------------------- */
