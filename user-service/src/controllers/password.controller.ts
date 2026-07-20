@@ -13,7 +13,7 @@ import type {
   TSetPasswordZodSchema,
 } from '@beautinique/backend-types';
 import { getUser, sanitizeToken } from '@beautinique/backend-utils';
-import { HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
+import { AUTH_PROVIDER_MAP, HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
@@ -27,7 +27,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
   const { email } = req.body as TEmailZodSchema;
   const user = await getUserByEmail({ email });
 
-  if (user && !user.providers.includes('MANUAL')) {
+  if (user && !user.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
     // Check if user has MANUAL login
     throw new UnprocessableEntityError(
       `This account was created using an oAuth (${user.providers.join(
@@ -187,7 +187,7 @@ export const changePasswordController = async (req: Request, res: Response) => {
 export const setPasswordController = async (req: Request, res: Response) => {
   const user = getUser(req.user);
 
-  if (user.providers.includes('MANUAL')) {
+  if (user.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
     throw new UnprocessableEntityError('Password already set. Please use forgot password.');
   }
 

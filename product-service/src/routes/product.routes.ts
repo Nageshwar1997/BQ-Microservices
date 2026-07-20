@@ -6,6 +6,7 @@ import {
   draftProductStepBodyZodSchema,
   validateZod,
 } from '@beautinique/backend-zod';
+import { USER_ROLE_MAP } from '@beautinique/shared-constants';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
@@ -58,8 +59,16 @@ dashboardRouter[get.dashboard.bySlug.method](
 
 /* ================== PRODUCTS ROUTES ================ */
 
-productRouter.use(draft.base, authorize(['ADMIN', 'SELLER', 'MASTER']), draftRouter);
-productRouter.use(get.dashboard.base, authorize(['ADMIN', 'SELLER', 'MASTER']), dashboardRouter);
+productRouter.use(
+  draft.base,
+  authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER, USER_ROLE_MAP.SELLER]),
+  draftRouter,
+);
+productRouter.use(
+  get.dashboard.base,
+  authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER, USER_ROLE_MAP.SELLER]),
+  dashboardRouter,
+);
 
 productRouter[get.bySlug.method](get.bySlug.path, getProductBySlugController);
 

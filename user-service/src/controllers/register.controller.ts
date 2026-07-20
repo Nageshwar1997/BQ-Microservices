@@ -5,11 +5,17 @@ import type {
   TRegisterZodSchema,
 } from '@beautinique/backend-types';
 import { sanitizeToken } from '@beautinique/backend-utils';
-import { HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
+import {
+  AUTH_PROVIDER_MAP,
+  HEADERS_MAP,
+  MAX_OTP_RESEND,
+  USER_ROLE_MAP,
+} from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 import { jobProducer, redisCacheManager } from '../configs/index.js';
+import { USER_STATUS_MAP } from '../constants/index.js';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../services/index.js';
 import { getMinimalUser } from '../utils/index.js';
 
@@ -17,7 +23,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   const { email } = req.body as TEmailZodSchema;
   const user = await getUserByEmail({ email });
 
-  if (user?.providers.includes('MANUAL')) {
+  if (user?.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
     throw new ConflictError('User already exists, please login', {
       fieldErrors: { email: ['Email already exists'] },
     });
@@ -119,9 +125,9 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
 
   if (user) {
     // User exists → oAuth-only
-    if (!user.providers.includes('MANUAL') && 'save' in user) {
+    if (!user.providers.includes(AUTH_PROVIDER_MAP.MANUAL) && 'save' in user) {
       user.password = hashedPassword;
-      user.providers.push('MANUAL');
+      user.providers.push(AUTH_PROVIDER_MAP.MANUAL);
       user.firstName = firstName;
       user.lastName = lastName;
       user.phoneNumber = phoneNumber;
@@ -139,9 +145,9 @@ export const registerAndSaveController = async (req: Request, res: Response) => 
       email: parsedData.email,
       phoneNumber,
       password: hashedPassword,
-      providers: ['MANUAL'],
-      role: 'USER',
-      status: 'ACTIVE',
+      providers: [AUTH_PROVIDER_MAP.MANUAL],
+      role: USER_ROLE_MAP.USER,
+      status: USER_STATUS_MAP.ACTIVE,
       avatar: '',
     });
   }

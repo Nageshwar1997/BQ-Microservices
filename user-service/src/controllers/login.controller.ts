@@ -82,8 +82,8 @@ export const googleCallbackController = async (req: Request, res: Response) => {
 
   if (user) {
     // If GOOGLE not linked yet, link it
-    if (!user.providers.includes('GOOGLE') && 'save' in user) {
-      user.providers.push('GOOGLE');
+    if (!user.providers.includes(AUTH_PROVIDER_MAP.GOOGLE) && 'save' in user) {
+      user.providers.push(AUTH_PROVIDER_MAP.GOOGLE);
       if (!user.avatar) {
         user.avatar = profile.picture ?? '';
       }
@@ -91,7 +91,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     }
   } else {
     // Prepare payload
-    const payload = createOAuthDbPayload(profile, 'GOOGLE');
+    const payload = createOAuthDbPayload(profile, AUTH_PROVIDER_MAP.GOOGLE);
 
     // Create new user
     user = await createNewUser({ ...payload });
@@ -131,8 +131,8 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
   if (user) {
     // If GOOGLE not linked yet, link it
-    if (!user.providers.includes('LINKEDIN') && 'save' in user) {
-      user.providers.push('LINKEDIN');
+    if (!user.providers.includes(AUTH_PROVIDER_MAP.LINKEDIN) && 'save' in user) {
+      user.providers.push(AUTH_PROVIDER_MAP.LINKEDIN);
       if (!user.avatar) {
         user.avatar = profile.picture ?? '';
       }
@@ -140,7 +140,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
     }
   } else {
     // Prepare payload
-    const payload = createOAuthDbPayload(profile, 'LINKEDIN');
+    const payload = createOAuthDbPayload(profile, AUTH_PROVIDER_MAP.LINKEDIN);
 
     // Create new user
     user = await createNewUser(payload);
@@ -179,8 +179,8 @@ export const githubCallbackController = async (req: Request, res: Response) => {
 
   if (user) {
     // If GOOGLE not linked yet, link it
-    if (!user.providers.includes('GITHUB') && 'save' in user) {
-      user.providers.push('GITHUB');
+    if (!user.providers.includes(AUTH_PROVIDER_MAP.GITHUB) && 'save' in user) {
+      user.providers.push(AUTH_PROVIDER_MAP.GITHUB);
       if (!user.avatar) {
         user.avatar = profile.avatar_url ?? '';
       }
@@ -188,7 +188,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
     }
   } else {
     // Prepare payload
-    const payload = createOAuthDbPayload(profile, 'GITHUB');
+    const payload = createOAuthDbPayload(profile, AUTH_PROVIDER_MAP.GITHUB);
 
     // Create new user
     user = await createNewUser(payload);

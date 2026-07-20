@@ -1,4 +1,11 @@
-import { HEADERS_MAP } from '@beautinique/shared-constants';
+import {
+  AUTH_PROVIDER_MAP,
+  AUTH_PROVIDERS,
+  HEADERS_MAP,
+  SERVICE_NAMES_MAP,
+  USER_ROLE_MAP,
+  USER_ROLES,
+} from '@beautinique/shared-constants';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 
@@ -39,10 +46,10 @@ const minimalUserSchema = {
     email: { type: 'string', format: 'email' },
     phoneNumber: { type: 'string' },
     avatar: { type: 'string' },
-    role: { type: 'string', enum: ['USER', 'SELLER', 'ADMIN', 'MASTER'] },
+    role: { type: 'string', enum: USER_ROLES, example: USER_ROLE_MAP.USER },
     providers: {
       type: 'array',
-      items: { type: 'string', enum: ['MANUAL', 'GOOGLE', 'LINKEDIN', 'GITHUB'] },
+      items: { type: 'string', enum: AUTH_PROVIDERS, example: AUTH_PROVIDER_MAP.MANUAL },
     },
   },
 };
@@ -64,7 +71,8 @@ const otpAuthHeader = {
   name: HEADERS_MAP.authorization,
   in: 'header',
   required: true,
-  description: 'The OTP session token returned by the corresponding "send-otp" call (raw or `Bearer <token>`).',
+  description:
+    'The OTP session token returned by the corresponding "send-otp" call (raw or `Bearer <token>`).',
   schema: { type: 'string' },
 };
 
@@ -93,8 +101,7 @@ export const openApiSpec = {
         type: 'apiKey',
         in: 'header',
         name: HEADERS_MAP.serviceSecret,
-        description:
-          'Shared secret required on every /api/v1/* request (typically set by the API gateway).',
+        description: `Shared secret required on every ${base}/* request (typically set by the API gateway).`,
       },
       userId: {
         type: 'apiKey',
@@ -120,7 +127,7 @@ export const openApiSpec = {
                   type: 'object',
                   properties: {
                     database: { type: 'object' },
-                    service: { type: 'string', example: 'user-service' },
+                    service: { type: 'string', example: SERVICE_NAMES_MAP['user-service'] },
                   },
                 }),
               },
@@ -140,7 +147,7 @@ export const openApiSpec = {
             in: 'header',
             required: false,
             description: 'If set, the logged-in user must have this role (MASTER always allowed).',
-            schema: { type: 'string', enum: ['USER', 'SELLER', 'ADMIN', 'MASTER'] },
+            schema: { type: 'string', enum: USER_ROLES, example: USER_ROLE_MAP.USER },
           },
         ],
         requestBody: {
@@ -172,53 +179,56 @@ export const openApiSpec = {
       },
     },
 
-    ...(['google', 'linkedin', 'github'] as const).reduce<Record<string, unknown>>((paths, provider) => {
-      const { redirect, callback } = login.oauth[provider];
+    ...(['google', 'linkedin', 'github'] as const).reduce<Record<string, unknown>>(
+      (paths, provider) => {
+        const { redirect, callback } = login.oauth[provider];
 
-      return {
-        ...paths,
-        [`${base}${auth.base}${login.base}${redirect.path}`]: {
-          [redirect.method]: {
-            tags: ['Login'],
-            summary: `Get the ${provider} OAuth consent URL`,
-            responses: {
-              '200': {
-                description: 'Redirect the client to this URL to start the OAuth flow.',
-                content: {
-                  'application/json': {
-                    schema: successEnvelope({ type: 'string', format: 'uri' }),
+        return {
+          ...paths,
+          [`${base}${auth.base}${login.base}${redirect.path}`]: {
+            [redirect.method]: {
+              tags: ['Login'],
+              summary: `Get the ${provider} OAuth consent URL`,
+              responses: {
+                '200': {
+                  description: 'Redirect the client to this URL to start the OAuth flow.',
+                  content: {
+                    'application/json': {
+                      schema: successEnvelope({ type: 'string', format: 'uri' }),
+                    },
                   },
                 },
               },
             },
           },
-        },
-        [`${base}${auth.base}${login.base}${callback.path}`]: {
-          [callback.method]: {
-            tags: ['Login'],
-            summary: `${provider} OAuth callback`,
-            parameters: [
-              {
-                name: 'code',
-                in: 'query',
-                required: true,
-                description: 'Authorization code issued by the provider.',
-                schema: { type: 'string' },
+          [`${base}${auth.base}${login.base}${callback.path}`]: {
+            [callback.method]: {
+              tags: ['Login'],
+              summary: `${provider} OAuth callback`,
+              parameters: [
+                {
+                  name: 'code',
+                  in: 'query',
+                  required: true,
+                  description: 'Authorization code issued by the provider.',
+                  schema: { type: 'string' },
+                },
+              ],
+              responses: {
+                '200': {
+                  description:
+                    'Logs in (linking the provider to an existing email match) or creates a new user. Cached in Redis.',
+                  content: { 'application/json': { schema: successEnvelope(minimalUserSchema) } },
+                },
+                '400': errorResponse('Missing `code` query parameter.'),
+                '404': errorResponse("Provider didn't return an email for this profile."),
               },
-            ],
-            responses: {
-              '200': {
-                description:
-                  'Logs in (linking the provider to an existing email match) or creates a new user. Cached in Redis.',
-                content: { 'application/json': { schema: successEnvelope(minimalUserSchema) } },
-              },
-              '400': errorResponse('Missing `code` query parameter.'),
-              '404': errorResponse("Provider didn't return an email for this profile."),
             },
           },
-        },
-      };
-    }, {}),
+        };
+      },
+      {},
+    ),
 
     [`${base}${auth.base}${logout.path}`]: {
       [logout.method]: {
@@ -418,7 +428,9 @@ export const openApiSpec = {
             content: { 'application/json': { schema: successEnvelope(minimalUserSchema) } },
           },
           '404': errorResponse('No user found for the OTP session email.'),
-          '422': errorResponse('Missing/invalid token/session, or new password equals the old one.'),
+          '422': errorResponse(
+            'Missing/invalid token/session, or new password equals the old one.',
+          ),
         },
       },
     },

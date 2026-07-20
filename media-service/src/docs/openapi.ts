@@ -1,4 +1,10 @@
-import { HEADERS_MAP, MAX_IMAGE_SIZE, MAX_VIDEO_SIZE } from '@beautinique/shared-constants';
+import {
+  HEADERS_MAP,
+  MAX_IMAGE_SIZE,
+  MAX_VIDEO_SIZE,
+  SERVICE_NAMES_MAP,
+} from '@beautinique/shared-constants';
+import { formatFileSize } from '@beautinique/shared-utils';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 
@@ -45,8 +51,7 @@ export const openApiSpec = {
         type: 'apiKey',
         in: 'header',
         name: HEADERS_MAP.serviceSecret,
-        description:
-          'Shared secret required on every /api/v1/* request (typically set by the API gateway).',
+        description: `Shared secret required on every ${base}/* request (typically set by the API gateway).`,
       },
       userId: {
         type: 'apiKey',
@@ -72,7 +77,7 @@ export const openApiSpec = {
                   type: 'object',
                   properties: {
                     database: { type: 'object' },
-                    service: { type: 'string', example: 'media-service' },
+                    service: { type: 'string', example: SERVICE_NAMES_MAP['media-service'] },
                     worker: { type: 'boolean', example: true },
                   },
                 }),
@@ -97,7 +102,7 @@ export const openApiSpec = {
                   file: {
                     type: 'string',
                     format: 'binary',
-                    description: `Image (≤${String(MAX_IMAGE_SIZE)}MB) or video (≤${String(MAX_VIDEO_SIZE)}MB).`,
+                    description: `Image (≤${formatFileSize(MAX_IMAGE_SIZE)}) or video (≤${formatFileSize(MAX_VIDEO_SIZE)}).`,
                   },
                   folder: {
                     type: 'string',
@@ -145,7 +150,7 @@ export const openApiSpec = {
                   files: {
                     type: 'array',
                     items: { type: 'string', format: 'binary' },
-                    description: 'Any mix of images (≤2MB each) and videos (≤10MB each).',
+                    description: `Any mix of images (≤${formatFileSize(MAX_IMAGE_SIZE)} each) and videos (≤${formatFileSize(MAX_VIDEO_SIZE)} each).`,
                   },
                   folder: {
                     type: 'string',

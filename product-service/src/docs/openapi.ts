@@ -1,8 +1,23 @@
-import { HEADERS_MAP } from '@beautinique/shared-constants';
+import {
+  CATEGORY_LEVELS,
+  CATEGORY_LEVELS_MAP,
+  DRAFT_PRODUCT_STEP_MAP,
+  HEADERS_MAP,
+  PRODUCT_STATUSES,
+  PRODUCT_STATUSES_MAP,
+  SERVICE_NAMES_MAP,
+  SORT,
+  SORT_MAP,
+  TRY_ON_ALL_SUB_CATEGORIES,
+  TRY_ON_CATEGORIES,
+  USER_ROLE_MAP,
+  VARIANT_TYPES,
+  VARIANT_TYPES_MAP,
+} from '@beautinique/shared-constants';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 
-const { health, category, product } = METHODS_AND_PATHS;
+const { health, category, product, base } = METHODS_AND_PATHS;
 
 const successEnvelope = (dataSchema?: object) => ({
   type: 'object',
@@ -19,7 +34,10 @@ const errorEnvelope = {
     success: { type: 'boolean', example: false },
     code: { type: 'string', example: 'UNPROCESSABLE_ENTITY' },
     message: { type: 'string' },
-    fieldErrors: { type: 'object', additionalProperties: { type: 'array', items: { type: 'string' } } },
+    fieldErrors: {
+      type: 'object',
+      additionalProperties: { type: 'array', items: { type: 'string' } },
+    },
     globalErrors: { type: 'array', items: { type: 'string' } },
   },
 };
@@ -39,7 +57,7 @@ const categorySchema = {
     _id: { type: 'string', example: '507f1f77bcf86cd799439011' },
     name: { type: 'string', example: 'Lipstick' },
     slug: { type: 'string', example: 'lipstick' },
-    level: { type: 'integer', enum: [1, 2, 3], example: 3 },
+    level: { type: 'integer', enum: CATEGORY_LEVELS, example: CATEGORY_LEVELS_MAP.L3 },
     parent: { type: 'string', description: 'Present for level 2 and 3 categories' },
     description: { type: 'string', description: 'Only meaningful for level 3 categories' },
   },
@@ -59,7 +77,7 @@ const variantSchema = {
   properties: {
     _id: { type: 'string' },
     sku: { type: 'string', example: 'LIP-RED-001' },
-    type: { type: 'string', enum: ['Color', 'Text'] },
+    type: { type: 'string', enum: VARIANT_TYPES, example: VARIANT_TYPES_MAP.Color },
     label: { type: 'string', example: 'Ruby Red' },
     value: { type: 'string', example: '#B00020' },
     originalPrice: { type: 'number', minimum: 0 },
@@ -77,8 +95,18 @@ const tryOnSchema = {
   properties: {
     configured: { type: 'boolean' },
     enabled: { type: 'boolean' },
-    category: { type: 'string', example: 'LIP', enum: ['LIP', 'EYE', 'HAIR', 'FACE', 'NAIL', 'SKIN'] },
-    subCategory: { type: 'string', example: 'MATTE' },
+    category: {
+      type: 'string',
+      example: 'LIP',
+      enum: TRY_ON_CATEGORIES,
+      description: 'Only required when `enabled` is `true`',
+    },
+    subCategory: {
+      type: 'string',
+      example: 'MATTE',
+      enum: TRY_ON_ALL_SUB_CATEGORIES,
+      description: 'Only required when `enabled` is `true`',
+    },
   },
 };
 
@@ -124,10 +152,7 @@ const productSchema = {
     averageRating: { type: 'number', minimum: 0, maximum: 5 },
     hasVariants: { type: 'boolean' },
     variants: { type: 'array', items: variantSchema },
-    status: {
-      type: 'string',
-      enum: ['DELETED', 'PENDING', 'PUBLISHED', 'REJECTED', 'BLOCKED'],
-    },
+    status: { type: 'string', enum: PRODUCT_STATUSES },
     history: historySchema,
     tryOn: tryOnSchema,
     createdAt: { type: 'string', format: 'date-time' },
@@ -154,7 +179,8 @@ const dashboardListProductSchema = {
     hasVariants: productSchema.properties.hasVariants,
     variants: {
       type: 'array',
-      description: 'Only the stock field is projected for the dashboard listing, not the full variant',
+      description:
+        'Only the stock field is projected for the dashboard listing, not the full variant',
       items: {
         type: 'object',
         properties: { _id: { type: 'string' }, stock: { type: 'integer' } },
@@ -179,11 +205,11 @@ const statusCountsSchema = {
   type: 'object',
   properties: {
     ALL: { type: 'integer' },
-    DELETED: { type: 'integer' },
-    PENDING: { type: 'integer' },
-    PUBLISHED: { type: 'integer' },
-    REJECTED: { type: 'integer' },
-    BLOCKED: { type: 'integer' },
+    [PRODUCT_STATUSES_MAP.DELETED]: { type: 'integer' },
+    [PRODUCT_STATUSES_MAP.PENDING]: { type: 'integer' },
+    [PRODUCT_STATUSES_MAP.PUBLISHED]: { type: 'integer' },
+    [PRODUCT_STATUSES_MAP.REJECTED]: { type: 'integer' },
+    [PRODUCT_STATUSES_MAP.BLOCKED]: { type: 'integer' },
   },
 };
 
@@ -201,14 +227,23 @@ const basicInfoSchema = {
     'l3Category',
   ],
   properties: {
-    step: { type: 'string', enum: ['basicInfo'] },
+    step: { type: 'string', enum: [DRAFT_PRODUCT_STEP_MAP[0]] },
     title: { type: 'string', minLength: 2, maxLength: 200 },
     brand: { type: 'string', minLength: 2, maxLength: 100 },
     originalPrice: { type: 'number', exclusiveMinimum: 0 },
     sellingPrice: { type: 'number', minimum: 0 },
-    l1Category: { type: 'object', properties: { _id: { type: 'string' }, name: { type: 'string' } } },
-    l2Category: { type: 'object', properties: { _id: { type: 'string' }, name: { type: 'string' } } },
-    l3Category: { type: 'object', properties: { _id: { type: 'string' }, name: { type: 'string' } } },
+    l1Category: {
+      type: 'object',
+      properties: { _id: { type: 'string' }, name: { type: 'string' } },
+    },
+    l2Category: {
+      type: 'object',
+      properties: { _id: { type: 'string' }, name: { type: 'string' } },
+    },
+    l3Category: {
+      type: 'object',
+      properties: { _id: { type: 'string' }, name: { type: 'string' } },
+    },
   },
 };
 
@@ -217,7 +252,7 @@ const mediaAndGallerySchema = {
   description: '`step: "mediaAndGallery"` — thumbnail/gallery/video',
   required: ['step', 'thumbnail', 'images'],
   properties: {
-    step: { type: 'string', enum: ['mediaAndGallery'] },
+    step: { type: 'string', enum: [DRAFT_PRODUCT_STEP_MAP[1]] },
     thumbnail: { type: 'string', format: 'uri' },
     images: { type: 'array', items: { type: 'string', format: 'uri' } },
     video: { type: 'string', format: 'uri' },
@@ -229,7 +264,7 @@ const descriptionAndContentSchema = {
   description: '`step: "descriptionAndContent"` — long-form content fields',
   required: ['step', 'shortDescription', 'description'],
   properties: {
-    step: { type: 'string', enum: ['descriptionAndContent'] },
+    step: { type: 'string', enum: [DRAFT_PRODUCT_STEP_MAP[2]] },
     shortDescription: { type: 'string', minLength: 10, maxLength: 300 },
     description: { type: 'string', minLength: 107 },
     instructions: { type: 'string', minLength: 20 },
@@ -245,7 +280,7 @@ const stockAndVariantsSchema = {
       type: 'object',
       required: ['step', 'hasVariants', 'stock', 'stockThreshold'],
       properties: {
-        step: { type: 'string', enum: ['stockAndVariants'] },
+        step: { type: 'string', enum: [DRAFT_PRODUCT_STEP_MAP[3]] },
         hasVariants: { type: 'boolean', enum: [false] },
         stock: { type: 'integer', minimum: 0 },
         stockThreshold: { type: 'integer', minimum: 0 },
@@ -255,7 +290,7 @@ const stockAndVariantsSchema = {
       type: 'object',
       required: ['step', 'hasVariants', 'variants'],
       properties: {
-        step: { type: 'string', enum: ['stockAndVariants'] },
+        step: { type: 'string', enum: [DRAFT_PRODUCT_STEP_MAP[3]] },
         hasVariants: { type: 'boolean', enum: [true] },
         variants: { type: 'array', minItems: 1, items: variantSchema },
       },
@@ -283,7 +318,7 @@ const tryOnConfigurationSchema = {
       type: 'object',
       required: ['step', 'enabled'],
       properties: {
-        step: { type: 'string', enum: ['tryOnConfiguration'] },
+        step: { type: 'string', enum: [DRAFT_PRODUCT_STEP_MAP[4]] },
         enabled: { type: 'boolean', enum: [false] },
         tryOn: tryOnSelectionSchema,
       },
@@ -292,7 +327,7 @@ const tryOnConfigurationSchema = {
       type: 'object',
       required: ['step', 'enabled', 'tryOn'],
       properties: {
-        step: { type: 'string', enum: ['tryOnConfiguration'] },
+        step: { type: 'string', enum: [DRAFT_PRODUCT_STEP_MAP[4]] },
         enabled: { type: 'boolean', enum: [true] },
         tryOn: tryOnSelectionSchema,
       },
@@ -317,11 +352,11 @@ const draftProductDetailsSchema = {
   type: 'object',
   description: 'The full, completed draft - every step must be present to publish.',
   required: [
-    'basicInfo',
-    'mediaAndGallery',
-    'descriptionAndContent',
-    'stockAndVariants',
-    'tryOnConfiguration',
+    DRAFT_PRODUCT_STEP_MAP[0],
+    DRAFT_PRODUCT_STEP_MAP[1],
+    DRAFT_PRODUCT_STEP_MAP[2],
+    DRAFT_PRODUCT_STEP_MAP[3],
+    DRAFT_PRODUCT_STEP_MAP[4],
   ],
   properties: {
     basicInfo: basicInfoSchema,
@@ -337,8 +372,11 @@ const createCategoryBodySchema = {
   required: ['name', 'level'],
   properties: {
     name: { type: 'string', minLength: 2, maxLength: 120 },
-    level: { type: 'integer', enum: [1, 2, 3] },
-    parent: { type: 'string', description: 'Required for level 2 and 3, must be one level shallower' },
+    level: { type: 'integer', enum: CATEGORY_LEVELS },
+    parent: {
+      type: 'string',
+      description: 'Required for level 2 and 3, must be one level shallower',
+    },
     description: { type: 'string', minLength: 10, maxLength: 150, description: 'Level 3 only' },
   },
 };
@@ -348,7 +386,11 @@ const updateCategoryBodySchema = {
   required: ['level'],
   properties: {
     name: { type: 'string', minLength: 2, maxLength: 120 },
-    level: { type: 'integer', enum: [1, 2, 3], description: 'Must match the existing category - immutable' },
+    level: {
+      type: 'integer',
+      enum: CATEGORY_LEVELS,
+      description: 'Must match the existing category - immutable',
+    },
     parent: {
       type: 'string',
       nullable: true,
@@ -401,8 +443,7 @@ export const openApiSpec = {
         type: 'apiKey',
         in: 'header',
         name: HEADERS_MAP.serviceSecret,
-        description:
-          'Shared secret required on every /api/v1/* request (typically set by the API gateway).',
+        description: `Shared secret required on every ${base}/* request (typically set by the API gateway).`,
       },
       userId: {
         type: 'apiKey',
@@ -434,7 +475,7 @@ export const openApiSpec = {
                   type: 'object',
                   properties: {
                     database: { type: 'object' },
-                    service: { type: 'string', example: 'product-service' },
+                    service: { type: 'string', example: SERVICE_NAMES_MAP['product-service'] },
                   },
                 }),
               },
@@ -444,7 +485,7 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/category': {
+    [`${base}${category.base}`]: {
       [category.add.method]: {
         tags: ['Category'],
         summary: 'Create a category',
@@ -466,7 +507,8 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/category/{categoryId}': {
+    // [`${base}${category.base}${category.delete.path.replace(':', '{')}}`]: {
+    [`${base}${category.base}${category.update.path.replace(':', '{')}}`]: {
       [category.update.method]: {
         tags: ['Category'],
         summary: 'Update a category',
@@ -490,7 +532,8 @@ export const openApiSpec = {
       [category.delete.method]: {
         tags: ['Category'],
         summary: 'Delete a category',
-        description: 'Requires ADMIN or MASTER role. Only a leaf category with zero products can be deleted.',
+        description:
+          'Requires ADMIN or MASTER role. Only a leaf category with zero products can be deleted.',
         security: [{ serviceSecret: [] }, { userId: [] }, { userRole: [] }],
         parameters: [categoryIdParam],
         responses: {
@@ -499,20 +542,28 @@ export const openApiSpec = {
             content: { 'application/json': { schema: successEnvelope() } },
           },
           '404': errorResponse('Category not found.'),
-          '422': errorResponse('Category has child categories or (for level 3) still has products.'),
+          '422': errorResponse(
+            'Category has child categories or (for level 3) still has products.',
+          ),
         },
       },
     },
 
-    '/api/v1/category/by-parent-level': {
+    [`${base}${category.base}${category.get.byParentLevel.path}`]: {
       [category.get.byParentLevel.method]: {
         tags: ['Category'],
         summary: 'List categories by parent + level',
-        description: 'Requires ADMIN, MASTER, or SELLER role. Reads from the Redis cache-aside category list.',
+        description:
+          'Requires ADMIN, MASTER, or SELLER role. Reads from the Redis cache-aside category list.',
         security: [{ serviceSecret: [] }, { userId: [] }, { userRole: [] }],
         parameters: [
-          { name: 'level', in: 'query', schema: { type: 'integer', enum: [1, 2, 3] } },
-          { name: 'parent', in: 'query', schema: { type: 'string' }, description: 'Required for level 2/3' },
+          { name: 'level', in: 'query', schema: { type: 'integer', enum: CATEGORY_LEVELS } },
+          {
+            name: 'parent',
+            in: 'query',
+            schema: { type: 'string' },
+            description: 'Required for level 2/3',
+          },
         ],
         responses: {
           '200': {
@@ -527,7 +578,7 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/category/by-hierarchy': {
+    [`${base}${category.base}${category.get.byHierarchy.path}`]: {
       [category.get.byHierarchy.method]: {
         tags: ['Category'],
         summary: 'Full L1 -> L2 -> L3 category tree',
@@ -545,11 +596,11 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/product/draft': {
+    [`${base}${product.base}${product.draft.base}`]: {
       [product.draft.save.method]: {
         tags: ['Draft Product'],
         summary: 'Save one step of a multi-step draft',
-        description: 'Requires ADMIN, SELLER, or MASTER role. Accumulates into a per-user Redis hash (24h TTL).',
+        description: `Requires ${USER_ROLE_MAP.ADMIN}, ${USER_ROLE_MAP.SELLER}, or ${USER_ROLE_MAP.MASTER} role. Accumulates into a per-user Redis hash (24h TTL).`,
         security: [{ serviceSecret: [] }, { userId: [] }, { userRole: [] }],
         requestBody: {
           required: true,
@@ -580,7 +631,7 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/product/draft/publish': {
+    [`${base}${product.base}${product.draft.base}${product.draft.publish.path}`]: {
       [product.draft.publish.method]: {
         tags: ['Draft Product'],
         summary: 'Publish a completed draft as a real product',
@@ -595,39 +646,48 @@ export const openApiSpec = {
             content: { 'application/json': { schema: successEnvelope(productSchema) } },
           },
           '404': errorResponse('Draft expired or was never started.'),
-          '422': errorResponse('Validation failed for the assembled product (price, variants, try-on, ...).'),
+          '422': errorResponse(
+            'Validation failed for the assembled product (price, variants, try-on, ...).',
+          ),
         },
       },
     },
 
-    '/api/v1/product/dashboard/products': {
+    [`${base}${product.base}${product.get.dashboard.base}${product.get.dashboard.products.path}`]: {
       [product.get.dashboard.products.method]: {
         tags: ['Dashboard Product'],
         summary: 'Paginated/sortable/searchable product listing',
         description:
-          'Requires ADMIN, SELLER, or MASTER role. Sellers only see their own products. ' +
+          `Requires ${USER_ROLE_MAP.ADMIN}, ${USER_ROLE_MAP.SELLER}, or ${USER_ROLE_MAP.MASTER} role. Sellers only see their own products. ` +
           'Uses Atlas Search when `search` is provided, a plain Mongo query otherwise.',
         security: [{ serviceSecret: [] }, { userId: [] }, { userRole: [] }],
         parameters: [
           { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
           { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 } },
           { name: 'search', in: 'query', schema: { type: 'string' } },
-          {
-            name: 'status',
-            in: 'query',
-            schema: { type: 'string', enum: ['DELETED', 'PENDING', 'PUBLISHED', 'REJECTED', 'BLOCKED'] },
-          },
+          { name: 'status', in: 'query', schema: { type: 'string', enum: PRODUCT_STATUSES } },
           { name: 'category', in: 'query', schema: { type: 'string' } },
           {
             name: 'sortBy',
             in: 'query',
             schema: {
               type: 'string',
-              enum: ['createdAt', 'updatedAt', 'title', 'sellingPrice', 'originalPrice', 'soldCount'],
+              enum: [
+                'createdAt',
+                'updatedAt',
+                'title',
+                'sellingPrice',
+                'originalPrice',
+                'soldCount',
+              ],
               default: 'createdAt',
             },
           },
-          { name: 'sortOrder', in: 'query', schema: { type: 'string', enum: ['asc', 'desc'], default: 'desc' } },
+          {
+            name: 'sortOrder',
+            in: 'query',
+            schema: { type: 'string', enum: SORT, default: SORT_MAP.desc },
+          },
         ],
         responses: {
           '200': {
@@ -649,11 +709,11 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/product/dashboard/{slug}': {
+    [`${base}${product.base}${product.get.dashboard.bySlug.path.replace(':', '{')}}`]: {
       [product.get.dashboard.bySlug.method]: {
         tags: ['Dashboard Product'],
         summary: 'Single product lookup for the dashboard',
-        description: 'Requires ADMIN, SELLER, or MASTER role. Cache-aside over Redis (1-day TTL).',
+        description: `Requires ${USER_ROLE_MAP.ADMIN}, ${USER_ROLE_MAP.SELLER}, or ${USER_ROLE_MAP.MASTER} role. Cache-aside over Redis (1-day TTL).`,
         security: [{ serviceSecret: [] }, { userId: [] }, { userRole: [] }],
         parameters: [slugParam],
         responses: {
@@ -666,11 +726,12 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/product/{slug}': {
+    [`${base}${product.base}${product.get.bySlug.path.replace(':', '{')}}`]: {
       [product.get.bySlug.method]: {
         tags: ['Public Product'],
         summary: 'Public storefront product lookup',
-        description: 'Only ever returns PUBLISHED products. No authentication headers required beyond the service secret.',
+        description:
+          'Only ever returns PUBLISHED products. No authentication headers required beyond the service secret.',
         security: [{ serviceSecret: [] }],
         parameters: [slugParam],
         responses: {
@@ -682,11 +743,12 @@ export const openApiSpec = {
       },
     },
 
-    '/api/v1/product/suggestions': {
+    [`${base}${product.base}${product.get.suggestions.path}`]: {
       [product.get.suggestions.method]: {
         tags: ['Public Product'],
         summary: 'Autocomplete search suggestions',
-        description: 'Atlas Search across title (must-match), brand/slug/shortDescription (should-match). Max 5 results.',
+        description:
+          'Atlas Search across title (must-match), brand/slug/shortDescription (should-match). Max 5 results.',
         security: [{ serviceSecret: [] }],
         parameters: [{ name: 'search', in: 'query', schema: { type: 'string' } }],
         responses: {

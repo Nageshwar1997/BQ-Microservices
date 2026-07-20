@@ -5,7 +5,7 @@ import type { Request, Response } from 'express';
 import { redisCacheManager } from '../../configs/index.js';
 import type { TCategoryHierarchy } from '../../types/index.js';
 
-export const getCategoriesByParentLevel = async (req: Request, res: Response) => {
+export const getCategoriesByParentLevelController = async (req: Request, res: Response) => {
   const parentId = req.query.parent as string;
   const level = Number(req.query.level) as TCategoryLevel | undefined;
 
@@ -28,7 +28,7 @@ export const getCategoriesByParentLevel = async (req: Request, res: Response) =>
   res.success({ message: 'Categories fetched successfully', data: categories });
 };
 
-export const getCategoriesByHierarchy = async (_req: Request, res: Response) => {
+export const getCategoriesByHierarchyController = async (_req: Request, res: Response) => {
   const allCategories = await redisCacheManager.category.getAllCategories();
 
   // Parent wise map
