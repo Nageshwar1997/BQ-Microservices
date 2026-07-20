@@ -16,23 +16,23 @@ The Product Service owns the product catalog and category tree for the **Beautin
 
 ## 2. Technology Stack
 
-| Layer                     | Technology                                                                                 |
-| -------------------------- | ------------------------------------------------------------------------------------------ |
-| Runtime                    | Node.js (ES2025, ESM)                                                                       |
-| Language                   | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                      |
-| Framework                  | Express.js 5.x                                                                              |
-| Database                   | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`), plus MongoDB Atlas Search (`$search`) for product/dashboard search |
-| Cache                      | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)             |
-| Background jobs / queue    | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only**, `media-queue` (see [§19](#19-background-jobs-media-queue-producer-only)) |
-| Validation                 | Zod, via `@beautinique/backend-zod` (schemas defined and versioned in a separate `BQ-Packages` repo, not here — see [§6](#6-request-validation-zod-schemas)) |
-| Logging                    | Pino, via `@beautinique/backend-logger`                                                      |
-| API docs                   | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                       |
-| README rendering           | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                     |
-| Shared response envelope   | `@beautinique/backend-response`                                                              |
-| Shared utilities           | `@beautinique/backend-utils`, `@beautinique/backend-mongoose`, `@beautinique/shared-utils`  |
-| Shared constants/types     | `@beautinique/shared-constants`, `@beautinique/backend-types`                                |
-| Slug generation            | `slugify`                                                                                     |
-| Code quality                | ESLint (flat config, type-checked + strict), Prettier                                        |
+| Layer                    | Technology                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Runtime                  | Node.js (ES2025, ESM)                                                                                                                                        |
+| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                                                                                       |
+| Framework                | Express.js 5.x                                                                                                                                               |
+| Database                 | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`), plus MongoDB Atlas Search (`$search`) for product/dashboard search                              |
+| Cache                    | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)                                                                             |
+| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only**, `media-queue` (see [§19](#19-background-jobs-media-queue-producer-only))              |
+| Validation               | Zod, via `@beautinique/backend-zod` (schemas defined and versioned in a separate `BQ-Packages` repo, not here — see [§6](#6-request-validation-zod-schemas)) |
+| Logging                  | Pino, via `@beautinique/backend-logger`                                                                                                                      |
+| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                                                                                       |
+| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                                                                                     |
+| Shared response envelope | `@beautinique/backend-response`                                                                                                                              |
+| Shared utilities         | `@beautinique/backend-utils`, `@beautinique/backend-mongoose`, `@beautinique/shared-utils`                                                                   |
+| Shared constants/types   | `@beautinique/shared-constants`, `@beautinique/backend-types`                                                                                                |
+| Slug generation          | `slugify`                                                                                                                                                    |
+| Code quality             | ESLint (flat config, type-checked + strict), Prettier                                                                                                        |
 
 ---
 
@@ -119,39 +119,39 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.1 Server & App
 
-| Variable         | Description                                                                          |
-| ----------------- | ------------------------------------------------------------------------------------ |
-| `PORT`            | HTTP port to listen on                                                               |
-| `IS_DEV`          | `"true"` enables pretty logging (`LOGGER_BASE_OPTIONS.pretty`) and stack traces in error responses (`errorResponse({ includeStack: envs.is_dev })`) |
-| `SERVICE_NAME`    | Name tag attached to every log line via `createLogger`                               |
-| `SERVICE_SECRET`  | Shared secret required in the `X-Service-Secret` header on every `/api/v1/*` request |
-| `DATABASE_NAME`   | MongoDB database name, passed to `connectDb` as `options.dbName`                     |
+| Variable         | Description                                                                                                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PORT`           | HTTP port to listen on                                                                                                                                     |
+| `NODE_ENV`       | `"development"` enables pretty logging (`LOGGER_BASE_OPTIONS.pretty`) and stack traces in error responses (`errorResponse({ includeStack: envs.is_dev })`) |
+| `SERVICE_NAME`   | Name tag attached to every log line via `createLogger`                                                                                                     |
+| `SERVICE_SECRET` | Shared secret required in the `X-Service-Secret` header on every `/api/v1/*` request                                                                       |
+| `DATABASE_NAME`  | MongoDB database name, passed to `connectDb` as `options.dbName`                                                                                           |
 
 ### 4.2 MongoDB
 
-| Variable       | Description               |
-| --------------- | -------------------------- |
-| `MONGODB_URI`   | MongoDB connection string |
+| Variable      | Description               |
+| ------------- | ------------------------- |
+| `MONGODB_URI` | MongoDB connection string |
 
 `databaseConfigs.enableGlobalCache` is wired to `envs.is_dev` — Mongoose's global model cache behaves differently in dev vs. production, matching the pattern `@beautinique/backend-mongoose` expects.
 
 ### 4.3 Redis — Cache
 
-| Variable          | Description                                    |
-| ------------------ | ----------------------------------------------- |
-| `CACHE_HOST`       | Redis host used for the category/dashboard cache |
-| `CACHE_PORT`       | Redis port                                      |
-| `CACHE_PASSWORD`   | Redis password                                  |
-| `CACHE_USERNAME`   | Redis username                                  |
+| Variable         | Description                                      |
+| ---------------- | ------------------------------------------------ |
+| `CACHE_HOST`     | Redis host used for the category/dashboard cache |
+| `CACHE_PORT`     | Redis port                                       |
+| `CACHE_PASSWORD` | Redis password                                   |
+| `CACHE_USERNAME` | Redis username                                   |
 
 ### 4.4 Redis — BullMQ
 
-| Variable            | Description                                             |
-| -------------------- | --------------------------------------------------------- |
-| `BULL_MQ_HOST`       | Redis host used for the `media-queue` BullMQ connection    |
-| `BULL_MQ_PORT`       | Redis port                                                |
-| `BULL_MQ_PASSWORD`   | Redis password                                            |
-| `BULL_MQ_USERNAME`   | Redis username                                            |
+| Variable           | Description                                             |
+| ------------------ | ------------------------------------------------------- |
+| `BULL_MQ_HOST`     | Redis host used for the `media-queue` BullMQ connection |
+| `BULL_MQ_PORT`     | Redis port                                              |
+| `BULL_MQ_PASSWORD` | Redis password                                          |
+| `BULL_MQ_USERNAME` | Redis username                                          |
 
 **This Redis instance is shared** with `media-service`, which runs the `media-queue` worker — it must point to the same instance in both services. Note that the cache Redis (§4.3) and the BullMQ Redis (§4.4) are configured as two entirely independent connections in `configs/index.ts` (`redisClient` vs. `jobProducer`'s `connection`) — they are allowed to point at different physical Redis instances/databases, and typically do in production (cache data is disposable, queue data is not).
 
@@ -163,17 +163,17 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 Collection: `categories`
 
-| Field           | Type                | Required | Default   | Notes                                                        |
-| ----------------- | --------------------- | ---------- | ----------- | ---------------------------------------------------------------- |
-| `name`           | String               | Yes       | —          | Trimmed, 2–120 chars                                            |
-| `slug`           | String               | Yes       | —          | Lowercased, auto-derived from `name` on every `validate` (non-unique on its own — uniqueness is enforced by the compound `{parent,slug}` index) |
-| `description`    | String               | No        | —          | 10–150 chars; only meaningful for L3 (force-cleared to `undefined` for L1/L2 on every validate, see below) |
-| `level`          | Number (enum)        | Yes       | —          | `1` (main), `2` (sub), `3` (final/product-facing) — `CATEGORY_LEVELS_MAP` from `@beautinique/shared-constants` |
-| `parent`         | ObjectId ref `Category` | No     | —          | Force-cleared to `undefined` for L1 (root categories have no parent) |
-| `isLeaf`         | Boolean              | No        | `true`     | Flipped to `false` when a category gains its first child, back to `true` when its last child is removed/reparented — maintained entirely by the category controllers, never set directly by the client |
-| `productCount`   | Number               | No        | —          | Maintained mainly for L3 (product-facing) categories; not currently written to by any controller in this service (see [§25](#25-design-notes--known-trade-offs)) |
-| `createdBy`      | ObjectId             | Yes       | —          | Caller's user id, taken from `X-User-Id` at creation time                |
-| `updatedBy`      | ObjectId             | No        | —          | Caller's user id, set on every update                                    |
+| Field          | Type                    | Required | Default | Notes                                                                                                                                                                                                  |
+| -------------- | ----------------------- | -------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `name`         | String                  | Yes      | —       | Trimmed, 2–120 chars                                                                                                                                                                                   |
+| `slug`         | String                  | Yes      | —       | Lowercased, auto-derived from `name` on every `validate` (non-unique on its own — uniqueness is enforced by the compound `{parent,slug}` index)                                                        |
+| `description`  | String                  | No       | —       | 10–150 chars; only meaningful for L3 (force-cleared to `undefined` for L1/L2 on every validate, see below)                                                                                             |
+| `level`        | Number (enum)           | Yes      | —       | `1` (main), `2` (sub), `3` (final/product-facing) — `CATEGORY_LEVELS_MAP` from `@beautinique/shared-constants`                                                                                         |
+| `parent`       | ObjectId ref `Category` | No       | —       | Force-cleared to `undefined` for L1 (root categories have no parent)                                                                                                                                   |
+| `isLeaf`       | Boolean                 | No       | `true`  | Flipped to `false` when a category gains its first child, back to `true` when its last child is removed/reparented — maintained entirely by the category controllers, never set directly by the client |
+| `productCount` | Number                  | No       | —       | Maintained mainly for L3 (product-facing) categories; not currently written to by any controller in this service (see [§25](#25-design-notes--known-trade-offs))                                       |
+| `createdBy`    | ObjectId                | Yes      | —       | Caller's user id, taken from `X-User-Id` at creation time                                                                                                                                              |
+| `updatedBy`    | ObjectId                | No       | —       | Caller's user id, set on every update                                                                                                                                                                  |
 
 Also has `timestamps: true` (`createdAt`/`updatedAt`), `versionKey: false` (no `__v`), and a case-insensitive `collation: { locale: 'en', strength: 1 }` — `strength: 1` means comparisons ignore case *and* diacritics, which keeps text search and the sibling-uniqueness index forgiving of casing differences.
 
@@ -192,69 +192,69 @@ Also has `timestamps: true` (`createdAt`/`updatedAt`), `versionKey: false` (no `
 
 Collection: `products`
 
-| Field                | Type                        | Required | Default        | Notes                                                     |
-| ----------------------- | ----------------------------- | ---------- | ---------------- | --------------------------------------------------------------- |
-| `title`                | String                       | Yes       | —              | Trimmed, 2–200 chars                                           |
-| `sku`                  | String                       | Yes       | —              | Trimmed, uppercased, globally unique (own `productSchema.index({ sku: 1 }, { unique: true })`, in addition to the `unique: true` implicitly declared on the path) |
-| `brand`                | String                       | Yes       | —              | Trimmed, 2–100 chars                                           |
-| `originalPrice` / `sellingPrice` | Number             | Yes       | —              | Both `min: 0` at the schema level; the *stronger* rules (`originalPrice > 0` strictly, `sellingPrice <= originalPrice`) are enforced in the `pre('validate')` hook below, not by `min`/`max` |
-| `discount`             | Number                       | No        | `0`             | `min: 0, max: 100` — auto-calculated from the two prices on every `validate`, never trusted from client input |
-| `stock` / `stockThreshold` | Number                  | No        | `null`          | Only meaningful when `hasVariants: false`; left `null` for variant products (each variant carries its own `stock`/`stockThreshold` instead) |
-| `shortDescription`     | String                       | Yes       | —              | Trimmed, 10–300 chars                                           |
-| `description`          | String                       | Yes       | —              | Trimmed, **≥107 chars** — the one unusually strict minimum in this schema, presumably to force a substantive product description |
-| `instructions` / `ingredients` / `additional` | String       | No        | —              | Trimmed, ≥20 chars each, only when present                       |
-| `slug`                 | String                       | Yes       | —              | Trimmed, lowercased, globally unique, generated by the controller (`generateSlug(title + ' ' + l3Category.name)`, unique suffix) — **not** auto-derived by a schema hook the way category's slug is |
-| `images` / `thumbnail` | [String] / String            | Yes       | —              | Cloudinary delivery URLs                                          |
-| `video`                | String                       | No        | —              | Cloudinary delivery URL                                            |
-| `category`             | ObjectId ref `Category`      | Yes       | —              | Always the deepest (L3) category — enforced by the controller, not the schema |
-| `seller`               | ObjectId                     | Yes       | —              | Owning seller's user id (external — no local `User` model, no `ref`) |
-| `soldCount` / `returnCount` / `totalReviews` / `totalRating` | Number  | No | `0`     | `min: 0`; not written to by any controller in this service today — reserved for order/review services to update directly |
-| `averageRating`        | Number                       | No        | `0`             | `min: 0, max: 5`; same as above — reserved for a review service    |
-| `reviews`               | [ObjectId ref `Review`]      | No        | `[]`            | External references only — **there is no `Review` model in this service**, `ref: 'Review'` only matters if/when `.populate('reviews')` is called against a connection where that model is registered |
-| `hasVariants`           | Boolean                      | Yes       | —              | Gates whether `stock`/`stockThreshold` or `variants` is the source of truth for inventory |
-| `variants`             | [variantSchema]              | No        | `[]`            | Required to be non-empty, with unique SKUs, when `hasVariants: true` (enforced in the `pre('validate')` hook, not by `required`/`minlength` on the array path itself) |
-| `status`               | String (enum)                | No        | `"PENDING"`     | `DELETED`, `PENDING`, `PUBLISHED`, `REJECTED`, `BLOCKED` — `PRODUCT_STATUSES_MAP` from `@beautinique/shared-constants` |
-| `history`              | historySchema                | No        | —              | `approvedBy`/`approvedAt`, `blockedBy`/`blockedAt`, `rejectedBy`/`rejectedAt`/`rejectReason` — populated piecemeal as a product moves through moderation, never all at once |
-| `tryOn`                | tryOnSchema                  | No        | —              | Virtual try-on configuration, see [§5.2.2](#522-tryonschema-subdocument) below |
+| Field                                                        | Type                    | Required | Default     | Notes                                                                                                                                                                                                |
+| ------------------------------------------------------------ | ----------------------- | -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`                                                      | String                  | Yes      | —           | Trimmed, 2–200 chars                                                                                                                                                                                 |
+| `sku`                                                        | String                  | Yes      | —           | Trimmed, uppercased, globally unique (own `productSchema.index({ sku: 1 }, { unique: true })`, in addition to the `unique: true` implicitly declared on the path)                                    |
+| `brand`                                                      | String                  | Yes      | —           | Trimmed, 2–100 chars                                                                                                                                                                                 |
+| `originalPrice` / `sellingPrice`                             | Number                  | Yes      | —           | Both `min: 0` at the schema level; the *stronger* rules (`originalPrice > 0` strictly, `sellingPrice <= originalPrice`) are enforced in the `pre('validate')` hook below, not by `min`/`max`         |
+| `discount`                                                   | Number                  | No       | `0`         | `min: 0, max: 100` — auto-calculated from the two prices on every `validate`, never trusted from client input                                                                                        |
+| `stock` / `stockThreshold`                                   | Number                  | No       | `null`      | Only meaningful when `hasVariants: false`; left `null` for variant products (each variant carries its own `stock`/`stockThreshold` instead)                                                          |
+| `shortDescription`                                           | String                  | Yes      | —           | Trimmed, 10–300 chars                                                                                                                                                                                |
+| `description`                                                | String                  | Yes      | —           | Trimmed, **≥107 chars** — the one unusually strict minimum in this schema, presumably to force a substantive product description                                                                     |
+| `instructions` / `ingredients` / `additional`                | String                  | No       | —           | Trimmed, ≥20 chars each, only when present                                                                                                                                                           |
+| `slug`                                                       | String                  | Yes      | —           | Trimmed, lowercased, globally unique, generated by the controller (`generateSlug(title + ' ' + l3Category.name)`, unique suffix) — **not** auto-derived by a schema hook the way category's slug is  |
+| `images` / `thumbnail`                                       | [String] / String       | Yes      | —           | Cloudinary delivery URLs                                                                                                                                                                             |
+| `video`                                                      | String                  | No       | —           | Cloudinary delivery URL                                                                                                                                                                              |
+| `category`                                                   | ObjectId ref `Category` | Yes      | —           | Always the deepest (L3) category — enforced by the controller, not the schema                                                                                                                        |
+| `seller`                                                     | ObjectId                | Yes      | —           | Owning seller's user id (external — no local `User` model, no `ref`)                                                                                                                                 |
+| `soldCount` / `returnCount` / `totalReviews` / `totalRating` | Number                  | No       | `0`         | `min: 0`; not written to by any controller in this service today — reserved for order/review services to update directly                                                                             |
+| `averageRating`                                              | Number                  | No       | `0`         | `min: 0, max: 5`; same as above — reserved for a review service                                                                                                                                      |
+| `reviews`                                                    | [ObjectId ref `Review`] | No       | `[]`        | External references only — **there is no `Review` model in this service**, `ref: 'Review'` only matters if/when `.populate('reviews')` is called against a connection where that model is registered |
+| `hasVariants`                                                | Boolean                 | Yes      | —           | Gates whether `stock`/`stockThreshold` or `variants` is the source of truth for inventory                                                                                                            |
+| `variants`                                                   | [variantSchema]         | No       | `[]`        | Required to be non-empty, with unique SKUs, when `hasVariants: true` (enforced in the `pre('validate')` hook, not by `required`/`minlength` on the array path itself)                                |
+| `status`                                                     | String (enum)           | No       | `"PENDING"` | `DELETED`, `PENDING`, `PUBLISHED`, `REJECTED`, `BLOCKED` — `PRODUCT_STATUSES_MAP` from `@beautinique/shared-constants`                                                                               |
+| `history`                                                    | historySchema           | No       | —           | `approvedBy`/`approvedAt`, `blockedBy`/`blockedAt`, `rejectedBy`/`rejectedAt`/`rejectReason` — populated piecemeal as a product moves through moderation, never all at once                          |
+| `tryOn`                                                      | tryOnSchema             | No       | —           | Virtual try-on configuration, see [§5.2.2](#522-tryonschema-subdocument) below                                                                                                                       |
 
 Also has `timestamps: true`, `versionKey: false`.
 
 #### 5.2.1 `variantSchema` (subdocument)
 
-| Field            | Type    | Required | Notes                                    |
-| ------------------ | --------- | ---------- | --------------------------------------------- |
-| `sku`             | String   | Yes       | Trimmed, uppercased — generated by the controller (`generateSku`), not the schema |
-| `type`            | String (enum) | Yes  | `Color` \| `Text` — governs whether the storefront renders `value` as a swatch or a text chip |
-| `label`           | String   | Yes       | Trimmed, e.g. `"Ruby Red"`                     |
-| `value`           | String   | Yes       | Trimmed — a hex code for `Color`, free text for `Text` |
-| `originalPrice` / `sellingPrice` | Number | Yes | `min: 0` at the schema level, plus the same "greater than zero" / "selling ≤ original" rule as the product level, enforced per-variant |
-| `discount`        | Number   | No        | `min:0, max:100, default:0` — auto-calculated per variant |
-| `stock`           | Number   | Yes       | `min: 0`                                        |
-| `stockThreshold`  | Number   | Yes       | `min: 0` — low-stock alert threshold             |
-| `images`          | [String] | Yes       | `default: undefined` (explicitly, so an empty `[]` doesn't silently satisfy `required` — Mongoose treats `[]` as satisfying `required` on an array path by default; this default override is what forces a real value) |
-| `thumbnail`       | String   | No        | —                                                |
+| Field                            | Type          | Required | Notes                                                                                                                                                                                                                  |
+| -------------------------------- | ------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `sku`                            | String        | Yes      | Trimmed, uppercased — generated by the controller (`generateSku`), not the schema                                                                                                                                      |
+| `type`                           | String (enum) | Yes      | `Color` \| `Text` — governs whether the storefront renders `value` as a swatch or a text chip                                                                                                                          |
+| `label`                          | String        | Yes      | Trimmed, e.g. `"Ruby Red"`                                                                                                                                                                                             |
+| `value`                          | String        | Yes      | Trimmed — a hex code for `Color`, free text for `Text`                                                                                                                                                                 |
+| `originalPrice` / `sellingPrice` | Number        | Yes      | `min: 0` at the schema level, plus the same "greater than zero" / "selling ≤ original" rule as the product level, enforced per-variant                                                                                 |
+| `discount`                       | Number        | No       | `min:0, max:100, default:0` — auto-calculated per variant                                                                                                                                                              |
+| `stock`                          | Number        | Yes      | `min: 0`                                                                                                                                                                                                               |
+| `stockThreshold`                 | Number        | Yes      | `min: 0` — low-stock alert threshold                                                                                                                                                                                   |
+| `images`                         | [String]      | Yes      | `default: undefined` (explicitly, so an empty `[]` doesn't silently satisfy `required` — Mongoose treats `[]` as satisfying `required` on an array path by default; this default override is what forces a real value) |
+| `thumbnail`                      | String        | No       | —                                                                                                                                                                                                                      |
 
 `variantSchema.pre('validate')`: throws `UnprocessableEntityError` if `originalPrice <= 0`, or if `sellingPrice > originalPrice`; then computes `discount = round((originalPrice - sellingPrice) / originalPrice * 100)`.
 
 #### 5.2.2 `tryOnSchema` (subdocument)
 
-| Field         | Type          | Required                                   | Notes                                                    |
-| --------------- | --------------- | --------------------------------------------- | ---------------------------------------------------------- |
-| `configured`   | Boolean        | Yes, `default: false`                        | Whether the seller has walked through try-on setup at all   |
-| `enabled`      | Boolean        | No, `default: false`                         | Whether try-on is actually turned on for this product       |
-| `category`     | String (enum)  | Only when `configured`                       | One of `TRY_ON_CATEGORIES`: `LIP`, `EYE`, `HAIR`, `FACE`, `NAIL`, `SKIN` |
-| `subCategory`  | String (enum)  | Only when `configured` **and** `category` set | One of `TRY_ON_ALL_SUB_CATEGORIES`, validated against `TRY_ON_MAP[category]` (see table below) |
+| Field         | Type          | Required                                      | Notes                                                                                          |
+| ------------- | ------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `configured`  | Boolean       | Yes, `default: false`                         | Whether the seller has walked through try-on setup at all                                      |
+| `enabled`     | Boolean       | No, `default: false`                          | Whether try-on is actually turned on for this product                                          |
+| `category`    | String (enum) | Only when `configured`                        | One of `TRY_ON_CATEGORIES`: `LIP`, `EYE`, `HAIR`, `FACE`, `NAIL`, `SKIN`                       |
+| `subCategory` | String (enum) | Only when `configured` **and** `category` set | One of `TRY_ON_ALL_SUB_CATEGORIES`, validated against `TRY_ON_MAP[category]` (see table below) |
 
 `TRY_ON_MAP` (from `@beautinique/shared-constants`) — the category → allowed-sub-category relationship enforced by both the path-level `validate` function and the schema's own `pre('validate')` hook:
 
-| Category | Allowed sub-categories                          |
-| ---------- | -------------------------------------------------- |
-| `LIP`     | `MATTE`, `GLOSS`, `SHIMMER`, `CRAYON`               |
-| `EYE`     | `EYEBROW`, `EYELINER`, `KAJAL`, `EYESHADOW`         |
-| `HAIR`    | `COLOR`                                             |
-| `FACE`    | `CONCEALER`, `FOUNDATION`, `HIGHLIGHTER`, `BLUSH`   |
-| `NAIL`    | `GEL`, `LIQUID`                                     |
-| `SKIN`    | `MOISTURIZER`, `SERUM`, `TONER`, `CLEANSER`         |
+| Category | Allowed sub-categories                            |
+| -------- | ------------------------------------------------- |
+| `LIP`    | `MATTE`, `GLOSS`, `SHIMMER`, `CRAYON`             |
+| `EYE`    | `EYEBROW`, `EYELINER`, `KAJAL`, `EYESHADOW`       |
+| `HAIR`   | `COLOR`                                           |
+| `FACE`   | `CONCEALER`, `FOUNDATION`, `HIGHLIGHTER`, `BLUSH` |
+| `NAIL`   | `GEL`, `LIQUID`                                   |
+| `SKIN`   | `MOISTURIZER`, `SERUM`, `TONER`, `CLEANSER`       |
 
 `tryOnSchema.pre('validate')` is the **only** place this relationship is actually checked at save time: if `configured`, it requires both `category` and `subCategory` to be present and requires `subCategory` to be a member of `TRY_ON_MAP[category]`, throwing `UnprocessableEntityError` otherwise. (`productSchema`'s own `pre('validate')` hook does **not** duplicate this check — Mongoose runs a single-nested subdocument's own validators automatically as part of validating the parent, so a second check there would be redundant. An earlier version of this file *did* duplicate it, keyed off `enabled` instead of `configured`, and could throw an unhandled `TypeError` instead of a clean `UnprocessableEntityError` if `enabled: true` was ever reachable without `configured: true` — see [§25](#25-design-notes--known-trade-offs) for why that combination is more reachable than it looks.)
 
@@ -302,13 +302,13 @@ Same shape as above, but every field is optional **except** `level` (which the c
 
 A discriminated union on a **string** `step` field — the request body for `POST /product/draft` is always exactly one of these five shapes, not a numbered/partial step:
 
-| `step` value            | Body shape                                                                                     |
-| -------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `"basicInfo"`              | `{ step, title, brand, originalPrice, sellingPrice, l1Category:{_id,name}, l2Category:{_id,name}, l3Category:{_id,name} }` |
-| `"mediaAndGallery"`        | `{ step, thumbnail: url, images: url[], video?: url }`                                              |
-| `"descriptionAndContent"`  | `{ step, shortDescription, description, instructions?, ingredients?, additional? }` — `description`/`instructions`/`ingredients`/`additional` each pass through a Zod transform before reaching the controller (almost certainly trimming/sanitizing rich-text HTML, not just validating it) |
-| `"stockAndVariants"`       | Discriminated union on `hasVariants`: `{ step, hasVariants:false, stock, stockThreshold }` **or** `{ step, hasVariants:true, variants:[{type,label,value,originalPrice,sellingPrice,stock,stockThreshold,images,thumbnail?}] }` |
-| `"tryOnConfiguration"`     | Discriminated union on `enabled`: `{ step, enabled:false, tryOn?:{category,subCategory} }` **or** `{ step, enabled:true, tryOn:{category,subCategory} }` — see the caveat in [§25](#25-design-notes--known-trade-offs) about this specific union in the published package |
+| `step` value              | Body shape                                                                                                                                                                                                                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"basicInfo"`             | `{ step, title, brand, originalPrice, sellingPrice, l1Category:{_id,name}, l2Category:{_id,name}, l3Category:{_id,name} }`                                                                                                                                                                   |
+| `"mediaAndGallery"`       | `{ step, thumbnail: url, images: url[], video?: url }`                                                                                                                                                                                                                                       |
+| `"descriptionAndContent"` | `{ step, shortDescription, description, instructions?, ingredients?, additional? }` — `description`/`instructions`/`ingredients`/`additional` each pass through a Zod transform before reaching the controller (almost certainly trimming/sanitizing rich-text HTML, not just validating it) |
+| `"stockAndVariants"`      | Discriminated union on `hasVariants`: `{ step, hasVariants:false, stock, stockThreshold }` **or** `{ step, hasVariants:true, variants:[{type,label,value,originalPrice,sellingPrice,stock,stockThreshold,images,thumbnail?}] }`                                                              |
+| `"tryOnConfiguration"`    | Discriminated union on `enabled`: `{ step, enabled:false, tryOn?:{category,subCategory} }` **or** `{ step, enabled:true, tryOn:{category,subCategory} }` — see the caveat in [§25](#25-design-notes--known-trade-offs) about this specific union in the published package                    |
 
 `RedisCacheDashboard.saveDraftProductStep` (see [§13](#13-redis-cache-classesredis)) uses `stepData.step` **directly** as the Redis hash field name — so the five `step` values above are literally the five hash field names inside `bq:products:draft:<userId>`.
 
@@ -324,52 +324,52 @@ All `/api/v1/*` routes require the `X-Service-Secret` header and a ready MongoDB
 
 ### 7.1 Home, Docs & Health
 
-| Method | Path        | Auth | Description                                                      |
-| -------- | ------------- | ------ | -------------------------------------------------------------------- |
-| GET     | `/`          | None  | This README, pre-rendered to HTML by `scripts/generate-html.mjs` |
-| GET     | `/docs`      | None  | Interactive Swagger UI (spec in `src/docs/openapi.ts`)             |
-| GET     | `/health`    | None  | Liveness + MongoDB connection status                              |
+| Method | Path      | Auth | Description                                                      |
+| ------ | --------- | ---- | ---------------------------------------------------------------- |
+| GET    | `/`       | None | This README, pre-rendered to HTML by `scripts/generate-html.mjs` |
+| GET    | `/docs`   | None | Interactive Swagger UI (spec in `src/docs/openapi.ts`)           |
+| GET    | `/health` | None | Liveness + MongoDB connection status                             |
 
 ### 7.2 Category — `/api/v1/category`
 
-| Method | Path                     | Auth                  | Description                                                    |
-| -------- | --------------------------- | ------------------------ | -------------------------------------------------------------------- |
-| POST    | `/category`                | ADMIN, MASTER          | Create a category (L1/L2/L3, with parent/level rules)                |
-| PATCH   | `/category/:categoryId`    | ADMIN, MASTER          | Update a category (name/parent/description; level is immutable)      |
-| DELETE  | `/category/:categoryId`    | ADMIN, MASTER          | Delete a leaf category with zero products                            |
-| GET     | `/category/by-parent-level`| ADMIN, MASTER, SELLER  | List categories filtered by `level` + `parent` (cache-aside)         |
-| GET     | `/category/by-hierarchy`   | None                   | Full L1→L2→L3 nested tree (cache-aside)                              |
+| Method | Path                        | Auth                  | Description                                                     |
+| ------ | --------------------------- | --------------------- | --------------------------------------------------------------- |
+| POST   | `/category`                 | ADMIN, MASTER         | Create a category (L1/L2/L3, with parent/level rules)           |
+| PATCH  | `/category/:categoryId`     | ADMIN, MASTER         | Update a category (name/parent/description; level is immutable) |
+| DELETE | `/category/:categoryId`     | ADMIN, MASTER         | Delete a leaf category with zero products                       |
+| GET    | `/category/by-parent-level` | ADMIN, MASTER, SELLER | List categories filtered by `level` + `parent` (cache-aside)    |
+| GET    | `/category/by-hierarchy`    | None                  | Full L1→L2→L3 nested tree (cache-aside)                         |
 
 ### 7.3 Product — `/api/v1/product`
 
-| Method | Path                              | Auth                  | Description                                                    |
-| -------- | ------------------------------------ | ------------------------ | -------------------------------------------------------------------- |
-| POST    | `/product/draft`                   | ADMIN, SELLER, MASTER  | Save one step of a multi-step draft into the Redis draft hash         |
-| GET     | `/product/draft`                   | ADMIN, SELLER, MASTER  | Fetch the caller's current in-progress draft                          |
-| PATCH   | `/product/draft/publish`           | ADMIN, SELLER, MASTER  | Turn a **complete** draft into a real `Product` document (`PENDING` for sellers, `PUBLISHED` directly for admins) |
-| GET     | `/product/dashboard/products`      | ADMIN, SELLER, MASTER  | Paginated/sortable/Atlas-Search listing, scoped to own products for sellers |
-| GET     | `/product/dashboard/:slug`         | ADMIN, SELLER, MASTER  | Single product lookup for the dashboard (cache-aside, 1-day TTL)      |
-| GET     | `/product/:slug`                   | None                   | Public storefront lookup — only `PUBLISHED` products                 |
-| GET     | `/product/suggestions`             | None                   | Atlas Search autocomplete (title/brand/slug/shortDescription)          |
+| Method | Path                          | Auth                  | Description                                                                                                       |
+| ------ | ----------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| POST   | `/product/draft`              | ADMIN, SELLER, MASTER | Save one step of a multi-step draft into the Redis draft hash                                                     |
+| GET    | `/product/draft`              | ADMIN, SELLER, MASTER | Fetch the caller's current in-progress draft                                                                      |
+| PATCH  | `/product/draft/publish`      | ADMIN, SELLER, MASTER | Turn a **complete** draft into a real `Product` document (`PENDING` for sellers, `PUBLISHED` directly for admins) |
+| GET    | `/product/dashboard/products` | ADMIN, SELLER, MASTER | Paginated/sortable/Atlas-Search listing, scoped to own products for sellers                                       |
+| GET    | `/product/dashboard/:slug`    | ADMIN, SELLER, MASTER | Single product lookup for the dashboard (cache-aside, 1-day TTL)                                                  |
+| GET    | `/product/:slug`              | None                  | Public storefront lookup — only `PUBLISHED` products                                                              |
+| GET    | `/product/suggestions`        | None                  | Atlas Search autocomplete (title/brand/slug/shortDescription)                                                     |
 
 **Declared but not currently wired to a route** (present in `METHODS_AND_PATHS`, `src/constants/index.ts`, but with no matching route registration in `product.routes.ts`) — see [§25](#25-design-notes--known-trade-offs):
 
-| Method | Path                    | Intended purpose (from the constant's own comment)              |
-| -------- | -------------------------- | ---------------------------------------------------------------------- |
-| DELETE  | `/product/draft`          | Discard the caller's in-progress draft                                  |
-| PATCH   | `/product/draft`          | Edit an already-published product's draft-style fields                 |
-| PATCH   | `/product/publish`        | Approve a `PENDING` product → `PUBLISHED` (controller exists: `publishPendingProductController`, just not routed) |
-| GET     | `/product/products`       | A public product listing, distinct from the dashboard one              |
+| Method | Path                | Intended purpose (from the constant's own comment)                                                                |
+| ------ | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| DELETE | `/product/draft`    | Discard the caller's in-progress draft                                                                            |
+| PATCH  | `/product/draft`    | Edit an already-published product's draft-style fields                                                            |
+| PATCH  | `/product/publish`  | Approve a `PENDING` product → `PUBLISHED` (controller exists: `publishPendingProductController`, just not routed) |
+| GET    | `/product/products` | A public product listing, distinct from the dashboard one                                                         |
 
 ---
 
 ## 8. Request Headers
 
-| Header               | Purpose                                                        |
-| ----------------------- | ------------------------------------------------------------------ |
-| `X-Service-Secret`     | Service-to-service authentication (`checkServiceAccess`, required on `/api/v1/*`) |
-| `X-User-Id`             | End user's id (forwarded by the gateway/caller, required wherever a role is listed under "Auth" in [§7](#7-api-routes)) |
-| `X-User-Role`           | End user's role, defaults to `USER` if not sent                    |
+| Header             | Purpose                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `X-Service-Secret` | Service-to-service authentication (`checkServiceAccess`, required on `/api/v1/*`)                                       |
+| `X-User-Id`        | End user's id (forwarded by the gateway/caller, required wherever a role is listed under "Auth" in [§7](#7-api-routes)) |
+| `X-User-Role`      | End user's role, defaults to `USER` if not sent                                                                         |
 
 There's no JWT here — the gateway/upstream service is expected to have already authenticated the user and forwarded their identity via `X-User-Id`/`X-User-Role`. Unlike `user-service`, there is no `Authorization`/OTP-session-token header in this service — nothing here issues or checks temporary tokens.
 
@@ -492,44 +492,44 @@ A consolidated view of every business rule enforced somewhere between the Zod la
 
 ### 11.1 Category
 
-| Rule | Enforced by | Failure |
-| ------ | ------------- | --------- |
-| `name` 2–120 chars | Mongoose (`minlength`/`maxlength`) | Mongoose `ValidationError` |
-| `slug` unique per sibling (`parent`+`slug`) | Mongo unique index + a pre-flight `findOne` duplicate check | `ConflictError` |
-| `level` immutable after creation | Controller-level comparison (`updateCategoryController`) | `ConflictError` |
-| L2 parent must be an L1 category; L3 parent must be an L2 category | Controller-level `findById(parent).level` check | `UnprocessableEntityError` |
-| A category cannot be its own parent | Controller-level `parent.equals(categoryId)` check (update only) | `ConflictError` |
-| Only a leaf category (`isLeaf`) can be deleted | Controller-level check | `UnprocessableEntityError` |
-| An L3 category with `productCount > 0` cannot be deleted | Controller-level check | `UnprocessableEntityError` |
-| L1 categories never have a `parent` or `description` | Mongoose `pre('validate')` (force-cleared, not rejected) | — (silently normalized) |
-| L2 categories never have a `description` | Mongoose `pre('validate')` (force-cleared) | — (silently normalized) |
+| Rule                                                               | Enforced by                                                      | Failure                    |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------- | -------------------------- |
+| `name` 2–120 chars                                                 | Mongoose (`minlength`/`maxlength`)                               | Mongoose `ValidationError` |
+| `slug` unique per sibling (`parent`+`slug`)                        | Mongo unique index + a pre-flight `findOne` duplicate check      | `ConflictError`            |
+| `level` immutable after creation                                   | Controller-level comparison (`updateCategoryController`)         | `ConflictError`            |
+| L2 parent must be an L1 category; L3 parent must be an L2 category | Controller-level `findById(parent).level` check                  | `UnprocessableEntityError` |
+| A category cannot be its own parent                                | Controller-level `parent.equals(categoryId)` check (update only) | `ConflictError`            |
+| Only a leaf category (`isLeaf`) can be deleted                     | Controller-level check                                           | `UnprocessableEntityError` |
+| An L3 category with `productCount > 0` cannot be deleted           | Controller-level check                                           | `UnprocessableEntityError` |
+| L1 categories never have a `parent` or `description`               | Mongoose `pre('validate')` (force-cleared, not rejected)         | — (silently normalized)    |
+| L2 categories never have a `description`                           | Mongoose `pre('validate')` (force-cleared)                       | — (silently normalized)    |
 
 ### 11.2 Product
 
-| Rule | Enforced by | Failure |
-| ------ | ------------- | --------- |
-| `originalPrice > 0` | Mongoose `pre('validate')` | `UnprocessableEntityError` |
-| `sellingPrice <= originalPrice` | Mongoose `pre('validate')` | `UnprocessableEntityError` |
-| `description` ≥ 107 chars | Mongoose `minlength` | Mongoose `ValidationError` |
-| `hasVariants: true` requires ≥1 variant | Mongoose `pre('validate')` | `UnprocessableEntityError` |
-| Variant SKUs unique within a product | Mongoose `pre('validate')` (`Set`-based check) | `UnprocessableEntityError` |
-| `sku` globally unique | Mongo unique index | Mongo `E11000` (not currently translated to a friendly error by any product controller — see [§25](#25-design-notes--known-trade-offs)) |
-| `slug` globally unique | Mongo unique index, plus timestamp-suffixed generation making a collision astronomically unlikely | Mongo `E11000` |
+| Rule                                    | Enforced by                                                                                       | Failure                                                                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `originalPrice > 0`                     | Mongoose `pre('validate')`                                                                        | `UnprocessableEntityError`                                                                                                              |
+| `sellingPrice <= originalPrice`         | Mongoose `pre('validate')`                                                                        | `UnprocessableEntityError`                                                                                                              |
+| `description` ≥ 107 chars               | Mongoose `minlength`                                                                              | Mongoose `ValidationError`                                                                                                              |
+| `hasVariants: true` requires ≥1 variant | Mongoose `pre('validate')`                                                                        | `UnprocessableEntityError`                                                                                                              |
+| Variant SKUs unique within a product    | Mongoose `pre('validate')` (`Set`-based check)                                                    | `UnprocessableEntityError`                                                                                                              |
+| `sku` globally unique                   | Mongo unique index                                                                                | Mongo `E11000` (not currently translated to a friendly error by any product controller — see [§25](#25-design-notes--known-trade-offs)) |
+| `slug` globally unique                  | Mongo unique index, plus timestamp-suffixed generation making a collision astronomically unlikely | Mongo `E11000`                                                                                                                          |
 
 ### 11.3 Variant (per-item, inside `hasVariants: true` products)
 
-| Rule | Enforced by | Failure |
-| ------ | ------------- | --------- |
-| `originalPrice > 0` | `variantSchema.pre('validate')` | `UnprocessableEntityError` |
-| `sellingPrice <= originalPrice` | `variantSchema.pre('validate')` | `UnprocessableEntityError` |
+| Rule                                     | Enforced by                                     | Failure                               |
+| ---------------------------------------- | ----------------------------------------------- | ------------------------------------- |
+| `originalPrice > 0`                      | `variantSchema.pre('validate')`                 | `UnprocessableEntityError`            |
+| `sellingPrice <= originalPrice`          | `variantSchema.pre('validate')`                 | `UnprocessableEntityError`            |
 | `images` must be a real, non-empty array | `default: undefined` override on the array path | Mongoose `ValidationError` (required) |
 
 ### 11.4 Try-On
 
-| Rule | Enforced by | Failure |
-| ------ | ------------- | --------- |
-| `category`/`subCategory` required when `configured: true` | `tryOnSchema` path-level `required` functions | Mongoose `ValidationError` |
-| `subCategory` must belong to `TRY_ON_MAP[category]` | `tryOnSchema` path-level `validate`, re-checked in `tryOnSchema.pre('validate')` | `UnprocessableEntityError` |
+| Rule                                                      | Enforced by                                                                      | Failure                    |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------- |
+| `category`/`subCategory` required when `configured: true` | `tryOnSchema` path-level `required` functions                                    | Mongoose `ValidationError` |
+| `subCategory` must belong to `TRY_ON_MAP[category]`       | `tryOnSchema` path-level `validate`, re-checked in `tryOnSchema.pre('validate')` | `UnprocessableEntityError` |
 
 ---
 
@@ -537,10 +537,10 @@ A consolidated view of every business rule enforced somewhere between the Zod la
 
 Two named MongoDB Atlas Search indexes are referenced **by name only** in application code (`utils/index.ts`, `getDashboardProducts.controller.ts`) — they must exist and be configured directly in Atlas; nothing in this repository creates or manages them.
 
-| Index name          | Used by                             | Indexed fields (as used in queries)                          |
-| ---------------------- | -------------------------------------- | ------------------------------------------------------------------ |
-| `product-search`      | `GET /product/suggestions`            | `title` (autocomplete), `brand` (autocomplete), `slug` (autocomplete), `shortDescription` (text) |
-| `dashboard-products`  | `GET /product/dashboard/products` (only when `search` is provided) | `title` (autocomplete), plus `equals`-filterable `seller`, `status`, `category` |
+| Index name           | Used by                                                            | Indexed fields (as used in queries)                                                              |
+| -------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------ |
+| `product-search`     | `GET /product/suggestions`                                         | `title` (autocomplete), `brand` (autocomplete), `slug` (autocomplete), `shortDescription` (text) |
+| `dashboard-products` | `GET /product/dashboard/products` (only when `search` is provided) | `title` (autocomplete), plus `equals`-filterable `seller`, `status`, `category`                  |
 
 If either index is missing, renamed, or out of sync with the fields above in the actual MongoDB Atlas cluster, the corresponding `$search` aggregation stage will fail at query time with a MongoDB error — this is not something `tsc`, `eslint`, or a local MongoDB instance (Atlas Search is an Atlas-only feature, unavailable against a plain self-hosted `mongod`) can catch ahead of time.
 
@@ -552,34 +552,34 @@ A `RedisCacheManager` singleton (instantiated once in `configs/index.ts`, export
 
 ### Key Prefixes
 
-| Prefix                                  | Purpose                        |
-| ------------------------------------------ | ------------------------------------- |
-| `bq:products:categories`                   | Single hash holding every category, keyed by category id |
-| `bq:products:draft:<userId>`               | One user's in-progress draft product, keyed by step name (§6.3)   |
-| `bq:products:dashboard:product:<slug>`     | A single dashboard product lookup       |
+| Prefix                                 | Purpose                                                         |
+| -------------------------------------- | --------------------------------------------------------------- |
+| `bq:products:categories`               | Single hash holding every category, keyed by category id        |
+| `bq:products:draft:<userId>`           | One user's in-progress draft product, keyed by step name (§6.3) |
+| `bq:products:dashboard:product:<slug>` | A single dashboard product lookup                               |
 
 ### `RedisCacheCategory` (`classes/redis/RedisCacheCategory.ts`)
 
-| Method                     | Description                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------------ |
-| `getAllCategories()`          | Cache-aside: reads the whole hash; on empty, reseeds from MongoDB               |
-| `setCategory(category)`       | Writes/overwrites one category field; sets the hash's TTL (1 day) only if the hash didn't already exist, so an active hash's expiry never keeps getting pushed out by routine writes |
-| `deleteCategory(categoryId)`  | Removes one category field from the hash                                        |
+| Method                       | Description                                                                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `getAllCategories()`         | Cache-aside: reads the whole hash; on empty, reseeds from MongoDB                                                                                                                    |
+| `setCategory(category)`      | Writes/overwrites one category field; sets the hash's TTL (1 day) only if the hash didn't already exist, so an active hash's expiry never keeps getting pushed out by routine writes |
+| `deleteCategory(categoryId)` | Removes one category field from the hash                                                                                                                                             |
 
 The 1-day TTL means any missed/failed invalidation (e.g. a Redis delete that silently fails) self-heals within at most a day, since a fully-expired hash forces `getAllCategories()` back to MongoDB.
 
 ### `RedisCacheDashboard` (`classes/redis/RedisCacheDashboard.ts`)
 
-| Method                          | Description                                                                    |
-| ----------------------------------- | ------------------------------------------------------------------------------------ |
-| `getDraftProduct(userId)`           | Read the caller's in-progress draft                                              |
-| `saveDraftProductStep(userId, body)`| Write one step's field (`body.step`) into the draft hash (24h TTL, fixed from first write) |
-| `deleteDraftProduct(userId)`        | Remove the draft entirely (called after a successful publish)                    |
-| `hasDraftProduct(userId)`           | Existence check                                                                   |
-| `getProductBySlug(slug)`            | Cache-aside dashboard product lookup                                             |
-| `setProductBySlug(slug, product)`   | Cache a dashboard product (24h TTL)                                              |
-| `deleteProductBySlug(slug)`         | Invalidate a cached dashboard product                                            |
-| `hasProductBySlug(slug)`            | Existence check                                                                   |
+| Method                               | Description                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------ |
+| `getDraftProduct(userId)`            | Read the caller's in-progress draft                                                        |
+| `saveDraftProductStep(userId, body)` | Write one step's field (`body.step`) into the draft hash (24h TTL, fixed from first write) |
+| `deleteDraftProduct(userId)`         | Remove the draft entirely (called after a successful publish)                              |
+| `hasDraftProduct(userId)`            | Existence check                                                                            |
+| `getProductBySlug(slug)`             | Cache-aside dashboard product lookup                                                       |
+| `setProductBySlug(slug, product)`    | Cache a dashboard product (24h TTL)                                                        |
+| `deleteProductBySlug(slug)`          | Invalidate a cached dashboard product                                                      |
+| `hasProductBySlug(slug)`             | Existence check                                                                            |
 
 ### `RedisCacheHelper` (`classes/redis/RedisCacheHelper.ts`)
 
@@ -615,41 +615,41 @@ Loads the caller's Redis draft (`redisCacheManager.dashboard.getDraftProduct`) a
 
 ### External Middlewares (from `@beautinique/*` packages)
 
-| Middleware              | Package                             | Purpose                                                                    |
-| -------------------------- | -------------------------------------- | ------------------------------------------------------------------------------- |
-| `checkServiceAccess`      | `@beautinique/backend-request`         | Validates `X-Service-Secret`, timing-safe compare                              |
-| `checkDbConnection`       | `@beautinique/backend-mongoose`        | Rejects with 503 if MongoDB isn't ready (scoped to `/api/v1` only)             |
-| `checkEmptyRequest`       | `@beautinique/backend-request`         | Guards against empty request bodies/params before validation                    |
-| `validateZod`             | `@beautinique/backend-zod`             | Request body validation via Zod (`categoryZodSchema`, `draftProductStepBodyZodSchema`, etc.) |
-| `tryCatchResponse`        | `@beautinique/backend-response`        | Wraps non-transactional controllers in try/catch, forwards errors to `errorResponse` |
-| `tryCatchSession`         | `@beautinique/backend-mongoose`        | Wraps transactional controllers in a Mongoose session + `res.locals.afterCommit`/`afterRollback`/`afterResponse`/`afterFinish` hooks |
-| `successResponse`         | `@beautinique/backend-response`        | Attaches `res.success({ statusCode, message, data })`                          |
-| `notFoundResponse`        | `@beautinique/backend-response`        | 404 handler (branded HTML page for browser requests)                            |
-| `errorResponse`           | `@beautinique/backend-response`        | Central error handler                                                            |
-| `createHttpLogger`        | `@beautinique/backend-logger`          | Per-request Pino logging                                                          |
+| Middleware           | Package                         | Purpose                                                                                                                              |
+| -------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `checkServiceAccess` | `@beautinique/backend-request`  | Validates `X-Service-Secret`, timing-safe compare                                                                                    |
+| `checkDbConnection`  | `@beautinique/backend-mongoose` | Rejects with 503 if MongoDB isn't ready (scoped to `/api/v1` only)                                                                   |
+| `checkEmptyRequest`  | `@beautinique/backend-request`  | Guards against empty request bodies/params before validation                                                                         |
+| `validateZod`        | `@beautinique/backend-zod`      | Request body validation via Zod (`categoryZodSchema`, `draftProductStepBodyZodSchema`, etc.)                                         |
+| `tryCatchResponse`   | `@beautinique/backend-response` | Wraps non-transactional controllers in try/catch, forwards errors to `errorResponse`                                                 |
+| `tryCatchSession`    | `@beautinique/backend-mongoose` | Wraps transactional controllers in a Mongoose session + `res.locals.afterCommit`/`afterRollback`/`afterResponse`/`afterFinish` hooks |
+| `successResponse`    | `@beautinique/backend-response` | Attaches `res.success({ statusCode, message, data })`                                                                                |
+| `notFoundResponse`   | `@beautinique/backend-response` | 404 handler (branded HTML page for browser requests)                                                                                 |
+| `errorResponse`      | `@beautinique/backend-response` | Central error handler                                                                                                                |
+| `createHttpLogger`   | `@beautinique/backend-logger`   | Per-request Pino logging                                                                                                             |
 
 ---
 
 ## 15. Services Layer (`services/index.ts`)
 
-| Function                                   | Description                                                             |
-| --------------------------------------------- | ---------------------------------------------------------------------------- |
+| Function                                                 | Description                                                                                                                                                             |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `findOrCreateCategory({name,slug,parent,level,session})` | Upsert helper (`findOneAndUpdate` + `$setOnInsert`, `upsert: true`) — not currently called from any controller in this service; available for cross-service or seed use |
 
 ---
 
 ## 16. Utilities (`utils/index.ts`)
 
-| Function                                  | Description                                                                     |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `generateSlug(text, unique = true)`            | `slugify` + optional `-<timestamp>` suffix — see [§10.3](#103-slug-generation)          |
-| `getMinimalCategory(category)`                 | Client/cache-facing category shape — `_id` as string; `parent`/`description` only included for L2/L3 as applicable |
-| `generateSku({data, prefix, unique})`          | Builds an uppercase SKU — see [§10.2](#102-sku-generation-worked-example)              |
-| `getCloudinaryPublicIdFromUrl(url)`            | Extracts a Cloudinary public id from a delivery URL. Example: `https://res.cloudinary.com/demo/image/upload/v1690000000/products/lipstick_red.jpg` → pathname `/demo/image/upload/v1690000000/products/lipstick_red.jpg` → regex captures `products/lipstick_red.jpg` (skipping any transformation segments and the `v<digits>/` version prefix) → strips the extension → `products/lipstick_red`. Throws `UnprocessableEntityError` if the URL doesn't match the expected `/upload/.../...` shape. |
-| `extractImageUrlsFromHtml(html)`               | Regex-extracts every `<img src="...">` from a rich-text field (used to find images to mark "used" in `media-queue`) |
-| `getProductSuggestionsPipeline(query)`         | Builds the Atlas `$search` aggregation pipeline for `/product/suggestions` — see [§12](#12-search-infrastructure--atlas-search-indexes) |
-| `getInitialProductCountsByStatus()`            | Zero-filled `{ ALL, DELETED, PENDING, PUBLISHED, REJECTED, BLOCKED }` counter object    |
-| `populateProductCountsByStatus(counts, rows)`  | Folds a `$group`-by-status aggregation result into the counter object above             |
+| Function                                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `generateSlug(text, unique = true)`           | `slugify` + optional `-<timestamp>` suffix — see [§10.3](#103-slug-generation)                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `getMinimalCategory(category)`                | Client/cache-facing category shape — `_id` as string; `parent`/`description` only included for L2/L3 as applicable                                                                                                                                                                                                                                                                                                                                                                                  |
+| `generateSku({data, prefix, unique})`         | Builds an uppercase SKU — see [§10.2](#102-sku-generation-worked-example)                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `getCloudinaryPublicIdFromUrl(url)`           | Extracts a Cloudinary public id from a delivery URL. Example: `https://res.cloudinary.com/demo/image/upload/v1690000000/products/lipstick_red.jpg` → pathname `/demo/image/upload/v1690000000/products/lipstick_red.jpg` → regex captures `products/lipstick_red.jpg` (skipping any transformation segments and the `v<digits>/` version prefix) → strips the extension → `products/lipstick_red`. Throws `UnprocessableEntityError` if the URL doesn't match the expected `/upload/.../...` shape. |
+| `extractImageUrlsFromHtml(html)`              | Regex-extracts every `<img src="...">` from a rich-text field (used to find images to mark "used" in `media-queue`)                                                                                                                                                                                                                                                                                                                                                                                 |
+| `getProductSuggestionsPipeline(query)`        | Builds the Atlas `$search` aggregation pipeline for `/product/suggestions` — see [§12](#12-search-infrastructure--atlas-search-indexes)                                                                                                                                                                                                                                                                                                                                                             |
+| `getInitialProductCountsByStatus()`           | Zero-filled `{ ALL, DELETED, PENDING, PUBLISHED, REJECTED, BLOCKED }` counter object                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `populateProductCountsByStatus(counts, rows)` | Folds a `$group`-by-status aggregation result into the counter object above                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ---
 
@@ -657,14 +657,14 @@ Loads the caller's Redis draft (`redisCacheManager.dashboard.getDraftProduct`) a
 
 All errors are thrown as `AppError` subclasses from `@beautinique/backend-classes` (e.g. `NotFoundError`, `ValidationError`, `ConflictError`, `UnprocessableEntityError`). Standard error codes used across the service:
 
-| Code                     | HTTP Equivalent | When Used                                                          |
-| --------------------------- | ------------------ | ----------------------------------------------------------------------- |
-| `NOT_FOUND`                | 404                | Category/parent/product not found; expired draft; parent category missing |
-| `CONFLICT`                 | 409                | Duplicate sibling category slug; category cannot be its own parent; category `level` change attempted |
-| `UNPROCESSABLE_ENTITY`     | 422                | Deleting a non-leaf category or an L3 category with products; invalid parent level; invalid prices; invalid try-on category/sub-category; malformed Cloudinary URL |
-| `AUTHENTICATION_ERROR`     | 401                | Missing `X-User-Id`                                                     |
-| `AUTHORIZATION_ERROR`      | 403                | Caller's role isn't in the route's `allowedRoles`                       |
-| `INTERNAL_SERVER_ERROR`    | 500                | Unexpected failures; `findOrCreateCategory` upsert failure               |
+| Code                    | HTTP Equivalent | When Used                                                                                                                                                          |
+| ----------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `NOT_FOUND`             | 404             | Category/parent/product not found; expired draft; parent category missing                                                                                          |
+| `CONFLICT`              | 409             | Duplicate sibling category slug; category cannot be its own parent; category `level` change attempted                                                              |
+| `UNPROCESSABLE_ENTITY`  | 422             | Deleting a non-leaf category or an L3 category with products; invalid parent level; invalid prices; invalid try-on category/sub-category; malformed Cloudinary URL |
+| `AUTHENTICATION_ERROR`  | 401             | Missing `X-User-Id`                                                                                                                                                |
+| `AUTHORIZATION_ERROR`   | 403             | Caller's role isn't in the route's `allowedRoles`                                                                                                                  |
+| `INTERNAL_SERVER_ERROR` | 500             | Unexpected failures; `findOrCreateCategory` upsert failure                                                                                                         |
 
 Errors flow through the `errorResponse` middleware (`@beautinique/backend-response`), which only forwards `message`/`code`/`statusCode`/`fieldErrors`/`globalErrors` for **operational** `AppError`s — anything else is converted to a generic `InternalServerError` before the client ever sees it, and `envs.is_dev` controls whether a stack trace is attached.
 
@@ -697,9 +697,9 @@ Idempotent (`setShuttingDown()` guards re-entry). Only the job-producer shutdown
 
 This service **only produces** onto `media-queue` — it doesn't run a worker for anything. `jobProducer` (`@beautinique/backend-bullmq`'s `JobProducer`, configured in `configs/index.ts`) is used from `publishDraftProductController`.
 
-| Job name                       | Enqueued from                     | Consumed by       |
-| ---------------------------------- | ------------------------------------ | ----------------------- |
-| `mark-multiple-media-as-used`      | `publishDraftProductController` (`afterCommit`) | `media-service` |
+| Job name                      | Enqueued from                                   | Consumed by     |
+| ----------------------------- | ----------------------------------------------- | --------------- |
+| `mark-multiple-media-as-used` | `publishDraftProductController` (`afterCommit`) | `media-service` |
 
 Every image/thumbnail/video URL referenced by a newly-published product (including images embedded in the rich-text `description`/`ingredients`/`instructions`/`additional` fields) is resolved to a Cloudinary public id and enqueued for the media service to mark as in-use, so orphan-cleanup jobs elsewhere don't delete assets that a product is actively using. If `uniquePublicIds.length === 0` (a product with no extractable images, which shouldn't happen given `images`/`thumbnail` are required, but could for a product with no rich-text-embedded images), the job simply isn't enqueued — the `afterCommit` task still runs to delete the Redis draft either way.
 
@@ -738,20 +738,20 @@ Flat config: `@eslint/js` recommended → `typescript-eslint` recommended/strict
 
 ## 21. Shared Packages (`@beautinique/*`)
 
-| Package                                | Purpose                                                                                          |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `@beautinique/backend-bullmq`            | `JobProducer` — typed BullMQ wrapper                                                                    |
-| `@beautinique/backend-classes`           | `AppError` subclasses (`NotFoundError`, `ValidationError`, `ConflictError`, `UnprocessableEntityError`, ...) |
-| `@beautinique/backend-logger`            | `createLogger`/`createHttpLogger` (Pino-based)                                                          |
-| `@beautinique/backend-mongoose`          | `connectDb`, `disconnectDB`, `checkDbConnection`, `getConnectionHealth`, `getObjId`, `mongoEvents`, `tryCatchSession` |
-| `@beautinique/backend-request`           | `checkServiceAccess`, `checkEmptyRequest`                                                                |
-| `@beautinique/backend-response`          | `successResponse`/`errorResponse`/`notFoundResponse`/`tryCatchResponse`                                  |
-| `@beautinique/backend-utils`             | `getUser`                                                                                                |
-| `@beautinique/backend-zod`               | `validateZod` and every request Zod schema (`categoryZodSchema`, `categoryUpdateZodSchema`, `draftProductStepBodyZodSchema`, `draftProductDetailsZodSchema`, plus the smaller per-field schemas — `productMediaAndGallerySchema`, `productVariantZodSchema`, `productStockAndVariantsSchema`, etc. — that those two are assembled from) |
-| `@beautinique/shared-constants`          | `CATEGORY_LEVELS(_MAP)`, `PRODUCT_STATUSES(_MAP)`, `USER_ROLES`, `SORT_MAP`, `API_METHODS_MAP`, `HEADERS_MAP`, `SERVICE_NAMES_MAP`, `TRY_ON_MAP`/`TRY_ON_CATEGORIES`/`TRY_ON_ALL_SUB_CATEGORIES` |
-| `@beautinique/shared-markdown-to-html`   | `generateHtmlFromMarkdown` — used by `scripts/generate-html.mjs`                                        |
-| `@beautinique/shared-utils`              | `requireEnv`/`requirePort`, `stringifyData`/`parseData`                                                  |
-| `@beautinique/backend-types`             | `TCategoryZodSchema`, `TCategoryUpdateZodSchema`, `TDraftProductStepBodyZodSchema`, `TDraftProductDetailsZodSchema`, `TTryOnSelection`, `TUserRole`, `TProductStatus`, `TSort`, `TCategoryLevel` — all `TInfer<typeof ...ZodSchema>` re-exports, so this package and `@beautinique/backend-zod` must always be upgraded together (a version of one that's out of sync with the other is exactly the class of bug that showed up mid-development on this service — see [§25](#25-design-notes--known-trade-offs)) |
+| Package                                | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@beautinique/backend-bullmq`          | `JobProducer` — typed BullMQ wrapper                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `@beautinique/backend-classes`         | `AppError` subclasses (`NotFoundError`, `ValidationError`, `ConflictError`, `UnprocessableEntityError`, ...)                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `@beautinique/backend-logger`          | `createLogger`/`createHttpLogger` (Pino-based)                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `@beautinique/backend-mongoose`        | `connectDb`, `disconnectDB`, `checkDbConnection`, `getConnectionHealth`, `getObjId`, `mongoEvents`, `tryCatchSession`                                                                                                                                                                                                                                                                                                                                                                                            |
+| `@beautinique/backend-request`         | `checkServiceAccess`, `checkEmptyRequest`                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `@beautinique/backend-response`        | `successResponse`/`errorResponse`/`notFoundResponse`/`tryCatchResponse`                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `@beautinique/backend-utils`           | `getUser`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `@beautinique/backend-zod`             | `validateZod` and every request Zod schema (`categoryZodSchema`, `categoryUpdateZodSchema`, `draftProductStepBodyZodSchema`, `draftProductDetailsZodSchema`, plus the smaller per-field schemas — `productMediaAndGallerySchema`, `productVariantZodSchema`, `productStockAndVariantsSchema`, etc. — that those two are assembled from)                                                                                                                                                                          |
+| `@beautinique/shared-constants`        | `CATEGORY_LEVELS(_MAP)`, `PRODUCT_STATUSES(_MAP)`, `USER_ROLES`, `SORT_MAP`, `API_METHODS_MAP`, `HEADERS_MAP`, `SERVICE_NAMES_MAP`, `TRY_ON_MAP`/`TRY_ON_CATEGORIES`/`TRY_ON_ALL_SUB_CATEGORIES`                                                                                                                                                                                                                                                                                                                 |
+| `@beautinique/shared-markdown-to-html` | `generateHtmlFromMarkdown` — used by `scripts/generate-html.mjs`                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `@beautinique/shared-utils`            | `requireEnv`/`requirePort`, `stringifyData`/`parseData`                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `@beautinique/backend-types`           | `TCategoryZodSchema`, `TCategoryUpdateZodSchema`, `TDraftProductStepBodyZodSchema`, `TDraftProductDetailsZodSchema`, `TTryOnSelection`, `TUserRole`, `TProductStatus`, `TSort`, `TCategoryLevel` — all `TInfer<typeof ...ZodSchema>` re-exports, so this package and `@beautinique/backend-zod` must always be upgraded together (a version of one that's out of sync with the other is exactly the class of bug that showed up mid-development on this service — see [§25](#25-design-notes--known-trade-offs)) |
 
 ---
 

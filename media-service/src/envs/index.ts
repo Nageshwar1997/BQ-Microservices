@@ -23,9 +23,6 @@ const {
   // G
   // H
   // I
-
-  IS_DEV,
-
   // J
   // K
   // L
@@ -34,6 +31,9 @@ const {
   MONGODB_URI,
 
   // N
+
+  NODE_ENV,
+
   // O
   // P
 
@@ -77,7 +77,7 @@ export const envs = {
   // H
   // I
 
-  is_dev: IS_DEV === 'true',
+  is_dev: NODE_ENV === 'development',
 
   // J
   // K

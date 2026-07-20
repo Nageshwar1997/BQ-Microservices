@@ -17,8 +17,7 @@ const {
   // F
   // G
 
-  GATEWAY_DEV_URL,
-  GATEWAY_PROD_URL,
+  GATEWAY_BASE_URL,
 
   GITHUB_CLIENT_ID,
   GITHUB_CLIENT_SECRET,
@@ -28,9 +27,6 @@ const {
 
   // H
   // I
-
-  IS_DEV,
-
   // J
 
   BULL_MQ_HOST,
@@ -49,6 +45,9 @@ const {
   MONGODB_URI,
 
   // N
+
+  NODE_ENV,
+
   // O
   // P
 
@@ -70,7 +69,7 @@ const {
   // Z
 } = process.env as Record<string, string>;
 
-const is_dev = IS_DEV === 'true';
+const is_dev = NODE_ENV === 'development';
 
 export const envs = {
   // A
@@ -143,9 +142,7 @@ export const envs = {
   // T
   // U
 
-  gateway_url: is_dev
-    ? requireEnv(GATEWAY_DEV_URL, 'GATEWAY_DEV_URL')
-    : requireEnv(GATEWAY_PROD_URL, 'GATEWAY_PROD_URL'),
+  gateway_url: requireEnv(GATEWAY_BASE_URL, 'GATEWAY_BASE_URL'),
 
   // V
   // W

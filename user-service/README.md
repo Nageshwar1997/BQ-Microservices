@@ -127,7 +127,7 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 | Variable         | Description                                                                          |
 | ---------------- | ------------------------------------------------------------------------------------ |
 | `PORT`           | HTTP port to listen on                                                               |
-| `IS_DEV`         | `"true"` enables pretty logging and stack traces in error responses                  |
+| `NODE_ENV`       | `"development"` enables pretty logging and stack traces in error responses           |
 | `SERVICE_NAME`   | Name tag attached to every log line                                                  |
 | `SERVICE_SECRET` | Shared secret required in the `X-Service-Secret` header on every `/api/v1/*` request |
 | `DATABASE_NAME`  | MongoDB database name                                                                |
@@ -173,11 +173,9 @@ There's no `*_REDIRECT_ENDPOINT` env var per provider anymore — each provider'
 
 ### 4.6 Gateway URL
 
-| Variable                               | Description                                                                                                           |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `GATEWAY_DEV_URL` / `GATEWAY_PROD_URL` | Base URL prepended to the computed OAuth callback path (dev/prod selected by `IS_DEV`), exposed as `envs.gateway_url` |
-
-`USER_SERVICE_*_URL`, `MAIL_SERVICE_*_URL`, and `MEDIA_SERVICE_*_URL` were removed — they were validated at startup but never actually read anywhere in the code. The OTP mail goes out via the `mail-queue` BullMQ job, not a direct HTTP call to `mail-service`, so no cross-service base URL is needed today.
+| Variable           | Description                                                                           |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `GATEWAY_BASE_URL` | Base URL prepended to the computed OAuth callback path, exposed as `envs.gateway_url` |
 
 ---
 

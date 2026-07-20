@@ -81,11 +81,11 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.1 Server & App
 
-| Variable       | Required | Description                                                         |
-| -------------- | -------- | ------------------------------------------------------------------- |
-| `PORT`         | Yes      | HTTP port to listen on (must be a positive integer)                 |
-| `IS_DEV`       | No       | `"true"` enables pretty logging and stack traces in error responses |
-| `SERVICE_NAME` | Yes      | Name tag attached to every log line                                 |
+| Variable       | Required | Description                                                                |
+| -------------- | -------- | -------------------------------------------------------------------------- |
+| `PORT`         | Yes      | HTTP port to listen on (must be a positive integer)                        |
+| `NODE_ENV`     | No       | `"development"` enables pretty logging and stack traces in error responses |
+| `SERVICE_NAME` | Yes      | Name tag attached to every log line                                        |
 
 ### 4.2 SMTP — Transporter
 
