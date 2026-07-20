@@ -10,7 +10,7 @@ import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
 import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
 
-const { health, home } = METHODS_AND_PATHS;
+const { health, home, wakeUp } = METHODS_AND_PATHS;
 
 /* -------------------------------------------------------------------------- */
 /*                               Express App                                  */
@@ -78,6 +78,13 @@ app[health.method](health.path, (_, res) => {
       service: SERVICE_NAMES_MAP['mail-service'],
     },
   });
+});
+
+/**
+ * Server wake-up (All Services) endpoint.
+ */
+app[wakeUp.method](wakeUp.path, (_, res) => {
+  res.success({ message: 'Mail Service is awaked.' });
 });
 
 /* -------------------------------------------------------------------------- */

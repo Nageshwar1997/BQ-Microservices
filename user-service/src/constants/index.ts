@@ -42,6 +42,7 @@ export const METHODS_AND_PATHS = {
   base: '/api/v1',
   home: { method: GET, path: '/' },
   health: { method: GET, path: '/health' },
+  wakeUp: { method: GET, path: '/wake-up' },
   auth: {
     base: '/auth',
     login: {

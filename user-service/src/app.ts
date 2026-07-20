@@ -13,7 +13,7 @@ import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
 import { router } from './routes/index.js';
 
-const { base, health, home } = METHODS_AND_PATHS;
+const { base, health, home, wakeUp } = METHODS_AND_PATHS;
 
 /* -------------------------------------------------------------------------- */
 /*                               Express App                                  */
@@ -80,6 +80,13 @@ app[health.method](health.path, (_, res) => {
       service: SERVICE_NAMES_MAP['user-service'],
     },
   });
+});
+
+/**
+ * Service wake-up endpoint.
+ */
+app[wakeUp.method](wakeUp.path, (_, res) => {
+  res.success({ message: 'User Service is awaked.' });
 });
 
 /**

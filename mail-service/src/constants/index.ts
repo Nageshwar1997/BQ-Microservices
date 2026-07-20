@@ -10,4 +10,5 @@ export const LOGGER_BASE_OPTIONS = {
 export const METHODS_AND_PATHS = {
   home: { method: API_METHODS_MAP.GET, path: '/' },
   health: { method: API_METHODS_MAP.GET, path: '/health' },
+  wakeUp: { method: API_METHODS_MAP.GET, path: '/wake-up' },
 } as const;
