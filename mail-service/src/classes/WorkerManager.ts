@@ -4,16 +4,6 @@ import { stringifyData } from '@beautinique/shared-utils';
 import { logger, transporter } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 
-/**
- * Fails a job immediately if the transporter isn't connected yet, instead of
- * letting the query sit in nodemailer's own buffer until it times out.
- */
-const ensureTransporterConnected = (): void => {
-  if (!transporter.isConnected()) {
-    throw new Error('Mail transporter is not connected yet.');
-  }
-};
-
 const WORKER_CONCURRENCY = 5;
 
 export class WorkerManager {
@@ -32,8 +22,6 @@ export class WorkerManager {
 
         'send-otp': async (data) => {
           try {
-            ensureTransporterConnected();
-
             await transporter.sendOtp(data.email, data.otp);
           } catch (error) {
             logger.error(

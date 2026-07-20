@@ -1,5 +1,4 @@
 import { JobWorker } from '@beautinique/backend-bullmq';
-import { connectionState } from '@beautinique/backend-mongoose';
 import { MEDIA_STATUS_MAP } from '@beautinique/shared-constants';
 import { stringifyData } from '@beautinique/shared-utils';
 
@@ -10,16 +9,6 @@ import { Media } from '../models/index.js';
 import { cloudinary } from './Cloudinary.js';
 
 const WORKER_CONCURRENCY = 5;
-
-/**
- * Fails a job immediately if MongoDB isn't connected yet, instead of
- * letting the query sit in mongoose's own buffer until it times out.
- */
-const ensureDbReady = (): void => {
-  if (!connectionState.isConnected()) {
-    throw new Error('Database connection is not ready yet.');
-  }
-};
 
 export class WorkerManager {
   private worker: JobWorker<'media-queue'> | undefined;
@@ -69,8 +58,6 @@ export class WorkerManager {
 
         'create-single-unused-media': async (data) => {
           try {
-            ensureDbReady();
-
             const expiresAt = new Date(Date.now() + CLEANUP_DELAY);
             await Media.create({ ...data, status: MEDIA_STATUS_MAP.UNUSED, expiresAt });
           } catch (error) {
@@ -86,8 +73,6 @@ export class WorkerManager {
 
         'create-multiple-unused-media': async (data) => {
           try {
-            ensureDbReady();
-
             const expiresAt = new Date(Date.now() + CLEANUP_DELAY);
 
             await Media.insertMany(
@@ -106,8 +91,6 @@ export class WorkerManager {
 
         'mark-single-media-as-used': async (data) => {
           try {
-            ensureDbReady();
-
             const { publicId } = data;
 
             const result = await Media.updateOne(
@@ -131,8 +114,6 @@ export class WorkerManager {
 
         'mark-multiple-media-as-used': async (data) => {
           try {
-            ensureDbReady();
-
             const { publicIds } = data;
             const result = await Media.updateMany(
               { publicId: { $in: publicIds }, status: MEDIA_STATUS_MAP.UNUSED },
@@ -158,8 +139,6 @@ export class WorkerManager {
 
         'delete-single-media': async (data) => {
           try {
-            ensureDbReady();
-
             const { publicId } = data;
 
             /* ---------------- FIND UNUSED MEDIA ---------------- */
@@ -203,8 +182,6 @@ export class WorkerManager {
 
         'delete-multiple-media': async (data) => {
           try {
-            ensureDbReady();
-
             const { publicIds } = data;
 
             /* ---------------- FIND UNUSED MEDIAS ---------------- */

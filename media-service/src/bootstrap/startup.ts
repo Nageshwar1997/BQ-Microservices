@@ -1,4 +1,4 @@
-import { connectDb } from '@beautinique/backend-mongoose';
+import { connectDb, connectionState } from '@beautinique/backend-mongoose';
 
 import { databaseConfigs, logger, workerManager } from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
@@ -11,6 +11,7 @@ import {
 } from './server.js';
 
 const DB_RETRY_DELAY_MS = 30_000;
+const WORKER_START_RETRY_DELAY_MS = 30_000;
 
 /* -------------------------------------------------------------------------- */
 /*                               MongoDB Connect                              */
@@ -38,6 +39,24 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
 };
 
 /* -------------------------------------------------------------------------- */
+/*                            BullMQ Worker Start                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Starts background workers once MongoDB is connected, polling in the
+ * background so they never pick up a job they can't yet fulfil.
+ */
+const startWorkerWithRetry = async (): Promise<void> => {
+  while (!isShuttingDown() && !connectionState.isConnected()) {
+    await new Promise((resolve) => setTimeout(resolve, WORKER_START_RETRY_DELAY_MS));
+  }
+
+  if (!isShuttingDown()) {
+    workerManager.start();
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 /*                              Startup Sequence                              */
 /* -------------------------------------------------------------------------- */
 
@@ -49,12 +68,9 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
  * Startup order:
  * 1. Register MongoDB event listeners.
  * 2. Start the HTTP server.
- * 3. Start background workers.
- * 4. Connect MongoDB (non-blocking, retried in the background).
- *
- * Workers start before MongoDB is connected - each job handler checks
- * readiness itself (`ensureDbReady`) and fails fast, letting BullMQ's own
- * retry/backoff pick the job back up once MongoDB is ready.
+ * 3. Connect MongoDB (non-blocking, retried in the background).
+ * 4. Start background workers once MongoDB is connected (non-blocking,
+ *    retried in the background).
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
@@ -66,9 +82,8 @@ export const startup = async (): Promise<void> => {
 
     await startHttpServer();
 
-    workerManager.start();
-
     void connectDatabaseWithRetry();
+    void startWorkerWithRetry();
 
     logger.info('✅ Media service initialized');
 

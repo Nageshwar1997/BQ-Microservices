@@ -8,6 +8,7 @@ import {
 } from './server.js';
 
 const TRANSPORTER_RETRY_DELAY_MS = 30_000;
+const WORKER_START_RETRY_DELAY_MS = 30_000;
 
 /* -------------------------------------------------------------------------- */
 /*                          SMTP Transporter Connect                          */
@@ -31,6 +32,24 @@ const connectTransporterWithRetry = async (): Promise<void> => {
 };
 
 /* -------------------------------------------------------------------------- */
+/*                            BullMQ Worker Start                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Starts the BullMQ worker once the transporter is connected, polling in
+ * the background so it never picks up a job it can't yet send.
+ */
+const startWorkerWithRetry = async (): Promise<void> => {
+  while (!isShuttingDown() && !transporter.isConnected()) {
+    await new Promise((resolve) => setTimeout(resolve, WORKER_START_RETRY_DELAY_MS));
+  }
+
+  if (!isShuttingDown()) {
+    workerManager.start();
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 /*                              Startup Sequence                              */
 /* -------------------------------------------------------------------------- */
 
@@ -41,12 +60,9 @@ const connectTransporterWithRetry = async (): Promise<void> => {
  *
  * Startup order:
  * 1. Start the HTTP server.
- * 2. Start the BullMQ worker.
- * 3. Connect the SMTP transporter (non-blocking, retried in the background).
- *
- * The worker starts before the transporter is connected - each job handler
- * checks readiness itself and fails fast, letting BullMQ's own retry/backoff
- * pick the job back up once the transporter is ready.
+ * 2. Connect the SMTP transporter (non-blocking, retried in the background).
+ * 3. Start the BullMQ worker once the transporter is connected (non-blocking,
+ *    retried in the background).
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
@@ -56,9 +72,8 @@ export const startup = async (): Promise<void> => {
   try {
     await startHttpServer();
 
-    workerManager.start();
-
     void connectTransporterWithRetry();
+    void startWorkerWithRetry();
 
     logger.info('✅ Mail service initialized');
 
