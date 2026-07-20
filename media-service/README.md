@@ -4,7 +4,7 @@
 **Service:** Media Service
 **Author:** Nageshwar Pawar
 **Version:** 1.0.0
-**Port:** 8084
+**Port:** configured via `PORT` (see [§4](#4-environment-variables))
 
 ---
 
