@@ -81,7 +81,7 @@ app[health.method](health.path, (_, res) => {
 });
 
 /**
- * Server wake-up (All Services) endpoint.
+ * Service wake-up endpoint.
  */
 app[wakeUp.method](wakeUp.path, (_, res) => {
   res.success({ message: 'Mail Service is awaked.' });
