@@ -1,14 +1,14 @@
 import { logger, transporter, workerManager } from '../configs/index.js';
 import {
-  // isShuttingDown,
+  isShuttingDown,
   resetShuttingDown,
   resetStarted,
   setStarted,
   startHttpServer,
 } from './server.js';
 
-// const TRANSPORTER_RETRY_DELAY_MS = 30_000;
-// const WORKER_START_RETRY_DELAY_MS = 30_000;
+const TRANSPORTER_RETRY_DELAY_MS = 30_000;
+const WORKER_START_RETRY_DELAY_MS = 30_000;
 
 /* -------------------------------------------------------------------------- */
 /*                            Mail Transporter Connect                        */
@@ -21,16 +21,16 @@ import {
  * Runs independently of the HTTP server so a slow or unreachable mail
  * provider never blocks the service from binding its port.
  */
-// const connectTransporterWithRetry = async (): Promise<void> => {
-//   while (!isShuttingDown() && !transporter.isConnected()) {
-//     try {
-//       await transporter.start();
-//       return;
-//     } catch {
-//       await new Promise((resolve) => setTimeout(resolve, TRANSPORTER_RETRY_DELAY_MS));
-//     }
-//   }
-// };
+const connectTransporterWithRetry = async (): Promise<void> => {
+  while (!isShuttingDown() && !transporter.isConnected()) {
+    try {
+      await transporter.start();
+      return;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, TRANSPORTER_RETRY_DELAY_MS));
+    }
+  }
+};
 
 /* -------------------------------------------------------------------------- */
 /*                            BullMQ Worker Start                             */
@@ -40,15 +40,15 @@ import {
  * Starts the BullMQ worker once the transporter is connected, polling in
  * the background so it never picks up a job it can't yet send.
  */
-// const startWorkerWithRetry = async (): Promise<void> => {
-//   while (!isShuttingDown() && !transporter.isConnected()) {
-//     await new Promise((resolve) => setTimeout(resolve, WORKER_START_RETRY_DELAY_MS));
-//   }
+const startWorkerWithRetry = async (): Promise<void> => {
+  while (!isShuttingDown() && !transporter.isConnected()) {
+    await new Promise((resolve) => setTimeout(resolve, WORKER_START_RETRY_DELAY_MS));
+  }
 
-//   if (!isShuttingDown()) {
-//     workerManager.start();
-//   }
-// };
+  if (!isShuttingDown()) {
+    workerManager.start();
+  }
+};
 
 /* -------------------------------------------------------------------------- */
 /*                              Startup Sequence                              */
@@ -73,11 +73,8 @@ export const startup = async (): Promise<void> => {
   try {
     await startHttpServer();
 
-    await transporter.start();
-    workerManager.start();
-
-    // void connectTransporterWithRetry();
-    // void startWorkerWithRetry();
+    void connectTransporterWithRetry();
+    void startWorkerWithRetry();
 
     logger.info('✅ Mail service initialized');
 
