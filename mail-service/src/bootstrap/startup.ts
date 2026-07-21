@@ -1,4 +1,4 @@
-import { logger, transporter } from '../configs/index.js';
+import { logger, transporter, workerManager } from '../configs/index.js';
 import {
   // isShuttingDown,
   resetShuttingDown,
@@ -74,7 +74,7 @@ export const startup = async (): Promise<void> => {
     await startHttpServer();
 
     await transporter.start();
-    await transporter.start();
+    workerManager.start();
 
     // void connectTransporterWithRetry();
     // void startWorkerWithRetry();
