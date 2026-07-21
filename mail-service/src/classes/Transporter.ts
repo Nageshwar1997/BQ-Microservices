@@ -1,40 +1,26 @@
-import { promises as dns } from 'node:dns';
-import net from 'node:net';
-
 import { stringifyData } from '@beautinique/shared-utils';
 import { convert } from 'html-to-text';
-import { createTransport, type Transporter } from 'nodemailer';
 
 import { logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import { getOtpHtmlMessage } from '../utils/index.js';
 
+const BREVO_API_BASE = 'https://api.brevo.com/v3';
+
+interface IBrevoErrorBody {
+  code?: string;
+  message?: string;
+}
+
 /**
- * Resolves `host` to a literal IPv4 address.
+ * Sends email via Brevo's transactional email REST API instead of raw SMTP.
  *
- * Nodemailer resolves both A and AAAA records itself and then picks one at
- * random to connect to (`lib/shared/index.js`'s `formatDNSValue`) -
- * `dns.setDefaultResultOrder('ipv4first')` has no effect on this, since
- * that path never calls `dns.lookup()`. On a host with no outbound IPv6
- * route (e.g. Render), a random IPv6 pick fails with ENETUNREACH. Handing
- * Nodemailer an already-resolved IPv4 literal makes its own `net.isIP(host)`
- * check skip that DNS/family-selection logic entirely, for every
- * connection this transport ever opens.
+ * Render (and Google, independently) were silently dropping every outbound
+ * SMTP connection to smtp.gmail.com on both 587 and 465 - `ETIMEDOUT` on
+ * every attempt, regardless of IPv4/IPv6 - so no SMTP port worked from this
+ * host. An HTTPS API call on port 443 sidesteps that entirely.
  */
-const resolveIpv4Host = async (host: string): Promise<string> => {
-  if (net.isIP(host)) return host;
-
-  const [address] = await dns.resolve4(host);
-
-  if (!address) {
-    throw new Error(`Could not resolve an IPv4 address for MAIL_HOST "${host}".`);
-  }
-
-  return address;
-};
-
-export class NodemailerTransporter {
-  private transporter: Transporter | undefined;
+export class MailTransporter {
   private isReady = false;
 
   /* ---------------- READY STATE ---------------- */
@@ -49,25 +35,16 @@ export class NodemailerTransporter {
     try {
       if (this.isReady) return;
 
-      if (!this.transporter) {
-        const host = await resolveIpv4Host(envs.mail.host);
+      // Confirms the API key is valid before accepting traffic - the HTTP
+      // equivalent of an SMTP transporter's `verify()`.
+      const response = await fetch(`${BREVO_API_BASE}/account`, {
+        method: 'GET',
+        headers: { 'api-key': envs.mail.apiKey, Accept: 'application/json' },
+      });
 
-        this.transporter = createTransport({
-          host,
-          port: envs.mail.port,
-          // Port 465 is implicit TLS (secure from the first byte); 587/25
-          // are STARTTLS (start plaintext, then upgrade).
-          secure: envs.mail.port === 465,
-          auth: { user: envs.mail.user, pass: envs.mail.pass },
-          pool: true,
-          // `host` above is now a literal IP, so Nodemailer can't derive
-          // the TLS server name from it - set it explicitly so SNI/cert
-          // hostname validation still checks against the real hostname.
-          tls: { servername: envs.mail.host },
-        });
+      if (!response.ok) {
+        throw new Error(`Brevo account check failed with status ${String(response.status)}`);
       }
-
-      await this.transporter.verify();
 
       this.isReady = true;
       logger.info('✅ Transporter is ready.');
@@ -81,35 +58,42 @@ export class NodemailerTransporter {
   /* ---------------- STOP ---------------- */
 
   public stop() {
-    try {
-      if (!this.isReady) return;
+    if (!this.isReady) return;
 
-      this.transporter?.close();
-
-      this.isReady = false;
-      logger.warn('🛑 Mail Service Closed');
-    } catch (error) {
-      logger.error(`❌ Mail Service close failed: ${stringifyData(error)}`);
-    }
+    // Stateless HTTP client - nothing to close, just reflect the new state.
+    this.isReady = false;
+    logger.warn('🛑 Mail Service Closed');
   }
 
   /* ---------------- Generic send email ---------------- */
 
   private async sendMail(options: { to: string; subject: string; htmlOrText: string }) {
-    if (!this.transporter) {
-      throw new Error('Mail transporter is not started.');
-    }
-
     const text = convert(options.htmlOrText, { wordwrap: 130 });
 
     try {
-      await this.transporter.sendMail({
-        from: `Beautinique <${envs.mail.from}>`,
-        to: options.to,
-        subject: options.subject,
-        text,
-        html: options.htmlOrText,
+      const response = await fetch(`${BREVO_API_BASE}/smtp/email`, {
+        method: 'POST',
+        headers: {
+          'api-key': envs.mail.apiKey,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'Beautinique', email: envs.mail.from },
+          to: [{ email: options.to }],
+          subject: options.subject,
+          htmlContent: options.htmlOrText,
+          textContent: text,
+        }),
       });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as IBrevoErrorBody | null;
+
+        throw new Error(
+          `Brevo send failed (${String(response.status)}): ${body?.message ?? response.statusText}`,
+        );
+      }
     } catch (error) {
       logger.error(`❌ Email send failed: ${stringifyData(error)}`);
       throw error;

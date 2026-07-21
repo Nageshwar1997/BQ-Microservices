@@ -10,6 +10,9 @@ const {
   BULL_MQ_USERNAME,
 
   // C
+
+  BREVO_API_KEY,
+
   // D
   // E
   // F
@@ -21,10 +24,6 @@ const {
   // L
   // M
 
-  MAIL_HOST,
-  MAIL_PORT,
-  MAIL_USER,
-  MAIL_PASS,
   MAIL_FROM,
 
   // N
@@ -70,10 +69,7 @@ export const envs = {
   // M
 
   mail: {
-    host: requireEnv(MAIL_HOST, 'MAIL_HOST'),
-    port: requirePort(MAIL_PORT, 'MAIL_PORT'),
-    user: requireEnv(MAIL_USER, 'MAIL_USER'),
-    pass: requireEnv(MAIL_PASS, 'MAIL_PASS'),
+    apiKey: requireEnv(BREVO_API_KEY, 'BREVO_API_KEY'),
     from: requireEnv(MAIL_FROM, 'MAIL_FROM'),
   },
 

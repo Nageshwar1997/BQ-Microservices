@@ -28,7 +28,7 @@ const shutdownTasks: readonly IShutdownTask[] = Object.freeze([
  * Shutdown order:
  * 1. Stop accepting HTTP requests.
  * 2. Stop the BullMQ worker.
- * 3. Close the SMTP transporter.
+ * 3. Close the mail transporter.
  * 4. Destroy any remaining sockets.
  * 5. Exit process.
  */

@@ -11,14 +11,15 @@ const TRANSPORTER_RETRY_DELAY_MS = 30_000;
 const WORKER_START_RETRY_DELAY_MS = 30_000;
 
 /* -------------------------------------------------------------------------- */
-/*                          SMTP Transporter Connect                          */
+/*                            Mail Transporter Connect                        */
 /* -------------------------------------------------------------------------- */
 
 /**
- * Connects the SMTP transporter, retrying in the background on failure.
+ * Connects the mail transporter (verifies the Brevo API key), retrying in
+ * the background on failure.
  *
- * Runs independently of the HTTP server so a slow or unreachable SMTP host
- * never blocks the service from binding its port.
+ * Runs independently of the HTTP server so a slow or unreachable mail
+ * provider never blocks the service from binding its port.
  */
 const connectTransporterWithRetry = async (): Promise<void> => {
   while (!isShuttingDown() && !transporter.isConnected()) {
@@ -60,7 +61,7 @@ const startWorkerWithRetry = async (): Promise<void> => {
  *
  * Startup order:
  * 1. Start the HTTP server.
- * 2. Connect the SMTP transporter (non-blocking, retried in the background).
+ * 2. Connect the mail transporter (non-blocking, retried in the background).
  * 3. Start the BullMQ worker once the transporter is connected (non-blocking,
  *    retried in the background).
  */

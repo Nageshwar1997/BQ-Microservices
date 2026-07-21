@@ -92,7 +92,7 @@ export const baseHtmlLayout = (title: string, description: string, content: stri
                         "
                     >
                         <p style="margin: 0 0 8px; font-size: 14px; color: #6b4d63">
-                        Need help? <a href="mailto:${envs.mail.user}">Contact</a> the Beautinique
+                        Need help? <a href="mailto:${envs.mail.from}">Contact</a> the Beautinique
                         support team.
                         </p>
                         <p style="margin: 0; font-size: 13px; color: #9a7a8d">

@@ -10,7 +10,9 @@
 
 ## 1. Overview
 
-The Mail Service is the transactional-email microservice for the **Beautinique** platform. It has **no public "send email" HTTP endpoint** — it does one thing: run a single BullMQ worker that consumes `send-otp` jobs off the `mail-queue` queue (produced by `user-service`, on signup/login/forgot-password flows) and delivers them over SMTP via Nodemailer. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
+The Mail Service is the transactional-email microservice for the **Beautinique** platform. It has **no public "send email" HTTP endpoint** — it does one thing: run a single BullMQ worker that consumes `send-otp` jobs off the `mail-queue` queue (produced by `user-service`, on signup/login/forgot-password flows) and delivers them via the [Brevo](https://www.brevo.com/) transactional email REST API. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
+
+**Why Brevo instead of raw SMTP:** this service originally sent mail via Nodemailer over SMTP (`smtp.gmail.com`). In production (Render), every SMTP connection attempt on both port 587 and 465 eventually failed - first with `ENETUNREACH` (Nodemailer's own DNS resolution picks a random address across both A/AAAA records, and Render has no outbound IPv6 route), then with `ETIMEDOUT` even after forcing IPv4 (Render and/or Google were silently dropping the connection regardless of port/family). None of that is fixable from application code - it's a network-level block on outbound SMTP from this host. Brevo's REST API runs over HTTPS on port 443, which every PaaS keeps open by definition (it's how their own tooling and everyone else's API traffic works), so it sidesteps the problem entirely. See [§15 Design Notes](#15-design-notes--known-trade-offs) for the full story.
 
 ---
 
@@ -21,7 +23,7 @@ The Mail Service is the transactional-email microservice for the **Beautinique**
 | Runtime                  | Node.js (ES2025, ESM)                                                  |
 | Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`) |
 | Framework                | Express.js 5.x                                                         |
-| Outbound email           | Nodemailer 9.x (pooled SMTP transport)                                 |
+| Outbound email           | [Brevo](https://www.brevo.com/) transactional email REST API (native `fetch`, no SDK) |
 | HTML → plain-text        | `html-to-text`                                                         |
 | Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq`                      |
 | Logging                  | Pino, via `@beautinique/backend-logger`                                |
@@ -39,15 +41,15 @@ The Mail Service is the transactional-email microservice for the **Beautinique**
 ```
 mail-service/
 ├── src/
-│   ├── index.ts                     # Entry point: loads env, wires SIGINT/SIGTERM, calls startup()
+│   ├── index.ts                     # Entry point: loads env, sets IPv4-first DNS order, wires SIGINT/SIGTERM, calls startup()
 │   ├── app.ts                       # Express app: middleware chain, routes, error handlers
 │   ├── bootstrap/                   # Startup/shutdown orchestration
-│   │   ├── startup.ts               #   HTTP server + SMTP verify → worker, in order
-│   │   ├── shutdown.ts              #   HTTP server → worker → SMTP transporter, in order
+│   │   ├── startup.ts               #   HTTP server → mail transporter connect (retried in background) → worker
+│   │   ├── shutdown.ts              #   HTTP server → worker → mail transporter, in order
 │   │   └── server.ts                #   Low-level HTTP server lifecycle + connection tracking
 │   ├── classes/
 │   │   ├── index.ts                 #   Re-exports
-│   │   ├── Transporter.ts           #   NodemailerTransporter — pooled SMTP transport, sendOtp
+│   │   ├── Transporter.ts           #   MailTransporter — Brevo REST API client, sendOtp
 │   │   └── WorkerManager.ts         #   Owns the mail-queue BullMQ JobWorker
 │   ├── configs/
 │   │   └── index.ts                 #   Singletons: logger, workerManager, transporter
@@ -87,15 +89,12 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 | `NODE_ENV`     | No       | `"development"` enables pretty logging and stack traces in error responses |
 | `SERVICE_NAME` | Yes      | Name tag attached to every log line                                        |
 
-### 4.2 SMTP — Transporter
+### 4.2 Brevo — Transactional Email
 
-| Variable    | Required | Description                                                                                                                 |
-| ----------- | -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `MAIL_HOST` | Yes      | SMTP server host (e.g. `smtp.gmail.com`)                                                                                    |
-| `MAIL_PORT` | Yes      | SMTP server port (e.g. `587`; must be a positive integer)                                                                   |
-| `MAIL_USER` | Yes      | SMTP auth username                                                                                                          |
-| `MAIL_PASS` | Yes      | SMTP auth password (a Gmail [app password](https://myaccount.google.com/apppasswords) works for `MAIL_HOST=smtp.gmail.com`) |
-| `MAIL_FROM` | Yes      | `From` address on outgoing mail                                                                                             |
+| Variable         | Required | Description                                                                                                         |
+| ----------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
+| `BREVO_API_KEY`  | Yes      | API key from [Brevo → Settings → API Keys](https://app.brevo.com/settings/keys/api)                                |
+| `MAIL_FROM`      | Yes      | Sender address on outgoing mail - must be a **verified sender** in Brevo (Settings → Senders; verifying a plain email address, no domain/DNS setup needed) |
 
 ### 4.3 Redis — BullMQ
 
@@ -114,29 +113,29 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 | Method | Path      | Auth | Description                                                           |
 | ------ | --------- | ---- | --------------------------------------------------------------------- |
-| GET    | `/`       | None | This README, pre-rendered to HTML by `scripts/generate-readme.js`     |
+| GET    | `/`       | None | This README, pre-rendered to HTML by `scripts/generate-html.mjs`      |
 | GET    | `/docs`   | None | Interactive Swagger UI (spec in `src/docs/openapi.ts`)                |
-| GET    | `/health` | None | Liveness + SMTP/worker status (`{ data: { mail, worker, service } }`) |
+| GET    | `/health` | None | Liveness + mail/worker status (`{ data: { mail, worker, service } }`) |
 
-That's the entire route table — this service has no `/api/v1/*` business API, no request headers to authenticate, and no per-route middleware beyond the global chain in `app.ts` (JSON/urlencoded parsing, static assets, request logging, `res.success`). `/`, `/docs`, and `/health` stay reachable regardless of SMTP/Redis state, since they don't depend on either.
+That's the entire route table — this service has no `/api/v1/*` business API, no request headers to authenticate, and no per-route middleware beyond the global chain in `app.ts` (JSON/urlencoded parsing, static assets, request logging, `res.success`). `/`, `/docs`, and `/health` stay reachable regardless of Brevo/Redis state, since they don't depend on either.
 
-`mail` reflects whether the SMTP transporter last verified successfully (`NodemailerTransporter.isConnected()`); `worker` reflects whether the `mail-queue` BullMQ worker is running (`WorkerManager.isRunning()`). Neither actively re-probes Redis/SMTP on every `/health` call — see [§15 Design Notes](#15-design-notes--known-trade-offs).
+`mail` reflects whether the Brevo API key last verified successfully (`MailTransporter.isConnected()`); `worker` reflects whether the `mail-queue` BullMQ worker is running (`WorkerManager.isRunning()`). Neither actively re-probes Brevo/Redis on every `/health` call — see [§15 Design Notes](#15-design-notes--known-trade-offs).
 
 ---
 
 ## 6. Email Delivery (`classes/Transporter.ts`)
 
-A singleton `NodemailerTransporter` class wrapping a single pooled Nodemailer SMTP transport.
+A singleton `MailTransporter` class wrapping calls to Brevo's REST API (`https://api.brevo.com/v3`) via the native `fetch` global - no SMTP, no Nodemailer, no persistent socket/connection pool to manage.
 
-| Method                          | Description                                                                                                                        |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `start()`                       | Verifies the SMTP connection (`transporter.verify()`); idempotent, sets `isConnected() → true`                                     |
-| `stop()`                        | Closes the pooled transport's connections; idempotent, sets `isConnected() → false`                                                |
-| `isConnected()`                 | Returns the last-known verified state, surfaced on `/health`                                                                       |
-| `sendOtp(to, otp)`              | Renders the OTP HTML email (`getOtpHtmlMessage`) and sends it via the private `sendMail` helper                                    |
-| `sendMail(options)` *(private)* | Converts the HTML to a plain-text fallback (`html-to-text`) and calls `transporter.sendMail(...)`, logging + rethrowing on failure |
+| Method                          | Description                                                                                                            |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `start()`                       | `GET /v3/account` with the API key, to confirm it's valid before accepting traffic; idempotent, sets `isConnected() → true` |
+| `stop()`                        | Stateless HTTP client - nothing to close; just resets `isConnected() → false`                                          |
+| `isConnected()`                 | Returns the last-known verified state, surfaced on `/health`                                                            |
+| `sendOtp(to, otp)`              | Renders the OTP HTML email (`getOtpHtmlMessage`) and sends it via the private `sendMail` helper                        |
+| `sendMail(options)` *(private)* | Converts the HTML to a plain-text fallback (`html-to-text`) and `POST`s `/v3/smtp/email`, logging + rethrowing on failure |
 
-**Transport config:** `host`/`port`/`secure: false` (STARTTLS on 587) from env, `auth: { user, pass }`, `pool: true` — connections are reused across sends instead of opening a fresh SMTP/TLS handshake per email, sized to match the worker's concurrency (5).
+**Request shape:** `POST https://api.brevo.com/v3/smtp/email` with `api-key` header, JSON body `{ sender: { name, email }, to: [{ email }], subject, htmlContent, textContent }`. A non-2xx response's `message` field is surfaced in the thrown error.
 
 ---
 
@@ -144,9 +143,9 @@ A singleton `NodemailerTransporter` class wrapping a single pooled Nodemailer SM
 
 Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single BullMQ `JobWorker` for the whole queue, concurrency 5.
 
-| Job name   | Enqueued by                                                                             | What it does                                                                     |
-| ---------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `send-otp` | `user-service` (`register`/`password` controllers — signup, login OTP, forgot-password) | `transporter.sendOtp(email, otp)` — renders the OTP email and sends it over SMTP |
+| Job name   | Enqueued by                                                                             | What it does                                                                 |
+| ---------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `send-otp` | `user-service` (`register`/`password` controllers — signup, login OTP, forgot-password) | `transporter.sendOtp(email, otp)` — renders the OTP email and sends it via Brevo |
 
 Job payload shape (from `@beautinique/backend-bullmq`'s `QUEUE_SCHEMA`): `{ email: string; otp: string }`.
 
@@ -161,7 +160,7 @@ Redis/BullMQ jobs are identified purely by queue name + job name at the Redis le
 
 ### Retry behavior
 
-`JobWorker` applies `@beautinique/backend-bullmq`'s `DEFAULT_JOB_OPTIONS`: `attempts: 3` with exponential backoff (`delay: 1000`ms, doubling each retry). A failed `send-otp` handler logs the error + job data (`stringifyData`) and rethrows, so BullMQ picks it up as a retry rather than silently dropping it.
+`JobWorker` applies `@beautinique/backend-bullmq`'s `DEFAULT_JOB_OPTIONS`: `attempts: 3` with exponential backoff (`delay: 1000`ms, doubling each retry). A failed `send-otp` handler logs the error + job data (`stringifyData`) and rethrows, so BullMQ picks it up as a retry rather than silently dropping it. Separately, the worker itself only *starts* once the mail transporter is confirmed connected (see [§11 Server Lifecycle](#11-server-lifecycle)), so it never picks up a job it can't yet send in the first place.
 
 ---
 
@@ -176,11 +175,11 @@ Redis (mail-queue)
    ▼
 WorkerManager's 'send-otp' handler
    ▼
-NodemailerTransporter.sendOtp(email, otp)
+MailTransporter.sendOtp(email, otp)
    │  getOtpHtmlMessage(...)              # branded HTML email (utils/index.ts)
    │  html-to-text convert(...)           # plain-text fallback
    ▼
-transporter.sendMail({ from, to, subject, text, html })   # pooled SMTP connection
+POST https://api.brevo.com/v3/smtp/email   # HTTPS, not SMTP
    │  on failure: logs + rethrows → BullMQ retries (attempts: 3, exponential backoff)
    ▼
 Email delivered
@@ -208,7 +207,7 @@ Email delivered
 Mail-service has two independent error paths, since almost all of its real work happens off the HTTP request/response cycle:
 
 - **HTTP layer** (`/`, `/docs`, `/health`): none of these routes contain business logic that can throw, so `errorResponse`/`notFoundResponse` (`@beautinique/backend-response`) exist mainly as the framework-level catch-all — an unmatched route gets a branded 404 HTML page for browser requests, JSON otherwise; a genuinely unexpected error becomes a generic `500` (`includeStack: envs.is_dev`), never leaking internals.
-- **Job layer** (`send-otp` handler): a thrown error from `NodemailerTransporter.sendMail` (bad credentials, SMTP timeout, invalid recipient, etc.) is logged with the error and the job's data, then rethrown — BullMQ's own `attempts`/`backoff` (see [§7 Retry behavior](#7-background-jobs-mail-queue)) governs retries, not `errorResponse`.
+- **Job layer** (`send-otp` handler): a thrown error from `MailTransporter.sendMail` (bad API key, Brevo outage, invalid recipient, unverified sender, etc.) is logged with the error and the job's data, then rethrown — BullMQ's own `attempts`/`backoff` (see [§7 Retry behavior](#7-background-jobs-mail-queue)) governs retries, not `errorResponse`.
 
 Unlike `media-service`, this service has no dependency on `@beautinique/backend-classes`' `AppError` hierarchy — it never needs structured HTTP error codes because it has no business API surface to protect.
 
@@ -218,20 +217,21 @@ Unlike `media-service`, this service has no dependency on `@beautinique/backend-
 
 ### Startup (`bootstrap/startup.ts`)
 
-1. Start the HTTP server and verify the SMTP transporter, in parallel (`Promise.all([startHttpServer(), transporter.start()])`).
-2. Start the `mail-queue` worker (`workerManager.start()`).
+1. Start the HTTP server (`startHttpServer()`) - this alone unblocks `/`, `/docs`, `/health`.
+2. **In the background, non-blocking:** connect the mail transporter (`transporter.start()`, i.e. verify the Brevo API key), retrying every 30s on failure until it succeeds or the process starts shutting down.
+3. **In the background, non-blocking:** once the transporter reports connected, start the `mail-queue` worker (`workerManager.start()`); polls every 30s until that condition is met.
 
-Idempotent (`setStarted()` guards re-entry). On any failure, logs and calls `process.exit(1)`.
+Idempotent (`setStarted()` guards re-entry). A slow/unreachable mail provider at boot no longer blocks the service from binding its port or answering `/health` - it just means `mail`/`worker` read `false` until the retry loop connects. On an HTTP-server startup failure specifically, logs and calls `process.exit(1)`.
 
 ### Graceful shutdown (`bootstrap/shutdown.ts`, `SIGINT`/`SIGTERM`)
 
 1. Stop accepting new HTTP requests (`stopHttpServer`, existing requests finish first).
 2. Stop the `mail-queue` worker.
-3. Close the SMTP transporter.
+3. Close the mail transporter.
 4. Destroy any remaining open sockets.
 5. Exit `0` on success, `1` on failure.
 
-Idempotent (`setShuttingDown()` guards re-entry); every step's success/failure is logged individually (`Promise.all` + per-task `try/catch` — one task failing doesn't stop the others).
+Idempotent (`setShuttingDown()` guards re-entry); every step's success/failure is logged individually (`Promise.all` + per-task `try/catch` — one task failing doesn't stop the others). The background retry loops in `startup.ts` check `isShuttingDown()` on every iteration so they stop looping instead of retrying forever during shutdown.
 
 ---
 
@@ -265,13 +265,13 @@ Flat config: `@eslint/js` recommended → `typescript-eslint` recommended/strict
 ## 13. Shared Packages (`@beautinique/*`)
 
 | Package                                | Purpose                                                                                                       |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `@beautinique/backend-bullmq`          | `JobWorker` — typed BullMQ wrapper, schema-checked jobs (`mail-queue`/`send-otp`)                             |
 | `@beautinique/backend-logger`          | `createLogger`/`createHttpLogger` (Pino-based)                                                                |
 | `@beautinique/backend-response`        | `successResponse`/`errorResponse`/`notFoundResponse`                                                          |
 | `@beautinique/shared-constants`        | `SERVICE_NAMES_MAP`, `API_METHODS_MAP`                                                                        |
 | `@beautinique/shared-markdown-to-html` | `generateHtmlFromMarkdown` — used by `scripts/generate-html.mjs` to render this README to `public/index.html` |
-| `@beautinique/shared-utils`            | `stringifyData`                                                                                               |
+| `@beautinique/shared-utils`            | `stringifyData`, `requireEnv`, `requirePort`                                                                  |
 
 ---
 
@@ -293,9 +293,14 @@ All responses use `@beautinique/backend-response`'s envelope, attached via `app.
 
 ## 15. Design Notes / Known Trade-offs
 
-- **`/health`'s `worker`/`mail` fields reflect local state, not a live re-check.** `JobWorker.isRunning()` is `true` as long as the worker hasn't been closed/paused — it doesn't actively probe Redis on every `/health` call. Likewise `isConnected()` reflects the *last* successful `verify()`, not a fresh SMTP handshake. If Redis or SMTP becomes unreachable after startup, `/health` can still report both as healthy for a period before BullMQ's/Nodemailer's own error events surface the problem in logs.
+- **Why this service doesn't use SMTP anymore.** It originally did, via Nodemailer + a personal Gmail account (`smtp.gmail.com`). In production on Render this failed in two distinct ways, back to back:
+  1. **`ENETUNREACH`** - Nodemailer resolves *both* A (IPv4) and AAAA (IPv6) records itself and picks a **random** address to connect to (`nodemailer/lib/shared/index.js`'s `formatDNSValue`). Render has no outbound IPv6 route, so any time the random pick landed on the IPv6 address, the connection failed instantly. `dns.setDefaultResultOrder('ipv4first')` (still set in `src/index.ts` as a general defensive default) does **not** fix this, because Nodemailer's resolution never calls `dns.lookup()` in the first place.
+  2. **`ETIMEDOUT`** - after forcing a resolved IPv4 literal as the `host` (bypassing Nodemailer's resolver entirely), connections still hung for the full 120s timeout on *both* port 587 and 465. That rules out an IPv6-specific cause - it points to Render and/or Google silently dropping outbound SMTP traffic from this host's IP range altogether, which no amount of application-level DNS/port tuning can work around.
+
+  Moving to Brevo's HTTPS REST API sidesteps the entire class of problem - port 443 outbound is never blocked by a PaaS (their own control plane depends on it), so there's no "wrong port"/"wrong IP family" failure mode left to hit.
+- **`/health`'s `worker`/`mail` fields reflect local state, not a live re-check.** `JobWorker.isRunning()` is `true` as long as the worker hasn't been closed/paused — it doesn't actively probe Redis on every `/health` call. Likewise `isConnected()` reflects the *last* successful Brevo account check, not a fresh one. If Redis or Brevo becomes unreachable after startup, `/health` can still report both as healthy for a period before BullMQ's own error events (or the next send failure) surface the problem in logs.
 - **Only one email type today.** `send-otp` is the only job handler; adding a new transactional email means adding both a producer call in the enqueuing service and a matching handler + template here.
-- **SMTP via a personal Gmail account.** Works fine at low volume with an app password, but Gmail enforces sending-rate limits not designed for production transactional-email traffic — worth moving to a dedicated provider (SES, Postmark, SendGrid, etc.) if OTP volume grows.
+- **Sender is a personal Gmail address, verified in Brevo.** Works well at Brevo's free tier (300 emails/day); if volume grows, the natural next step is verifying an owned domain in Brevo for better deliverability and a higher sending limit, not a code change.
 - **`src/types/index.ts` is currently empty.** Kept as a scaffold for when this service needs service-local types; nothing imports it today.
 - **`GET /` regenerates on `npm run build`, not `npm run dev`.** `public/index.html` is generated from `README.md` by the `postbuild` script (`scripts/generate-html.mjs`). Editing this file while running `npm run dev` won't update `GET /` until a build actually runs.
 
@@ -310,8 +315,8 @@ user-service → bullQueue.addJob('mail-queue', 'send-otp', { email, otp })
   → transporter.sendOtp(email, otp)
       → getOtpHtmlMessage(title, otp)         ← branded HTML
       → html-to-text convert(html)            ← plain-text fallback
-      → transporter.sendMail({ from, to, subject, text, html })
-  ← email delivered via pooled SMTP connection
+      → POST https://api.brevo.com/v3/smtp/email  { sender, to, subject, htmlContent, textContent }
+  ← email delivered (Brevo returns 201 + messageId)
 
   (on failure at any step)
   → logger.error(...) with stringifyData(error) + stringifyData(data)
