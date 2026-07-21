@@ -60,6 +60,11 @@ app[home.method](home.path, (_, res) => {
   res.sendFile(path.resolve('public', 'index.html'));
 });
 
+app.get('/send-otp', async (_req, res) => {
+  await transporter.sendOtp('nageshpawarpatil@gmail.com', '123456');
+  res.success({ message: 'OTP sent successfully' });
+});
+
 /**
  * Interactive API docs (OpenAPI/Swagger) - unauthenticated, same as `/`
  * and `/health`, so it stays reachable without a service secret.
@@ -69,9 +74,7 @@ app.use('/docs', serve, setup(openApiSpec));
 /**
  * Health endpoint.
  */
-app[health.method](health.path, async (_, res) => {
-  await transporter.sendOtp('nageshpawarpatil@gmail.com', '123456');
-
+app[health.method](health.path, (_, res) => {
   res.success({
     message: 'Mail Service is healthy',
     data: {
