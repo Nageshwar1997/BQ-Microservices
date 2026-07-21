@@ -1,4 +1,9 @@
-import { createError, type IAppError } from '@beautinique/backend-classes';
+import {
+  createError,
+  ERROR_CLASS_MAP,
+  type IAppError,
+  type TErrorCode,
+} from '@beautinique/backend-classes';
 import axios, {
   AxiosError,
   type AxiosInstance,
@@ -9,6 +14,9 @@ import axios, {
 import type { TApiResponse } from '../../types/index.js';
 
 type TErrorResponse = Omit<IAppError, 'cause' | 'isOperational'>;
+
+const isErrorCode = (code: string | undefined): code is TErrorCode =>
+  !!code && code in ERROR_CLASS_MAP;
 
 export class ApiRequest {
   private readonly instance: AxiosInstance;
@@ -29,7 +37,7 @@ export class ApiRequest {
         const globalErrors = errResp?.data.globalErrors;
         const fieldErrors = errResp?.data.fieldErrors;
         const statusCode = errResp?.status ?? errResp?.data.statusCode ?? 500;
-        const code = errResp?.data.code;
+        const code = isErrorCode(errResp?.data.code) ? errResp.data.code : 'INTERNAL_SERVER_ERROR';
 
         throw createError({ message, payload: { code, statusCode, fieldErrors, globalErrors } });
       }
