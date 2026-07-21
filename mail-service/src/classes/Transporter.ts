@@ -55,7 +55,9 @@ export class NodemailerTransporter {
         this.transporter = createTransport({
           host,
           port: envs.mail.port,
-          secure: false,
+          // Port 465 is implicit TLS (secure from the first byte); 587/25
+          // are STARTTLS (start plaintext, then upgrade).
+          secure: envs.mail.port === 465,
           auth: { user: envs.mail.user, pass: envs.mail.pass },
           pool: true,
           // `host` above is now a literal IP, so Nodemailer can't derive
