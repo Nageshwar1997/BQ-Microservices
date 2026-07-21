@@ -19,7 +19,7 @@ export const openApiSpec = {
     title: 'Mail Service API',
     version: '1.0.0',
     description:
-      'Sends transactional emails (currently OTP verification codes) over SMTP. ' +
+      'Sends transactional emails (currently OTP verification codes) via the Brevo API. ' +
       'Has no public send endpoints - work is consumed from the `mail-queue` BullMQ ' +
       'queue (job `send-otp`), enqueued by other services such as user-service. ' +
       'See the [README](/) for more details.',
@@ -39,7 +39,7 @@ export const openApiSpec = {
                 schema: successEnvelope({
                   type: 'object',
                   properties: {
-                    mail: { type: 'boolean', description: 'SMTP transporter is connected.' },
+                    mail: { type: 'boolean', description: 'Brevo API key verified.' },
                     worker: { type: 'boolean', description: 'BullMQ worker is running.' },
                     service: { type: 'string', example: SERVICE_NAMES_MAP['mail-service'] },
                   },

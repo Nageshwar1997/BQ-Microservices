@@ -23,7 +23,6 @@
     "@types/express": "^5.0.6",
     "@types/html-to-text": "^9.0.4",
     "@types/node": "^26.1.1",
-    "@types/nodemailer": "^8.0.1",
     "@types/swagger-ui-express": "^4.1.8",
     "concurrently": "^10.0.3",
     "eslint": "^10.7.0",
@@ -42,10 +41,10 @@
     "@beautinique/shared-constants": "^1.0.6",
     "@beautinique/shared-markdown-to-html": "^1.0.0",
     "@beautinique/shared-utils": "^1.0.3",
+    "@getbrevo/brevo": "^6.0.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "html-to-text": "^10.0.0",
-    "nodemailer": "^9.0.3",
     "swagger-ui-express": "^5.0.1"
   },
   "repository": {
