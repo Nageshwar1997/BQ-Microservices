@@ -1,19 +1,14 @@
 import { stringifyData } from '@beautinique/shared-utils';
+import { BrevoClient } from '@getbrevo/brevo';
 import { convert } from 'html-to-text';
 
 import { logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import { getOtpHtmlMessage } from '../utils/index.js';
 
-const BREVO_API_BASE = 'https://api.brevo.com/v3';
-
-interface IBrevoErrorBody {
-  code?: string;
-  message?: string;
-}
-
 /**
- * Sends email via Brevo's transactional email REST API instead of raw SMTP.
+ * Sends email via Brevo's transactional email API (official SDK) instead of
+ * raw SMTP.
  *
  * Render (and Google, independently) were silently dropping every outbound
  * SMTP connection to smtp.gmail.com on both 587 and 465 - `ETIMEDOUT` on
@@ -21,7 +16,12 @@ interface IBrevoErrorBody {
  * host. An HTTPS API call on port 443 sidesteps that entirely.
  */
 export class MailTransporter {
+  private client: BrevoClient;
   private isReady = false;
+
+  constructor() {
+    this.client = new BrevoClient({ apiKey: envs.mail.apiKey });
+  }
 
   /* ---------------- READY STATE ---------------- */
 
@@ -37,14 +37,7 @@ export class MailTransporter {
 
       // Confirms the API key is valid before accepting traffic - the HTTP
       // equivalent of an SMTP transporter's `verify()`.
-      const response = await fetch(`${BREVO_API_BASE}/account`, {
-        method: 'GET',
-        headers: { 'api-key': envs.mail.apiKey, Accept: 'application/json' },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Brevo account check failed with status ${String(response.status)}`);
-      }
+      await this.client.account.getAccount();
 
       this.isReady = true;
       logger.info('✅ Transporter is ready.');
@@ -71,29 +64,13 @@ export class MailTransporter {
     const text = convert(options.htmlOrText, { wordwrap: 130 });
 
     try {
-      const response = await fetch(`${BREVO_API_BASE}/smtp/email`, {
-        method: 'POST',
-        headers: {
-          'api-key': envs.mail.apiKey,
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          sender: { name: 'Beautinique', email: envs.mail.from },
-          to: [{ email: options.to }],
-          subject: options.subject,
-          htmlContent: options.htmlOrText,
-          textContent: text,
-        }),
+      await this.client.transactionalEmails.sendTransacEmail({
+        sender: { name: 'Beautinique', email: envs.mail.from },
+        to: [{ email: options.to }],
+        subject: options.subject,
+        htmlContent: options.htmlOrText,
+        textContent: text,
       });
-
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as IBrevoErrorBody | null;
-
-        throw new Error(
-          `Brevo send failed (${String(response.status)}): ${body?.message ?? response.statusText}`,
-        );
-      }
     } catch (error) {
       logger.error(`❌ Email send failed: ${stringifyData(error)}`);
       throw error;

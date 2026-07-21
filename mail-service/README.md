@@ -18,21 +18,21 @@ The Mail Service is the transactional-email microservice for the **Beautinique**
 
 ## 2. Technology Stack
 
-| Layer                    | Technology                                                             |
-| ------------------------ | ---------------------------------------------------------------------- |
-| Runtime                  | Node.js (ES2025, ESM)                                                  |
-| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`) |
-| Framework                | Express.js 5.x                                                         |
-| Outbound email           | [Brevo](https://www.brevo.com/) transactional email REST API (native `fetch`, no SDK) |
-| HTML → plain-text        | `html-to-text`                                                         |
-| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq`                      |
-| Logging                  | Pino, via `@beautinique/backend-logger`                                |
-| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                 |
-| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)               |
-| Shared response envelope | `@beautinique/backend-response`                                        |
-| Shared utilities         | `@beautinique/shared-utils`                                            |
-| Shared constants         | `@beautinique/shared-constants`                                        |
-| Code quality             | ESLint (flat config, type-checked + strict), Prettier                  |
+| Layer                    | Technology                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| Runtime                  | Node.js (ES2025, ESM)                                                                         |
+| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                        |
+| Framework                | Express.js 5.x                                                                                |
+| Outbound email           | [Brevo](https://www.brevo.com/) transactional email API, via `@getbrevo/brevo` (official SDK) |
+| HTML → plain-text        | `html-to-text`                                                                                |
+| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq`                                             |
+| Logging                  | Pino, via `@beautinique/backend-logger`                                                       |
+| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                        |
+| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                      |
+| Shared response envelope | `@beautinique/backend-response`                                                               |
+| Shared utilities         | `@beautinique/shared-utils`                                                                   |
+| Shared constants         | `@beautinique/shared-constants`                                                               |
+| Code quality             | ESLint (flat config, type-checked + strict), Prettier                                         |
 
 ---
 
@@ -91,10 +91,10 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.2 Brevo — Transactional Email
 
-| Variable         | Required | Description                                                                                                         |
-| ----------------- | -------- | --------------------------------------------------------------------------------------------------------------------- |
-| `BREVO_API_KEY`  | Yes      | API key from [Brevo → Settings → API Keys](https://app.brevo.com/settings/keys/api)                                |
-| `MAIL_FROM`      | Yes      | Sender address on outgoing mail - must be a **verified sender** in Brevo (Settings → Senders; verifying a plain email address, no domain/DNS setup needed) |
+| Variable        | Required | Description                                                                                                                                                |
+| --------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BREVO_API_KEY` | Yes      | API key from [Brevo → Settings → API Keys](https://app.brevo.com/settings/keys/api)                                                                        |
+| `MAIL_FROM`     | Yes      | Sender address on outgoing mail - must be a **verified sender** in Brevo (Settings → Senders; verifying a plain email address, no domain/DNS setup needed) |
 
 ### 4.3 Redis — BullMQ
 
@@ -125,17 +125,17 @@ That's the entire route table — this service has no `/api/v1/*` business API, 
 
 ## 6. Email Delivery (`classes/Transporter.ts`)
 
-A singleton `MailTransporter` class wrapping calls to Brevo's REST API (`https://api.brevo.com/v3`) via the native `fetch` global - no SMTP, no Nodemailer, no persistent socket/connection pool to manage.
+A singleton `MailTransporter` class wrapping Brevo's official Node.js SDK (`@getbrevo/brevo`'s `BrevoClient`) - no SMTP, no Nodemailer, no persistent socket/connection pool to manage.
 
-| Method                          | Description                                                                                                            |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `start()`                       | `GET /v3/account` with the API key, to confirm it's valid before accepting traffic; idempotent, sets `isConnected() → true` |
-| `stop()`                        | Stateless HTTP client - nothing to close; just resets `isConnected() → false`                                          |
-| `isConnected()`                 | Returns the last-known verified state, surfaced on `/health`                                                            |
-| `sendOtp(to, otp)`              | Renders the OTP HTML email (`getOtpHtmlMessage`) and sends it via the private `sendMail` helper                        |
-| `sendMail(options)` *(private)* | Converts the HTML to a plain-text fallback (`html-to-text`) and `POST`s `/v3/smtp/email`, logging + rethrowing on failure |
+| Method                          | Description                                                                                                                                               |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `start()`                       | `client.account.getAccount()`, to confirm the API key is valid before accepting traffic; idempotent, sets `isConnected() → true`                          |
+| `stop()`                        | Stateless HTTP client - nothing to close; just resets `isConnected() → false`                                                                             |
+| `isConnected()`                 | Returns the last-known verified state, surfaced on `/health`                                                                                              |
+| `sendOtp(to, otp)`              | Renders the OTP HTML email (`getOtpHtmlMessage`) and sends it via the private `sendMail` helper                                                           |
+| `sendMail(options)` *(private)* | Converts the HTML to a plain-text fallback (`html-to-text`) and calls `client.transactionalEmails.sendTransacEmail(...)`, logging + rethrowing on failure |
 
-**Request shape:** `POST https://api.brevo.com/v3/smtp/email` with `api-key` header, JSON body `{ sender: { name, email }, to: [{ email }], subject, htmlContent, textContent }`. A non-2xx response's `message` field is surfaced in the thrown error.
+**Request shape:** `sendTransacEmail({ sender: { name, email }, to: [{ email }], subject, htmlContent, textContent })`. On failure the SDK throws a typed `BrevoError` subclass (e.g. `UnauthorizedError`, `BadRequestError`) carrying `statusCode`/`body`/`message`.
 
 ---
 
@@ -143,8 +143,8 @@ A singleton `MailTransporter` class wrapping calls to Brevo's REST API (`https:/
 
 Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single BullMQ `JobWorker` for the whole queue, concurrency 5.
 
-| Job name   | Enqueued by                                                                             | What it does                                                                 |
-| ---------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Job name   | Enqueued by                                                                             | What it does                                                                     |
+| ---------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | `send-otp` | `user-service` (`register`/`password` controllers — signup, login OTP, forgot-password) | `transporter.sendOtp(email, otp)` — renders the OTP email and sends it via Brevo |
 
 Job payload shape (from `@beautinique/backend-bullmq`'s `QUEUE_SCHEMA`): `{ email: string; otp: string }`.
@@ -179,7 +179,7 @@ MailTransporter.sendOtp(email, otp)
    │  getOtpHtmlMessage(...)              # branded HTML email (utils/index.ts)
    │  html-to-text convert(...)           # plain-text fallback
    ▼
-POST https://api.brevo.com/v3/smtp/email   # HTTPS, not SMTP
+client.transactionalEmails.sendTransacEmail(...)   # @getbrevo/brevo SDK, HTTPS - not SMTP
    │  on failure: logs + rethrows → BullMQ retries (attempts: 3, exponential backoff)
    ▼
 Email delivered
@@ -265,7 +265,7 @@ Flat config: `@eslint/js` recommended → `typescript-eslint` recommended/strict
 ## 13. Shared Packages (`@beautinique/*`)
 
 | Package                                | Purpose                                                                                                       |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
 | `@beautinique/backend-bullmq`          | `JobWorker` — typed BullMQ wrapper, schema-checked jobs (`mail-queue`/`send-otp`)                             |
 | `@beautinique/backend-logger`          | `createLogger`/`createHttpLogger` (Pino-based)                                                                |
 | `@beautinique/backend-response`        | `successResponse`/`errorResponse`/`notFoundResponse`                                                          |
@@ -315,8 +315,8 @@ user-service → bullQueue.addJob('mail-queue', 'send-otp', { email, otp })
   → transporter.sendOtp(email, otp)
       → getOtpHtmlMessage(title, otp)         ← branded HTML
       → html-to-text convert(html)            ← plain-text fallback
-      → POST https://api.brevo.com/v3/smtp/email  { sender, to, subject, htmlContent, textContent }
-  ← email delivered (Brevo returns 201 + messageId)
+      → client.transactionalEmails.sendTransacEmail({ sender, to, subject, htmlContent, textContent })
+  ← email delivered (Brevo returns a messageId)
 
   (on failure at any step)
   → logger.error(...) with stringifyData(error) + stringifyData(data)
