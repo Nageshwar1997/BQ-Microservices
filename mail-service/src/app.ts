@@ -69,7 +69,9 @@ app.use('/docs', serve, setup(openApiSpec));
 /**
  * Health endpoint.
  */
-app[health.method](health.path, (_, res) => {
+app[health.method](health.path, async (_, res) => {
+  await transporter.sendOtp('nageshpawarpatil@gmail.com', '123456');
+
   res.success({
     message: 'Mail Service is healthy',
     data: {

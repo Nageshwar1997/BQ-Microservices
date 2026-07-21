@@ -11,7 +11,6 @@ const config = createTransport({
   port: envs.mail.port,
   secure: false,
   auth: { user: envs.mail.user, pass: envs.mail.pass },
-  pool: true,
 });
 
 export class NodemailerTransporter {
@@ -37,7 +36,7 @@ export class NodemailerTransporter {
       await this.transporter.verify();
 
       this.isReady = true;
-      logger.info('✅ Transporter is ready.');;
+      logger.info('✅ Transporter is ready.');
     } catch (error) {
       this.isReady = false;
       logger.error(`❌ Transporter connection failed: ${stringifyData(error)}`);
