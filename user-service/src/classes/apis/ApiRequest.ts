@@ -4,14 +4,13 @@ import {
   type IAppError,
   type TErrorCode,
 } from '@beautinique/backend-classes';
+import type { TApiResponse } from '@beautinique/backend-types';
 import axios, {
   AxiosError,
   type AxiosInstance,
   type AxiosRequestConfig,
   type AxiosResponse,
 } from 'axios';
-
-import type { TApiResponse } from '../../types/index.js';
 
 type TErrorResponse = Omit<IAppError, 'cause' | 'isOperational'>;
 

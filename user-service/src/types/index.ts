@@ -20,9 +20,3 @@ export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
 
 export interface IWishlist extends InferSchemaType<typeof wishlistSchema>, IId {}
 
-export interface TApiResponse {
-  statusCode: number;
-  message: string;
-  data?: unknown;
-  [key: string]: unknown;
-}

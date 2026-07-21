@@ -100,7 +100,7 @@ user-service/
 │   ├── services/
 │   │   └── index.ts                   #   User CRUD/query service functions
 │   ├── types/
-│   │   ├── index.ts                   #   Core interfaces (IUser, ISeller, TApiResponse, etc.)
+│   │   ├── index.ts                   #   Core interfaces (IUser, ISeller, etc.)
 │   │   └── express.d.ts               #   Request.user augmentation
 │   └── utils/
 │       └── index.ts                   #   OAuth payload builder, minimal-user projector, OTP/token generators
