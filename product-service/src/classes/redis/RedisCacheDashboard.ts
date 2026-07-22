@@ -2,7 +2,6 @@ import type {
   TDraftProductDetailsZodSchema,
   TDraftProductStepBodyZodSchema,
 } from '@beautinique/backend-types';
-import { parseData } from '@beautinique/shared-utils';
 
 import type { DashboardCacheProduct } from '../../types/index.js';
 import { RedisCacheHelper } from './RedisCacheHelper.js';
@@ -28,27 +27,13 @@ export class RedisCacheDashboard extends RedisCacheHelper {
   private async getDraftHashData(
     key: string,
   ): Promise<Partial<TDraftProductDetailsZodSchema> | null> {
-    const data = await this.getAllHashFields<string>(key);
+    const data = await this.getAllHashFields<TDraftProductDetailsZodSchema>(key);
 
     if (Object.keys(data).length === 0) {
       return null;
     }
 
-    return {
-      basicInfo: data.basicInfo ? (parseData(data.basicInfo) ?? undefined) : undefined,
-      mediaAndGallery: data.mediaAndGallery
-        ? (parseData(data.mediaAndGallery) ?? undefined)
-        : undefined,
-      descriptionAndContent: data.descriptionAndContent
-        ? (parseData(data.descriptionAndContent) ?? undefined)
-        : undefined,
-      stockAndVariants: data.stockAndVariants
-        ? (parseData(data.stockAndVariants) ?? undefined)
-        : undefined,
-      tryOnConfiguration: data.tryOnConfiguration
-        ? (parseData(data.tryOnConfiguration) ?? undefined)
-        : undefined,
-    };
+    return data;
   }
 
   public async getDraftProduct(userId: string) {
