@@ -1,7 +1,7 @@
 {
   "name": "organization-service",
   "version": "1.0.0",
-  "description": "User service for Beautinique project",
+  "description": "Organization service for Beautinique project",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

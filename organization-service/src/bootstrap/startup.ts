@@ -64,7 +64,7 @@ export const startup = async (): Promise<void> => {
     void redisCacheManager.connect();
     void connectDatabaseWithRetry();
 
-    logger.info('✅ User service initialized');
+    logger.info('✅ Organization service initialized');
 
     resetShuttingDown();
   } catch (error: unknown) {
@@ -72,7 +72,7 @@ export const startup = async (): Promise<void> => {
 
     resetShuttingDown();
 
-    logger.error(`❌ Failed to start user service: ${String(error)}`);
+    logger.error(`❌ Failed to start organization service: ${String(error)}`);
 
     process.exit(1);
   }

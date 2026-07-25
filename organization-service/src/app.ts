@@ -74,7 +74,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
  */
 app[health.method](health.path, (_, res) => {
   res.success({
-    message: 'User Service is healthy',
+    message: 'Organization Service is healthy',
     data: {
       database: getConnectionHealth(),
       service: SERVICE_NAMES_MAP['user-service'],
@@ -86,7 +86,7 @@ app[health.method](health.path, (_, res) => {
  * Service wake-up endpoint.
  */
 app[wakeUp.method](wakeUp.path, (_, res) => {
-  res.success({ message: 'User Service is awaked.' });
+  res.success({ message: 'Organization Service is awaked.' });
 });
 
 /**
