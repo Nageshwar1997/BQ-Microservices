@@ -6,9 +6,7 @@
 // } from '@beautinique/shared-constants';
 // import { Schema } from 'mongoose';
 
-// import { USER_STATUS } from '../constants/index.js';
-
-// export const userSchema = new Schema(
+// export const teamSchema = new Schema(
 //   {
 //     firstName: { type: String, trim: true, required: true },
 //     lastName: { type: String, trim: true, required: true },
@@ -51,4 +49,3 @@
 // /* ---------------- ADMIN LISTING ---------------- */
 
 // userSchema.index({ status: 1, role: 1, createdAt: -1 });
-export const schema = 0;
