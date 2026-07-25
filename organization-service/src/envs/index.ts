@@ -16,30 +16,11 @@ const {
   // E
   // F
   // G
-
-  GATEWAY_BASE_URL,
-
-  GITHUB_CLIENT_ID,
-  GITHUB_CLIENT_SECRET,
-
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-
   // H
   // I
   // J
-
-  BULL_MQ_HOST,
-  BULL_MQ_PORT,
-  BULL_MQ_PASSWORD,
-  BULL_MQ_USERNAME,
-
   // K
   // L
-
-  LINKEDIN_CLIENT_ID,
-  LINKEDIN_CLIENT_SECRET,
-
   // M
 
   MONGODB_URI,
@@ -96,22 +77,6 @@ export const envs = {
 
   // N
   // O
-
-  oAuth: {
-    github: {
-      client_id: requireEnv(GITHUB_CLIENT_ID, 'GITHUB_CLIENT_ID'),
-      client_secret: requireEnv(GITHUB_CLIENT_SECRET, 'GITHUB_CLIENT_SECRET'),
-    },
-    google: {
-      client_id: requireEnv(GOOGLE_CLIENT_ID, 'GOOGLE_CLIENT_ID'),
-      client_secret: requireEnv(GOOGLE_CLIENT_SECRET, 'GOOGLE_CLIENT_SECRET'),
-    },
-    linkedin: {
-      client_id: requireEnv(LINKEDIN_CLIENT_ID, 'LINKEDIN_CLIENT_ID'),
-      client_secret: requireEnv(LINKEDIN_CLIENT_SECRET, 'LINKEDIN_CLIENT_SECRET'),
-    },
-  },
-
   // P
 
   port: requirePort(PORT, 'PORT'),
@@ -126,12 +91,6 @@ export const envs = {
       password: requireEnv(CACHE_PASSWORD, 'REDIS_PASSWORD'),
       username: requireEnv(CACHE_USERNAME, 'REDIS_USERNAME'),
     },
-    bull_mq: {
-      host: requireEnv(BULL_MQ_HOST, 'BULL_MQ_HOST'),
-      port: requirePort(BULL_MQ_PORT, 'BULL_MQ_PORT'),
-      password: requireEnv(BULL_MQ_PASSWORD, 'BULL_MQ_PASSWORD'),
-      username: requireEnv(BULL_MQ_USERNAME, 'BULL_MQ_USERNAME'),
-    },
   },
 
   // S
@@ -141,9 +100,6 @@ export const envs = {
 
   // T
   // U
-
-  gateway_url: requireEnv(GATEWAY_BASE_URL, 'GATEWAY_BASE_URL'),
-
   // V
   // W
   // X
