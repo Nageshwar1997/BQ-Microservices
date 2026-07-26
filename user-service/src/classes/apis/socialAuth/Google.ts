@@ -3,6 +3,7 @@ import { OAuth2Client } from 'google-auth-library';
 
 import { OAUTH_API_ROUTES_AND_METHODS } from '../../../constants/index.js';
 import { envs } from '../../../envs/index.js';
+import type { IGoogleProfile } from '../../../types/index.js';
 import { getSocialAuthRedirectURL } from '../../../utils/index.js';
 import { ApiRequest } from '../ApiRequest.js';
 
@@ -37,7 +38,7 @@ export class Google extends ApiRequest {
     const { tokens } = await client.getToken(code);
     client.setCredentials(tokens);
 
-    return this.request<Record<string, string> | undefined>({
+    return this.request<IGoogleProfile>({
       ...this.routes.decode,
       ...(tokens.access_token && {
         headers: { [HEADERS_MAP.authorization]: `Bearer ${tokens.access_token}` },

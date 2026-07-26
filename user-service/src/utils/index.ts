@@ -4,25 +4,34 @@ import { randomBytes } from 'crypto';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 import { envs } from '../envs/index.js';
-import type { IUser, TSocialAuthProvider } from '../types/index.js';
+import type {
+  IGithubProfile,
+  IGoogleProfile,
+  ILinkedinProfile,
+  IUser,
+  TSocialAuthProvider,
+} from '../types/index.js';
 
 /* ======================= Auth Utils ======================= */
 
 export const createOAuthDbPayload = (
-  data: Record<string, string>,
+  data: IGoogleProfile | ILinkedinProfile | IGithubProfile,
   provider: TAuthProvider,
 ): Omit<IUser, '_id' | 'createdAt' | 'updatedAt'> => {
-  const fullName = data.name?.trim() ?? '';
+  const fullName = data.name.trim();
   const nameParts = fullName.split(/\s+/);
 
-  const firstName = data.given_name ?? nameParts[0] ?? '';
+  const firstName = 'given_name' in data ? data.given_name : (nameParts[0] ?? '');
   const lastName =
-    (data.family_name ?? (nameParts.length > 1 ? nameParts.slice(1).join(' ') : '')) || '';
-
-  const avatar = data.picture ?? data.avatar_url ?? '';
+    'family_name' in data
+      ? data.family_name
+      : nameParts.length > 1
+        ? nameParts.slice(1).join(' ')
+        : '';
+  const avatar = 'picture' in data ? data.picture : 'avatar_url' in data ? data.avatar_url : '';
 
   return {
-    email: data.email ?? '',
+    email: data.email,
     firstName,
     lastName,
     avatar,
@@ -66,7 +75,7 @@ export const getSocialAuthRedirectURL = (provider: TSocialAuthProvider) => {
   const { base: auth_base, login } = auth;
   const { base: login_base, oauth } = login;
   const { github, google, linkedin } = oauth;
-  
+
   const prefix = `${base}/${SERVICE_NAMES_MAP['user-service']}${auth_base}${login_base}` as const;
 
   const redirectMap = {

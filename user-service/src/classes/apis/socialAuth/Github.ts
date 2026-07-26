@@ -2,6 +2,7 @@ import { AUTH_PROVIDER_MAP, HEADERS_MAP } from '@beautinique/shared-constants';
 
 import { OAUTH_API_ROUTES_AND_METHODS } from '../../../constants/index.js';
 import { envs } from '../../../envs/index.js';
+import type { IGithubEmail, IGithubProfile } from '../../../types/index.js';
 import { getSocialAuthRedirectURL } from '../../../utils/index.js';
 import { ApiRequest } from '../ApiRequest.js';
 
@@ -34,22 +35,22 @@ export class Github extends ApiRequest {
 
   public async decode(access_token: string) {
     const headers = { [HEADERS_MAP.authorization]: `Bearer ${access_token}` };
-    const profile = await this.request<Record<string, string> | undefined>({
+    const profile = await this.request<IGithubProfile>({
       ...this.routes.decode_profile,
       headers,
     });
 
-    if (!!profile && !profile.email) {
-      const emails = await this.request<Record<string, string | boolean>[]>({
+    if (!profile.email) {
+      const emails = await this.request<IGithubEmail[]>({
         ...this.routes.decode_emails,
         headers,
       });
 
       const filteredEmails = emails.find((email) => email.primary);
 
-      const email = filteredEmails?.email ?? emails[0]?.email;
+      const email = filteredEmails?.email ?? emails[0]?.email ?? '';
 
-      profile.email = email as string;
+      profile.email = email;
     }
 
     return profile;

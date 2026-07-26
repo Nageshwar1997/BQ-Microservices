@@ -73,7 +73,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
   // Fetch user info from Google
   const profile = await google.decode(code);
 
-  if (!profile?.email) {
+  if (!profile.email) {
     throw new NotFoundError('User info not found');
   }
 
@@ -85,7 +85,7 @@ export const googleCallbackController = async (req: Request, res: Response) => {
     if (!user.providers.includes(AUTH_PROVIDER_MAP.GOOGLE) && 'save' in user) {
       user.providers.push(AUTH_PROVIDER_MAP.GOOGLE);
       if (!user.avatar) {
-        user.avatar = profile.picture ?? '';
+        user.avatar = profile.picture;
       }
       await user.save();
     }
@@ -122,7 +122,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
 
   const profile = await linkedin.decode(access_token);
 
-  if (!profile?.email) {
+  if (!profile.email) {
     throw new NotFoundError('User info not found');
   }
 
@@ -134,7 +134,7 @@ export const linkedinCallbackController = async (req: Request, res: Response) =>
     if (!user.providers.includes(AUTH_PROVIDER_MAP.LINKEDIN) && 'save' in user) {
       user.providers.push(AUTH_PROVIDER_MAP.LINKEDIN);
       if (!user.avatar) {
-        user.avatar = profile.picture ?? '';
+        user.avatar = profile.picture;
       }
       await user.save();
     }
@@ -170,7 +170,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
   const { access_token } = await github.access_token(code);
   const profile = await github.decode(access_token);
 
-  if (!profile?.email) {
+  if (!profile.email) {
     throw new NotFoundError('User info not found');
   }
 
@@ -182,7 +182,7 @@ export const githubCallbackController = async (req: Request, res: Response) => {
     if (!user.providers.includes(AUTH_PROVIDER_MAP.GITHUB) && 'save' in user) {
       user.providers.push(AUTH_PROVIDER_MAP.GITHUB);
       if (!user.avatar) {
-        user.avatar = profile.avatar_url ?? '';
+        user.avatar = profile.avatar_url;
       }
       await user.save();
     }
