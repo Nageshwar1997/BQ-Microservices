@@ -1,9 +1,8 @@
-import type { TAuthProvider } from '@beautinique/backend-types';
+import type { TAuthProvider, TUserRole } from '@beautinique/backend-types';
 import type { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
 import type { InferSchemaType, Types } from 'mongoose';
 
 import type { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
-import type { getMinimalUser } from '../utils/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -40,7 +39,18 @@ export type TSocialAuthProvider = Exclude<TAuthProvider, typeof AUTH_PROVIDER_MA
 
 export interface IUser extends InferSchemaType<typeof userSchema>, IId {}
 
-export type TMinimalUser = ReturnType<typeof getMinimalUser>;
+export interface IMinimalUser {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber: string;
+  avatar: string;
+  role: TUserRole;
+  providers: TAuthProvider[];
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
 

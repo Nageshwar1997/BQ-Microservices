@@ -53,6 +53,8 @@ export const getMinimalUser = (user: IUser) => {
     avatar: user.avatar,
     role: user.role,
     providers: user.providers,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt,
   };
 };
 
