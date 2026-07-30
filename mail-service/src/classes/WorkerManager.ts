@@ -35,11 +35,7 @@ export class WorkerManager {
 
         'send-contact-acknowledgement': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAcknowledgement(
-              to,
-              subject,
-              data as { ticketId: string; queryType: string },
-            );
+            await transporter.sendContactAcknowledgement(to, subject, data);
           } catch (error) {
             logger.error(
               `Failed to send contact acknowledgement. Error:${stringifyData(error)}. To:${to}. Data:${stringifyData(data)}`,
@@ -53,18 +49,7 @@ export class WorkerManager {
 
         'send-contact-admin-notification': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAdminNotification(
-              to,
-              subject,
-              data as {
-                ticketId: string;
-                name: string;
-                email: string;
-                phoneNumber: string;
-                queryType: string;
-                message: string;
-              },
-            );
+            await transporter.sendContactAdminNotification(to, subject, data);
           } catch (error) {
             logger.error(
               `Failed to send contact admin notification. Error:${String(error)}. To:${to}. Data:${stringifyData(data)}`,

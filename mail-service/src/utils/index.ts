@@ -1,5 +1,9 @@
+import type {
+  IContactAcknowledgementData,
+  IContactAdminNotificationData,
+} from '@beautinique/backend-bullmq';
+
 import { envs } from '../envs/index.js';
-import type { IContactAcknowledgementData, IContactAdminNotificationData } from '../types/index.js';
 
 const baseHtmlLayout = (
   title: string,

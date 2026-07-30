@@ -1,3 +1,4 @@
+import type { IContactAdminNotificationData } from '@beautinique/backend-bullmq';
 import { stringifyData } from '@beautinique/shared-utils';
 import { BrevoClient } from '@getbrevo/brevo';
 import { convert } from 'html-to-text';
@@ -107,14 +108,7 @@ export class MailTransporter {
   public async sendContactAdminNotification(
     to: string,
     subject: string,
-    data: {
-      ticketId: string;
-      name: string;
-      email: string;
-      phoneNumber: string;
-      queryType: string;
-      message: string;
-    },
+    data: IContactAdminNotificationData,
   ) {
     const html = getContactAdminNotificationHtmlMessage(data);
     // Lets the support agent hit "reply" and land directly in the
