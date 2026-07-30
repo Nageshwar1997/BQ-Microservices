@@ -26,7 +26,7 @@ export const CONTACT_QUERY_TYPE_MAP = Object.fromEntries(
   CONTACT_QUERY_TYPES.map((type) => [type, type]),
 );
 
-export const CONTACT_QUERY_STATUS = ['open', 'attempted', 'resolved'] as const;
+export const CONTACT_QUERY_STATUS = ['OPENED', 'ANSWERED', 'CLOSED', 'REJECTED'] as const;
 
 export const CONTACT_QUERY_STATUS_MAP = Object.fromEntries(
   CONTACT_QUERY_STATUS.map((status) => [status, status]),

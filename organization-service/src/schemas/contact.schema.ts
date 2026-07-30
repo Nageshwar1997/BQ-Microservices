@@ -16,7 +16,7 @@ export const contactQuerySchema = new Schema(
     status: {
       type: String,
       enum: CONTACT_QUERY_STATUS,
-      default: CONTACT_QUERY_STATUS_MAP.open,
+      default: CONTACT_QUERY_STATUS_MAP.OPENED,
       index: true,
     },
   },

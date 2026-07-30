@@ -21,7 +21,7 @@ export const createContactQueryController = async (req: Request, res: Response) 
     phoneNumber,
     queryType,
     message,
-    status: CONTACT_QUERY_STATUS_MAP.open,
+    status: CONTACT_QUERY_STATUS_MAP.OPENED,
   });
 
   const ticketId = contactQuery._id.toString();
