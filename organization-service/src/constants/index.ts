@@ -43,6 +43,6 @@ export const METHODS_AND_PATHS = {
     base: '/contact',
     create: { method: POST, path: '/' },
     list: { method: GET, path: '/' },
-    updateStatus: { method: PATCH, path: '/:id' },
+    updateStatus: { method: PATCH, path: '/:ticketId' },
   },
 } as const;

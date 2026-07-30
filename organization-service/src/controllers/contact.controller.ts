@@ -1,16 +1,16 @@
 import { NotFoundError } from '@beautinique/backend-classes';
 import { CONTACT_QUERY_STATUS_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
+import type {
+  TContactQueryTicketIdZodSchema,
+  TCreateContactQueryZodSchema,
+  TUpdateContactQueryStatusZodSchema,
+} from '@beautinique/backend-types';
 import type { Request, Response } from 'express';
 
 import { jobProducer, logger } from '../configs/index.js';
 import { CONTACT_QUERY_RETENTION_MS_MAP, SUPPORT_INBOX_EMAIL } from '../constants/index.js';
 import { ContactQuery } from '../models/index.js';
-import type {
-  TContactIdParamsZodSchema,
-  TCreateContactQueryZodSchema,
-  TUpdateContactQueryStatusZodSchema,
-} from '../schemas/index.js';
 import type { IListContactQueriesQuery, TContactQuery } from '../types/index.js';
 
 export const createContactQueryController = async (req: Request, res: Response) => {
@@ -90,7 +90,7 @@ export const getContactQueriesController = async (req: Request, res: Response) =
 };
 
 export const updateContactQueryStatusController = async (req: Request, res: Response) => {
-  const { id } = req.params as TContactIdParamsZodSchema;
+  const { ticketId } = req.params as TContactQueryTicketIdZodSchema;
   const { status } = req.body as TUpdateContactQueryStatusZodSchema;
 
   // CLOSED/REJECTED get a TTL deadline (see `CONTACT_QUERY_RETENTION_MS_MAP`);
@@ -99,7 +99,7 @@ export const updateContactQueryStatusController = async (req: Request, res: Resp
   const expiresAt = retentionMs ? new Date(Date.now() + retentionMs) : null;
 
   const contactQuery = await ContactQuery.findByIdAndUpdate(
-    getObjId(id),
+    getObjId(ticketId),
     { status, expiresAt },
     { new: true },
   ).lean();
