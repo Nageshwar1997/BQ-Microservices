@@ -1,13 +1,10 @@
 import { NotFoundError } from '@beautinique/backend-classes';
+import { CONTACT_QUERY_STATUS_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type { Request, Response } from 'express';
 
 import { jobProducer, logger } from '../configs/index.js';
-import {
-  CONTACT_QUERY_RETENTION_MS_MAP,
-  CONTACT_QUERY_STATUS_MAP,
-  SUPPORT_INBOX_EMAIL,
-} from '../constants/index.js';
+import { CONTACT_QUERY_RETENTION_MS_MAP, SUPPORT_INBOX_EMAIL } from '../constants/index.js';
 import { ContactQuery } from '../models/index.js';
 import type {
   TContactIdParamsZodSchema,

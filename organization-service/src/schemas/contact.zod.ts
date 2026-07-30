@@ -1,8 +1,6 @@
+import { CONTACT_QUERY_STATUS, CONTACT_QUERY_TYPES, REGEX } from '@beautinique/backend-constants';
 import { emailValidation, phoneNumberValidation } from '@beautinique/backend-zod';
-import { REGEX } from '@beautinique/shared-constants';
 import { z } from '@beautinique/shared-zod';
-
-import { CONTACT_QUERY_STATUS, CONTACT_QUERY_TYPES } from '../constants/index.js';
 
 const nameValidation = z
   .string('Name is required')

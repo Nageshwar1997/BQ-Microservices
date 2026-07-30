@@ -1,4 +1,8 @@
-import { API_METHODS_MAP } from '@beautinique/shared-constants';
+import {
+  API_METHODS_MAP,
+  type CONTACT_QUERY_STATUS,
+  CONTACT_QUERY_STATUS_MAP,
+} from '@beautinique/backend-constants';
 
 import { envs } from '../envs/index.js';
 
@@ -8,29 +12,6 @@ export const LOGGER_BASE_OPTIONS = {
   level: envs.is_dev ? 'debug' : 'info',
   pretty: envs.is_dev,
 } as const;
-
-export const CONTACT_QUERY_TYPES = [
-  'Order Related',
-  'Returns & Refunds',
-  'Payment Issue',
-  'Product Question',
-  'Become a Seller',
-  'Account Help',
-  'Feedback / Suggestion',
-  'Something Else / Other',
-];
-
-export const CONTACT_QUERY_TYPE_MAP = Object.fromEntries(
-  CONTACT_QUERY_TYPES.map((type) => [type, type]),
-);
-
-export const CONTACT_QUERY_STATUS = ['OPENED', 'ANSWERED', 'CLOSED', 'REJECTED'] as const;
-
-export const CONTACT_QUERY_STATUS_MAP = Object.fromEntries(
-  CONTACT_QUERY_STATUS.map((status) => [status, status]),
-) as {
-  readonly [K in (typeof CONTACT_QUERY_STATUS)[number]]: K;
-};
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

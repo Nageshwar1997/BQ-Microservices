@@ -1,10 +1,9 @@
-import { Schema } from 'mongoose';
-
 import {
   CONTACT_QUERY_STATUS,
   CONTACT_QUERY_STATUS_MAP,
   CONTACT_QUERY_TYPES,
-} from '../constants/index.js';
+} from '@beautinique/backend-constants';
+import { Schema } from 'mongoose';
 
 export const contactQuerySchema = new Schema(
   {

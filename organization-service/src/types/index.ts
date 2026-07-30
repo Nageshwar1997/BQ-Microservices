@@ -1,7 +1,7 @@
+import type { CONTACT_QUERY_STATUS, CONTACT_QUERY_TYPES } from '@beautinique/backend-constants';
 import type { TUserRole } from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
 
-import type { CONTACT_QUERY_STATUS, CONTACT_QUERY_TYPES } from '../constants/index.js';
 import type { contactQuerySchema } from '../schemas/index.js';
 
 export type TId = Types.ObjectId;
