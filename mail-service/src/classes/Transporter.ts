@@ -4,7 +4,11 @@ import { convert } from 'html-to-text';
 
 import { logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
-import { getOtpHtmlMessage } from '../utils/index.js';
+import {
+  getContactAcknowledgementHtmlMessage,
+  getContactAdminNotificationHtmlMessage,
+  getOtpHtmlMessage,
+} from '../utils/index.js';
 
 /**
  * Sends email via Brevo's transactional email API (official SDK) instead of
@@ -80,6 +84,17 @@ export class MailTransporter {
   /* ---------------- Send OTP email ---------------- */
   public async sendOtp(to: string, otp: string) {
     const html = getOtpHtmlMessage('OTP Verification', otp);
+    await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
+  }
+
+  /* ---------------- Send contact acknowledgement email ---------------- */
+  public async sendContactAcknowledgement(to: string, otp: string) {
+    const html = getContactAcknowledgementHtmlMessage('OTP Verification', otp);
+    await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
+  }
+  /* ---------------- Send admin contact notification email ---------------- */
+  public async sendContactAdminNotification(to: string, otp: string) {
+    const html = getContactAdminNotificationHtmlMessage('OTP Verification', otp);
     await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
   }
 }

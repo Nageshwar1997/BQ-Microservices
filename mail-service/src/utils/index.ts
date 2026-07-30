@@ -159,3 +159,105 @@ export const getOtpHtmlMessage = (title: string, otp: string) => {
     </p>`,
   );
 };
+
+export const getContactAcknowledgementHtmlMessage = (title: string, otp: string) => {
+  return baseHtmlLayout(
+    title,
+    'Use the verification code below to continue securely.',
+    `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.7">Hello,</p>
+    <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #5b4158">
+    We received a request to verify your action. Please enter the OTP below to
+    proceed.
+    </p>
+
+    <div
+    style="
+        margin: 0 auto 24px;
+        max-width: 320px;
+        padding: 20px 24px;
+        border-radius: 18px;
+        background: #fff1f2;
+        border: 1px dashed #f9a8d4;
+        text-align: center;
+    "
+    >
+    <p
+        style="
+        margin: 0 0 10px;
+        font-size: 13px;
+        color: #9d174d;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        "
+    >
+        Your One-Time Password
+    </p>
+    <p
+        style="
+        margin: 0;
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: 10px;
+        color: #831843;
+        "
+    >
+        ${otp}
+    </p>
+    </div>
+    <p style="margin: 0 0 14px; font-size: 15px; line-height: 1.7; color: #5b4158">
+    This code is valid for <b>10 minutes</b> and is intended for one-time use only.
+    Please do not share it with anyone.
+    </p>`,
+  );
+};
+
+export const getContactAdminNotificationHtmlMessage = (title: string, otp: string) => {
+  return baseHtmlLayout(
+    title,
+    'Use the verification code below to continue securely.',
+    `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.7">Hello,</p>
+    <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #5b4158">
+    We received a request to verify your action. Please enter the OTP below to
+    proceed.
+    </p>
+
+    <div
+    style="
+        margin: 0 auto 24px;
+        max-width: 320px;
+        padding: 20px 24px;
+        border-radius: 18px;
+        background: #fff1f2;
+        border: 1px dashed #f9a8d4;
+        text-align: center;
+    "
+    >
+    <p
+        style="
+        margin: 0 0 10px;
+        font-size: 13px;
+        color: #9d174d;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        "
+    >
+        Your One-Time Password
+    </p>
+    <p
+        style="
+        margin: 0;
+        font-size: 34px;
+        font-weight: 700;
+        letter-spacing: 10px;
+        color: #831843;
+        "
+    >
+        ${otp}
+    </p>
+    </div>
+    <p style="margin: 0 0 14px; font-size: 15px; line-height: 1.7; color: #5b4158">
+    This code is valid for <b>10 minutes</b> and is intended for one-time use only.
+    Please do not share it with anyone.
+    </p>`,
+  );
+};

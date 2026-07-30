@@ -31,6 +31,28 @@ export class WorkerManager {
             throw error;
           }
         },
+        'send-contact-acknowledgement': async (data) => {
+          try {
+            await transporter.sendContactAcknowledgement(data.to, data.subject);
+          } catch (error) {
+            logger.error(
+              `Failed to send OTP. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
+            );
+
+            throw error;
+          }
+        },
+        'send-contact-admin-notification': async (data) => {
+          try {
+            await transporter.sendContactAdminNotification(data.to, data.subject);
+          } catch (error) {
+            logger.error(
+              `Failed to send OTP. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
+            );
+
+            throw error;
+          }
+        },
       },
     });
 
