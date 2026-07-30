@@ -3,7 +3,7 @@
 //   AUTH_PROVIDERS,
 //   USER_ROLE_MAP,
 //   USER_ROLES,
-// } from '@beautinique/shared-constants';
+// } from '@beautinique/backend-constants';
 // import { Schema } from 'mongoose';
 
 // export const teamSchema = new Schema(

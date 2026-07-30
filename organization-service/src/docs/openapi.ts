@@ -1,4 +1,4 @@
-import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
+import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/backend-constants';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 
