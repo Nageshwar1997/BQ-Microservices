@@ -19,6 +19,12 @@ const {
   // H
   // I
   // J
+
+  BULL_MQ_HOST,
+  BULL_MQ_PORT,
+  BULL_MQ_PASSWORD,
+  BULL_MQ_USERNAME,
+
   // K
   // L
   // M
@@ -40,6 +46,7 @@ const {
 
   SERVICE_NAME,
   SERVICE_SECRET,
+  SUPPORT_INBOX_EMAIL,
 
   // T
   // U
@@ -91,12 +98,19 @@ export const envs = {
       password: requireEnv(CACHE_PASSWORD, 'REDIS_PASSWORD'),
       username: requireEnv(CACHE_USERNAME, 'REDIS_USERNAME'),
     },
+    bull_mq: {
+      host: requireEnv(BULL_MQ_HOST, 'BULL_MQ_HOST'),
+      port: requirePort(BULL_MQ_PORT, 'BULL_MQ_PORT'),
+      password: requireEnv(BULL_MQ_PASSWORD, 'BULL_MQ_PASSWORD'),
+      username: requireEnv(BULL_MQ_USERNAME, 'BULL_MQ_USERNAME'),
+    },
   },
 
   // S
 
   service_name: requireEnv(SERVICE_NAME, 'SERVICE_NAME'),
   service_secret: requireEnv(SERVICE_SECRET, 'SERVICE_SECRET'),
+  support_inbox_email: requireEnv(SUPPORT_INBOX_EMAIL, 'SUPPORT_INBOX_EMAIL'),
 
   // T
   // U

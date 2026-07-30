@@ -1,3 +1,4 @@
+import { JobProducer } from '@beautinique/backend-bullmq';
 import { createLogger } from '@beautinique/backend-logger';
 import type { MongoConnectOptions } from '@beautinique/backend-mongoose';
 import { createClient, type RedisClientType } from 'redis';
@@ -16,6 +17,18 @@ export const logger = createLogger({
   ...LOGGER_BASE_OPTIONS,
   service: envs.service_name,
   logsDir: 'logs',
+});
+
+export const jobProducer = new JobProducer({
+  connection: envs.redis.bull_mq,
+  logger,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 2000 },
+    removeOnComplete: { age: 30, count: 5 },
+    removeOnFail: { age: 1800, count: 10 },
+  },
+  queueOptions: {},
 });
 
 export const redisClient: RedisClientType = createClient({
