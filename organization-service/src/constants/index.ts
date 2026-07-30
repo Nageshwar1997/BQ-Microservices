@@ -9,8 +9,6 @@ export const LOGGER_BASE_OPTIONS = {
   pretty: envs.is_dev,
 } as const;
 
-export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
-
 export const CONTACT_QUERY_TYPES = [
   'Order Related',
   'Returns & Refunds',
