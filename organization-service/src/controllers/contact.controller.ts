@@ -2,7 +2,7 @@ import { NotFoundError } from '@beautinique/backend-classes';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type { Request, Response } from 'express';
 
-import { logger } from '../configs/index.js';
+import { jobProducer, logger } from '../configs/index.js';
 import { CONTACT_QUERY_STATUS_MAP, SUPPORT_INBOX_EMAIL } from '../constants/index.js';
 import { ContactQuery } from '../models/index.js';
 import type {
@@ -11,11 +11,6 @@ import type {
   TUpdateContactQueryStatusZodSchema,
 } from '../schemas/index.js';
 import type { IListContactQueriesQuery, TContactQuery } from '../types/index.js';
-import {
-  buildContactAcknowledgementEmail,
-  buildContactAdminNotificationEmail,
-  enqueueContactMail,
-} from '../utils/index.js';
 
 export const createContactQueryController = async (req: Request, res: Response) => {
   const { name, email, phoneNumber, queryType, message } = req.body as TCreateContactQueryZodSchema;
@@ -33,23 +28,23 @@ export const createContactQueryController = async (req: Request, res: Response) 
 
   try {
     await Promise.all([
-      enqueueContactMail(buildContactAcknowledgementEmail({ to: email, ticketId, queryType })),
-      enqueueContactMail(
-        buildContactAdminNotificationEmail({
-          to: SUPPORT_INBOX_EMAIL,
-          ticketId,
-          name,
-          email,
-          phoneNumber,
-          queryType,
-          message,
-        }),
-      ),
+      jobProducer.addJob('mail-queue', 'send-contact-acknowledgement', {
+        to: email,
+        subject: `[Ticket #${ticketId}] Your query has been received`,
+        data: { ticketId, queryType },
+      }),
+      jobProducer.addJob('mail-queue', 'send-contact-admin-notification', {
+        to: SUPPORT_INBOX_EMAIL,
+        subject: `[Ticket #${ticketId}] New Contact Query — ${queryType}`,
+        data: { ticketId, name, email, phoneNumber, queryType, message },
+      }),
     ]);
   } catch (error) {
     // The ticket is already saved - a queue hiccup shouldn't fail the
     // request, the admin can still see the query via the dashboard listing.
-    logger.error(`❌ Failed to enqueue contact query emails for ticket ${ticketId}: ${String(error)}`);
+    logger.error(
+      `❌ Failed to enqueue contact query emails for ticket ${ticketId}: ${String(error)}`,
+    );
   }
 
   res.success({
@@ -75,8 +70,7 @@ export const getContactQueriesController = async (req: Request, res: Response) =
       .sort({ createdAt: -1 })
       .skip((currentPage - 1) * pageSize)
       .limit(pageSize)
-      .lean<TContactQuery[]>(),
-
+      .lean(),
     ContactQuery.countDocuments(filter),
   ]);
 
@@ -102,7 +96,7 @@ export const updateContactQueryStatusController = async (req: Request, res: Resp
     getObjId(id),
     { status },
     { new: true },
-  ).lean<TContactQuery>();
+  ).lean();
 
   if (!contactQuery) {
     throw new NotFoundError('Contact query not found');
