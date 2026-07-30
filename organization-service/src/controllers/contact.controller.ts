@@ -3,7 +3,11 @@ import { getObjId } from '@beautinique/backend-mongoose';
 import type { Request, Response } from 'express';
 
 import { jobProducer, logger } from '../configs/index.js';
-import { CONTACT_QUERY_STATUS_MAP, SUPPORT_INBOX_EMAIL } from '../constants/index.js';
+import {
+  CONTACT_QUERY_RETENTION_MS_MAP,
+  CONTACT_QUERY_STATUS_MAP,
+  SUPPORT_INBOX_EMAIL,
+} from '../constants/index.js';
 import { ContactQuery } from '../models/index.js';
 import type {
   TContactIdParamsZodSchema,
@@ -92,9 +96,14 @@ export const updateContactQueryStatusController = async (req: Request, res: Resp
   const { id } = req.params as TContactIdParamsZodSchema;
   const { status } = req.body as TUpdateContactQueryStatusZodSchema;
 
+  // CLOSED/REJECTED get a TTL deadline (see `CONTACT_QUERY_RETENTION_MS_MAP`);
+  // any other status clears it, so reopening a query cancels its auto-delete.
+  const retentionMs = CONTACT_QUERY_RETENTION_MS_MAP[status];
+  const expiresAt = retentionMs ? new Date(Date.now() + retentionMs) : null;
+
   const contactQuery = await ContactQuery.findByIdAndUpdate(
     getObjId(id),
-    { status },
+    { status, expiresAt },
     { new: true },
   ).lean();
 

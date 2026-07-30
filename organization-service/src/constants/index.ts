@@ -34,6 +34,21 @@ export const CONTACT_QUERY_STATUS_MAP = Object.fromEntries(
   readonly [K in (typeof CONTACT_QUERY_STATUS)[number]]: K;
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * How long a contact query is kept after landing in a terminal status,
+ * before the `expiresAt` TTL index (see `contact.schema.ts`) sweeps it -
+ * statuses not listed here (e.g. `OPENED`, `ANSWERED`) are never
+ * auto-deleted.
+ */
+export const CONTACT_QUERY_RETENTION_MS_MAP: Partial<
+  Record<(typeof CONTACT_QUERY_STATUS)[number], number>
+> = {
+  [CONTACT_QUERY_STATUS_MAP.CLOSED]: 2 * DAY_MS,
+  [CONTACT_QUERY_STATUS_MAP.REJECTED]: 5 * DAY_MS,
+};
+
 export const SUPPORT_INBOX_EMAIL = envs.support_inbox_email;
 
 export const METHODS_AND_PATHS = {

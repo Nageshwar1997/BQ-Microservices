@@ -19,6 +19,10 @@ export const contactQuerySchema = new Schema(
       default: CONTACT_QUERY_STATUS_MAP.OPENED,
       index: true,
     },
+    // Set only for terminal statuses (CLOSED / REJECTED) - see
+    // `CONTACT_QUERY_RETENTION_MS_MAP` and `updateContactQueryStatusController`.
+    // Null/unset for every other status, which the TTL index below ignores.
+    expiresAt: { type: Date, default: null },
   },
   { versionKey: false, timestamps: { createdAt: true, updatedAt: false } },
 );
@@ -28,3 +32,7 @@ export const contactQuerySchema = new Schema(
 contactQuerySchema.index({ status: 1, createdAt: -1 });
 
 contactQuerySchema.index({ queryType: 1, createdAt: -1 });
+
+/* ---------------- AUTO-DELETE (TTL) ---------------- */
+
+contactQuerySchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
