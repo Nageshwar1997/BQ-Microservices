@@ -2,6 +2,7 @@ import { JobWorker } from '@beautinique/backend-bullmq';
 import { MEDIA_STATUS_MAP } from '@beautinique/shared-constants';
 import { stringifyData } from '@beautinique/shared-utils';
 
+import { getObjId } from '@beautinique/backend-mongoose';
 import { logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';
 import { envs } from '../envs/index.js';
@@ -59,7 +60,8 @@ export class WorkerManager {
         'create-single-unused-media': async (data) => {
           try {
             const expiresAt = new Date(Date.now() + CLEANUP_DELAY);
-            await Media.create({ ...data, status: MEDIA_STATUS_MAP.UNUSED, expiresAt });
+            const userId = getObjId(data.userId as string);
+            await Media.create({ ...data, userId, status: MEDIA_STATUS_MAP.UNUSED, expiresAt });
           } catch (error) {
             logger.error(
               `Failed to create single unused media. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,

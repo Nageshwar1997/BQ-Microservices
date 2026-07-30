@@ -31,23 +31,43 @@ export class WorkerManager {
             throw error;
           }
         },
-        'send-contact-acknowledgement': async (data) => {
+        /* ---------------- SEND CONTACT ACKNOWLEDGEMENT ---------------- */
+
+        'send-contact-acknowledgement': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAcknowledgement(data.to, data.subject);
+            await transporter.sendContactAcknowledgement(
+              to,
+              subject,
+              data as { ticketId: string; queryType: string },
+            );
           } catch (error) {
             logger.error(
-              `Failed to send OTP. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
+              `Failed to send contact acknowledgement. Error:${stringifyData(error)}. To:${to}. Data:${stringifyData(data)}`,
             );
 
             throw error;
           }
         },
-        'send-contact-admin-notification': async (data) => {
+
+        /* ---------------- SEND CONTACT ADMIN NOTIFICATION ---------------- */
+
+        'send-contact-admin-notification': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAdminNotification(data.to, data.subject);
+            await transporter.sendContactAdminNotification(
+              to,
+              subject,
+              data as {
+                ticketId: string;
+                name: string;
+                email: string;
+                phoneNumber: string;
+                queryType: string;
+                message: string;
+              },
+            );
           } catch (error) {
             logger.error(
-              `Failed to send OTP. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
+              `Failed to send contact admin notification. Error:${String(error)}. To:${to}. Data:${stringifyData(data)}`,
             );
 
             throw error;

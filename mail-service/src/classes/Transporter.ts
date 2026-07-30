@@ -64,7 +64,12 @@ export class MailTransporter {
 
   /* ---------------- Generic send email ---------------- */
 
-  private async sendMail(options: { to: string; subject: string; htmlOrText: string }) {
+  private async sendMail(options: {
+    to: string;
+    subject: string;
+    htmlOrText: string;
+    replyTo?: { email: string; name?: string };
+  }) {
     const text = convert(options.htmlOrText, { wordwrap: 130 });
 
     try {
@@ -74,6 +79,7 @@ export class MailTransporter {
         subject: options.subject,
         htmlContent: options.htmlOrText,
         textContent: text,
+        ...(options.replyTo && { replyTo: options.replyTo }),
       });
     } catch (error) {
       logger.error(`❌ Email send failed: ${stringifyData(error)}`);
@@ -88,13 +94,36 @@ export class MailTransporter {
   }
 
   /* ---------------- Send contact acknowledgement email ---------------- */
-  public async sendContactAcknowledgement(to: string, otp: string) {
-    const html = getContactAcknowledgementHtmlMessage('OTP Verification', otp);
-    await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
+  public async sendContactAcknowledgement(
+    to: string,
+    subject: string,
+    data: { ticketId: string; queryType: string },
+  ) {
+    const html = getContactAcknowledgementHtmlMessage(data);
+    await this.sendMail({ to, subject, htmlOrText: html });
   }
+
   /* ---------------- Send admin contact notification email ---------------- */
-  public async sendContactAdminNotification(to: string, otp: string) {
-    const html = getContactAdminNotificationHtmlMessage('OTP Verification', otp);
-    await this.sendMail({ to, subject: 'Your OTP Code 🔑', htmlOrText: html });
+  public async sendContactAdminNotification(
+    to: string,
+    subject: string,
+    data: {
+      ticketId: string;
+      name: string;
+      email: string;
+      phoneNumber: string;
+      queryType: string;
+      message: string;
+    },
+  ) {
+    const html = getContactAdminNotificationHtmlMessage(data);
+    // Lets the support agent hit "reply" and land directly in the
+    // submitter's inbox, instead of replying to the no-reply sender address.
+    await this.sendMail({
+      to,
+      subject,
+      htmlOrText: html,
+      replyTo: { email: data.email, name: data.name },
+    });
   }
 }
