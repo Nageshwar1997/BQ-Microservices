@@ -37,7 +37,7 @@
     "typescript-eslint": "^8.65.0"
   },
   "dependencies": {
-    "@beautinique/backend-bullmq": "^1.0.0",
+    "@beautinique/backend-bullmq": "^1.0.2",
     "@beautinique/backend-classes": "^1.0.3",
     "@beautinique/backend-logger": "^1.0.2",
     "@beautinique/backend-mongoose": "^1.0.7",

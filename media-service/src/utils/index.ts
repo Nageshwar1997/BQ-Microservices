@@ -1,11 +1,10 @@
-import { getObjId } from '@beautinique/backend-mongoose';
 import type { TMediaResource } from '@beautinique/shared-types';
 import type { UploadApiResponse } from 'cloudinary';
+import type { TId } from '../types/index.js';
 
-export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: string }) => {
-  const userId = getObjId(data.userId);
+export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: TId }) => {
   return {
-    userId,
+    userId: data.userId,
     url: data.secure_url,
     publicId: data.public_id,
     resourceType: data.resource_type as TMediaResource,
@@ -15,7 +14,7 @@ export const generateBaseMediaPayload = (data: UploadApiResponse & { userId: str
       height: data.height,
       format: data.format,
       size: data.bytes,
-      folder: (data.asset_folder ?? '') as string,
+      ...(data.asset_folder && { folder: data.asset_folder }),
     },
   };
 };

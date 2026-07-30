@@ -3,8 +3,8 @@ import type { InferSchemaType, Types } from 'mongoose';
 
 import type { mediaSchema } from '../models/index.js';
 
-type TId = Types.ObjectId;
-interface IId {
+export type TId = Types.ObjectId;
+export interface IId {
   _id: TId;
 }
 

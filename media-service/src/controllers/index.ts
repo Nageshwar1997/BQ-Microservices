@@ -36,11 +36,16 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
 
   /* ---------------- CREATE UNUSED MEDIA ---------------- */
 
-  await jobProducer.addJob('media-queue', 'create-single-unused-media', payload, {
-    jobId: `create-single-unused-${payload.publicId}`,
-    attempts: 5,
-    backoff: { type: 'exponential', delay: 5000 },
-  });
+  await jobProducer.addJob(
+    'media-queue',
+    'create-single-unused-media',
+    { ...payload, userId: userId.toString() },
+    {
+      jobId: `create-single-unused-${payload.publicId}`,
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 5000 },
+    },
+  );
 
   /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
 
@@ -75,7 +80,10 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
 
   const uploadedMedia = await cloudinary.uploadMultiple({ files, folder });
 
-  const payload = uploadedMedia.map((media) => generateBaseMediaPayload({ ...media, userId }));
+  const payload = uploadedMedia.map((media) => ({
+    ...generateBaseMediaPayload({ ...media, userId }),
+    userId: userId.toString(),
+  }));
 
   const publicIds = payload.map(({ publicId }) => publicId);
 
