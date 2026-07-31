@@ -37,7 +37,7 @@ contactRouter[list.method](
 contactRouter[updateStatus.method](
   updateStatus.path,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
-  checkEmptyRequest({ body: true }),
+  checkEmptyRequest({ body: true, params: true }),
   validateZod({ params: contactQueryTicketIdZodSchema, body: updateContactQueryStatusZodSchema }),
   tryCatchResponse(updateContactQueryStatusController),
 );
