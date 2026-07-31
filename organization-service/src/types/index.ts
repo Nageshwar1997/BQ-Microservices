@@ -1,4 +1,3 @@
-import type { CONTACT_QUERY_STATUS, CONTACT_QUERY_TYPES } from '@beautinique/backend-constants';
 import type { TUserRole } from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
 
@@ -13,15 +12,4 @@ export interface IUser extends IId {
   role: TUserRole;
 }
 
-export type TContactQueryType = (typeof CONTACT_QUERY_TYPES)[number];
-
-export type TContactQueryStatus = (typeof CONTACT_QUERY_STATUS)[number];
-
 export type TContactQuery = InferSchemaType<typeof contactQuerySchema> & IId;
-
-export interface IListContactQueriesQuery {
-  page?: string;
-  limit?: string;
-  status?: TContactQueryStatus;
-  queryType?: TContactQueryType;
-}
