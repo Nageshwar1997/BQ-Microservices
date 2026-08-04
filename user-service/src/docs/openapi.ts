@@ -434,8 +434,24 @@ export const openApiSpec = {
         },
       },
     },
-    [`${base}${auth.base}${password.base}${password.change.path}`]: {
-      [password.change.method]: {
+
+    [`${base}${user.base}${user.session.path}`]: {
+      [user.session.method]: {
+        tags: ['User'],
+        summary: "Fetch the caller's own user record",
+        security: [{ serviceSecret: [], userId: [] }],
+        responses: {
+          '200': {
+            description: 'From Redis if cached, otherwise MongoDB (and re-cached).',
+            content: { 'application/json': { schema: successEnvelope(minimalUserSchema) } },
+          },
+          '401': errorResponse(`Missing ${HEADERS_MAP.userId} header.`),
+          '404': errorResponse('No user found for this id.'),
+        },
+      },
+    },
+    [`${base}${user.base}${user.password.base}${user.password.change.path}`]: {
+      [user.password.change.method]: {
         tags: ['Password'],
         summary: 'Change password while logged in',
         security: [{ serviceSecret: [], userId: [] }],
@@ -464,8 +480,8 @@ export const openApiSpec = {
         },
       },
     },
-    [`${base}${auth.base}${password.base}${password.set.path}`]: {
-      [password.set.method]: {
+    [`${base}${user.base}${user.password.base}${user.password.set.path}`]: {
+      [user.password.set.method]: {
         tags: ['Password'],
         summary: 'Set an initial password for an OAuth-only account',
         security: [{ serviceSecret: [], userId: [] }],
@@ -488,22 +504,6 @@ export const openApiSpec = {
           },
           '401': errorResponse(`Missing ${HEADERS_MAP.userId} header.`),
           '422': errorResponse('MANUAL provider is already linked - use forgot-password instead.'),
-        },
-      },
-    },
-
-    [`${base}${user.base}${user.session.path}`]: {
-      [user.session.method]: {
-        tags: ['User'],
-        summary: "Fetch the caller's own user record",
-        security: [{ serviceSecret: [], userId: [] }],
-        responses: {
-          '200': {
-            description: 'From Redis if cached, otherwise MongoDB (and re-cached).',
-            content: { 'application/json': { schema: successEnvelope(minimalUserSchema) } },
-          },
-          '401': errorResponse(`Missing ${HEADERS_MAP.userId} header.`),
-          '404': errorResponse('No user found for this id.'),
         },
       },
     },
