@@ -1,1 +1,1 @@
-export * from './contact.controller.js';
+export * from './contact/index.js';

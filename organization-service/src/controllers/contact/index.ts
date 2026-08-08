@@ -9,10 +9,10 @@ import type {
 } from '@beautinique/backend-types';
 import type { Request, Response } from 'express';
 
-import { jobProducer, logger } from '../configs/index.js';
-import { CONTACT_QUERY_RETENTION_MS_MAP, SUPPORT_INBOX_EMAIL } from '../constants/index.js';
-import { ContactQuery } from '../models/index.js';
-import type { TContactQuery } from '../types/index.js';
+import { jobProducer, logger } from '../../configs/index.js';
+import { CONTACT_QUERY_RETENTION_MS_MAP, SUPPORT_INBOX_EMAIL } from '../../constants/index.js';
+import { ContactQuery } from '../../models/index.js';
+import type { TContactQuery } from '../../types/index.js';
 
 export const createContactQueryController = async (req: Request, res: Response) => {
   const { name, email, phoneNumber, queryType, message } = req.body as TCreateContactQueryZodSchema;
