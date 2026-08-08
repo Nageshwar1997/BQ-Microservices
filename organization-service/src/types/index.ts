@@ -1,14 +1,12 @@
 import type { TUserRole } from '@beautinique/backend-types';
-import type { TInfer } from '@beautinique/backend-zod';
+import type {
+  draftSellerDetailsZodSchema,
+  draftSellerStepBodyZodSchema,
+  TInfer,
+} from '@beautinique/backend-zod';
 import type { InferSchemaType, Types } from 'mongoose';
 
-import type {
-  contactQuerySchema,
-  createSellerZodSchema,
-  sellerDraftDetailsZodSchema,
-  sellerDraftStepBodyZodSchema,
-  sellerSchema,
-} from '../schemas/index.js';
+import type { contactQuerySchema, createSellerZodSchema, sellerSchema } from '../schemas/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -25,6 +23,6 @@ export type TSeller = InferSchemaType<typeof sellerSchema> & IId;
 
 export type TCreateSellerZodSchema = TInfer<typeof createSellerZodSchema>;
 
-export type TSellerDraftStepBodyZodSchema = TInfer<typeof sellerDraftStepBodyZodSchema>;
+export type TDraftSellerStepBodyZodSchema = TInfer<typeof draftSellerStepBodyZodSchema>;
 
-export type TSellerDraftDetailsZodSchema = TInfer<typeof sellerDraftDetailsZodSchema>;
+export type TDraftSellerDetailsZodSchema = TInfer<typeof draftSellerDetailsZodSchema>;

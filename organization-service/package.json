@@ -43,7 +43,7 @@
     "@beautinique/backend-request": "^1.0.2",
     "@beautinique/backend-response": "^1.0.4",
     "@beautinique/backend-utils": "^1.0.6",
-    "@beautinique/backend-zod": "^1.0.28",
+    "@beautinique/backend-zod": "^1.0.29",
     "@beautinique/shared-markdown-to-html": "^1.0.1",
     "@beautinique/shared-utils": "^1.0.5",
     "axios": "^1.19.0",

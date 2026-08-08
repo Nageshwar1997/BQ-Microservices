@@ -2,11 +2,11 @@ import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 
 import { redisCacheManager } from '../../configs/index.js';
-import type { TSellerDraftStepBodyZodSchema } from '../../types/index.js';
+import type { TDraftSellerStepBodyZodSchema } from '../../types/index.js';
 
 export const saveDraftSellerController = async (req: Request, res: Response) => {
   const { _id: userId } = getUser(req.user);
-  const body = req.body as TSellerDraftStepBodyZodSchema;
+  const body = req.body as TDraftSellerStepBodyZodSchema;
 
   const draft = await redisCacheManager.seller.saveDraftSellerStep(userId.toString(), body);
 

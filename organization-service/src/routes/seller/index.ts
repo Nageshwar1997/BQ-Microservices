@@ -1,7 +1,7 @@
 import { USER_ROLE_MAP } from '@beautinique/backend-constants';
 import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
-import { validateZod } from '@beautinique/backend-zod';
+import { draftSellerStepBodyZodSchema, validateZod } from '@beautinique/backend-zod';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../../constants/index.js';
@@ -11,7 +11,7 @@ import {
   saveDraftSellerController,
 } from '../../controllers/index.js';
 import { authenticate, authorize } from '../../middlewares/index.js';
-import { createSellerZodSchema, sellerDraftStepBodyZodSchema } from '../../schemas/index.js';
+import { createSellerZodSchema } from '../../schemas/index.js';
 
 export const sellerRouter = Router();
 const draftRouter = Router();
@@ -23,7 +23,7 @@ const { create, draft } = METHODS_AND_PATHS.seller;
 draftRouter[draft.save.method](
   draft.save.path,
   checkEmptyRequest({ body: true }),
-  validateZod({ body: sellerDraftStepBodyZodSchema }),
+  validateZod({ body: draftSellerStepBodyZodSchema }),
   tryCatchResponse(saveDraftSellerController),
 );
 

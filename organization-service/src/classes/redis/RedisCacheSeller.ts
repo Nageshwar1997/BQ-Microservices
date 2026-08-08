@@ -1,7 +1,7 @@
 import type {
+  TDraftSellerDetailsZodSchema,
+  TDraftSellerStepBodyZodSchema,
   TSeller,
-  TSellerDraftDetailsZodSchema,
-  TSellerDraftStepBodyZodSchema,
 } from '../../types/index.js';
 import { RedisCacheHelper } from './RedisCacheHelper.js';
 
@@ -25,8 +25,8 @@ export class RedisCacheSeller extends RedisCacheHelper {
 
   private async getDraftHashData(
     key: string,
-  ): Promise<Partial<TSellerDraftDetailsZodSchema> | null> {
-    const data = await this.getAllHashFields<TSellerDraftDetailsZodSchema>(key);
+  ): Promise<Partial<TDraftSellerDetailsZodSchema> | null> {
+    const data = await this.getAllHashFields<TDraftSellerDetailsZodSchema>(key);
 
     if (Object.keys(data).length === 0) {
       return null;
@@ -39,7 +39,7 @@ export class RedisCacheSeller extends RedisCacheHelper {
     return this.getDraftHashData(this.getDraftSellerKey(userId));
   }
 
-  public async saveDraftSellerStep(userId: string, stepData: TSellerDraftStepBodyZodSchema) {
+  public async saveDraftSellerStep(userId: string, stepData: TDraftSellerStepBodyZodSchema) {
     const key = this.getDraftSellerKey(userId);
 
     const isNewDraft = !(await this.exists(key));
