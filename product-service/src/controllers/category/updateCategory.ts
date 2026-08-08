@@ -3,10 +3,10 @@ import {
   NotFoundError,
   UnprocessableEntityError,
 } from '@beautinique/backend-classes';
+import { CATEGORY_LEVELS_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type { TCategoryUpdateZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
-import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
 import type { ClientSession } from 'mongoose';

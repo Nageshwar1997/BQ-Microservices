@@ -3,6 +3,7 @@ import {
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
+import { AUTH_PROVIDER_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type {
   TChangePasswordZodSchema,
@@ -10,7 +11,6 @@ import type {
   TUpdateUserZodSchema,
 } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
-import { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';

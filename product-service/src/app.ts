@@ -1,8 +1,8 @@
+import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/backend-constants';
 import { createHttpLogger } from '@beautinique/backend-logger';
 import { checkDbConnection, getConnectionHealth } from '@beautinique/backend-mongoose';
 import { checkServiceAccess } from '@beautinique/backend-request';
 import { errorResponse, notFoundResponse, successResponse } from '@beautinique/backend-response';
-import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
 import { parse } from 'qs';

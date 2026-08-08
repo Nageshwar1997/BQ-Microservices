@@ -1,6 +1,6 @@
+import type { AUTH_PROVIDER_MAP } from '@beautinique/backend-constants';
 import type { TAuthProvider, TUserRole } from '@beautinique/backend-types';
 import type { TInfer } from '@beautinique/backend-zod';
-import type { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
 import type { InferSchemaType, Types } from 'mongoose';
 
 import type {

@@ -4,8 +4,8 @@
 // bump for. Follows the same `xZodSchema` naming convention used everywhere
 // else.
 
+import { REGEX } from '@beautinique/backend-constants';
 import { literal, object, string } from '@beautinique/backend-zod';
-import { REGEX } from '@beautinique/shared-constants';
 
 export const promoteUserRoleParamsZodSchema = object({
   userId: string('User id is required')

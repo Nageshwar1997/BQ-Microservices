@@ -1,6 +1,6 @@
 import { ConflictError, NotFoundError } from '@beautinique/backend-classes';
+import { USER_ROLE_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
-import { USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 
 import { redisCacheManager } from '../../configs/index.js';

@@ -7,7 +7,7 @@ import {
   STATES_AND_UTS,
   USER_STATUS_MAP,
   USER_STATUSES,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
 import { Schema } from 'mongoose';
 
 const businessAddressSchema = new Schema(

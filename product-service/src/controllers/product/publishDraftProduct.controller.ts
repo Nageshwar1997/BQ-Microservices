@@ -1,7 +1,7 @@
+import { PRODUCT_STATUSES_MAP, USER_ROLE_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type { TDraftProductDetailsZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
-import { PRODUCT_STATUSES_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 

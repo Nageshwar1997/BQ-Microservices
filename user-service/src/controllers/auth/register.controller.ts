@@ -1,17 +1,17 @@
 import { ConflictError, TooManyRequestsError, ValidationError } from '@beautinique/backend-classes';
-import type {
-  TEmailZodSchema,
-  TOtpZodSchema,
-  TRegisterZodSchema,
-} from '@beautinique/backend-types';
-import { sanitizeToken } from '@beautinique/backend-utils';
 import {
   AUTH_PROVIDER_MAP,
   HEADERS_MAP,
   MAX_OTP_RESEND,
   USER_ROLE_MAP,
   USER_STATUS_MAP,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
+import type {
+  TEmailZodSchema,
+  TOtpZodSchema,
+  TRegisterZodSchema,
+} from '@beautinique/backend-types';
+import { sanitizeToken } from '@beautinique/backend-utils';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 

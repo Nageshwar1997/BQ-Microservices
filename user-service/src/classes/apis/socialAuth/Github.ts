@@ -1,4 +1,4 @@
-import { AUTH_PROVIDER_MAP, HEADERS_MAP } from '@beautinique/shared-constants';
+import { AUTH_PROVIDER_MAP, HEADERS_MAP } from '@beautinique/backend-constants';
 
 import { OAUTH_API_ROUTES_AND_METHODS } from '../../../constants/index.js';
 import { envs } from '../../../envs/index.js';

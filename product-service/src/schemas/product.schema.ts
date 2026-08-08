@@ -1,12 +1,12 @@
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
-import type { TTryOnCategory, TTryOnSubCategory } from '@beautinique/backend-types';
 import {
   PRODUCT_STATUSES,
   PRODUCT_STATUSES_MAP,
   TRY_ON_ALL_SUB_CATEGORIES,
   TRY_ON_CATEGORIES,
   TRY_ON_MAP,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
+import type { TTryOnCategory, TTryOnSubCategory } from '@beautinique/backend-types';
 import { Schema } from 'mongoose';
 
 import type { ITryOn } from '../types/index.js';
