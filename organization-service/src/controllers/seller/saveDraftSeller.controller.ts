@@ -1,0 +1,14 @@
+import { getUser } from '@beautinique/backend-utils';
+import type { Request, Response } from 'express';
+
+import { redisCacheManager } from '../../configs/index.js';
+import type { TSellerDraftStepBodyZodSchema } from '../../types/index.js';
+
+export const saveDraftSellerController = async (req: Request, res: Response) => {
+  const { _id: userId } = getUser(req.user);
+  const body = req.body as TSellerDraftStepBodyZodSchema;
+
+  const draft = await redisCacheManager.seller.saveDraftSellerStep(userId.toString(), body);
+
+  res.success({ statusCode: 201, message: 'Seller application draft saved', data: draft });
+};

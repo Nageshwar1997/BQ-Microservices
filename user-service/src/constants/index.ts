@@ -17,8 +17,6 @@ export const USER_STATUS_MAP = Object.fromEntries(
   readonly [K in (typeof USER_STATUS)[number]]: K;
 };
 
-export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
-
 export const OAUTH_API_ROUTES_AND_METHODS = {
   google: {
     decode: { method: GET, baseURL: 'https://www.googleapis.com', url: '/oauth2/v2/userinfo' },
@@ -87,6 +85,9 @@ export const METHODS_AND_PATHS = {
     base: '/user',
     session: { method: GET, path: '/session' },
     update: { method: PATCH, path: '/' },
+    // Internal - called by organization-service's `createSeller` flow to
+    // flip a User's role from USER to SELLER. See `promoteUserRoleController`.
+    promoteRole: { method: PATCH, path: '/:userId/role' },
     password: {
       base: '/password',
       change: { method: PATCH, path: '/change' },

@@ -1,7 +1,7 @@
-// TODO: migrate these to @beautinique/frontend-zod (with matching inferred types moved to
-// @beautinique/frontend-types) once the seller-review endpoints ship server-side — this repo can't
-// bump those shared packages on its own, so the seller onboarding wizard's schemas live here for
-// now, following the same `xZodSchema`/`TXZodSchema` naming convention used everywhere else.
+// These aren't in `@beautinique/backend-zod` yet - this repo can't bump that
+// shared package on its own (see SELLER_FEATURE_PLAN.md), so the seller
+// onboarding wizard's schemas live here for now, following the same
+// `xZodSchema` naming convention used everywhere else.
 
 import { COUNTRIES, REGEX, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/backend-constants';
 import {
@@ -14,14 +14,18 @@ import {
   z,
 } from '@beautinique/backend-zod';
 
-import { BANK_ACCOUNT_NUMBER_REGEX, IFSC_REGEX, SELLER_FORM_ID_MAP } from './constants.js';
+import {
+  BANK_ACCOUNT_NUMBER_REGEX,
+  DRAFT_SELLER_STEP_MAP,
+  IFSC_REGEX,
+} from '../constants/index.js';
 
 /* -------------------------------------------------------------------------- */
-/*                          STEP 1 — BUSINESS DETAILS                         */
+/*                    SELF-SERVICE ONBOARDING WIZARD STEPS                    */
 /* -------------------------------------------------------------------------- */
 
 export const sellerBusinessDetailsZodSchema = object({
-  step: literal(SELLER_FORM_ID_MAP[0]),
+  step: literal(DRAFT_SELLER_STEP_MAP[0]),
   businessName: string('Business name is required')
     .nonempty('Business name is required')
     .trim()
@@ -41,12 +45,8 @@ export const sellerBusinessDetailsZodSchema = object({
     .regex(REGEX.PAN, 'Enter a valid PAN'),
 });
 
-/* -------------------------------------------------------------------------- */
-/*                         STEP 2 — BANK & TAX DETAILS                        */
-/* -------------------------------------------------------------------------- */
-// SELLER_STEPPER_STEP_COUNT_MAP;
 export const sellerBankDetailsZodSchema = object({
-  step: literal(SELLER_FORM_ID_MAP[1]),
+  step: literal(DRAFT_SELLER_STEP_MAP[1]),
   accountHolderName: string('Account holder name is required')
     .trim()
     .nonempty('Account holder name is required'),
@@ -64,12 +64,8 @@ export const sellerBankDetailsZodSchema = object({
   bankName: string('Bank name is required').trim().nonempty('Bank name is required'),
 });
 
-/* -------------------------------------------------------------------------- */
-/*                             STEP 3 — ADDRESS                               */
-/* -------------------------------------------------------------------------- */
-
 export const sellerAddressZodSchema = object({
-  step: literal(SELLER_FORM_ID_MAP[2]),
+  step: literal(DRAFT_SELLER_STEP_MAP[2]),
   line1: string('Address line 1 is required').trim().nonempty('Address line 1 is required'),
   line2: string('Address line 2 (optional)').trim().optional(),
   city: string('City is required').trim().nonempty('City is required'),
@@ -83,16 +79,48 @@ export const sellerAddressZodSchema = object({
   country: z.enum(COUNTRIES, 'Country is required'),
 });
 
-/* -------------------------------------------------------------------------- */
-/*                            STEP 4 — DOCUMENTS                              */
-/* -------------------------------------------------------------------------- */
-
 export const sellerDocumentsFormZodSchema = object({
-  step: literal(SELLER_FORM_ID_MAP[3]),
+  step: literal(DRAFT_SELLER_STEP_MAP[3]),
   id: imageUrlValidation,
   address: imageUrlValidation,
   license: imageUrlValidation,
   pan: imageUrlValidation,
   gst: imageUrlValidation,
   bank: imageUrlValidation,
+});
+
+/**
+ * Body of a single "save draft step" call - whichever step the self-service
+ * wizard is currently on.
+ */
+export const sellerDraftStepBodyZodSchema = sellerBusinessDetailsZodSchema
+  .or(sellerBankDetailsZodSchema)
+  .or(sellerAddressZodSchema)
+  .or(sellerDocumentsFormZodSchema);
+
+/**
+ * The full assembled draft, keyed by step - each key is only actually
+ * present once that step has been saved (see `RedisCacheSeller.getDraftSeller`),
+ * so callers should treat this as `Partial<...>`.
+ */
+export const sellerDraftDetailsZodSchema = object({
+  businessDetails: sellerBusinessDetailsZodSchema,
+  bankDetails: sellerBankDetailsZodSchema,
+  address: sellerAddressZodSchema,
+  documents: sellerDocumentsFormZodSchema,
+});
+
+/* -------------------------------------------------------------------------- */
+/*                      ADMIN - CREATE SELLER (FULL PAYLOAD)                  */
+/* -------------------------------------------------------------------------- */
+
+export const createSellerZodSchema = object({
+  userId: string('User id is required')
+    .trim()
+    .nonempty('User id is required')
+    .regex(REGEX.MONGODB_ID, 'Invalid user id'),
+  businessDetails: sellerBusinessDetailsZodSchema.omit({ step: true }),
+  bankDetails: sellerBankDetailsZodSchema.omit({ step: true }),
+  address: sellerAddressZodSchema.omit({ step: true }),
+  documents: sellerDocumentsFormZodSchema.omit({ step: true }),
 });

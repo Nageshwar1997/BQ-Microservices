@@ -30,6 +30,44 @@ export const CONTACT_QUERY_RETENTION_MS_MAP: Partial<
 
 export const SUPPORT_INBOX_EMAIL = envs.support_inbox_email;
 
+/* ---------------- SELLER ---------------- */
+
+export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
+
+export const SELLER_APPROVAL_STATUS_MAP = Object.fromEntries(
+  SELLER_APPROVAL_STATUS.map((status) => [status, status]),
+) as {
+  readonly [K in (typeof SELLER_APPROVAL_STATUS)[number]]: K;
+};
+
+export const SELLER_STATUS = ['ACTIVE', 'SUSPENDED'] as const;
+
+export const SELLER_STATUS_MAP = Object.fromEntries(SELLER_STATUS.map((status) => [status, status])) as {
+  readonly [K in (typeof SELLER_STATUS)[number]]: K;
+};
+
+// Self-service seller onboarding wizard step order (frontend stepper form ids).
+export const DRAFT_SELLER_STEP_MAP = {
+  0: 'businessDetails',
+  1: 'bankDetails',
+  2: 'address',
+  3: 'documents',
+  4: 'review',
+} as const;
+
+export const SELLER_STEPPER_STEP_COUNT = Object.keys(DRAFT_SELLER_STEP_MAP).map(
+  Number,
+) as (keyof typeof DRAFT_SELLER_STEP_MAP)[];
+
+export const SELLER_STEPPER_STEP_COUNT_MAP = Object.fromEntries(
+  SELLER_STEPPER_STEP_COUNT.map((type) => [type, type]),
+) as {
+  [K in keyof typeof DRAFT_SELLER_STEP_MAP]: K;
+};
+
+export const IFSC_REGEX = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+export const BANK_ACCOUNT_NUMBER_REGEX = /^[0-9]{9,18}$/;
+
 export const METHODS_AND_PATHS = {
   base: '/api/v1',
   home: { method: GET, path: '/' },
@@ -44,5 +82,14 @@ export const METHODS_AND_PATHS = {
     create: { method: POST, path: '/' },
     list: { method: GET, path: '/' },
     updateStatus: { method: PATCH, path: '/:ticketId' },
+  },
+  seller: {
+    base: '/seller',
+    create: { method: POST, path: '/' },
+    draft: {
+      base: '/draft',
+      save: { method: POST, path: '/' }, // For saving a wizard step as draft
+      get: { method: GET, path: '/' }, // For fetching the existing draft to prefill the wizard
+    },
   },
 } as const;

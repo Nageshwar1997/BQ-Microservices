@@ -50,6 +50,10 @@ const {
 
   // T
   // U
+
+  USER_SERVICE_BASE_URL,
+  USER_SERVICE_SECRET,
+
   // V
   // W
   // X
@@ -114,6 +118,14 @@ export const envs = {
 
   // T
   // U
+
+  // Used by `UserServiceApi` to call `user-service` directly (not through the
+  // gateway) - e.g. to sync a User's role when `createSeller` runs.
+  user_service: {
+    base_url: requireEnv(USER_SERVICE_BASE_URL, 'USER_SERVICE_BASE_URL'),
+    secret: requireEnv(USER_SERVICE_SECRET, 'USER_SERVICE_SECRET'),
+  },
+
   // V
   // W
   // X

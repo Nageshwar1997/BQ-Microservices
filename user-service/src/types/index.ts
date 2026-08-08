@@ -1,8 +1,15 @@
 import type { TAuthProvider, TUserRole } from '@beautinique/backend-types';
+import type { TInfer } from '@beautinique/backend-zod';
 import type { AUTH_PROVIDER_MAP } from '@beautinique/shared-constants';
 import type { InferSchemaType, Types } from 'mongoose';
 
-import type { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
+import type {
+  promoteUserRoleBodyZodSchema,
+  promoteUserRoleParamsZodSchema,
+  sellerSchema,
+  userSchema,
+  wishlistSchema,
+} from '../schemas/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -55,3 +62,7 @@ export interface IMinimalUser {
 export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
 
 export interface IWishlist extends InferSchemaType<typeof wishlistSchema>, IId {}
+
+export type TPromoteUserRoleParamsZodSchema = TInfer<typeof promoteUserRoleParamsZodSchema>;
+
+export type TPromoteUserRoleBodyZodSchema = TInfer<typeof promoteUserRoleBodyZodSchema>;
