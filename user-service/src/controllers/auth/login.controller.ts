@@ -10,10 +10,10 @@ import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shar
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
-import { github, google, linkedin, redisCacheManager } from '../configs/index.js';
-import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../services/index.js';
-import type { IUser } from '../types/index.js';
-import { createOAuthDbPayload, getMinimalUser } from '../utils/index.js';
+import { github, google, linkedin, redisCacheManager } from '../../configs/index.js';
+import { createNewUser, getUserByEmail, getUserByEmailOrPhone } from '../../services/index.js';
+import type { IUser } from '../../types/index.js';
+import { createOAuthDbPayload, getMinimalUser } from '../../utils/index.js';
 
 export const manualLoginController = async (req: Request, res: Response) => {
   const body = req.body as TLoginZodSchema;

@@ -1,39 +1,35 @@
-import {
-  NotFoundError,
-  TooManyRequestsError,
-  UnprocessableEntityError,
-  ValidationError,
-} from '@beautinique/backend-classes';
+import { ConflictError, TooManyRequestsError, ValidationError } from '@beautinique/backend-classes';
 import type {
   TEmailZodSchema,
   TOtpZodSchema,
-  TPasswordsZodSchema,
+  TRegisterZodSchema,
 } from '@beautinique/backend-types';
 import { sanitizeToken } from '@beautinique/backend-utils';
-import { AUTH_PROVIDER_MAP, HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
+import {
+  AUTH_PROVIDER_MAP,
+  HEADERS_MAP,
+  MAX_OTP_RESEND,
+  USER_ROLE_MAP,
+} from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
-import type { HydratedDocument } from 'mongoose';
 
-import { jobProducer, redisCacheManager } from '../configs/index.js';
-import { getUserByEmail } from '../services/index.js';
-import type { IUser } from '../types/index.js';
-import { getMinimalUser } from '../utils/index.js';
+import { jobProducer, redisCacheManager } from '../../configs/index.js';
+import { USER_STATUS_MAP } from '../../constants/index.js';
+import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../../services/index.js';
+import { getMinimalUser } from '../../utils/index.js';
 
-export const forgotPasswordSendOtpController = async (req: Request, res: Response) => {
+export const registerSendOtpController = async (req: Request, res: Response) => {
   const { email } = req.body as TEmailZodSchema;
   const user = await getUserByEmail({ email });
 
-  if (user && !user.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
-    // Check if user has MANUAL login
-    throw new UnprocessableEntityError(
-      `This account was created using an oAuth (${user.providers.join(
-        ' / ',
-      )}) login. Please login using your provider (e.g., ${user.providers.join(', ')}).`,
-    );
+  if (user?.providers.includes(AUTH_PROVIDER_MAP.MANUAL)) {
+    throw new ConflictError('User already exists, please login', {
+      fieldErrors: { email: ['Email already exists'] },
+    });
   }
 
-  // Store EMAIL & OTP in cache
+  // Store email in cache
   const { otp, token } = await redisCacheManager.token.setOtpData(email);
 
   try {
@@ -52,7 +48,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
   res.success({ message: 'OTP sent successfully', data: token });
 };
 
-export const forgotPasswordResendOtpController = async (req: Request, res: Response) => {
+export const registerResendOtpController = async (req: Request, res: Response) => {
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   //  Get parsed data from cache
@@ -62,7 +58,6 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
     throw new ValidationError('OTP session expired or invalid');
   }
 
-  // Update OTP & sendCount in cache
   const { otp, sendCount, email } = await redisCacheManager.token.updateOtpData(token);
 
   if (sendCount > MAX_OTP_RESEND) {
@@ -71,6 +66,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 
   try {
     /* ---------------- SEND OTP ---------------- */
+
     await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
@@ -80,10 +76,11 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 
     throw error;
   }
+
   res.success({ message: 'OTP resent successfully', data: sendCount });
 };
 
-export const forgotPasswordVerifyOtpController = async (req: Request, res: Response) => {
+export const registerVerifyOtpController = async (req: Request, res: Response) => {
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
   const { otp } = req.body as TOtpZodSchema;
@@ -98,10 +95,10 @@ export const forgotPasswordVerifyOtpController = async (req: Request, res: Respo
   res.success({ message: 'OTP verified successfully' });
 };
 
-export const forgotPasswordSaveController = async (req: Request, res: Response) => {
+export const registerAndSaveController = async (req: Request, res: Response) => {
   const token = sanitizeToken(req.get(HEADERS_MAP.authorization));
 
-  const { password } = req.body as TPasswordsZodSchema;
+  const { firstName, lastName, password, phoneNumber } = req.body as TRegisterZodSchema;
 
   //  Get parsed data from cache
   const parsedData = await redisCacheManager.token.getOtpData(token);
@@ -111,25 +108,49 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
   }
 
   // Check for existing users
-  const user = (await getUserByEmail({
-    email: parsedData.email,
-    lean: false,
-  })) as HydratedDocument<IUser> | null;
+  const [emailUser, phoneUser] = await Promise.all([
+    getUserByEmail({ email: parsedData.email, lean: false }),
+    getUserByPhoneNumber({ phoneNumber, lean: false }),
+  ]);
 
-  if (!user) {
-    throw new NotFoundError('User not found');
-  }
+  let user = emailUser ?? phoneUser;
 
-  const isSamePassword = await bcrypt.compare(password, user.password);
-
-  if (isSamePassword) {
-    throw new UnprocessableEntityError('New password cannot be same as current password');
+  if (phoneUser && phoneUser._id.toString() !== emailUser?._id.toString()) {
+    throw new ConflictError('Phone number already exists', {
+      fieldErrors: { phoneNumber: ['Phone number already exists'] },
+    });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  user.password = hashedPassword;
-  await user.save();
+  if (user) {
+    // User exists → oAuth-only
+    if (!user.providers.includes(AUTH_PROVIDER_MAP.MANUAL) && 'save' in user) {
+      user.password = hashedPassword;
+      user.providers.push(AUTH_PROVIDER_MAP.MANUAL);
+      user.firstName = firstName;
+      user.lastName = lastName;
+      user.phoneNumber = phoneNumber;
+      await user.save();
+    } else {
+      throw new ConflictError('Email already exists', {
+        fieldErrors: { email: ['Email already exists'] },
+      });
+    }
+  } else {
+    // Completely new user → create
+    user = await createNewUser({
+      firstName,
+      lastName,
+      email: parsedData.email,
+      phoneNumber,
+      password: hashedPassword,
+      providers: [AUTH_PROVIDER_MAP.MANUAL],
+      role: USER_ROLE_MAP.USER,
+      status: USER_STATUS_MAP.ACTIVE,
+      avatar: '',
+    });
+  }
 
   // Delete OTP and Token from Redis
   await redisCacheManager.token.deleteOtpData(token);
@@ -138,5 +159,5 @@ export const forgotPasswordSaveController = async (req: Request, res: Response) 
 
   await redisCacheManager.user.setUser(minUser);
 
-  res.success({ message: 'Password reset successfully', data: minUser });
+  res.success({ message: 'User registered successfully', data: minUser });
 };
