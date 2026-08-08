@@ -6,7 +6,7 @@
 import { COUNTRIES, REGEX, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/backend-constants';
 import {
   emailValidation,
-  imageUnionZodSchema,
+  imageUrlValidation,
   literal,
   object,
   phoneNumberValidation,
@@ -89,10 +89,10 @@ export const sellerAddressZodSchema = object({
 
 export const sellerDocumentsFormZodSchema = object({
   step: literal(SELLER_FORM_ID_MAP[3]),
-  id: imageUnionZodSchema,
-  address: imageUnionZodSchema,
-  license: imageUnionZodSchema,
-  pan: imageUnionZodSchema,
-  gst: imageUnionZodSchema,
-  bank: imageUnionZodSchema,
+  id: imageUrlValidation,
+  address: imageUrlValidation,
+  license: imageUrlValidation,
+  pan: imageUrlValidation,
+  gst: imageUrlValidation,
+  bank: imageUrlValidation,
 });
