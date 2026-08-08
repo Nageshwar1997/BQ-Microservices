@@ -1,5 +1,4 @@
 import type { IContactAdminNotificationData } from '@beautinique/backend-bullmq';
-import { stringifyData } from '@beautinique/shared-utils';
 import { BrevoClient } from '@getbrevo/brevo';
 import { convert } from 'html-to-text';
 
@@ -48,7 +47,7 @@ export class MailTransporter {
       logger.info('✅ Transporter is ready.');
     } catch (error) {
       this.isReady = false;
-      logger.error(`❌ Transporter connection failed: ${stringifyData(error)}`);
+      logger.error(error, `❌ Transporter connection failed.`);
       throw error;
     }
   }
@@ -83,7 +82,7 @@ export class MailTransporter {
         ...(options.replyTo && { replyTo: options.replyTo }),
       });
     } catch (error) {
-      logger.error(`❌ Email send failed: ${stringifyData(error)}`);
+      logger.error(error, `❌ Email send failed.`);
       throw error;
     }
   }

@@ -1,19 +1,19 @@
 import { ExternalServiceError } from '@beautinique/backend-classes';
-import type { TFolderZodSchema } from '@beautinique/backend-types';
 import {
   IMAGE_FORMATS,
   IMAGE_MIMES,
   MEDIA_RESOURCE_MAP,
   VIDEO_FORMATS,
   VIDEO_MIMES,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
 import type {
+  TFolderZodSchema,
   TImageFormat,
   TImageMime,
   TMediaResource,
   TVideoFormat,
   TVideoMime,
-} from '@beautinique/shared-types';
+} from '@beautinique/backend-types';
 import { stringifyData } from '@beautinique/shared-utils';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { createHash, randomUUID } from 'crypto';

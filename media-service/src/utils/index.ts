@@ -1,4 +1,4 @@
-import type { TMediaResource } from '@beautinique/shared-types';
+import type { TMediaResource } from '@beautinique/backend-types';
 import type { UploadApiResponse } from 'cloudinary';
 import type { TId } from '../types/index.js';
 

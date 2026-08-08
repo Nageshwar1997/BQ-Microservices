@@ -39,6 +39,7 @@
   "dependencies": {
     "@beautinique/backend-bullmq": "^1.0.3",
     "@beautinique/backend-classes": "^1.0.4",
+    "@beautinique/backend-constants": "^1.0.4",
     "@beautinique/backend-logger": "^1.0.3",
     "@beautinique/backend-mongoose": "^1.0.8",
     "@beautinique/backend-multer": "^1.0.7",

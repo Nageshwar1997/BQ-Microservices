@@ -1,8 +1,8 @@
+import { MB } from '@beautinique/backend-constants';
 import { validateMulter } from '@beautinique/backend-multer';
 import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
 import { folderZodSchema, validateZod } from '@beautinique/backend-zod';
-import { MB } from '@beautinique/shared-constants';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';

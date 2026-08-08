@@ -1,4 +1,4 @@
-import { API_METHODS_MAP, DAY, SECOND } from '@beautinique/shared-constants';
+import { API_METHODS_MAP, DAY, SECOND } from '@beautinique/backend-constants';
 
 import { envs } from '../envs/index.js';
 

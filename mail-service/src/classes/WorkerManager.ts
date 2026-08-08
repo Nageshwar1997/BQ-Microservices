@@ -1,5 +1,4 @@
 import { JobWorker } from '@beautinique/backend-bullmq';
-import { stringifyData } from '@beautinique/shared-utils';
 
 import { logger, transporter } from '../configs/index.js';
 import { envs } from '../envs/index.js';
@@ -24,9 +23,7 @@ export class WorkerManager {
           try {
             await transporter.sendOtp(data.email, data.otp);
           } catch (error) {
-            logger.error(
-              `Failed to send OTP. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
-            );
+            logger.error({ Data: data, Error: error }, `Failed to send OTP.`);
 
             throw error;
           }
@@ -38,7 +35,8 @@ export class WorkerManager {
             await transporter.sendContactAcknowledgement(to, subject, data);
           } catch (error) {
             logger.error(
-              `Failed to send contact acknowledgement. Error:${stringifyData(error)}. To:${to}. Data:${stringifyData(data)}`,
+              { Error: error, To: to, Data: data },
+              `Failed to send contact acknowledgement.`,
             );
 
             throw error;
@@ -52,7 +50,8 @@ export class WorkerManager {
             await transporter.sendContactAdminNotification(to, subject, data);
           } catch (error) {
             logger.error(
-              `Failed to send contact admin notification. Error:${String(error)}. To:${to}. Data:${stringifyData(data)}`,
+              { Error: error, To: to, Data: data },
+              `Failed to send contact admin notification`,
             );
 
             throw error;

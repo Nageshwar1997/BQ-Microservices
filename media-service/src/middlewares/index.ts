@@ -1,7 +1,7 @@
 import { AuthenticationError, AuthorizationError } from '@beautinique/backend-classes';
+import { HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
-import { HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
-import type { TUserRole } from '@beautinique/shared-types';
+import type { TUserRole } from '@beautinique/backend-types';
 import type { NextFunction, Request, Response } from 'express';
 
 export const authenticate = (req: Request, _res: Response, next: NextFunction) => {

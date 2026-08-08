@@ -1,6 +1,6 @@
+import { SERVICE_NAMES_MAP } from '@beautinique/backend-constants';
 import { createHttpLogger } from '@beautinique/backend-logger';
 import { errorResponse, notFoundResponse, successResponse } from '@beautinique/backend-response';
-import { SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
 import { serve, setup } from 'swagger-ui-express';
