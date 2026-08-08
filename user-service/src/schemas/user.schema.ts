@@ -3,10 +3,10 @@ import {
   AUTH_PROVIDERS,
   USER_ROLE_MAP,
   USER_ROLES,
+  USER_STATUS_MAP,
+  USER_STATUSES,
 } from '@beautinique/shared-constants';
 import { Schema } from 'mongoose';
-
-import { USER_STATUS } from '../constants/index.js';
 
 export const userSchema = new Schema(
   {
@@ -21,7 +21,7 @@ export const userSchema = new Schema(
       type: [{ type: String, enum: AUTH_PROVIDERS }],
       default: [AUTH_PROVIDER_MAP.MANUAL],
     },
-    status: { type: String, enum: USER_STATUS, default: 'ACTIVE' },
+    status: { type: String, enum: USER_STATUSES, default: USER_STATUS_MAP.ACTIVE },
     reason: { type: String },
   },
   { versionKey: false, timestamps: true },

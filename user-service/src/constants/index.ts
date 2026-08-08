@@ -9,14 +9,6 @@ export const LOGGER_BASE_OPTIONS = {
   pretty: envs.is_dev,
 } as const;
 
-export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
-
-export const USER_STATUS_MAP = Object.fromEntries(
-  USER_STATUS.map((status) => [status, status]),
-) as {
-  readonly [K in (typeof USER_STATUS)[number]]: K;
-};
-
 export const OAUTH_API_ROUTES_AND_METHODS = {
   google: {
     decode: { method: GET, baseURL: 'https://www.googleapis.com', url: '/oauth2/v2/userinfo' },

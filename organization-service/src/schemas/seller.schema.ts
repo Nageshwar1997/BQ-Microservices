@@ -1,17 +1,14 @@
 import {
   COUNTRIES,
   COUNTRIES_MAP,
+  SELLER_APPROVAL_STATUS_MAP,
+  SELLER_APPROVAL_STATUSES,
+  SELLER_STATUS_MAP,
+  SELLER_STATUSES,
   SELLER_TYPES,
   STATES_AND_UTS,
 } from '@beautinique/backend-constants';
 import { Schema } from 'mongoose';
-
-import {
-  SELLER_APPROVAL_STATUS,
-  SELLER_APPROVAL_STATUS_MAP,
-  SELLER_STATUS,
-  SELLER_STATUS_MAP,
-} from '../constants/index.js';
 
 const sellerBusinessDetailsSchema = new Schema(
   {
@@ -71,10 +68,10 @@ export const sellerSchema = new Schema(
     documents: { type: sellerDocumentsSchema, required: true },
     approvalStatus: {
       type: String,
-      enum: SELLER_APPROVAL_STATUS,
+      enum: SELLER_APPROVAL_STATUSES,
       default: SELLER_APPROVAL_STATUS_MAP.APPROVED,
     },
-    status: { type: String, enum: SELLER_STATUS, default: SELLER_STATUS_MAP.ACTIVE },
+    status: { type: String, enum: SELLER_STATUSES, default: SELLER_STATUS_MAP.ACTIVE },
     // The admin/master who created this record - audit trail.
     createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     // Populated if ever suspended/rejected later.

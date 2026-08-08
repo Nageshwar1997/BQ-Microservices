@@ -3,7 +3,13 @@
 // onboarding wizard's schemas live here for now, following the same
 // `xZodSchema` naming convention used everywhere else.
 
-import { COUNTRIES, REGEX, SELLER_TYPES, STATES_AND_UTS } from '@beautinique/backend-constants';
+import {
+  COUNTRIES,
+  DRAFT_SELLER_STEP_MAP,
+  REGEX,
+  SELLER_TYPES,
+  STATES_AND_UTS,
+} from '@beautinique/backend-constants';
 import {
   emailValidation,
   imageUrlValidation,
@@ -13,12 +19,6 @@ import {
   string,
   z,
 } from '@beautinique/backend-zod';
-
-import {
-  BANK_ACCOUNT_NUMBER_REGEX,
-  DRAFT_SELLER_STEP_MAP,
-  IFSC_REGEX,
-} from '../constants/index.js';
 
 /* -------------------------------------------------------------------------- */
 /*                    SELF-SERVICE ONBOARDING WIZARD STEPS                    */
@@ -55,12 +55,12 @@ export const sellerBankDetailsZodSchema = object({
     .nonempty('Account number is required')
     .min(9, 'Enter valid account number')
     .max(18, 'Enter valid account number')
-    .regex(BANK_ACCOUNT_NUMBER_REGEX, 'Enter a valid account number'),
+    .regex(REGEX.ACCOUNT_NUMBER, 'Enter a valid account number'),
   ifscCode: string('IFSC code is required')
     .trim()
     .nonempty('IFSC code is required')
     .toUpperCase()
-    .regex(IFSC_REGEX, 'Enter a valid IFSC code'),
+    .regex(REGEX.IFSC, 'Enter a valid IFSC code'),
   bankName: string('Bank name is required').trim().nonempty('Bank name is required'),
 });
 

@@ -19,7 +19,7 @@
 //       type: [{ type: String, enum: AUTH_PROVIDERS }],
 //       default: [AUTH_PROVIDER_MAP.MANUAL],
 //     },
-//     status: { type: String, enum: USER_STATUS, default: 'ACTIVE' },
+//     status: { type: String, enum: USER_STATUSES, default: USER_STATUS_MAP.ACTIVE },
 //     reason: { type: String },
 //   },
 //   { versionKey: false, timestamps: true },

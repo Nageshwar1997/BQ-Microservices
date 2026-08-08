@@ -14,7 +14,7 @@ schema, zod validation, the route, and full edge-case handling.
 
 - `RedisCacheManager` already wires up `this.seller = new RedisCacheSeller(...)`
   (your commit `b77dcf5`), with a commented-out `this.team` next to it.
-- `src/constants/index.ts` already has `SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED']`,
+- `src/constants/index.ts` already has `SELLER_APPROVAL_STATUSES = ['PENDING', 'APPROVED', 'REJECTED']`,
   unused so far.
 - `src/controllers/seller/` is scaffolded: `createSeller.controller.ts` (stub),
   `updateSeller.controller.ts` (stub), `index.ts` (re-exports both).
@@ -110,7 +110,7 @@ Seller
 │  ├─ line1, line2?, city, state (enum STATES_AND_UTS), pincode, country (enum COUNTRIES)
 ├─ documents
 │  ├─ id, address, license, pan, gst, bank  (image URLs - already uploaded via media-service)
-├─ approvalStatus: enum SELLER_APPROVAL_STATUS  (default 'APPROVED', see Q6)
+├─ approvalStatus: enum SELLER_APPROVAL_STATUSES  (default 'APPROVED', see Q6)
 ├─ status: 'ACTIVE' | 'SUSPENDED'  (default 'ACTIVE' - lets admin suspend later)
 ├─ createdBy: ObjectId  (the admin/master who created this record - audit trail)
 ├─ reason: string  (optional - populated if ever suspended/rejected later)

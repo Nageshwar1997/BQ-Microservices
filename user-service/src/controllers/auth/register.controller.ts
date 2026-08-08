@@ -10,12 +10,12 @@ import {
   HEADERS_MAP,
   MAX_OTP_RESEND,
   USER_ROLE_MAP,
+  USER_STATUS_MAP,
 } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 import { jobProducer, redisCacheManager } from '../../configs/index.js';
-import { USER_STATUS_MAP } from '../../constants/index.js';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../../services/index.js';
 import { getMinimalUser } from '../../utils/index.js';
 
