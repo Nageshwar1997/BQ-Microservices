@@ -1,27 +1,30 @@
 import { type RedisClientType } from 'redis';
 
 import { logger, redisClient } from '../../configs/index.js';
+import { RedisCacheSeller } from './RedisCacheSeller.js';
 
 export class RedisCacheManager {
   private readonly client: RedisClientType;
 
   private isReady = false;
 
+  public readonly seller: RedisCacheSeller;
   // public readonly team: RedisCacheTeam;
 
   constructor() {
     this.client = redisClient;
 
-    // const getClient = () => {
-    //   if (!this.isReady) {
-    //     logger.warn('⚠️ Redis client unavailable.');
+    const getClient = () => {
+      if (!this.isReady) {
+        logger.warn('⚠️ Redis client unavailable.');
 
-    //     return null;
-    //   }
+        return null;
+      }
 
-    //   return this.client;
-    // };
+      return this.client;
+    };
 
+    this.seller = new RedisCacheSeller(this.client, getClient);
     // this.team = new RedisCacheTeam(this.client, getClient);
 
     this.registerEvents();
@@ -54,8 +57,6 @@ export class RedisCacheManager {
   }
 
   public async connect() {
-    // TODO: Remove this logger
-    logger.info(this.isReady);
     try {
       await this.client.connect();
 
