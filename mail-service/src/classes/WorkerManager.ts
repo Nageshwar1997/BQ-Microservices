@@ -32,7 +32,7 @@ export class WorkerManager {
 
         'send-contact-acknowledgement': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAcknowledgement(to, subject, data);
+            await transporter.sendContactAcknowledgement({ to, subject, data });
           } catch (error) {
             logger.error(
               { Error: error, To: to, Data: data },
@@ -47,7 +47,7 @@ export class WorkerManager {
 
         'send-contact-admin-notification': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAdminNotification(to, subject, data);
+            await transporter.sendContactAdminNotification({ to, subject, data });
           } catch (error) {
             logger.error(
               { Error: error, To: to, Data: data },

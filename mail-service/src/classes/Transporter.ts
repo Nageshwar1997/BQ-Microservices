@@ -1,4 +1,7 @@
-import type { IContactAdminNotificationData } from '@beautinique/backend-bullmq';
+import type {
+  IContactAcknowledgement,
+  IContactAdminNotification,
+} from '@beautinique/backend-bullmq';
 import { BrevoClient } from '@getbrevo/brevo';
 import { convert } from 'html-to-text';
 
@@ -94,21 +97,13 @@ export class MailTransporter {
   }
 
   /* ---------------- Send contact acknowledgement email ---------------- */
-  public async sendContactAcknowledgement(
-    to: string,
-    subject: string,
-    data: { ticketId: string; queryType: string },
-  ) {
+  public async sendContactAcknowledgement({ to, subject, data }: IContactAcknowledgement) {
     const html = getContactAcknowledgementHtmlMessage(data);
     await this.sendMail({ to, subject, htmlOrText: html });
   }
 
   /* ---------------- Send admin contact notification email ---------------- */
-  public async sendContactAdminNotification(
-    to: string,
-    subject: string,
-    data: IContactAdminNotificationData,
-  ) {
+  public async sendContactAdminNotification({ to, subject, data }: IContactAdminNotification) {
     const html = getContactAdminNotificationHtmlMessage(data);
     // Lets the support agent hit "reply" and land directly in the
     // submitter's inbox, instead of replying to the no-reply sender address.
