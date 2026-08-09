@@ -40,8 +40,6 @@ export const METHODS_AND_PATHS = {
   },
   seller: {
     base: '/seller',
-    // Admin reviews a PENDING application - approving it is what promotes
-    // the user's role (see `updateSellerApprovalStatusController`).
     updateApprovalStatus: { method: PATCH, path: '/:sellerId/approval-status' },
     draft: {
       base: '/draft',

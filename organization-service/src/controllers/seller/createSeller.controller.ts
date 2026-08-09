@@ -73,9 +73,6 @@ export const createSellerController = async (
   }
 
   /* ---------------- CREATE (PENDING - the user's role is NOT touched here) ---------------- */
-
-  // Only `updateSellerApprovalStatusController` promotes the user's role,
-  // and only once an admin actually approves this application.
   const seller = new Seller({
     user: user._id,
     businessDetails: {

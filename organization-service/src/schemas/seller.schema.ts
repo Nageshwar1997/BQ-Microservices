@@ -61,12 +61,12 @@ const sellerDocumentsSchema = new Schema(
 // `historySchema` on `Product`. Populated by `updateSellerApprovalStatusController`.
 const sellerHistorySchema = new Schema(
   {
-    approvedBy: { type: Schema.Types.ObjectId },
+    approvedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     approvedAt: { type: Date },
-    rejectedBy: { type: Schema.Types.ObjectId },
+    rejectedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     rejectedAt: { type: Date },
     rejectReason: { type: String },
-    suspendedBy: { type: Schema.Types.ObjectId },
+    suspendedBy: { type: Schema.Types.ObjectId, ref: 'User' },
     suspendedAt: { type: Date },
     suspendReason: { type: String },
   },
