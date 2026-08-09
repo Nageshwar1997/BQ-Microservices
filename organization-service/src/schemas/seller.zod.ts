@@ -3,27 +3,26 @@
 // onboarding wizard's schemas live here for now, following the same
 // `xZodSchema` naming convention used everywhere else.
 
-import { REGEX } from '@beautinique/backend-constants';
-import {
-  object,
-  sellerAddressZodSchema,
-  sellerBankDetailsZodSchema,
-  sellerBusinessDetailsZodSchema,
-  sellerDocumentsZodSchema,
-  string,
-} from '@beautinique/backend-zod';
+import { REGEX, SELLER_APPROVAL_STATUS_MAP } from '@beautinique/backend-constants';
+import { discriminatedUnion, literal, object, string } from '@beautinique/backend-zod';
 
 /* -------------------------------------------------------------------------- */
-/*                      ADMIN - CREATE SELLER (FULL PAYLOAD)                  */
+/*                 ADMIN - REVIEW A PENDING SELLER APPLICATION                */
 /* -------------------------------------------------------------------------- */
 
-export const createSellerZodSchema = object({
-  userId: string('User id is required')
+export const sellerIdParamsZodSchema = object({
+  sellerId: string('Seller id is required')
     .trim()
-    .nonempty('User id is required')
-    .regex(REGEX.MONGODB_ID, 'Invalid user id'),
-  businessDetails: sellerBusinessDetailsZodSchema.omit({ step: true }),
-  bankDetails: sellerBankDetailsZodSchema.omit({ step: true }),
-  address: sellerAddressZodSchema.omit({ step: true }),
-  documents: sellerDocumentsZodSchema.omit({ step: true }),
+    .nonempty('Seller id is required')
+    .regex(REGEX.MONGODB_ID, 'Invalid seller id'),
 });
+
+export const updateSellerApprovalStatusZodSchema = discriminatedUnion('approvalStatus', [
+  object({
+    approvalStatus: literal(SELLER_APPROVAL_STATUS_MAP.APPROVED),
+  }),
+  object({
+    approvalStatus: literal(SELLER_APPROVAL_STATUS_MAP.REJECTED),
+    rejectReason: string('Reject reason is required').trim().nonempty('Reject reason is required'),
+  }),
+]);

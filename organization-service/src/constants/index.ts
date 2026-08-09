@@ -46,11 +46,14 @@ export const METHODS_AND_PATHS = {
   },
   seller: {
     base: '/seller',
-    create: { method: POST, path: '/' },
+    // Admin reviews a PENDING application - approving it is what promotes
+    // the user's role (see `updateSellerApprovalStatusController`).
+    updateApprovalStatus: { method: PATCH, path: '/:sellerId/approval-status' },
     draft: {
       base: '/draft',
       save: { method: POST, path: '/' }, // For saving a wizard step as draft
       get: { method: GET, path: '/' }, // For fetching the existing draft to prefill the wizard
+      submit: { method: PATCH, path: '/submit' }, // Reassembles the draft and creates the Seller as PENDING
     },
   },
 } as const;

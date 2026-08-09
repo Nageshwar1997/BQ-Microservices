@@ -6,7 +6,12 @@ import type {
 } from '@beautinique/backend-zod';
 import type { InferSchemaType, Types } from 'mongoose';
 
-import type { contactQuerySchema, createSellerZodSchema, sellerSchema } from '../schemas/index.js';
+import type {
+  contactQuerySchema,
+  sellerIdParamsZodSchema,
+  sellerSchema,
+  updateSellerApprovalStatusZodSchema,
+} from '../schemas/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -21,7 +26,9 @@ export type TContactQuery = InferSchemaType<typeof contactQuerySchema> & IId;
 
 export type TSeller = InferSchemaType<typeof sellerSchema> & IId;
 
-export type TCreateSellerZodSchema = TInfer<typeof createSellerZodSchema>;
+export type TSellerIdParamsZodSchema = TInfer<typeof sellerIdParamsZodSchema>;
+
+export type TUpdateSellerApprovalStatusZodSchema = TInfer<typeof updateSellerApprovalStatusZodSchema>;
 
 export type TDraftSellerStepBodyZodSchema = TInfer<typeof draftSellerStepBodyZodSchema>;
 

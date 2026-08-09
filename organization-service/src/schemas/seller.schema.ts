@@ -57,25 +57,41 @@ const sellerDocumentsSchema = new Schema(
   { versionKey: false, _id: false },
 );
 
+// Audit trail for admin review actions - mirrors product-service's
+// `historySchema` on `Product`. Populated by `updateSellerApprovalStatusController`.
+const sellerHistorySchema = new Schema(
+  {
+    approvedBy: { type: Schema.Types.ObjectId },
+    approvedAt: { type: Date },
+    rejectedBy: { type: Schema.Types.ObjectId },
+    rejectedAt: { type: Date },
+    rejectReason: { type: String },
+    suspendedBy: { type: Schema.Types.ObjectId },
+    suspendedAt: { type: Date },
+    suspendReason: { type: String },
+  },
+  { _id: false, versionKey: false },
+);
+
 export const sellerSchema = new Schema(
   {
     // `user-service` owns the actual `User` document (and its `role`) - this
-    // just references it by id, see `createSellerController`.
+    // just references it by id. Also the applicant/creator - self-service
+    // only, see `createSellerController`.
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, unique: true },
     businessDetails: { type: sellerBusinessDetailsSchema, required: true },
     bankDetails: { type: sellerBankDetailsSchema, required: true },
     address: { type: sellerAddressSchema, required: true },
     documents: { type: sellerDocumentsSchema, required: true },
+    // Starts `PENDING` - `updateSellerApprovalStatusController` is what
+    // flips it (and, on approval, promotes the user's role).
     approvalStatus: {
       type: String,
       enum: SELLER_APPROVAL_STATUSES,
-      default: SELLER_APPROVAL_STATUS_MAP.APPROVED,
+      default: SELLER_APPROVAL_STATUS_MAP.PENDING,
     },
     status: { type: String, enum: SELLER_STATUSES, default: SELLER_STATUS_MAP.ACTIVE },
-    // The admin/master who created this record - audit trail.
-    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    // Populated if ever suspended/rejected later.
-    reason: { type: String, trim: true },
+    history: sellerHistorySchema,
   },
   { versionKey: false, timestamps: true },
 );

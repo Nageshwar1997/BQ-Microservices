@@ -1,7 +1,12 @@
 import { USER_ROLE_MAP } from '@beautinique/backend-constants';
+import { tryCatchSession } from '@beautinique/backend-mongoose';
 import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
-import { draftSellerStepBodyZodSchema, validateZod } from '@beautinique/backend-zod';
+import {
+  draftSellerDetailsZodSchema,
+  draftSellerStepBodyZodSchema,
+  validateZod,
+} from '@beautinique/backend-zod';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../../constants/index.js';
@@ -9,14 +14,18 @@ import {
   createSellerController,
   getDraftSellerController,
   saveDraftSellerController,
+  updateSellerApprovalStatusController,
 } from '../../controllers/index.js';
-import { authenticate, authorize } from '../../middlewares/index.js';
-import { createSellerZodSchema } from '../../schemas/index.js';
+import { authenticate, authorize, createPendingSellerPayload } from '../../middlewares/index.js';
+import {
+  sellerIdParamsZodSchema,
+  updateSellerApprovalStatusZodSchema,
+} from '../../schemas/index.js';
 
 export const sellerRouter = Router();
 const draftRouter = Router();
 
-const { create, draft } = METHODS_AND_PATHS.seller;
+const { draft, updateApprovalStatus } = METHODS_AND_PATHS.seller;
 
 /* ================== DRAFT ROUTES (self-service onboarding wizard) ================== */
 
@@ -29,14 +38,25 @@ draftRouter[draft.save.method](
 
 draftRouter[draft.get.method](draft.get.path, tryCatchResponse(getDraftSellerController));
 
+// Reassembles the applicant's draft from redis, validates it's complete,
+// then creates the Seller as PENDING - mirrors product-service's
+// `draft.publish` (`createPendingProductPayload` -> `publishDraftProductController`).
+draftRouter[draft.submit.method](
+  draft.submit.path,
+  createPendingSellerPayload,
+  checkEmptyRequest({ body: true }),
+  validateZod({ body: draftSellerDetailsZodSchema }),
+  tryCatchSession(createSellerController),
+);
+
 sellerRouter.use(draft.base, authenticate, draftRouter);
 
-/* ================== CREATE ROUTE (admin/master) ================== */
+/* ================== ADMIN REVIEW ================== */
 
-sellerRouter[create.method](
-  create.path,
+sellerRouter[updateApprovalStatus.method](
+  updateApprovalStatus.path,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
-  checkEmptyRequest({ body: true }),
-  validateZod({ body: createSellerZodSchema }),
-  tryCatchResponse(createSellerController),
+  checkEmptyRequest({ body: true, params: true }),
+  validateZod({ params: sellerIdParamsZodSchema, body: updateSellerApprovalStatusZodSchema }),
+  tryCatchResponse(updateSellerApprovalStatusController),
 );
