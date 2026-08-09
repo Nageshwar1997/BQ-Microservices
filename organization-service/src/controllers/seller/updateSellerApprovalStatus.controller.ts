@@ -1,16 +1,13 @@
 import { ConflictError, NotFoundError } from '@beautinique/backend-classes';
 import { SELLER_APPROVAL_STATUS_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
+import type { TUpdateSellerApprovalStatusZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 
 import { UserServiceApi } from '../../classes/index.js';
 import { redisCacheManager } from '../../configs/index.js';
 import { Seller } from '../../models/index.js';
-import type {
-  TSellerIdParamsZodSchema,
-  TUpdateSellerApprovalStatusZodSchema,
-} from '../../types/index.js';
 
 const userServiceApi = new UserServiceApi();
 
@@ -24,7 +21,7 @@ const userServiceApi = new UserServiceApi();
 export const updateSellerApprovalStatusController = async (req: Request, res: Response) => {
   const admin = getUser(req.user);
 
-  const { sellerId } = req.params as TSellerIdParamsZodSchema;
+  const { sellerId } = req.params as { sellerId: string };
   const body = req.body as TUpdateSellerApprovalStatusZodSchema;
 
   const seller = await Seller.findById(getObjId(sellerId));

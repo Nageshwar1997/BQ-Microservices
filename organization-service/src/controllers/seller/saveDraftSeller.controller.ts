@@ -1,8 +1,8 @@
+import type { TDraftSellerStepBodyZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 
 import { redisCacheManager } from '../../configs/index.js';
-import type { TDraftSellerStepBodyZodSchema } from '../../types/index.js';
 
 export const saveDraftSellerController = async (req: Request, res: Response) => {
   const { _id: userId } = getUser(req.user);

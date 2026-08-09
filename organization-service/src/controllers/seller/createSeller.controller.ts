@@ -1,12 +1,12 @@
 import { ConflictError } from '@beautinique/backend-classes';
 import { SELLER_APPROVAL_STATUS_MAP } from '@beautinique/backend-constants';
+import type { TDraftSellerDetailsZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
 import { redisCacheManager } from '../../configs/index.js';
 import { Seller } from '../../models/index.js';
-import type { TDraftSellerDetailsZodSchema } from '../../types/index.js';
 
 // Avoids pulling in `mongodb` just for this - a duplicate-key write error
 // always carries a numeric `code: 11000`.

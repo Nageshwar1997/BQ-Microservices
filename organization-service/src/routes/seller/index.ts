@@ -5,6 +5,7 @@ import { tryCatchResponse } from '@beautinique/backend-response';
 import {
   draftSellerDetailsZodSchema,
   draftSellerStepBodyZodSchema,
+  updateSellerApprovalStatusZodSchema,
   validateZod,
 } from '@beautinique/backend-zod';
 import { Router } from 'express';
@@ -17,7 +18,6 @@ import {
   updateSellerApprovalStatusController,
 } from '../../controllers/index.js';
 import { authenticate, authorize, createPendingSellerPayload } from '../../middlewares/index.js';
-import { updateSellerApprovalStatusZodSchema } from '../../schemas/index.js';
 
 export const sellerRouter = Router();
 const draftRouter = Router();

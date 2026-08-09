@@ -1,8 +1,9 @@
 import type {
   TDraftSellerDetailsZodSchema,
   TDraftSellerStepBodyZodSchema,
-  TSeller,
-} from '../../types/index.js';
+} from '@beautinique/backend-types';
+
+import type { TSeller } from '../../types/index.js';
 import { RedisCacheHelper } from './RedisCacheHelper.js';
 
 const SELLER_CACHE_TTL_SECONDS = 60 * 60 * 24; // 1 day

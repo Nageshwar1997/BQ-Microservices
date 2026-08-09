@@ -19,7 +19,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@beautinique/backend-types": "^1.0.26",
+    "@beautinique/backend-types": "^1.0.27",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/node": "^26.2.0",
@@ -43,7 +43,7 @@
     "@beautinique/backend-request": "^1.0.2",
     "@beautinique/backend-response": "^1.0.4",
     "@beautinique/backend-utils": "^1.0.6",
-    "@beautinique/backend-zod": "^1.0.29",
+    "@beautinique/backend-zod": "^1.0.31",
     "@beautinique/shared-markdown-to-html": "^1.0.1",
     "@beautinique/shared-utils": "^1.0.5",
     "axios": "^1.19.0",
