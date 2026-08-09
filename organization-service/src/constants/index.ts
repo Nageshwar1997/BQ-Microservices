@@ -40,7 +40,7 @@ export const METHODS_AND_PATHS = {
   },
   seller: {
     base: '/seller',
-    updateApprovalStatus: { method: PATCH, path: '/:sellerId/approval-status' },
+    updateApprovalStatus: { method: PATCH, path: '/approval-status/:sellerId' },
     draft: {
       base: '/draft',
       save: { method: POST, path: '/' }, // For saving a wizard step as draft
