@@ -90,7 +90,8 @@ export const getContactQueriesController = async (req: Request, res: Response) =
 };
 
 export const updateContactQueryStatusController = async (req: Request, res: Response) => {
-  const { ticketId, status } = req.params as { ticketId: string; status: TContactQueryStatus };
+  const { ticketId } = req.params as { ticketId: string };
+  const { status } = req.query as { status: TContactQueryStatus };
 
   // CLOSED/REJECTED get a TTL deadline (see `CONTACT_QUERY_RETENTION_MS_MAP`);
   // any other status clears it, so reopening a query cancels its auto-delete.

@@ -32,6 +32,6 @@ contactRouter[list.method](
 contactRouter[updateStatus.method](
   updateStatus.path,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
-  checkEmptyRequest({ params: true }),
+  checkEmptyRequest({ query: true, params: true }),
   tryCatchResponse(updateContactQueryStatusController),
 );
