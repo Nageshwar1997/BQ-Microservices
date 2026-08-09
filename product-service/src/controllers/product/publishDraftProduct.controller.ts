@@ -123,7 +123,7 @@ export const publishDraftProductController = async (
   res.locals.afterCommit?.push(async () => {
     if (uniquePublicIds.length > 0) {
       await jobProducer.addJob(
-        'media-queue',
+        'media-service-queue',
         'mark-multiple-media-as-used',
         { publicIds: uniquePublicIds },
         { attempts: 5, backoff: { type: 'exponential', delay: 5000 } },
