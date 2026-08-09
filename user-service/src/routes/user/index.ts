@@ -18,10 +18,7 @@ import {
   updateUserController,
 } from '../../controllers/index.js';
 import { authenticate, authorize } from '../../middlewares/index.js';
-import {
-  promoteUserRoleBodyZodSchema,
-  promoteUserRoleParamsZodSchema,
-} from '../../schemas/index.js';
+import { promoteUserRoleBodyZodSchema } from '../../schemas/index.js';
 
 export const userRouter = Router();
 
@@ -63,6 +60,6 @@ userRouter[promoteRole.method](
   promoteRole.path,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
   checkEmptyRequest({ body: true, params: true }),
-  validateZod({  body: promoteUserRoleBodyZodSchema }),
+  validateZod({ body: promoteUserRoleBodyZodSchema }),
   tryCatchResponse(promoteUserRoleController),
 );

@@ -1,11 +1,7 @@
 import { USER_ROLE_MAP } from '@beautinique/backend-constants';
 import { checkEmptyRequest } from '@beautinique/backend-request';
 import { tryCatchResponse } from '@beautinique/backend-response';
-import {
-  createContactQueryZodSchema,
-  updateContactQueryStatusZodSchema,
-  validateZod,
-} from '@beautinique/backend-zod';
+import { createContactQueryZodSchema, validateZod } from '@beautinique/backend-zod';
 import { Router } from 'express';
 
 import { METHODS_AND_PATHS } from '../../constants/index.js';
@@ -36,7 +32,6 @@ contactRouter[list.method](
 contactRouter[updateStatus.method](
   updateStatus.path,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
-  checkEmptyRequest({ body: true, params: true }),
-  validateZod({ body: updateContactQueryStatusZodSchema }),
+  checkEmptyRequest({ params: true }),
   tryCatchResponse(updateContactQueryStatusController),
 );

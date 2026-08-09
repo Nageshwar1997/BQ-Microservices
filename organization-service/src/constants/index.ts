@@ -1,9 +1,5 @@
-import {
-  API_METHODS_MAP,
-  type CONTACT_QUERY_STATUS,
-  CONTACT_QUERY_STATUS_MAP,
-  DAY,
-} from '@beautinique/backend-constants';
+import { API_METHODS_MAP, CONTACT_QUERY_STATUS_MAP, DAY } from '@beautinique/backend-constants';
+import type { TContactQueryStatus } from '@beautinique/backend-types';
 
 import { envs } from '../envs/index.js';
 
@@ -20,9 +16,7 @@ export const LOGGER_BASE_OPTIONS = {
  * statuses not listed here (e.g. `OPENED`, `ANSWERED`) are never
  * auto-deleted.
  */
-export const CONTACT_QUERY_RETENTION_MS_MAP: Partial<
-  Record<(typeof CONTACT_QUERY_STATUS)[number], number>
-> = {
+export const CONTACT_QUERY_RETENTION_MS_MAP: Partial<Record<TContactQueryStatus, number>> = {
   [CONTACT_QUERY_STATUS_MAP.CLOSED]: 2 * DAY,
   [CONTACT_QUERY_STATUS_MAP.REJECTED]: 5 * DAY,
 };

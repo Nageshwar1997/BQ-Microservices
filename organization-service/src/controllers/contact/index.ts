@@ -3,9 +3,8 @@ import { CONTACT_QUERY_STATUS_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type {
   IListContactQueriesQuery,
-  TContactQueryTicketIdZodSchema,
+  TContactQueryStatus,
   TCreateContactQueryZodSchema,
-  TUpdateContactQueryStatusZodSchema,
 } from '@beautinique/backend-types';
 import type { Request, Response } from 'express';
 
@@ -91,8 +90,7 @@ export const getContactQueriesController = async (req: Request, res: Response) =
 };
 
 export const updateContactQueryStatusController = async (req: Request, res: Response) => {
-  const ticketId = req.params.ticketId as string;
-  const { status } = req.body as TUpdateContactQueryStatusZodSchema;
+  const { ticketId, status } = req.params as { ticketId: string; status: TContactQueryStatus };
 
   // CLOSED/REJECTED get a TTL deadline (see `CONTACT_QUERY_RETENTION_MS_MAP`);
   // any other status clears it, so reopening a query cancels its auto-delete.
