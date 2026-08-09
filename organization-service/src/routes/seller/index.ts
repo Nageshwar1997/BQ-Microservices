@@ -35,9 +35,6 @@ draftRouter[draft.save.method](
 
 draftRouter[draft.get.method](draft.get.path, tryCatchResponse(getDraftSellerController));
 
-// Reassembles the applicant's draft from redis, validates it's complete,
-// then creates the Seller as PENDING - mirrors product-service's
-// `draft.publish` (`createPendingProductPayload` -> `publishDraftProductController`).
 draftRouter[draft.submit.method](
   draft.submit.path,
   createPendingSellerPayload,
