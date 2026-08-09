@@ -3,7 +3,7 @@ import {
   MEDIA_STATUS_MAP,
   MEDIA_STATUSES,
   SERVICE_NAMES,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
 import { model, Schema } from 'mongoose';
 
 import { TTL_SAFETY_BUFFER_SECONDS } from '../constants/index.js';

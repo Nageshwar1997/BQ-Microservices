@@ -5,7 +5,7 @@ import {
   SERVICE_NAMES_MAP,
   USER_ROLE_MAP,
   USER_ROLES,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 

@@ -1,20 +1,19 @@
 import { ExternalServiceError } from '@beautinique/backend-classes';
-import type { TFolderZodSchema } from '@beautinique/backend-types';
 import {
   IMAGE_FORMATS,
   IMAGE_MIMES,
   MEDIA_RESOURCE_MAP,
   VIDEO_FORMATS,
   VIDEO_MIMES,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
 import type {
+  TFolderZodSchema,
   TImageFormat,
   TImageMime,
   TMediaResource,
   TVideoFormat,
   TVideoMime,
-} from '@beautinique/shared-types';
-import { stringifyData } from '@beautinique/shared-utils';
+} from '@beautinique/backend-types';
 import { type DeleteApiResponse, type UploadApiResponse, v2 } from 'cloudinary';
 import { createHash, randomUUID } from 'crypto';
 import pLimit from 'p-limit';
@@ -103,7 +102,7 @@ class Cloudinary {
 
     // Push failed deletions into background job queue+
     await jobProducer.addJob(
-      'media-queue',
+      'media-service-queue',
       'remove-multiple-media-directly',
       { publicIds: failedIds, retryCount },
       { jobId: `remove-multiple-directly-${batchId}` },
@@ -202,11 +201,11 @@ class Cloudinary {
         );
       }
 
-      logger.info(`Cloudinary delete success. ${stringifyData(result)}`);
+      logger.info(result, 'Cloudinary delete success.');
 
       return result;
     } catch (error) {
-      logger.error(`Cloudinary delete failed. ${stringifyData(error)}`);
+      logger.error(error, 'Cloudinary delete failed.');
 
       throw new ExternalServiceError(
         error instanceof Error ? error.message : 'Failed to delete media.',
@@ -253,7 +252,8 @@ class Cloudinary {
     // Log if retry limit exceeded
     if (failedIds.length > 0 && retryCount >= MAX_REMOVE_RETRIES) {
       logger.error(
-        `Delete retry limit reached. Failed IDs: ${stringifyData(failedIds)}, Retry count: ${String(retryCount)}`,
+        { 'Failed IDs': failedIds, 'Retry count': retryCount },
+        'Delete retry limit reached.',
       );
     }
 

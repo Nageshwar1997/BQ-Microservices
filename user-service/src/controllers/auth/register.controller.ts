@@ -1,21 +1,21 @@
 import { ConflictError, TooManyRequestsError, ValidationError } from '@beautinique/backend-classes';
+import {
+  AUTH_PROVIDER_MAP,
+  HEADERS_MAP,
+  MAX_OTP_RESEND,
+  USER_ROLE_MAP,
+  USER_STATUS_MAP,
+} from '@beautinique/backend-constants';
 import type {
   TEmailZodSchema,
   TOtpZodSchema,
   TRegisterZodSchema,
 } from '@beautinique/backend-types';
 import { sanitizeToken } from '@beautinique/backend-utils';
-import {
-  AUTH_PROVIDER_MAP,
-  HEADERS_MAP,
-  MAX_OTP_RESEND,
-  USER_ROLE_MAP,
-} from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 
 import { jobProducer, redisCacheManager } from '../../configs/index.js';
-import { USER_STATUS_MAP } from '../../constants/index.js';
 import { createNewUser, getUserByEmail, getUserByPhoneNumber } from '../../services/index.js';
 import { getMinimalUser } from '../../utils/index.js';
 
@@ -35,7 +35,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
@@ -67,7 +67,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 

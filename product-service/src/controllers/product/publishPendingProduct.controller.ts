@@ -1,6 +1,6 @@
 import { NotFoundError } from '@beautinique/backend-classes';
+import { PRODUCT_STATUSES_MAP } from '@beautinique/backend-constants';
 import { getUser } from '@beautinique/backend-utils';
-import { PRODUCT_STATUSES_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 
 import { Product } from '../../models/index.js';

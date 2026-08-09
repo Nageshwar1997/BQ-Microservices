@@ -1,25 +1,23 @@
 import { JobWorker } from '@beautinique/backend-bullmq';
-import { MEDIA_STATUS_MAP } from '@beautinique/shared-constants';
-import { stringifyData } from '@beautinique/shared-utils';
-
+import { MEDIA_STATUS_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
+
 import { logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 import { Media } from '../models/index.js';
-import type { TResource } from '../types/index.js';
 import { cloudinary } from './Cloudinary.js';
 
 const WORKER_CONCURRENCY = 5;
 
 export class WorkerManager {
-  private worker: JobWorker<'media-queue'> | undefined;
+  private worker: JobWorker<'media-service-queue'> | undefined;
 
   /* ---------------- START ---------------- */
 
   public start() {
     this.worker = new JobWorker({
-      queueName: 'media-queue',
+      queueName: 'media-service-queue',
       connection: envs.redis.bull_mq,
       concurrency: WORKER_CONCURRENCY,
       logger,
@@ -30,11 +28,7 @@ export class WorkerManager {
           try {
             await cloudinary.removeSingle(data);
           } catch (error) {
-            logger.error(
-              `Failed to remove single media directly. Error:${stringifyData(error)}. Data:${stringifyData(
-                data,
-              )}`,
-            );
+            logger.error({ Error: error, Data: data }, 'Failed to remove single media directly.');
 
             throw error;
           }
@@ -46,11 +40,7 @@ export class WorkerManager {
           try {
             await cloudinary.removeMultiple(data);
           } catch (error) {
-            logger.error(
-              `Failed to remove multiple media directly. Error:${stringifyData(error)}. Data:${stringifyData(
-                data,
-              )}`,
-            );
+            logger.error({ Error: error, Data: data }, 'Failed to remove multiple media directly.');
 
             throw error;
           }
@@ -62,7 +52,7 @@ export class WorkerManager {
           try {
             const expiresAt = new Date(Date.now() + CLEANUP_DELAY);
             const userId = getObjId(data.userId);
-            const resourceType = data.resourceType as TResource['resourceType'];
+            const resourceType = data.resourceType;
             await Media.create({
               ...data,
               userId,
@@ -71,9 +61,7 @@ export class WorkerManager {
               expiresAt,
             });
           } catch (error) {
-            logger.error(
-              `Failed to create single unused media. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
-            );
+            logger.error({ Error: error, Data: data }, 'Failed to create single unused media.');
 
             throw error;
           }
@@ -89,9 +77,7 @@ export class WorkerManager {
               data.map((media) => ({ ...media, status: MEDIA_STATUS_MAP.UNUSED, expiresAt })),
             );
           } catch (error) {
-            logger.error(
-              `Failed to create multiple unused media. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
-            );
+            logger.error({ Error: error, Data: data }, 'Failed to create multiple unused media.');
 
             throw error;
           }
@@ -113,9 +99,7 @@ export class WorkerManager {
               return;
             }
           } catch (error) {
-            logger.error(
-              `Failed to mark single media as used. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
-            );
+            logger.error({ Error: error, Data: data }, 'Failed to mark single media as used.');
             throw error;
           }
         },
@@ -134,13 +118,17 @@ export class WorkerManager {
 
             if (result.matchedCount !== publicIds.length) {
               logger.warn(
-                `Some media were already used or not found. Requested: ${String(publicIds.length)}, Matched: ${String(result.matchedCount)}, Modified: ${String(result.modifiedCount)}, IDs: ${stringifyData(publicIds)}`,
+                {
+                  Requested: publicIds.length,
+                  Matched: result.matchedCount,
+                  Modified: result.modifiedCount,
+                  IDs: publicIds,
+                },
+                'Some media were already used or not found.',
               );
             }
           } catch (error) {
-            logger.warn(
-              `Some media were already used or not found. Error: ${stringifyData(error)}, Data: ${stringifyData(data)}`,
-            );
+            logger.warn({ Error: error, Data: data }, 'Some media were already used or not found.');
             throw error;
           }
         },
@@ -180,9 +168,7 @@ export class WorkerManager {
               },
             );
           } catch (error) {
-            logger.error(
-              `Failed to delete single media. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
-            );
+            logger.error({ Error: error, Data: data }, 'Failed to delete single media.');
 
             throw error;
           }
@@ -204,9 +190,7 @@ export class WorkerManager {
             /* ---------------- SKIP IF NOTHING FOUND ---------------- */
 
             if (medias.length === 0) {
-              logger.warn(
-                `Unused medias not found or already processed, publicIds: ${stringifyData(publicIds)}`,
-              );
+              logger.warn({ publicIds }, 'Unused medias not found or already processed.');
               return;
             }
 
@@ -239,13 +223,12 @@ export class WorkerManager {
 
             if (medias.length !== publicIds.length) {
               logger.warn(
-                `Some medias were already processed or not found. Requested: ${String(publicIds.length)}, Found: ${String(medias.length)}, Public IDs: ${stringifyData(publicIds)}`,
+                { Requested: publicIds.length, Found: medias.length, PublicIDs: publicIds },
+                'Some medias were already processed or not found.',
               );
             }
           } catch (error) {
-            logger.error(
-              `Failed to delete multiple media. Error: ${stringifyData(error)}. Data: ${stringifyData(data)}`,
-            );
+            logger.error({ Error: error, Data: data }, 'Failed to delete multiple media.');
 
             throw error;
           }

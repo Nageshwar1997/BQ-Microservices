@@ -1,13 +1,13 @@
+import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/backend-constants';
 import { createHttpLogger } from '@beautinique/backend-logger';
 import { checkDbConnection, getConnectionHealth } from '@beautinique/backend-mongoose';
 import { checkServiceAccess } from '@beautinique/backend-request';
 import { errorResponse, notFoundResponse, successResponse } from '@beautinique/backend-response';
-import { HEADERS_MAP, SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
 import express from 'express';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 
-import { logger } from './configs/index.js';
+import { logger, workerManager } from './configs/index.js';
 import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
 import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
@@ -78,6 +78,7 @@ app[health.method](health.path, (_, res) => {
     data: {
       database: getConnectionHealth(),
       service: SERVICE_NAMES_MAP['user-service'],
+      worker: workerManager.isRunning(),
     },
   });
 });

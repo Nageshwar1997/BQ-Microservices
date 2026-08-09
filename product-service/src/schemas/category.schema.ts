@@ -1,4 +1,4 @@
-import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
+import { CATEGORY_LEVELS, CATEGORY_LEVELS_MAP } from '@beautinique/backend-constants';
 import { Schema } from 'mongoose';
 
 import { generateSlug } from '../utils/index.js';

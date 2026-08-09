@@ -1,4 +1,4 @@
-import { PRODUCT_STATUSES_MAP } from '@beautinique/shared-constants';
+import { PRODUCT_STATUSES_MAP } from '@beautinique/backend-constants';
 import type { Request, Response } from 'express';
 
 import { Product } from '../../models/index.js';

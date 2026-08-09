@@ -1,6 +1,9 @@
 # BQ-Microservices
 Microservices for Beautinique
 
+## Update All Dependency Packages => (npx npm-check-updates -u)
+
+
 ## Run all services from root
 
 1. Install every microservice from the main folder:

@@ -1,12 +1,14 @@
 import {
   COUNTRIES,
   COUNTRIES_MAP,
+  SELLER_APPROVAL_STATUS_MAP,
+  SELLER_APPROVAL_STATUSES,
   SELLER_TYPES,
   STATES_AND_UTS,
-} from '@beautinique/shared-constants';
+  USER_STATUS_MAP,
+  USER_STATUSES,
+} from '@beautinique/backend-constants';
 import { Schema } from 'mongoose';
-
-import { SELLER_APPROVAL_STATUS, USER_STATUS } from '../constants/index.js';
 
 const businessAddressSchema = new Schema(
   {
@@ -58,8 +60,12 @@ export const sellerSchema = new Schema(
     personalDetails: personalDetailsSchema,
     businessDetails: businessDetailsSchema,
     requiredDocuments: requiredDocumentsSchema,
-    approvalStatus: { type: String, enum: SELLER_APPROVAL_STATUS, default: 'PENDING' },
-    status: { type: String, enum: USER_STATUS, default: 'ACTIVE' },
+    approvalStatus: {
+      type: String,
+      enum: SELLER_APPROVAL_STATUSES,
+      default: SELLER_APPROVAL_STATUS_MAP.PENDING,
+    },
+    status: { type: String, enum: USER_STATUSES, default: USER_STATUS_MAP.ACTIVE },
     reason: { type: String },
   },
   { versionKey: false, timestamps: true },

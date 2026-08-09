@@ -1,4 +1,4 @@
-import { SERVICE_NAMES_MAP } from '@beautinique/shared-constants';
+import { SERVICE_NAMES_MAP } from '@beautinique/backend-constants';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 
@@ -20,7 +20,7 @@ export const openApiSpec = {
     version: '1.0.0',
     description:
       'Sends transactional emails (currently OTP verification codes) via the Brevo API. ' +
-      'Has no public send endpoints - work is consumed from the `mail-queue` BullMQ ' +
+      'Has no public send endpoints - work is consumed from the `mail-service-queue` BullMQ ' +
       'queue (job `send-otp`), enqueued by other services such as user-service. ' +
       'See the [README](/) for more details.',
   },

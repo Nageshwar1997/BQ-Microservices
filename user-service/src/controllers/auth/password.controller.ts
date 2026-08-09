@@ -4,13 +4,13 @@ import {
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
+import { AUTH_PROVIDER_MAP, HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/backend-constants';
 import type {
   TEmailZodSchema,
   TOtpZodSchema,
   TPasswordsZodSchema,
 } from '@beautinique/backend-types';
 import { sanitizeToken } from '@beautinique/backend-utils';
-import { AUTH_PROVIDER_MAP, HEADERS_MAP, MAX_OTP_RESEND } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
@@ -39,7 +39,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
@@ -71,7 +71,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 
   try {
     /* ---------------- SEND OTP ---------------- */
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 

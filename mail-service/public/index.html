@@ -165,7 +165,7 @@
         <strong>Beautinique</strong> platform. It has
         <strong>no public &quot;send email&quot; HTTP endpoint</strong> — it does one thing: run a
         single BullMQ worker that consumes <code>send-otp</code> jobs off the
-        <code>mail-queue</code> queue (produced by <code>user-service</code>, on
+        <code>mail-service-queue</code> queue (produced by <code>user-service</code>, on
         signup/login/forgot-password flows) and delivers them via the
         <a href="https://www.brevo.com/">Brevo</a> transactional email REST API. It also serves its
         own documentation: <code>GET /</code> renders this README as HTML, and
@@ -267,7 +267,7 @@
 │   ├── classes/
 │   │   ├── index.ts                 #   Re-exports
 │   │   ├── Transporter.ts           #   MailTransporter — Brevo REST API client, sendOtp
-│   │   └── WorkerManager.ts         #   Owns the mail-queue BullMQ JobWorker
+│   │   └── WorkerManager.ts         #   Owns the mail-service-queue BullMQ JobWorker
 │   ├── configs/
 │   │   └── index.ts                 #   Singletons: logger, workerManager, transporter
 │   ├── constants/
@@ -371,7 +371,7 @@
           <tr>
             <td><code>BULL_MQ_HOST</code></td>
             <td>Yes</td>
-            <td>Redis host used for the <code>mail-queue</code> BullMQ connection</td>
+            <td>Redis host used for the <code>mail-service-queue</code> BullMQ connection</td>
           </tr>
           <tr>
             <td><code>BULL_MQ_PORT</code></td>
@@ -392,9 +392,9 @@
       </table>
       <p>
         <strong>This Redis instance is shared</strong> across every service that produces or
-        consumes <code>mail-queue</code> jobs (see
-        <a href="#7-background-jobs-mail-queue">§7 Background Jobs</a>) — it must point to the same
-        instance everywhere, most notably wherever <code>user-service</code> runs.
+        consumes <code>mail-service-queue</code> jobs (see
+        <a href="#7-background-jobs-mail-service-queue">§7 Background Jobs</a>) — it must point to
+        the same instance everywhere, most notably wherever <code>user-service</code> runs.
       </p>
       <hr />
       <h2>5. API Routes</h2>
@@ -440,8 +440,9 @@
       <p>
         <code>mail</code> reflects whether the Brevo API key last verified successfully
         (<code>MailTransporter.isConnected()</code>); <code>worker</code> reflects whether the
-        <code>mail-queue</code> BullMQ worker is running (<code>WorkerManager.isRunning()</code>).
-        Neither actively re-probes Brevo/Redis on every <code>/health</code> call — see
+        <code>mail-service-queue</code> BullMQ worker is running
+        (<code>WorkerManager.isRunning()</code>). Neither actively re-probes Brevo/Redis on every
+        <code>/health</code> call — see
         <a href="#15-design-notes--known-trade-offs">§15 Design Notes</a>.
       </p>
       <hr />
@@ -504,7 +505,7 @@
         <code>statusCode</code>/<code>body</code>/<code>message</code>.
       </p>
       <hr />
-      <h2>7. Background Jobs (<code>mail-queue</code>)</h2>
+      <h2>7. Background Jobs (<code>mail-service-queue</code>)</h2>
       <p>
         Owned and consumed by <code>WorkerManager</code> (<code>classes/WorkerManager.ts</code>) — a
         single BullMQ <code>JobWorker</code> for the whole queue, concurrency 5.
@@ -537,23 +538,23 @@
       </p>
       <p>
         <code>mail-service</code> never enqueues jobs onto any queue itself — it is a consumer only.
-        <code>media-queue</code> (used for Cloudinary media lifecycle) is owned end-to-end by
-        <code>media-service</code> — unrelated to this service.
+        <code>media-service-queue</code> (used for Cloudinary media lifecycle) is owned end-to-end
+        by <code>media-service</code> — unrelated to this service.
       </p>
       <h3>Cross-service queue integration</h3>
       <p>
         Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any
-        service can enqueue onto <code>mail-queue</code> as long as it targets the same Redis
-        instance and uses <code>@beautinique/backend-bullmq</code> — <code>user-service</code> does
-        this today. This means:
+        service can enqueue onto <code>mail-service-queue</code> as long as it targets the same
+        Redis instance and uses <code>@beautinique/backend-bullmq</code> —
+        <code>user-service</code> does this today. This means:
       </p>
       <ul>
         <li>
           The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance
-          as every producer of <code>mail-queue</code>.
+          as every producer of <code>mail-service-queue</code>.
         </li>
         <li>
-          If <code>mail-queue</code>&#39;s schema/job names ever change in
+          If <code>mail-service-queue</code>&#39;s schema/job names ever change in
           <code>backend-bullmq</code>, every producer needs a matching update, or
           <code>send-otp</code> jobs will silently stop being picked up here.
         </li>
@@ -573,9 +574,9 @@
       <hr />
       <h2>8. OTP Email Flow</h2>
       <pre><code>user-service (register/password controller)
-   │  bullQueue.addJob({ queueName: &#39;mail-queue&#39;, jobName: &#39;send-otp&#39;, data: { email, otp } })
+   │  bullQueue.addJob({ queueName: &#39;mail-service-queue&#39;, jobName: &#39;send-otp&#39;, data: { email, otp } })
    ▼
-Redis (mail-queue)
+Redis (mail-service-queue)
    │  (async, on this service&#39;s JobWorker, concurrency 5)
    ▼
 WorkerManager&#39;s &#39;send-otp&#39; handler
@@ -654,8 +655,8 @@ Email delivered
           <code>MailTransporter.sendMail</code> (bad API key, Brevo outage, invalid recipient,
           unverified sender, etc.) is logged with the error and the job&#39;s data, then rethrown —
           BullMQ&#39;s own <code>attempts</code>/<code>backoff</code> (see
-          <a href="#7-background-jobs-mail-queue">§7 Retry behavior</a>) governs retries, not
-          <code>errorResponse</code>.
+          <a href="#7-background-jobs-mail-service-queue">§7 Retry behavior</a>) governs retries,
+          not <code>errorResponse</code>.
         </li>
       </ul>
       <p>
@@ -678,8 +679,8 @@ Email delivered
         </li>
         <li>
           <strong>In the background, non-blocking:</strong> once the transporter reports connected,
-          start the <code>mail-queue</code> worker (<code>workerManager.start()</code>); polls every
-          30s until that condition is met.
+          start the <code>mail-service-queue</code> worker (<code>workerManager.start()</code>);
+          polls every 30s until that condition is met.
         </li>
       </ol>
       <p>
@@ -698,7 +699,7 @@ Email delivered
           Stop accepting new HTTP requests (<code>stopHttpServer</code>, existing requests finish
           first).
         </li>
-        <li>Stop the <code>mail-queue</code> worker.</li>
+        <li>Stop the <code>mail-service-queue</code> worker.</li>
         <li>Close the mail transporter.</li>
         <li>Destroy any remaining open sockets.</li>
         <li>Exit <code>0</code> on success, <code>1</code> on failure.</li>
@@ -777,7 +778,7 @@ npm run clean              # remove dist/
             <td><code>@beautinique/backend-bullmq</code></td>
             <td>
               <code>JobWorker</code> — typed BullMQ wrapper, schema-checked jobs
-              (<code>mail-queue</code>/<code>send-otp</code>)
+              (<code>mail-service-queue</code>/<code>send-otp</code>)
             </td>
           </tr>
           <tr>
@@ -912,8 +913,8 @@ npm run clean              # remove dist/
       </ul>
       <hr />
       <h2>16. Data Flow Example — OTP Send</h2>
-      <pre><code>user-service → bullQueue.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, { email, otp })
-  (async, on this service&#39;s mail-queue worker)
+      <pre><code>user-service → bullQueue.addJob(&#39;mail-service-queue&#39;, &#39;send-otp&#39;, { email, otp })
+  (async, on this service&#39;s mail-service-queue worker)
   → WorkerManager&#39;s &#39;send-otp&#39; handler
   → transporter.sendOtp(email, otp)
       → getOtpHtmlMessage(title, otp)         ← branded HTML

@@ -1,4 +1,4 @@
-import { API_METHODS_MAP } from '@beautinique/shared-constants';
+import { API_METHODS_MAP } from '@beautinique/backend-constants';
 
 import { envs } from '../envs/index.js';
 
@@ -8,16 +8,6 @@ export const LOGGER_BASE_OPTIONS = {
   level: envs.is_dev ? 'debug' : 'info',
   pretty: envs.is_dev,
 } as const;
-
-export const USER_STATUS = ['ACTIVE', 'INACTIVE', 'DELETED'] as const;
-
-export const USER_STATUS_MAP = Object.fromEntries(
-  USER_STATUS.map((status) => [status, status]),
-) as {
-  readonly [K in (typeof USER_STATUS)[number]]: K;
-};
-
-export const SELLER_APPROVAL_STATUS = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 
 export const OAUTH_API_ROUTES_AND_METHODS = {
   google: {

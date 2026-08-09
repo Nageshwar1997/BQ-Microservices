@@ -1,5 +1,7 @@
-import type { IContactAdminNotificationData } from '@beautinique/backend-bullmq';
-import { stringifyData } from '@beautinique/shared-utils';
+import type {
+  IContactAcknowledgement,
+  IContactAdminNotification,
+} from '@beautinique/backend-bullmq';
 import { BrevoClient } from '@getbrevo/brevo';
 import { convert } from 'html-to-text';
 
@@ -48,7 +50,7 @@ export class MailTransporter {
       logger.info('✅ Transporter is ready.');
     } catch (error) {
       this.isReady = false;
-      logger.error(`❌ Transporter connection failed: ${stringifyData(error)}`);
+      logger.error(error, `❌ Transporter connection failed.`);
       throw error;
     }
   }
@@ -83,7 +85,7 @@ export class MailTransporter {
         ...(options.replyTo && { replyTo: options.replyTo }),
       });
     } catch (error) {
-      logger.error(`❌ Email send failed: ${stringifyData(error)}`);
+      logger.error(error, `❌ Email send failed.`);
       throw error;
     }
   }
@@ -95,21 +97,13 @@ export class MailTransporter {
   }
 
   /* ---------------- Send contact acknowledgement email ---------------- */
-  public async sendContactAcknowledgement(
-    to: string,
-    subject: string,
-    data: { ticketId: string; queryType: string },
-  ) {
+  public async sendContactAcknowledgement({ to, subject, data }: IContactAcknowledgement) {
     const html = getContactAcknowledgementHtmlMessage(data);
     await this.sendMail({ to, subject, htmlOrText: html });
   }
 
   /* ---------------- Send admin contact notification email ---------------- */
-  public async sendContactAdminNotification(
-    to: string,
-    subject: string,
-    data: IContactAdminNotificationData,
-  ) {
+  public async sendContactAdminNotification({ to, subject, data }: IContactAdminNotification) {
     const html = getContactAdminNotificationHtmlMessage(data);
     // Lets the support agent hit "reply" and land directly in the
     // submitter's inbox, instead of replying to the no-reply sender address.

@@ -5,8 +5,8 @@ import {
   UnprocessableEntityError,
   ValidationError,
 } from '@beautinique/backend-classes';
+import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/backend-constants';
 import type { TLoginZodSchema, TUserRole } from '@beautinique/backend-types';
-import { AUTH_PROVIDER_MAP, HEADERS_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 

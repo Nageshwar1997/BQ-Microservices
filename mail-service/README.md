@@ -10,7 +10,7 @@
 
 ## 1. Overview
 
-The Mail Service is the transactional-email microservice for the **Beautinique** platform. It has **no public "send email" HTTP endpoint** — it does one thing: run a single BullMQ worker that consumes `send-otp` jobs off the `mail-queue` queue (produced by `user-service`, on signup/login/forgot-password flows) and delivers them via the [Brevo](https://www.brevo.com/) transactional email REST API. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
+The Mail Service is the transactional-email microservice for the **Beautinique** platform. It has **no public "send email" HTTP endpoint** — it does one thing: run a single BullMQ worker that consumes `send-otp` jobs off the `mail-service-queue` queue (produced by `user-service`, on signup/login/forgot-password flows) and delivers them via the [Brevo](https://www.brevo.com/) transactional email REST API. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
 
 **Why Brevo instead of raw SMTP:** this service originally sent mail via Nodemailer over SMTP (`smtp.gmail.com`). In production (Render), every SMTP connection attempt on both port 587 and 465 eventually failed - first with `ENETUNREACH` (Nodemailer's own DNS resolution picks a random address across both A/AAAA records, and Render has no outbound IPv6 route), then with `ETIMEDOUT` even after forcing IPv4 (Render and/or Google were silently dropping the connection regardless of port/family). None of that is fixable from application code - it's a network-level block on outbound SMTP from this host. Brevo's REST API runs over HTTPS on port 443, which every PaaS keeps open by definition (it's how their own tooling and everyone else's API traffic works), so it sidesteps the problem entirely. See [§15 Design Notes](#15-design-notes--known-trade-offs) for the full story.
 
@@ -50,7 +50,7 @@ mail-service/
 │   ├── classes/
 │   │   ├── index.ts                 #   Re-exports
 │   │   ├── Transporter.ts           #   MailTransporter — Brevo REST API client, sendOtp
-│   │   └── WorkerManager.ts         #   Owns the mail-queue BullMQ JobWorker
+│   │   └── WorkerManager.ts         #   Owns the mail-service-queue BullMQ JobWorker
 │   ├── configs/
 │   │   └── index.ts                 #   Singletons: logger, workerManager, transporter
 │   ├── constants/
@@ -98,14 +98,14 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.3 Redis — BullMQ
 
-| Variable           | Required | Description                                            |
-| ------------------ | -------- | ------------------------------------------------------ |
-| `BULL_MQ_HOST`     | Yes      | Redis host used for the `mail-queue` BullMQ connection |
-| `BULL_MQ_PORT`     | Yes      | Redis port (must be a positive integer)                |
-| `BULL_MQ_PASSWORD` | No       | Redis password, if the instance requires auth          |
-| `BULL_MQ_USERNAME` | No       | Redis username, if the instance requires auth          |
+| Variable           | Required | Description                                                    |
+| ------------------ | -------- | -------------------------------------------------------------- |
+| `BULL_MQ_HOST`     | Yes      | Redis host used for the `mail-service-queue` BullMQ connection |
+| `BULL_MQ_PORT`     | Yes      | Redis port (must be a positive integer)                        |
+| `BULL_MQ_PASSWORD` | No       | Redis password, if the instance requires auth                  |
+| `BULL_MQ_USERNAME` | No       | Redis username, if the instance requires auth                  |
 
-**This Redis instance is shared** across every service that produces or consumes `mail-queue` jobs (see [§7 Background Jobs](#7-background-jobs-mail-queue)) — it must point to the same instance everywhere, most notably wherever `user-service` runs.
+**This Redis instance is shared** across every service that produces or consumes `mail-service-queue` jobs (see [§7 Background Jobs](#7-background-jobs-mail-service-queue)) — it must point to the same instance everywhere, most notably wherever `user-service` runs.
 
 ---
 
@@ -119,7 +119,7 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 That's the entire route table — this service has no `/api/v1/*` business API, no request headers to authenticate, and no per-route middleware beyond the global chain in `app.ts` (JSON/urlencoded parsing, static assets, request logging, `res.success`). `/`, `/docs`, and `/health` stay reachable regardless of Brevo/Redis state, since they don't depend on either.
 
-`mail` reflects whether the Brevo API key last verified successfully (`MailTransporter.isConnected()`); `worker` reflects whether the `mail-queue` BullMQ worker is running (`WorkerManager.isRunning()`). Neither actively re-probes Brevo/Redis on every `/health` call — see [§15 Design Notes](#15-design-notes--known-trade-offs).
+`mail` reflects whether the Brevo API key last verified successfully (`MailTransporter.isConnected()`); `worker` reflects whether the `mail-service-queue` BullMQ worker is running (`WorkerManager.isRunning()`). Neither actively re-probes Brevo/Redis on every `/health` call — see [§15 Design Notes](#15-design-notes--known-trade-offs).
 
 ---
 
@@ -139,7 +139,7 @@ A singleton `MailTransporter` class wrapping Brevo's official Node.js SDK (`@get
 
 ---
 
-## 7. Background Jobs (`mail-queue`)
+## 7. Background Jobs (`mail-service-queue`)
 
 Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single BullMQ `JobWorker` for the whole queue, concurrency 5.
 
@@ -149,14 +149,14 @@ Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single 
 
 Job payload shape (from `@beautinique/backend-bullmq`'s `QUEUE_SCHEMA`): `{ email: string; otp: string }`.
 
-`mail-service` never enqueues jobs onto any queue itself — it is a consumer only. `media-queue` (used for Cloudinary media lifecycle) is owned end-to-end by `media-service` — unrelated to this service.
+`mail-service` never enqueues jobs onto any queue itself — it is a consumer only. `media-service-queue` (used for Cloudinary media lifecycle) is owned end-to-end by `media-service` — unrelated to this service.
 
 ### Cross-service queue integration
 
-Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any service can enqueue onto `mail-queue` as long as it targets the same Redis instance and uses `@beautinique/backend-bullmq` — `user-service` does this today. This means:
+Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any service can enqueue onto `mail-service-queue` as long as it targets the same Redis instance and uses `@beautinique/backend-bullmq` — `user-service` does this today. This means:
 
-- The `BULL_MQ_*` env vars must point to the **same** Redis instance as every producer of `mail-queue`.
-- If `mail-queue`'s schema/job names ever change in `backend-bullmq`, every producer needs a matching update, or `send-otp` jobs will silently stop being picked up here.
+- The `BULL_MQ_*` env vars must point to the **same** Redis instance as every producer of `mail-service-queue`.
+- If `mail-service-queue`'s schema/job names ever change in `backend-bullmq`, every producer needs a matching update, or `send-otp` jobs will silently stop being picked up here.
 
 ### Retry behavior
 
@@ -168,9 +168,9 @@ Redis/BullMQ jobs are identified purely by queue name + job name at the Redis le
 
 ```
 user-service (register/password controller)
-   │  bullQueue.addJob({ queueName: 'mail-queue', jobName: 'send-otp', data: { email, otp } })
+   │  bullQueue.addJob({ queueName: 'mail-service-queue', jobName: 'send-otp', data: { email, otp } })
    ▼
-Redis (mail-queue)
+Redis (mail-service-queue)
    │  (async, on this service's JobWorker, concurrency 5)
    ▼
 WorkerManager's 'send-otp' handler
@@ -207,7 +207,7 @@ Email delivered
 Mail-service has two independent error paths, since almost all of its real work happens off the HTTP request/response cycle:
 
 - **HTTP layer** (`/`, `/docs`, `/health`): none of these routes contain business logic that can throw, so `errorResponse`/`notFoundResponse` (`@beautinique/backend-response`) exist mainly as the framework-level catch-all — an unmatched route gets a branded 404 HTML page for browser requests, JSON otherwise; a genuinely unexpected error becomes a generic `500` (`includeStack: envs.is_dev`), never leaking internals.
-- **Job layer** (`send-otp` handler): a thrown error from `MailTransporter.sendMail` (bad API key, Brevo outage, invalid recipient, unverified sender, etc.) is logged with the error and the job's data, then rethrown — BullMQ's own `attempts`/`backoff` (see [§7 Retry behavior](#7-background-jobs-mail-queue)) governs retries, not `errorResponse`.
+- **Job layer** (`send-otp` handler): a thrown error from `MailTransporter.sendMail` (bad API key, Brevo outage, invalid recipient, unverified sender, etc.) is logged with the error and the job's data, then rethrown — BullMQ's own `attempts`/`backoff` (see [§7 Retry behavior](#7-background-jobs-mail-service-queue)) governs retries, not `errorResponse`.
 
 Unlike `media-service`, this service has no dependency on `@beautinique/backend-classes`' `AppError` hierarchy — it never needs structured HTTP error codes because it has no business API surface to protect.
 
@@ -219,14 +219,14 @@ Unlike `media-service`, this service has no dependency on `@beautinique/backend-
 
 1. Start the HTTP server (`startHttpServer()`) - this alone unblocks `/`, `/docs`, `/health`.
 2. **In the background, non-blocking:** connect the mail transporter (`transporter.start()`, i.e. verify the Brevo API key), retrying every 30s on failure until it succeeds or the process starts shutting down.
-3. **In the background, non-blocking:** once the transporter reports connected, start the `mail-queue` worker (`workerManager.start()`); polls every 30s until that condition is met.
+3. **In the background, non-blocking:** once the transporter reports connected, start the `mail-service-queue` worker (`workerManager.start()`); polls every 30s until that condition is met.
 
 Idempotent (`setStarted()` guards re-entry). A slow/unreachable mail provider at boot no longer blocks the service from binding its port or answering `/health` - it just means `mail`/`worker` read `false` until the retry loop connects. On an HTTP-server startup failure specifically, logs and calls `process.exit(1)`.
 
 ### Graceful shutdown (`bootstrap/shutdown.ts`, `SIGINT`/`SIGTERM`)
 
 1. Stop accepting new HTTP requests (`stopHttpServer`, existing requests finish first).
-2. Stop the `mail-queue` worker.
+2. Stop the `mail-service-queue` worker.
 3. Close the mail transporter.
 4. Destroy any remaining open sockets.
 5. Exit `0` on success, `1` on failure.
@@ -266,7 +266,7 @@ Flat config: `@eslint/js` recommended → `typescript-eslint` recommended/strict
 
 | Package                                | Purpose                                                                                                       |
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `@beautinique/backend-bullmq`          | `JobWorker` — typed BullMQ wrapper, schema-checked jobs (`mail-queue`/`send-otp`)                             |
+| `@beautinique/backend-bullmq`          | `JobWorker` — typed BullMQ wrapper, schema-checked jobs (`mail-service-queue`/`send-otp`)                     |
 | `@beautinique/backend-logger`          | `createLogger`/`createHttpLogger` (Pino-based)                                                                |
 | `@beautinique/backend-response`        | `successResponse`/`errorResponse`/`notFoundResponse`                                                          |
 | `@beautinique/shared-constants`        | `SERVICE_NAMES_MAP`, `API_METHODS_MAP`                                                                        |
@@ -309,8 +309,8 @@ All responses use `@beautinique/backend-response`'s envelope, attached via `app.
 ## 16. Data Flow Example — OTP Send
 
 ```
-user-service → bullQueue.addJob('mail-queue', 'send-otp', { email, otp })
-  (async, on this service's mail-queue worker)
+user-service → bullQueue.addJob('mail-service-queue', 'send-otp', { email, otp })
+  (async, on this service's mail-service-queue worker)
   → WorkerManager's 'send-otp' handler
   → transporter.sendOtp(email, otp)
       → getOtpHtmlMessage(title, otp)         ← branded HTML

@@ -263,7 +263,7 @@
 │   ├── classes/
 │   │   ├── index.ts                 #   Re-exports
 │   │   ├── Cloudinary.ts            #   Upload/remove logic, retry-via-queue on failure
-│   │   └── WorkerManager.ts         #   Owns the media-queue BullMQ JobWorker
+│   │   └── WorkerManager.ts         #   Owns the media-service-queue BullMQ JobWorker
 │   ├── configs/
 │   │   └── index.ts                 #   Singletons: databaseConfigs, logger, jobProducer, workerManager
 │   ├── constants/
@@ -379,7 +379,7 @@
           <tr>
             <td><code>BULL_MQ_HOST</code></td>
             <td>Yes</td>
-            <td>Redis host used for the <code>media-queue</code> BullMQ connection</td>
+            <td>Redis host used for the <code>media-service-queue</code> BullMQ connection</td>
           </tr>
           <tr>
             <td><code>BULL_MQ_PORT</code></td>
@@ -400,9 +400,9 @@
       </table>
       <p>
         <strong>This Redis instance is shared</strong> across every service that produces or
-        consumes <code>media-queue</code> jobs (see
-        <a href="#10-background-jobs-media-queue">§10 Cross-service queue integration</a>) — it must
-        point to the same instance everywhere.
+        consumes <code>media-service-queue</code> jobs (see
+        <a href="#10-background-jobs-media-service-queue">§10 Cross-service queue integration</a>) —
+        it must point to the same instance everywhere.
       </p>
       <h3>4.4 Cloudinary</h3>
       <table>
@@ -718,13 +718,13 @@ cloudinary.uploadSingle()          # streams the buffer straight to Cloudinary
    ▼
 res.locals.afterRollback.push(...)  # registers a Cloudinary-cleanup task, in case anything below fails
    ▼
-jobProducer.addJob(&#39;media-queue&#39;, &#39;create-single-unused-media&#39;, payload)
-jobProducer.addJob(&#39;media-queue&#39;, &#39;delete-single-media&#39;, { publicId }, { delay: CLEANUP_DELAY })
+jobProducer.addJob(&#39;media-service-queue&#39;, &#39;create-single-unused-media&#39;, payload)
+jobProducer.addJob(&#39;media-service-queue&#39;, &#39;delete-single-media&#39;, { publicId }, { delay: CLEANUP_DELAY })
    │  on failure: tryCatchResponse runs afterRollback (removes the Cloudinary upload), forwards the error
    ▼
 res.success({ statusCode: 201, data: url })   # request returns here - DB write happens async
    .
-   .  (async, inside WorkerManager&#39;s JobWorker for &#39;media-queue&#39;)
+   .  (async, inside WorkerManager&#39;s JobWorker for &#39;media-service-queue&#39;)
    ▼
 &#39;create-single-unused-media&#39; handler → Media.create({ ..., status: UNUSED, expiresAt: now + CLEANUP_DELAY })
    .
@@ -767,8 +767,8 @@ res.success({ statusCode: 201, data: url })   # request returns here - DB write 
       <p>
         <code>media-service</code> never marks its own media as used — a
         <strong>different</strong> service enqueues <code>mark-single-media-as-used</code> /
-        <code>mark-multiple-media-as-used</code> onto <code>media-queue</code> once it actually
-        references the uploaded URL (e.g. <code>product-service</code> does this in
+        <code>mark-multiple-media-as-used</code> onto <code>media-service-queue</code> once it
+        actually references the uploaded URL (e.g. <code>product-service</code> does this in
         <code>publishDraftProductController</code> when a product referencing the media is saved).
         That handler flips <code>status: UNUSED → USED</code> and clears <code>expiresAt</code>,
         which is what keeps the media from being auto-deleted by the cleanup job / TTL index.
@@ -859,7 +859,7 @@ res.success({ statusCode: 201, data: url })   # request returns here - DB write 
         </tbody>
       </table>
       <hr />
-      <h2>10. Background Jobs (<code>media-queue</code>)</h2>
+      <h2>10. Background Jobs (<code>media-service-queue</code>)</h2>
       <p>
         Owned and consumed by <code>WorkerManager</code> (<code>classes/WorkerManager.ts</code>) — a
         single BullMQ <code>JobWorker</code> for the whole queue (concurrency 5, shared across every
@@ -910,26 +910,26 @@ res.success({ statusCode: 201, data: url })   # request returns here - DB write 
         </tbody>
       </table>
       <p>
-        <code>media-service</code> only runs a worker for <code>media-queue</code>.
-        <code>mail-queue</code> (used for OTP emails) is owned end-to-end by
+        <code>media-service</code> only runs a worker for <code>media-service-queue</code>.
+        <code>mail-service-queue</code> (used for OTP emails) is owned end-to-end by
         <code>user-service</code> (producer) and <code>mail-service</code> (worker) — unrelated to
         this service.
       </p>
       <h3>Cross-service queue integration</h3>
       <p>
         Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any
-        service can enqueue onto <code>media-queue</code> as long as it targets the same Redis
-        instance and uses <code>@beautinique/backend-bullmq</code> —
+        service can enqueue onto <code>media-service-queue</code> as long as it targets the same
+        Redis instance and uses <code>@beautinique/backend-bullmq</code> —
         <code>product-service</code> does this in <code>publishDraftProductController</code> when it
         enqueues <code>mark-multiple-media-as-used</code>. This means:
       </p>
       <ul>
         <li>
           The <code>BULL_MQ_*</code> env vars must point to the <strong>same</strong> Redis instance
-          across every service that touches <code>media-queue</code>.
+          across every service that touches <code>media-service-queue</code>.
         </li>
         <li>
-          If <code>media-queue</code>&#39;s schema/job names ever change in
+          If <code>media-service-queue</code>&#39;s schema/job names ever change in
           <code>backend-bullmq</code>, every producer needs a matching update, or those jobs will
           silently stop being picked up.
         </li>
@@ -1130,7 +1130,9 @@ res.success({ statusCode: 201, data: url })   # request returns here - DB write 
         <li>Register MongoDB event listeners (<code>registerDatabaseEvents</code>).</li>
         <li>Connect MongoDB (<code>connectDb</code>).</li>
         <li>Start the HTTP server (<code>startHttpServer</code>).</li>
-        <li>Start the <code>media-queue</code> worker (<code>workerManager.start()</code>).</li>
+        <li>
+          Start the <code>media-service-queue</code> worker (<code>workerManager.start()</code>).
+        </li>
       </ol>
       <p>
         Idempotent (<code>setStarted()</code> guards re-entry). On any failure, logs and calls
@@ -1145,7 +1147,7 @@ res.success({ statusCode: 201, data: url })   # request returns here - DB write 
           Stop accepting new HTTP requests (<code>stopHttpServer</code>, existing requests finish
           first).
         </li>
-        <li>Stop the <code>media-queue</code> worker.</li>
+        <li>Stop the <code>media-service-queue</code> worker.</li>
         <li>Close the BullMQ job producer.</li>
         <li>Disconnect MongoDB.</li>
         <li>Destroy any remaining open sockets.</li>
@@ -1387,7 +1389,7 @@ npm run clean              # remove dist/
   → jobProducer.addJob(&#39;delete-single-media&#39;, { publicId }, { delay: 2 days })
   ← res.success({ statusCode: 201, data: url })
 
-  (async, on the media-queue worker)
+  (async, on the media-service-queue worker)
   → Media.create({ ...payload, status: &#39;UNUSED&#39;, expiresAt })
 
   (2 days later, unless marked USED first)

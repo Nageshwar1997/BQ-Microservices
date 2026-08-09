@@ -1,6 +1,6 @@
 import type {
-  IContactAcknowledgementData,
   IContactAdminNotificationData,
+  TContactAcknowledgementData,
 } from '@beautinique/backend-bullmq';
 
 import { envs } from '../envs/index.js';
@@ -177,7 +177,7 @@ export const getOtpHtmlMessage = (title: string, otp: string) => {
 export const getContactAcknowledgementHtmlMessage = ({
   ticketId,
   queryType,
-}: IContactAcknowledgementData) => {
+}: TContactAcknowledgementData) => {
   return baseHtmlLayout(
     'Query Received',
     "We've got your message, and our team is already on it.",

@@ -3,7 +3,7 @@ import {
   MAX_IMAGE_SIZE,
   MAX_VIDEO_SIZE,
   SERVICE_NAMES_MAP,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
 import { formatFileSize } from '@beautinique/shared-utils';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';

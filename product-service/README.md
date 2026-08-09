@@ -16,23 +16,23 @@ The Product Service owns the product catalog and category tree for the **Beautin
 
 ## 2. Technology Stack
 
-| Layer                    | Technology                                                                                                                                                   |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Runtime                  | Node.js (ES2025, ESM)                                                                                                                                        |
-| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                                                                                       |
-| Framework                | Express.js 5.x                                                                                                                                               |
-| Database                 | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`), plus MongoDB Atlas Search (`$search`) for product/dashboard search                              |
-| Cache                    | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)                                                                             |
-| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only**, `media-queue` (see [§19](#19-background-jobs-media-queue-producer-only))              |
-| Validation               | Zod, via `@beautinique/backend-zod` (schemas defined and versioned in a separate `BQ-Packages` repo, not here — see [§6](#6-request-validation-zod-schemas)) |
-| Logging                  | Pino, via `@beautinique/backend-logger`                                                                                                                      |
-| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                                                                                       |
-| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                                                                                     |
-| Shared response envelope | `@beautinique/backend-response`                                                                                                                              |
-| Shared utilities         | `@beautinique/backend-utils`, `@beautinique/backend-mongoose`, `@beautinique/shared-utils`                                                                   |
-| Shared constants/types   | `@beautinique/shared-constants`, `@beautinique/backend-types`                                                                                                |
-| Slug generation          | `slugify`                                                                                                                                                    |
-| Code quality             | ESLint (flat config, type-checked + strict), Prettier                                                                                                        |
+| Layer                    | Technology                                                                                                                                                      |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime                  | Node.js (ES2025, ESM)                                                                                                                                           |
+| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                                                                                          |
+| Framework                | Express.js 5.x                                                                                                                                                  |
+| Database                 | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`), plus MongoDB Atlas Search (`$search`) for product/dashboard search                                 |
+| Cache                    | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)                                                                                |
+| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only**, `media-service-queue` (see [§19](#19-background-jobs-media-service-queue-producer-only)) |
+| Validation               | Zod, via `@beautinique/backend-zod` (schemas defined and versioned in a separate `BQ-Packages` repo, not here — see [§6](#6-request-validation-zod-schemas))    |
+| Logging                  | Pino, via `@beautinique/backend-logger`                                                                                                                         |
+| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                                                                                          |
+| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                                                                                        |
+| Shared response envelope | `@beautinique/backend-response`                                                                                                                                 |
+| Shared utilities         | `@beautinique/backend-utils`, `@beautinique/backend-mongoose`, `@beautinique/shared-utils`                                                                      |
+| Shared constants/types   | `@beautinique/shared-constants`, `@beautinique/backend-types`                                                                                                   |
+| Slug generation          | `slugify`                                                                                                                                                       |
+| Code quality             | ESLint (flat config, type-checked + strict), Prettier                                                                                                           |
 
 ---
 
@@ -146,14 +146,14 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.4 Redis — BullMQ
 
-| Variable           | Description                                             |
-| ------------------ | ------------------------------------------------------- |
-| `BULL_MQ_HOST`     | Redis host used for the `media-queue` BullMQ connection |
-| `BULL_MQ_PORT`     | Redis port                                              |
-| `BULL_MQ_PASSWORD` | Redis password                                          |
-| `BULL_MQ_USERNAME` | Redis username                                          |
+| Variable           | Description                                                     |
+| ------------------ | --------------------------------------------------------------- |
+| `BULL_MQ_HOST`     | Redis host used for the `media-service-queue` BullMQ connection |
+| `BULL_MQ_PORT`     | Redis port                                                      |
+| `BULL_MQ_PASSWORD` | Redis password                                                  |
+| `BULL_MQ_USERNAME` | Redis username                                                  |
 
-**This Redis instance is shared** with `media-service`, which runs the `media-queue` worker — it must point to the same instance in both services. Note that the cache Redis (§4.3) and the BullMQ Redis (§4.4) are configured as two entirely independent connections in `configs/index.ts` (`redisClient` vs. `jobProducer`'s `connection`) — they are allowed to point at different physical Redis instances/databases, and typically do in production (cache data is disposable, queue data is not).
+**This Redis instance is shared** with `media-service`, which runs the `media-service-queue` worker — it must point to the same instance in both services. Note that the cache Redis (§4.3) and the BullMQ Redis (§4.4) are configured as two entirely independent connections in `configs/index.ts` (`redisClient` vs. `jobProducer`'s `connection`) — they are allowed to point at different physical Redis instances/databases, and typically do in production (cache data is disposable, queue data is not).
 
 ---
 
@@ -459,7 +459,7 @@ joined:      RUB-MAC-MAK-LIP-LIP
 3. `PATCH /product/draft/publish`:
    - `createPendingProductPayload` middleware loads the full draft from Redis into `req.body`, throwing `NotFoundError('Draft expired')` if nothing is cached (TTL elapsed or the draft was never started) — the client sends **no body** of its own for this request.
    - The assembled body is validated against `draftProductDetailsZodSchema` — every one of the five steps must be present and individually valid, or Zod rejects the whole request before the controller runs.
-   - The controller builds a full `Product` payload from the draft: SKU generation (§10.2), slug generation (§10.3), image-URL extraction from rich-text fields (for later "mark as used" cleanup, see [§19](#19-background-jobs-media-queue-producer-only)), and per-variant SKU generation.
+   - The controller builds a full `Product` payload from the draft: SKU generation (§10.2), slug generation (§10.3), image-URL extraction from rich-text fields (for later "mark as used" cleanup, see [§19](#19-background-jobs-media-service-queue-producer-only)), and per-variant SKU generation.
    - `status` is set to `PENDING` for a `SELLER` caller, or `PUBLISHED` (with `history.approvedAt`/`history.approvedBy` stamped immediately) for `ADMIN`/`MASTER`.
    - `product.validate()` is called **explicitly** before `save()`, so Mongoose validation errors surface as a clean response before any DB write is even attempted (rather than surfacing from inside `save()` itself, which would behave identically here but is worth calling out as a deliberate style choice — it separates "is this data valid" from "did the write succeed").
    - After commit: every image/thumbnail/video URL referenced by the product (including images embedded inside the rich-text `description`/`ingredients`/`instructions`/`additional` fields, extracted via a `<img src="...">` regex) is resolved to a Cloudinary public id and enqueued as a `mark-multiple-media-as-used` job, and the Redis draft is deleted.
@@ -646,7 +646,7 @@ Loads the caller's Redis draft (`redisCacheManager.dashboard.getDraftProduct`) a
 | `getMinimalCategory(category)`                | Client/cache-facing category shape — `_id` as string; `parent`/`description` only included for L2/L3 as applicable                                                                                                                                                                                                                                                                                                                                                                                  |
 | `generateSku({data, prefix, unique})`         | Builds an uppercase SKU — see [§10.2](#102-sku-generation-worked-example)                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `getCloudinaryPublicIdFromUrl(url)`           | Extracts a Cloudinary public id from a delivery URL. Example: `https://res.cloudinary.com/demo/image/upload/v1690000000/products/lipstick_red.jpg` → pathname `/demo/image/upload/v1690000000/products/lipstick_red.jpg` → regex captures `products/lipstick_red.jpg` (skipping any transformation segments and the `v<digits>/` version prefix) → strips the extension → `products/lipstick_red`. Throws `UnprocessableEntityError` if the URL doesn't match the expected `/upload/.../...` shape. |
-| `extractImageUrlsFromHtml(html)`              | Regex-extracts every `<img src="...">` from a rich-text field (used to find images to mark "used" in `media-queue`)                                                                                                                                                                                                                                                                                                                                                                                 |
+| `extractImageUrlsFromHtml(html)`              | Regex-extracts every `<img src="...">` from a rich-text field (used to find images to mark "used" in `media-service-queue`)                                                                                                                                                                                                                                                                                                                                                                         |
 | `getProductSuggestionsPipeline(query)`        | Builds the Atlas `$search` aggregation pipeline for `/product/suggestions` — see [§12](#12-search-infrastructure--atlas-search-indexes)                                                                                                                                                                                                                                                                                                                                                             |
 | `getInitialProductCountsByStatus()`           | Zero-filled `{ ALL, DELETED, PENDING, PUBLISHED, REJECTED, BLOCKED }` counter object                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `populateProductCountsByStatus(counts, rows)` | Folds a `$group`-by-status aggregation result into the counter object above                                                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -693,9 +693,9 @@ Idempotent (`setShuttingDown()` guards re-entry). Only the job-producer shutdown
 
 ---
 
-## 19. Background Jobs (`media-queue`, producer only)
+## 19. Background Jobs (`media-service-queue`, producer only)
 
-This service **only produces** onto `media-queue` — it doesn't run a worker for anything. `jobProducer` (`@beautinique/backend-bullmq`'s `JobProducer`, configured in `configs/index.ts`) is used from `publishDraftProductController`.
+This service **only produces** onto `media-service-queue` — it doesn't run a worker for anything. `jobProducer` (`@beautinique/backend-bullmq`'s `JobProducer`, configured in `configs/index.ts`) is used from `publishDraftProductController`.
 
 | Job name                      | Enqueued from                                   | Consumed by     |
 | ----------------------------- | ----------------------------------------------- | --------------- |
@@ -816,7 +816,7 @@ Client → PATCH /product/draft/publish   (no request body)
   → Build Product payload (SKU/slug generation, variant SKUs)
   → product.validate() then product.save({ session })
   ← Commit
-  → afterCommit: mark referenced images "used" (media-queue), delete Redis draft
+  → afterCommit: mark referenced images "used" (media-service-queue), delete Redis draft
   ← res.success({ statusCode: 201, data: product })
 ```
 

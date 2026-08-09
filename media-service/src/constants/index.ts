@@ -1,4 +1,4 @@
-import { API_METHODS_MAP } from '@beautinique/shared-constants';
+import { API_METHODS_MAP, DAY, SECOND } from '@beautinique/backend-constants';
 
 import { envs } from '../envs/index.js';
 
@@ -19,10 +19,6 @@ export const METHODS_AND_PATHS = {
   },
 } as const;
 
-const MINUTE = 60 * 1000;
-const HOUR = MINUTE * 60;
-const DAY = HOUR * 24;
-
 export const CLEANUP_DELAY = 2 * DAY;
 
 /**
@@ -38,4 +34,4 @@ export const CLEANUP_DELAY = 2 * DAY;
  * asset is orphaned. The TTL index should only fire as a last-resort
  * safety net for jobs that never ran (e.g. exhausted retries).
  */
-export const TTL_SAFETY_BUFFER_SECONDS = DAY / 1000;
+export const TTL_SAFETY_BUFFER_SECONDS = DAY / SECOND;

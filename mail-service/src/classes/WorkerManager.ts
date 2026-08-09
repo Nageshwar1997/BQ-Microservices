@@ -1,5 +1,4 @@
 import { JobWorker } from '@beautinique/backend-bullmq';
-import { stringifyData } from '@beautinique/shared-utils';
 
 import { logger, transporter } from '../configs/index.js';
 import { envs } from '../envs/index.js';
@@ -7,13 +6,13 @@ import { envs } from '../envs/index.js';
 const WORKER_CONCURRENCY = 5;
 
 export class WorkerManager {
-  private worker: JobWorker<'mail-queue'> | undefined;
+  private worker: JobWorker<'mail-service-queue'> | undefined;
 
   /* ---------------- START ---------------- */
 
   public start() {
     this.worker = new JobWorker({
-      queueName: 'mail-queue',
+      queueName: 'mail-service-queue',
       connection: envs.redis.bull_mq,
       concurrency: WORKER_CONCURRENCY,
       logger,
@@ -24,9 +23,7 @@ export class WorkerManager {
           try {
             await transporter.sendOtp(data.email, data.otp);
           } catch (error) {
-            logger.error(
-              `Failed to send OTP. Error:${stringifyData(error)}. Data:${stringifyData(data)}`,
-            );
+            logger.error({ Data: data, Error: error }, `Failed to send OTP.`);
 
             throw error;
           }
@@ -35,10 +32,11 @@ export class WorkerManager {
 
         'send-contact-acknowledgement': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAcknowledgement(to, subject, data);
+            await transporter.sendContactAcknowledgement({ to, subject, data });
           } catch (error) {
             logger.error(
-              `Failed to send contact acknowledgement. Error:${stringifyData(error)}. To:${to}. Data:${stringifyData(data)}`,
+              { Error: error, To: to, Data: data },
+              `Failed to send contact acknowledgement.`,
             );
 
             throw error;
@@ -49,10 +47,11 @@ export class WorkerManager {
 
         'send-contact-admin-notification': async ({ to, subject, data }) => {
           try {
-            await transporter.sendContactAdminNotification(to, subject, data);
+            await transporter.sendContactAdminNotification({ to, subject, data });
           } catch (error) {
             logger.error(
-              `Failed to send contact admin notification. Error:${String(error)}. To:${to}. Data:${stringifyData(data)}`,
+              { Error: error, To: to, Data: data },
+              `Failed to send contact admin notification`,
             );
 
             throw error;

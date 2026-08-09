@@ -1,6 +1,5 @@
 import type { TFolderZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
-import { stringifyData } from '@beautinique/shared-utils';
 import { createHash } from 'crypto';
 import type { Request, Response } from 'express';
 
@@ -30,14 +29,14 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
     try {
       await cloudinary.removeSingle({ publicId: payload.publicId });
     } catch (cleanupError) {
-      logger.error(`Failed to rollback uploaded single media ${stringifyData(cleanupError)}`);
+      logger.error({ Error: cleanupError }, 'Failed to rollback uploaded single media.');
     }
   });
 
   /* ---------------- CREATE UNUSED MEDIA ---------------- */
 
   await jobProducer.addJob(
-    'media-queue',
+    'media-service-queue',
     'create-single-unused-media',
     { ...payload, userId: userId.toString() },
     {
@@ -50,7 +49,7 @@ export const singleMediaUploadController = async (req: Request, res: Response) =
   /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
 
   await jobProducer.addJob(
-    'media-queue',
+    'media-service-queue',
     'delete-single-media',
     { publicId: payload.publicId },
     {
@@ -97,13 +96,13 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
     try {
       await cloudinary.removeMultiple({ publicIds });
     } catch (cleanupError) {
-      logger.error(`Failed to rollback uploaded multiple media ${stringifyData(cleanupError)}`);
+      logger.error({ Error: cleanupError }, 'Failed to rollback uploaded multiple media.');
     }
   });
 
   /* ---------------- CREATE UNUSED MEDIA ---------------- */
 
-  await jobProducer.addJob('media-queue', 'create-multiple-unused-media', payload, {
+  await jobProducer.addJob('media-service-queue', 'create-multiple-unused-media', payload, {
     jobId: `create-multiple-unused-${batchId}`,
     attempts: 5,
     backoff: { type: 'exponential', delay: 5000 },
@@ -112,7 +111,7 @@ export const multipleMediaUploadController = async (req: Request, res: Response)
   /* ---------------- AUTO CLEANUP SCHEDULER ---------------- */
 
   await jobProducer.addJob(
-    'media-queue',
+    'media-service-queue',
     'delete-multiple-media',
     { publicIds },
     {

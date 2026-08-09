@@ -13,7 +13,7 @@ import {
   USER_ROLE_MAP,
   VARIANT_TYPES,
   VARIANT_TYPES_MAP,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';
 

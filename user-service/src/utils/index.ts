@@ -1,5 +1,9 @@
+import {
+  AUTH_PROVIDER_MAP,
+  SERVICE_NAMES_MAP,
+  USER_ROLE_MAP,
+} from '@beautinique/backend-constants';
 import type { TAuthProvider } from '@beautinique/backend-types';
-import { AUTH_PROVIDER_MAP, SERVICE_NAMES_MAP, USER_ROLE_MAP } from '@beautinique/shared-constants';
 import { randomBytes } from 'crypto';
 
 import { METHODS_AND_PATHS } from '../constants/index.js';

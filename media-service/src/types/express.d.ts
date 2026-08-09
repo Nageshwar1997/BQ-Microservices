@@ -1,6 +1,6 @@
 import 'express-serve-static-core';
 
-import type { TUserRole } from '@beautinique/shared-types';
+import type { TUserRole } from '@beautinique/backend-types';
 import type { IId } from './index.ts';
 
 // `Response.success` itself is declared by `@beautinique/backend-response`

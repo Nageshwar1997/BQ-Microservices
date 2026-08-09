@@ -1,12 +1,12 @@
 import { randomInt } from 'node:crypto';
 
 import { UnprocessableEntityError } from '@beautinique/backend-classes';
-import type { TProductStatus } from '@beautinique/backend-types';
 import {
   CATEGORY_LEVELS_MAP,
   PRODUCT_STATUSES,
   PRODUCT_STATUSES_MAP,
-} from '@beautinique/shared-constants';
+} from '@beautinique/backend-constants';
+import type { TProductStatus } from '@beautinique/backend-types';
 import slugify from 'slugify';
 
 import type {

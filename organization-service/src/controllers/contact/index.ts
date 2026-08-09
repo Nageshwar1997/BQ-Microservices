@@ -3,9 +3,8 @@ import { CONTACT_QUERY_STATUS_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type {
   IListContactQueriesQuery,
-  TContactQueryTicketIdZodSchema,
+  TContactQueryStatus,
   TCreateContactQueryZodSchema,
-  TUpdateContactQueryStatusZodSchema,
 } from '@beautinique/backend-types';
 import type { Request, Response } from 'express';
 
@@ -30,12 +29,12 @@ export const createContactQueryController = async (req: Request, res: Response) 
 
   try {
     await Promise.all([
-      jobProducer.addJob('mail-queue', 'send-contact-acknowledgement', {
+      jobProducer.addJob('mail-service-queue', 'send-contact-acknowledgement', {
         to: email,
         subject: `[Ticket #${ticketId}] Your query has been received`,
         data: { ticketId, queryType },
       }),
-      jobProducer.addJob('mail-queue', 'send-contact-admin-notification', {
+      jobProducer.addJob('mail-service-queue', 'send-contact-admin-notification', {
         to: SUPPORT_INBOX_EMAIL,
         subject: `[Ticket #${ticketId}] New Contact Query — ${queryType}`,
         data: { ticketId, name, email, phoneNumber, queryType, message },
@@ -91,8 +90,8 @@ export const getContactQueriesController = async (req: Request, res: Response) =
 };
 
 export const updateContactQueryStatusController = async (req: Request, res: Response) => {
-  const { ticketId } = req.params as TContactQueryTicketIdZodSchema;
-  const { status } = req.body as TUpdateContactQueryStatusZodSchema;
+  const { ticketId } = req.params as { ticketId: string };
+  const { status } = req.query as { status: TContactQueryStatus };
 
   // CLOSED/REJECTED get a TTL deadline (see `CONTACT_QUERY_RETENTION_MS_MAP`);
   // any other status clears it, so reopening a query cancels its auto-delete.

@@ -1,5 +1,5 @@
+import { CATEGORY_LEVELS_MAP } from '@beautinique/backend-constants';
 import type { TCategoryLevel } from '@beautinique/backend-types';
-import { CATEGORY_LEVELS_MAP } from '@beautinique/shared-constants';
 import type { Request, Response } from 'express';
 
 import { redisCacheManager } from '../../configs/index.js';
