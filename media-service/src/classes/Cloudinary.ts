@@ -102,7 +102,7 @@ class Cloudinary {
 
     // Push failed deletions into background job queue+
     await jobProducer.addJob(
-      'media-queue',
+      'media-service-queue',
       'remove-multiple-media-directly',
       { publicIds: failedIds, retryCount },
       { jobId: `remove-multiple-directly-${batchId}` },

@@ -149,7 +149,7 @@ Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single 
 
 Job payload shape (from `@beautinique/backend-bullmq`'s `QUEUE_SCHEMA`): `{ email: string; otp: string }`.
 
-`mail-service` never enqueues jobs onto any queue itself — it is a consumer only. `media-queue` (used for Cloudinary media lifecycle) is owned end-to-end by `media-service` — unrelated to this service.
+`mail-service` never enqueues jobs onto any queue itself — it is a consumer only. `media-service-queue` (used for Cloudinary media lifecycle) is owned end-to-end by `media-service` — unrelated to this service.
 
 ### Cross-service queue integration
 

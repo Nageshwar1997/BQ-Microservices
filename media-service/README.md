@@ -51,7 +51,7 @@ media-service/
 │   ├── classes/
 │   │   ├── index.ts                 #   Re-exports
 │   │   ├── Cloudinary.ts            #   Upload/remove logic, retry-via-queue on failure
-│   │   └── WorkerManager.ts         #   Owns the media-queue BullMQ JobWorker
+│   │   └── WorkerManager.ts         #   Owns the media-service-queue BullMQ JobWorker
 │   ├── configs/
 │   │   └── index.ts                 #   Singletons: databaseConfigs, logger, jobProducer, workerManager
 │   ├── constants/
@@ -110,14 +110,14 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.3 Redis — BullMQ
 
-| Variable           | Required | Description                                             |
-| ------------------ | -------- | ------------------------------------------------------- |
-| `BULL_MQ_HOST`     | Yes      | Redis host used for the `media-queue` BullMQ connection |
-| `BULL_MQ_PORT`     | Yes      | Redis port (must be a positive integer)                 |
-| `BULL_MQ_PASSWORD` | No       | Redis password, if the instance requires auth           |
-| `BULL_MQ_USERNAME` | No       | Redis username, if the instance requires auth           |
+| Variable           | Required | Description                                                     |
+| ------------------ | -------- | --------------------------------------------------------------- |
+| `BULL_MQ_HOST`     | Yes      | Redis host used for the `media-service-queue` BullMQ connection |
+| `BULL_MQ_PORT`     | Yes      | Redis port (must be a positive integer)                         |
+| `BULL_MQ_PASSWORD` | No       | Redis password, if the instance requires auth                   |
+| `BULL_MQ_USERNAME` | No       | Redis username, if the instance requires auth                   |
 
-**This Redis instance is shared** across every service that produces or consumes `media-queue` jobs (see [§10 Cross-service queue integration](#10-background-jobs-media-queue)) — it must point to the same instance everywhere.
+**This Redis instance is shared** across every service that produces or consumes `media-service-queue` jobs (see [§10 Cross-service queue integration](#10-background-jobs-media-service-queue)) — it must point to the same instance everywhere.
 
 ### 4.4 Cloudinary
 
@@ -241,13 +241,13 @@ cloudinary.uploadSingle()          # streams the buffer straight to Cloudinary
    ▼
 res.locals.afterRollback.push(...)  # registers a Cloudinary-cleanup task, in case anything below fails
    ▼
-jobProducer.addJob('media-queue', 'create-single-unused-media', payload)
-jobProducer.addJob('media-queue', 'delete-single-media', { publicId }, { delay: CLEANUP_DELAY })
+jobProducer.addJob('media-service-queue', 'create-single-unused-media', payload)
+jobProducer.addJob('media-service-queue', 'delete-single-media', { publicId }, { delay: CLEANUP_DELAY })
    │  on failure: tryCatchResponse runs afterRollback (removes the Cloudinary upload), forwards the error
    ▼
 res.success({ statusCode: 201, data: url })   # request returns here - DB write happens async
    .
-   .  (async, inside WorkerManager's JobWorker for 'media-queue')
+   .  (async, inside WorkerManager's JobWorker for 'media-service-queue')
    ▼
 'create-single-unused-media' handler → Media.create({ ..., status: UNUSED, expiresAt: now + CLEANUP_DELAY })
    .
@@ -270,7 +270,7 @@ Both controllers use `res.locals.afterRollback` (provided by `@beautinique/backe
 
 ### 8.4 Marking Media as "Used"
 
-`media-service` never marks its own media as used — a **different** service enqueues `mark-single-media-as-used` / `mark-multiple-media-as-used` onto `media-queue` once it actually references the uploaded URL (e.g. `product-service` does this in `publishDraftProductController` when a product referencing the media is saved). That handler flips `status: UNUSED → USED` and clears `expiresAt`, which is what keeps the media from being auto-deleted by the cleanup job / TTL index.
+`media-service` never marks its own media as used — a **different** service enqueues `mark-single-media-as-used` / `mark-multiple-media-as-used` onto `media-service-queue` once it actually references the uploaded URL (e.g. `product-service` does this in `publishDraftProductController` when a product referencing the media is saved). That handler flips `status: UNUSED → USED` and clears `expiresAt`, which is what keeps the media from being auto-deleted by the cleanup job / TTL index.
 
 ---
 
@@ -301,7 +301,7 @@ Factory middleware — same header extraction as `authenticate`, plus throws `Au
 
 ---
 
-## 10. Background Jobs (`media-queue`)
+## 10. Background Jobs (`media-service-queue`)
 
 Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single BullMQ `JobWorker` for the whole queue (concurrency 5, shared across every job name below, not one worker per job name).
 
@@ -312,14 +312,14 @@ Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single 
 | `mark-single-media-as-used` / `mark-multiple-media-as-used`       | other services (e.g. `product-service`)                         | Flips `status → USED`, clears `expiresAt`                                         |
 | `remove-single-media-directly` / `remove-multiple-media-directly` | this service (`Cloudinary` class, as a retry path)              | Re-attempts a Cloudinary deletion that failed inline                              |
 
-`media-service` only runs a worker for `media-queue`. `mail-service-queue` (used for OTP emails) is owned end-to-end by `user-service` (producer) and `mail-service` (worker) — unrelated to this service.
+`media-service` only runs a worker for `media-service-queue`. `mail-service-queue` (used for OTP emails) is owned end-to-end by `user-service` (producer) and `mail-service` (worker) — unrelated to this service.
 
 ### Cross-service queue integration
 
-Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any service can enqueue onto `media-queue` as long as it targets the same Redis instance and uses `@beautinique/backend-bullmq` — `product-service` does this in `publishDraftProductController` when it enqueues `mark-multiple-media-as-used`. This means:
+Redis/BullMQ jobs are identified purely by queue name + job name at the Redis level, so any service can enqueue onto `media-service-queue` as long as it targets the same Redis instance and uses `@beautinique/backend-bullmq` — `product-service` does this in `publishDraftProductController` when it enqueues `mark-multiple-media-as-used`. This means:
 
-- The `BULL_MQ_*` env vars must point to the **same** Redis instance across every service that touches `media-queue`.
-- If `media-queue`'s schema/job names ever change in `backend-bullmq`, every producer needs a matching update, or those jobs will silently stop being picked up.
+- The `BULL_MQ_*` env vars must point to the **same** Redis instance across every service that touches `media-service-queue`.
+- If `media-service-queue`'s schema/job names ever change in `backend-bullmq`, every producer needs a matching update, or those jobs will silently stop being picked up.
 
 ### Retry Behavior
 
@@ -391,14 +391,14 @@ Errors flow through the `errorResponse` middleware, which uses `envs.is_dev` to 
 1. Register MongoDB event listeners (`registerDatabaseEvents`).
 2. Connect MongoDB (`connectDb`).
 3. Start the HTTP server (`startHttpServer`).
-4. Start the `media-queue` worker (`workerManager.start()`).
+4. Start the `media-service-queue` worker (`workerManager.start()`).
 
 Idempotent (`setStarted()` guards re-entry). On any failure, logs and calls `process.exit(1)`.
 
 ### Graceful Shutdown (`bootstrap/shutdown.ts`, `SIGINT`/`SIGTERM`)
 
 1. Stop accepting new HTTP requests (`stopHttpServer`, existing requests finish first).
-2. Stop the `media-queue` worker.
+2. Stop the `media-service-queue` worker.
 3. Close the BullMQ job producer.
 4. Disconnect MongoDB.
 5. Destroy any remaining open sockets.
@@ -505,7 +505,7 @@ Client → POST /api/v1/upload/single { file, folder } [X-Service-Secret, X-User
   → jobProducer.addJob('delete-single-media', { publicId }, { delay: 2 days })
   ← res.success({ statusCode: 201, data: url })
 
-  (async, on the media-queue worker)
+  (async, on the media-service-queue worker)
   → Media.create({ ...payload, status: 'UNUSED', expiresAt })
 
   (2 days later, unless marked USED first)

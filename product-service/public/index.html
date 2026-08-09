@@ -212,8 +212,8 @@
             <td>Background jobs / queue</td>
             <td>
               BullMQ (Redis), via <code>@beautinique/backend-bullmq</code> —
-              <strong>producer only</strong>, <code>media-queue</code> (see
-              <a href="#19-background-jobs-media-queue-producer-only">§19</a>)
+              <strong>producer only</strong>, <code>media-service-queue</code> (see
+              <a href="#19-background-jobs-media-service-queue-producer-only">§19</a>)
             </td>
           </tr>
           <tr>
@@ -444,7 +444,7 @@
         <tbody>
           <tr>
             <td><code>BULL_MQ_HOST</code></td>
-            <td>Redis host used for the <code>media-queue</code> BullMQ connection</td>
+            <td>Redis host used for the <code>media-service-queue</code> BullMQ connection</td>
           </tr>
           <tr>
             <td><code>BULL_MQ_PORT</code></td>
@@ -462,10 +462,10 @@
       </table>
       <p>
         <strong>This Redis instance is shared</strong> with <code>media-service</code>, which runs
-        the <code>media-queue</code> worker — it must point to the same instance in both services.
-        Note that the cache Redis (§4.3) and the BullMQ Redis (§4.4) are configured as two entirely
-        independent connections in <code>configs/index.ts</code> (<code>redisClient</code> vs.
-        <code>jobProducer</code>&#39;s <code>connection</code>) — they are allowed to point at
+        the <code>media-service-queue</code> worker — it must point to the same instance in both
+        services. Note that the cache Redis (§4.3) and the BullMQ Redis (§4.4) are configured as two
+        entirely independent connections in <code>configs/index.ts</code> (<code>redisClient</code>
+        vs. <code>jobProducer</code>&#39;s <code>connection</code>) — they are allowed to point at
         different physical Redis instances/databases, and typically do in production (cache data is
         disposable, queue data is not).
       </p>
@@ -1684,8 +1684,8 @@ joined:      RUB-MAC-MAK-LIP-LIP
               The controller builds a full <code>Product</code> payload from the draft: SKU
               generation (§10.2), slug generation (§10.3), image-URL extraction from rich-text
               fields (for later &quot;mark as used&quot; cleanup, see
-              <a href="#19-background-jobs-media-queue-producer-only">§19</a>), and per-variant SKU
-              generation.
+              <a href="#19-background-jobs-media-service-queue-producer-only">§19</a>), and
+              per-variant SKU generation.
             </li>
             <li>
               <code>status</code> is set to <code>PENDING</code> for a <code>SELLER</code> caller,
@@ -2344,7 +2344,8 @@ joined:      RUB-MAC-MAK-LIP-LIP
             <td><code>extractImageUrlsFromHtml(html)</code></td>
             <td>
               Regex-extracts every <code>&lt;img src=&quot;...&quot;&gt;</code> from a rich-text
-              field (used to find images to mark &quot;used&quot; in <code>media-queue</code>)
+              field (used to find images to mark &quot;used&quot; in
+              <code>media-service-queue</code>)
             </td>
           </tr>
           <tr>
@@ -2488,10 +2489,10 @@ joined:      RUB-MAC-MAK-LIP-LIP
         they arrive.
       </p>
       <hr />
-      <h2>19. Background Jobs (<code>media-queue</code>, producer only)</h2>
+      <h2>19. Background Jobs (<code>media-service-queue</code>, producer only)</h2>
       <p>
-        This service <strong>only produces</strong> onto <code>media-queue</code> — it doesn&#39;t
-        run a worker for anything.
+        This service <strong>only produces</strong> onto <code>media-service-queue</code> — it
+        doesn&#39;t run a worker for anything.
         <code>jobProducer</code> (<code>@beautinique/backend-bullmq</code>&#39;s
         <code>JobProducer</code>, configured in <code>configs/index.ts</code>) is used from
         <code>publishDraftProductController</code>.
@@ -2746,7 +2747,7 @@ Client → PATCH /product/draft/publish   (no request body)
   → Build Product payload (SKU/slug generation, variant SKUs)
   → product.validate() then product.save({ session })
   ← Commit
-  → afterCommit: mark referenced images &quot;used&quot; (media-queue), delete Redis draft
+  → afterCommit: mark referenced images &quot;used&quot; (media-service-queue), delete Redis draft
   ← res.success({ statusCode: 201, data: product })
 </code></pre>
       <h3>Dashboard Product Search</h3>

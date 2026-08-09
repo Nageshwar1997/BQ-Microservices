@@ -1,24 +1,23 @@
 import { JobWorker } from '@beautinique/backend-bullmq';
 import { MEDIA_STATUS_MAP } from '@beautinique/backend-constants';
-
 import { getObjId } from '@beautinique/backend-mongoose';
+
 import { logger } from '../configs/index.js';
 import { CLEANUP_DELAY } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 import { Media } from '../models/index.js';
-import type { TResource } from '../types/index.js';
 import { cloudinary } from './Cloudinary.js';
 
 const WORKER_CONCURRENCY = 5;
 
 export class WorkerManager {
-  private worker: JobWorker<'media-queue'> | undefined;
+  private worker: JobWorker<'media-service-queue'> | undefined;
 
   /* ---------------- START ---------------- */
 
   public start() {
     this.worker = new JobWorker({
-      queueName: 'media-queue',
+      queueName: 'media-service-queue',
       connection: envs.redis.bull_mq,
       concurrency: WORKER_CONCURRENCY,
       logger,
@@ -53,7 +52,7 @@ export class WorkerManager {
           try {
             const expiresAt = new Date(Date.now() + CLEANUP_DELAY);
             const userId = getObjId(data.userId);
-            const resourceType = data.resourceType as TResource['resourceType'];
+            const resourceType = data.resourceType;
             await Media.create({
               ...data,
               userId,
