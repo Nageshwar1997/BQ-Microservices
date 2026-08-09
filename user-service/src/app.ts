@@ -7,7 +7,7 @@ import express from 'express';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 
-import { logger } from './configs/index.js';
+import { logger, workerManager } from './configs/index.js';
 import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
 import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
@@ -78,6 +78,7 @@ app[health.method](health.path, (_, res) => {
     data: {
       database: getConnectionHealth(),
       service: SERVICE_NAMES_MAP['user-service'],
+      worker: workerManager.isRunning(),
     },
   });
 });
