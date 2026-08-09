@@ -911,7 +911,7 @@ res.success({ statusCode: 201, data: url })   # request returns here - DB write 
       </table>
       <p>
         <code>media-service</code> only runs a worker for <code>media-queue</code>.
-        <code>mail-queue</code> (used for OTP emails) is owned end-to-end by
+        <code>mail-service-queue</code> (used for OTP emails) is owned end-to-end by
         <code>user-service</code> (producer) and <code>mail-service</code> (worker) — unrelated to
         this service.
       </p>

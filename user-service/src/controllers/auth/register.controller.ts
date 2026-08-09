@@ -35,7 +35,7 @@ export const registerSendOtpController = async (req: Request, res: Response) => 
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
@@ -67,7 +67,7 @@ export const registerResendOtpController = async (req: Request, res: Response) =
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 

@@ -10,7 +10,7 @@
 
 ## 1. Overview
 
-The User Service is the central identity and authentication microservice for the **Beautinique** platform. It handles manual (email/phone + password) and OAuth (Google, LinkedIn, GitHub) login, OTP-verified registration, forgot/change/set password flows, session lookup, and a Redis-backed cache for user sessions and OTP state. Password reset/registration OTPs are delivered by enqueuing `send-otp` jobs onto BullMQ's `mail-queue`, consumed end-to-end by `mail-service`. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
+The User Service is the central identity and authentication microservice for the **Beautinique** platform. It handles manual (email/phone + password) and OAuth (Google, LinkedIn, GitHub) login, OTP-verified registration, forgot/change/set password flows, session lookup, and a Redis-backed cache for user sessions and OTP state. Password reset/registration OTPs are delivered by enqueuing `send-otp` jobs onto BullMQ's `mail-service-queue`, consumed end-to-end by `mail-service`. It also serves its own documentation: `GET /` renders this README as HTML, and `GET /docs` serves an interactive Swagger UI.
 
 ---
 
@@ -23,7 +23,7 @@ The User Service is the central identity and authentication microservice for the
 | Framework                | Express.js 5.x                                                                                                                  |
 | Database                 | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`)                                                                     |
 | Cache                    | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)                                                |
-| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only** (see [§16](#16-background-jobs-mail-queue-producer-only)) |
+| Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only** (see [§16](#16-background-jobs-mail-service-queue-producer-only)) |
 | OAuth                    | `google-auth-library` (Google), hand-rolled REST calls via `axios` (LinkedIn, GitHub)                                           |
 | Password hashing         | `bcryptjs`                                                                                                                      |
 | Validation               | Zod, via `@beautinique/backend-zod`                                                                                             |
@@ -151,12 +151,12 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 | Variable           | Description                                            |
 | ------------------ | ------------------------------------------------------ |
-| `BULL_MQ_HOST`     | Redis host used for the `mail-queue` BullMQ connection |
+| `BULL_MQ_HOST`     | Redis host used for the `mail-service-queue` BullMQ connection |
 | `BULL_MQ_PORT`     | Redis port                                             |
 | `BULL_MQ_PASSWORD` | Redis password                                         |
 | `BULL_MQ_USERNAME` | Redis username                                         |
 
-**This Redis instance is shared** with `mail-service`, which runs the `mail-queue` worker — it must point to the same instance in both services.
+**This Redis instance is shared** with `mail-service`, which runs the `mail-service-queue` worker — it must point to the same instance in both services.
 
 ### 4.5 OAuth Credentials
 
@@ -539,15 +539,15 @@ Defined in `constants/index.ts` as `OAUTH_API_ROUTES_AND_METHODS`:
 
 ---
 
-## 16. Background Jobs (`mail-queue`, producer only)
+## 16. Background Jobs (`mail-service-queue`, producer only)
 
-This service **only produces** onto `mail-queue` — it doesn't run a worker for anything. `jobProducer` (`@beautinique/backend-bullmq`'s `JobProducer`, configured in `configs/index.ts`) is used directly from the register/password controllers.
+This service **only produces** onto `mail-service-queue` — it doesn't run a worker for anything. `jobProducer` (`@beautinique/backend-bullmq`'s `JobProducer`, configured in `configs/index.ts`) is used directly from the register/password controllers.
 
 | Job name   | Enqueued from                                                                                                                      | Consumed by                      |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
 | `send-otp` | `registerSendOtpController`, `registerResendOtpController`, `forgotPasswordSendOtpController`, `forgotPasswordResendOtpController` | `mail-service` (`WorkerManager`) |
 
-**Rollback on enqueue failure:** every `jobProducer.addJob('mail-queue', 'send-otp', ...)` call is wrapped in its own `try/catch` — if enqueueing fails, the just-written OTP session is deleted from Redis (`redisCacheManager.token.deleteOtpData`) before the error is re-thrown, so a failed send doesn't leave an unreachable OTP session behind.
+**Rollback on enqueue failure:** every `jobProducer.addJob('mail-service-queue', 'send-otp', ...)` call is wrapped in its own `try/catch` — if enqueueing fails, the just-written OTP session is deleted from Redis (`redisCacheManager.token.deleteOtpData`) before the error is re-thrown, so a failed send doesn't leave an unreachable OTP session behind.
 
 **Retry/backoff:** configured once, at the `jobProducer` level (`configs/index.ts`): `attempts: 3`, `backoff: { type: 'exponential', delay: 2000 }`, `removeOnComplete: { age: 30, count: 5 }`, `removeOnFail: { age: 1800, count: 10 }`.
 
@@ -668,7 +668,7 @@ All responses use `@beautinique/backend-response`'s envelope, attached via `app.
 Client → POST /auth/register/send-otp { email }
   → GET user by email from DB
   → Store OTP in Redis (10 min TTL) ← Returns { token, otp, sendCount: 1 }
-  → jobProducer.addJob('mail-queue', 'send-otp', { email, otp })
+  → jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp })
   ← res.success({ data: token })
 
 Client → POST /auth/register/verify-otp { otp } [Authorization: token]
@@ -690,7 +690,7 @@ Client → POST /auth/register/save-user { firstName, lastName, password, phoneN
 Client → POST /auth/password/forgot-send-otp { email }
   → Validate user has a MANUAL provider
   → Store OTP in Redis ← Returns { token, otp }
-  → jobProducer.addJob('mail-queue', 'send-otp', { email, otp })
+  → jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp })
 
 Client → POST /auth/password/forgot-verify-otp { otp } [Authorization: token]
   → Validate OTP in Redis

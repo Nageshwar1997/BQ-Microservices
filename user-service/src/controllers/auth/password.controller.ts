@@ -39,7 +39,7 @@ export const forgotPasswordSendOtpController = async (req: Request, res: Respons
   try {
     /* ---------------- SEND OTP ---------------- */
 
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 
@@ -71,7 +71,7 @@ export const forgotPasswordResendOtpController = async (req: Request, res: Respo
 
   try {
     /* ---------------- SEND OTP ---------------- */
-    await jobProducer.addJob('mail-queue', 'send-otp', { email, otp });
+    await jobProducer.addJob('mail-service-queue', 'send-otp', { email, otp });
   } catch (error) {
     /* ---------------- ROLLBACK ---------------- */
 

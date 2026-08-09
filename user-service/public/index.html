@@ -166,9 +166,9 @@
         (Google, LinkedIn, GitHub) login, OTP-verified registration, forgot/change/set password
         flows, session lookup, and a Redis-backed cache for user sessions and OTP state. Password
         reset/registration OTPs are delivered by enqueuing <code>send-otp</code> jobs onto
-        BullMQ&#39;s <code>mail-queue</code>, consumed end-to-end by <code>mail-service</code>. It
-        also serves its own documentation: <code>GET /</code> renders this README as HTML, and
-        <code>GET /docs</code> serves an interactive Swagger UI.
+        BullMQ&#39;s <code>mail-service-queue</code>, consumed end-to-end by
+        <code>mail-service</code>. It also serves its own documentation: <code>GET /</code> renders
+        this README as HTML, and <code>GET /docs</code> serves an interactive Swagger UI.
       </p>
       <hr />
       <h2>2. Technology Stack</h2>
@@ -211,7 +211,7 @@
             <td>
               BullMQ (Redis), via <code>@beautinique/backend-bullmq</code> —
               <strong>producer only</strong> (see
-              <a href="#16-background-jobs-mail-queue-producer-only">§16</a>)
+              <a href="#16-background-jobs-mail-service-queue-producer-only">§16</a>)
             </td>
           </tr>
           <tr>
@@ -439,7 +439,7 @@
         <tbody>
           <tr>
             <td><code>BULL_MQ_HOST</code></td>
-            <td>Redis host used for the <code>mail-queue</code> BullMQ connection</td>
+            <td>Redis host used for the <code>mail-service-queue</code> BullMQ connection</td>
           </tr>
           <tr>
             <td><code>BULL_MQ_PORT</code></td>
@@ -457,7 +457,8 @@
       </table>
       <p>
         <strong>This Redis instance is shared</strong> with <code>mail-service</code>, which runs
-        the <code>mail-queue</code> worker — it must point to the same instance in both services.
+        the <code>mail-service-queue</code> worker — it must point to the same instance in both
+        services.
       </p>
       <h3>4.5 OAuth Credentials</h3>
       <table>
@@ -1668,10 +1669,10 @@
         </tbody>
       </table>
       <hr />
-      <h2>16. Background Jobs (<code>mail-queue</code>, producer only)</h2>
+      <h2>16. Background Jobs (<code>mail-service-queue</code>, producer only)</h2>
       <p>
-        This service <strong>only produces</strong> onto <code>mail-queue</code> — it doesn&#39;t
-        run a worker for anything.
+        This service <strong>only produces</strong> onto <code>mail-service-queue</code> — it
+        doesn&#39;t run a worker for anything.
         <code>jobProducer</code> (<code>@beautinique/backend-bullmq</code>&#39;s
         <code>JobProducer</code>, configured in <code>configs/index.ts</code>) is used directly from
         the register/password controllers.
@@ -1698,8 +1699,8 @@
       </table>
       <p>
         <strong>Rollback on enqueue failure:</strong> every
-        <code>jobProducer.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, ...)</code> call is
-        wrapped in its own <code>try/catch</code> — if enqueueing fails, the just-written OTP
+        <code>jobProducer.addJob(&#39;mail-service-queue&#39;, &#39;send-otp&#39;, ...)</code> call
+        is wrapped in its own <code>try/catch</code> — if enqueueing fails, the just-written OTP
         session is deleted from Redis (<code>redisCacheManager.token.deleteOtpData</code>) before
         the error is re-thrown, so a failed send doesn&#39;t leave an unreachable OTP session
         behind.
@@ -2009,7 +2010,7 @@ npm run clean              # remove dist/
       <pre><code>Client → POST /auth/register/send-otp { email }
   → GET user by email from DB
   → Store OTP in Redis (10 min TTL) ← Returns { token, otp, sendCount: 1 }
-  → jobProducer.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, { email, otp })
+  → jobProducer.addJob(&#39;mail-service-queue&#39;, &#39;send-otp&#39;, { email, otp })
   ← res.success({ data: token })
 
 Client → POST /auth/register/verify-otp { otp } [Authorization: token]
@@ -2028,7 +2029,7 @@ Client → POST /auth/register/save-user { firstName, lastName, password, phoneN
       <pre><code>Client → POST /auth/password/forgot-send-otp { email }
   → Validate user has a MANUAL provider
   → Store OTP in Redis ← Returns { token, otp }
-  → jobProducer.addJob(&#39;mail-queue&#39;, &#39;send-otp&#39;, { email, otp })
+  → jobProducer.addJob(&#39;mail-service-queue&#39;, &#39;send-otp&#39;, { email, otp })
 
 Client → POST /auth/password/forgot-verify-otp { otp } [Authorization: token]
   → Validate OTP in Redis

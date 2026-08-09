@@ -6,13 +6,13 @@ import { envs } from '../envs/index.js';
 const WORKER_CONCURRENCY = 5;
 
 export class WorkerManager {
-  private worker: JobWorker<'mail-queue'> | undefined;
+  private worker: JobWorker<'mail-service-queue'> | undefined;
 
   /* ---------------- START ---------------- */
 
   public start() {
     this.worker = new JobWorker({
-      queueName: 'mail-queue',
+      queueName: 'mail-service-queue',
       connection: envs.redis.bull_mq,
       concurrency: WORKER_CONCURRENCY,
       logger,

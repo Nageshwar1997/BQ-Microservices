@@ -312,7 +312,7 @@ Owned and consumed by `WorkerManager` (`classes/WorkerManager.ts`) — a single 
 | `mark-single-media-as-used` / `mark-multiple-media-as-used`       | other services (e.g. `product-service`)                         | Flips `status → USED`, clears `expiresAt`                                         |
 | `remove-single-media-directly` / `remove-multiple-media-directly` | this service (`Cloudinary` class, as a retry path)              | Re-attempts a Cloudinary deletion that failed inline                              |
 
-`media-service` only runs a worker for `media-queue`. `mail-queue` (used for OTP emails) is owned end-to-end by `user-service` (producer) and `mail-service` (worker) — unrelated to this service.
+`media-service` only runs a worker for `media-queue`. `mail-service-queue` (used for OTP emails) is owned end-to-end by `user-service` (producer) and `mail-service` (worker) — unrelated to this service.
 
 ### Cross-service queue integration
 

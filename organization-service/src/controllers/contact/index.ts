@@ -29,12 +29,12 @@ export const createContactQueryController = async (req: Request, res: Response) 
 
   try {
     await Promise.all([
-      jobProducer.addJob('mail-queue', 'send-contact-acknowledgement', {
+      jobProducer.addJob('mail-service-queue', 'send-contact-acknowledgement', {
         to: email,
         subject: `[Ticket #${ticketId}] Your query has been received`,
         data: { ticketId, queryType },
       }),
-      jobProducer.addJob('mail-queue', 'send-contact-admin-notification', {
+      jobProducer.addJob('mail-service-queue', 'send-contact-admin-notification', {
         to: SUPPORT_INBOX_EMAIL,
         subject: `[Ticket #${ticketId}] New Contact Query — ${queryType}`,
         data: { ticketId, name, email, phoneNumber, queryType, message },
