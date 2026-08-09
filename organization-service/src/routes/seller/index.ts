@@ -17,10 +17,7 @@ import {
   updateSellerApprovalStatusController,
 } from '../../controllers/index.js';
 import { authenticate, authorize, createPendingSellerPayload } from '../../middlewares/index.js';
-import {
-  sellerIdParamsZodSchema,
-  updateSellerApprovalStatusZodSchema,
-} from '../../schemas/index.js';
+import { updateSellerApprovalStatusZodSchema } from '../../schemas/index.js';
 
 export const sellerRouter = Router();
 const draftRouter = Router();
@@ -57,6 +54,6 @@ sellerRouter[updateApprovalStatus.method](
   updateApprovalStatus.path,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
   checkEmptyRequest({ body: true, params: true }),
-  validateZod({ params: sellerIdParamsZodSchema, body: updateSellerApprovalStatusZodSchema }),
+  validateZod({ body: updateSellerApprovalStatusZodSchema }),
   tryCatchResponse(updateSellerApprovalStatusController),
 );

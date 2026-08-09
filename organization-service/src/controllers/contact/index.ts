@@ -91,7 +91,7 @@ export const getContactQueriesController = async (req: Request, res: Response) =
 };
 
 export const updateContactQueryStatusController = async (req: Request, res: Response) => {
-  const { ticketId } = req.params as TContactQueryTicketIdZodSchema;
+  const ticketId = req.params.ticketId as string;
   const { status } = req.body as TUpdateContactQueryStatusZodSchema;
 
   // CLOSED/REJECTED get a TTL deadline (see `CONTACT_QUERY_RETENTION_MS_MAP`);

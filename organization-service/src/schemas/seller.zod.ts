@@ -18,9 +18,7 @@ export const sellerIdParamsZodSchema = object({
 });
 
 export const updateSellerApprovalStatusZodSchema = discriminatedUnion('approvalStatus', [
-  object({
-    approvalStatus: literal(SELLER_APPROVAL_STATUS_MAP.APPROVED),
-  }),
+  object({ approvalStatus: literal(SELLER_APPROVAL_STATUS_MAP.APPROVED) }),
   object({
     approvalStatus: literal(SELLER_APPROVAL_STATUS_MAP.REJECTED),
     rejectReason: string('Reject reason is required').trim().nonempty('Reject reason is required'),

@@ -63,6 +63,6 @@ userRouter[promoteRole.method](
   promoteRole.path,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
   checkEmptyRequest({ body: true, params: true }),
-  validateZod({ params: promoteUserRoleParamsZodSchema, body: promoteUserRoleBodyZodSchema }),
+  validateZod({  body: promoteUserRoleBodyZodSchema }),
   tryCatchResponse(promoteUserRoleController),
 );
