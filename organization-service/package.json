@@ -46,7 +46,6 @@
     "@beautinique/backend-zod": "^1.0.31",
     "@beautinique/shared-markdown-to-html": "^1.0.1",
     "@beautinique/shared-utils": "^1.0.5",
-    "axios": "^1.19.0",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
