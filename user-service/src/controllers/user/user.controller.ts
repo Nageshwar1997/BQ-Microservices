@@ -15,11 +15,11 @@ import bcrypt from 'bcryptjs';
 import type { Request, Response } from 'express';
 import type { HydratedDocument } from 'mongoose';
 
-import { redisCacheManager } from '../../configs/index.js';
+import { jobProducer, redisCacheManager } from '../../configs/index.js';
 import { User } from '../../models/index.js';
 import { getUserById, updateUser } from '../../services/index.js';
 import type { IUser } from '../../types/index.js';
-import { getMinimalUser } from '../../utils/index.js';
+import { getCloudinaryPublicIdFromUrl, getMinimalUser } from '../../utils/index.js';
 
 export const getSessionUserController = async (req: Request, res: Response) => {
   const { _id: userId } = getUser(req.user);
@@ -44,6 +44,11 @@ export const updateUserController = async (req: Request, res: Response) => {
 
   res.locals.afterResponse?.push(async () => {
     await redisCacheManager.user.updateUser(minimalUser);
+    if (body.avatar) {
+      await jobProducer.addJob('media-service-queue', 'mark-single-media-as-used', {
+        publicId: getCloudinaryPublicIdFromUrl(body.avatar),
+      });
+    }
   });
 
   res.success({ message: 'Profile updated successfully.', data: minimalUser });

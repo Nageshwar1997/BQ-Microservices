@@ -92,3 +92,20 @@ export const getSocialAuthRedirectURL = (provider: TSocialAuthProvider) => {
 
   return `${envs.gateway_url}${redirectMap[provider]}`;
 };
+
+
+export const getCloudinaryPublicIdFromUrl = (url: string): string => {
+  try {
+    const { pathname } = new URL(url);
+
+    const match = /\/upload\/(?:[^/]+\/)*(?:v\d+\/)?(.+)$/.exec(pathname);
+
+    if (!match?.[1]) {
+      throw new UnprocessableEntityError('Invalid URL.');
+    }
+
+    return match[1].replace(/\.[^/.]+$/, '');
+  } catch {
+    throw new UnprocessableEntityError('Invalid URL.');
+  }
+};
