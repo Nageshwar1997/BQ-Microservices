@@ -1,3 +1,4 @@
+import { UnprocessableEntityError } from '@beautinique/backend-classes';
 import {
   AUTH_PROVIDER_MAP,
   SERVICE_NAMES_MAP,
@@ -92,7 +93,6 @@ export const getSocialAuthRedirectURL = (provider: TSocialAuthProvider) => {
 
   return `${envs.gateway_url}${redirectMap[provider]}`;
 };
-
 
 export const getCloudinaryPublicIdFromUrl = (url: string): string => {
   try {
