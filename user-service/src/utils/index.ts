@@ -83,7 +83,7 @@ export const getSocialAuthRedirectURL = (provider: TSocialAuthProvider) => {
   const { base: login_base, oauth } = login;
   const { github, google, linkedin } = oauth;
 
-  const prefix = `${base}/${SERVICE_NAMES_MAP['user-service']}${auth_base}${login_base}` as const;
+  const prefix = `${base}/${SERVICE_NAMES_MAP.user}${auth_base}${login_base}` as const;
 
   const redirectMap = {
     [AUTH_PROVIDER_MAP.GOOGLE]: `${prefix}${google.callback.path}`,

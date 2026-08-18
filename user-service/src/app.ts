@@ -77,7 +77,7 @@ app[health.method](health.path, (_, res) => {
     message: 'User Service is healthy',
     data: {
       database: getConnectionHealth(),
-      service: SERVICE_NAMES_MAP['user-service'],
+      service: SERVICE_NAMES_MAP.user,
       worker: workerManager.isRunning(),
     },
   });

@@ -41,7 +41,7 @@ export const openApiSpec = {
                   properties: {
                     mail: { type: 'boolean', description: 'Brevo API key verified.' },
                     worker: { type: 'boolean', description: 'BullMQ worker is running.' },
-                    service: { type: 'string', example: SERVICE_NAMES_MAP['mail-service'] },
+                    service: { type: 'string', example: SERVICE_NAMES_MAP.mail },
                   },
                 }),
               },

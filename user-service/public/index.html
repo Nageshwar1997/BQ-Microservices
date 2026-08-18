@@ -1543,7 +1543,7 @@
             <td><code>getSocialAuthRedirectURL(provider)</code></td>
             <td>
               Builds the absolute OAuth callback URL: <code>envs.gateway_url</code> +
-              <code>/api/v1/{SERVICE_NAMES_MAP[&#39;user-service&#39;]}/auth/login</code> + that
+              <code>/api/v1/{SERVICE_NAMES_MAP.user}/auth/login</code> + that
               provider&#39;s <code>callback.path</code> from <code>METHODS_AND_PATHS</code>
             </td>
           </tr>
@@ -1554,7 +1554,7 @@
         <code>*_REDIRECT_ENDPOINT</code> env var — it derives the callback path directly from this
         service&#39;s own <code>METHODS_AND_PATHS</code> route constants
         (<code>constants/index.ts</code>) and
-        <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code>
+        <code>SERVICE_NAMES_MAP.user</code>
         (<code>@beautinique/shared-constants</code>), so the URL registered with each OAuth provider
         can never drift out of sync with the actual route. Each <code>socialAuth/*.ts</code> class
         now calls this once at construction and caches it in a <code>REDIRECT_URI</code> field,
@@ -2097,7 +2097,7 @@ Wishlist ──1→N─── Product     (many products per wishlist)
           <strong>OAuth callback URLs are self-derived, not configured.</strong>
           <code>getSocialAuthRedirectURL</code> builds each provider&#39;s callback URL from this
           service&#39;s own <code>METHODS_AND_PATHS</code> +
-          <code>SERVICE_NAMES_MAP[&#39;user-service&#39;]</code> instead of a per-provider env var —
+          <code>SERVICE_NAMES_MAP.user</code> instead of a per-provider env var —
           the trade-off is that the URL registered with Google/LinkedIn/GitHub&#39;s OAuth console
           must match
           <code>{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback</code>

@@ -77,7 +77,7 @@ app[health.method](health.path, (_, res) => {
     message: 'Media Service is healthy',
     data: {
       database: getConnectionHealth(),
-      service: SERVICE_NAMES_MAP['media-service'],
+      service: SERVICE_NAMES_MAP.media,
       worker: workerManager.isRunning(),
     },
   });

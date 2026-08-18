@@ -77,7 +77,7 @@ export const openApiSpec = {
                   type: 'object',
                   properties: {
                     database: { type: 'object' },
-                    service: { type: 'string', example: SERVICE_NAMES_MAP['media-service'] },
+                    service: { type: 'string', example: SERVICE_NAMES_MAP.media },
                     worker: { type: 'boolean', example: true },
                   },
                 }),

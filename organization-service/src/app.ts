@@ -77,7 +77,7 @@ app[health.method](health.path, (_, res) => {
     message: 'Organization Service is healthy',
     data: {
       database: getConnectionHealth(),
-      service: SERVICE_NAMES_MAP['organization-service'],
+      service: SERVICE_NAMES_MAP.organization,
     },
   });
 });

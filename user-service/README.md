@@ -16,24 +16,24 @@ The User Service is the central identity and authentication microservice for the
 
 ## 2. Technology Stack
 
-| Layer                    | Technology                                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| Runtime                  | Node.js (ES2025, ESM)                                                                                                           |
-| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                                                          |
-| Framework                | Express.js 5.x                                                                                                                  |
-| Database                 | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`)                                                                     |
-| Cache                    | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)                                                |
+| Layer                    | Technology                                                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime                  | Node.js (ES2025, ESM)                                                                                                                   |
+| Language                 | TypeScript 6.x (`strict`, `noUncheckedIndexedAccess`, `noEmitOnError`)                                                                  |
+| Framework                | Express.js 5.x                                                                                                                          |
+| Database                 | MongoDB (via Mongoose 9.x, `@beautinique/backend-mongoose`)                                                                             |
+| Cache                    | Redis, via the `redis` client (custom `RedisCacheManager`, not a shared package)                                                        |
 | Background jobs / queue  | BullMQ (Redis), via `@beautinique/backend-bullmq` — **producer only** (see [§16](#16-background-jobs-mail-service-queue-producer-only)) |
-| OAuth                    | `google-auth-library` (Google), hand-rolled REST calls via `axios` (LinkedIn, GitHub)                                           |
-| Password hashing         | `bcryptjs`                                                                                                                      |
-| Validation               | Zod, via `@beautinique/backend-zod`                                                                                             |
-| Logging                  | Pino, via `@beautinique/backend-logger`                                                                                         |
-| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                                                          |
-| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                                                        |
-| Shared response envelope | `@beautinique/backend-response`                                                                                                 |
-| Shared utilities         | `@beautinique/backend-utils`, `@beautinique/backend-mongoose`, `@beautinique/shared-utils`                                      |
-| Shared constants/types   | `@beautinique/shared-constants`, `@beautinique/backend-types`                                                                   |
-| Code quality             | ESLint (flat config, type-checked + strict), Prettier                                                                           |
+| OAuth                    | `google-auth-library` (Google), hand-rolled REST calls via `axios` (LinkedIn, GitHub)                                                   |
+| Password hashing         | `bcryptjs`                                                                                                                              |
+| Validation               | Zod, via `@beautinique/backend-zod`                                                                                                     |
+| Logging                  | Pino, via `@beautinique/backend-logger`                                                                                                 |
+| API docs                 | OpenAPI 3.0 spec (hand-written) + `swagger-ui-express`                                                                                  |
+| README rendering         | `@beautinique/shared-markdown-to-html` (markdown → HTML)                                                                                |
+| Shared response envelope | `@beautinique/backend-response`                                                                                                         |
+| Shared utilities         | `@beautinique/backend-utils`, `@beautinique/backend-mongoose`, `@beautinique/shared-utils`                                              |
+| Shared constants/types   | `@beautinique/shared-constants`, `@beautinique/backend-types`                                                                           |
+| Code quality             | ESLint (flat config, type-checked + strict), Prettier                                                                                   |
 
 ---
 
@@ -149,12 +149,12 @@ All environment variables are loaded via `dotenv` and validated in `src/envs/ind
 
 ### 4.4 Redis — BullMQ
 
-| Variable           | Description                                            |
-| ------------------ | ------------------------------------------------------ |
+| Variable           | Description                                                    |
+| ------------------ | -------------------------------------------------------------- |
 | `BULL_MQ_HOST`     | Redis host used for the `mail-service-queue` BullMQ connection |
-| `BULL_MQ_PORT`     | Redis port                                             |
-| `BULL_MQ_PASSWORD` | Redis password                                         |
-| `BULL_MQ_USERNAME` | Redis username                                         |
+| `BULL_MQ_PORT`     | Redis port                                                     |
+| `BULL_MQ_PASSWORD` | Redis password                                                 |
+| `BULL_MQ_USERNAME` | Redis username                                                 |
 
 **This Redis instance is shared** with `mail-service`, which runs the `mail-service-queue` worker — it must point to the same instance in both services.
 
@@ -486,15 +486,15 @@ Factory middleware — same header extraction as `authenticate`, plus reads `X-U
 
 ## 13. Utilities (`utils/index.ts`)
 
-| Function                               | Description                                                                                                                                                                      |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `createOAuthDbPayload(data, provider)` | Builds a new-user payload from a third-party OAuth profile                                                                                                                       |
-| `getMinimalUser(user)`                 | Returns the sanitized client-facing user shape (`_id` as string; excludes `password`/`reason`/timestamps)                                                                        |
-| `generateOtp()`                        | Returns a random 6-digit numeric OTP                                                                                                                                             |
-| `generateTempToken(bytes = 32)`        | Returns a hex token (default 32 bytes = 64 hex chars)                                                                                                                            |
-| `getSocialAuthRedirectURL(provider)`   | Builds the absolute OAuth callback URL: `envs.gateway_url` + `/api/v1/{SERVICE_NAMES_MAP['user-service']}/auth/login` + that provider's `callback.path` from `METHODS_AND_PATHS` |
+| Function                               | Description                                                                                                                                                           |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `createOAuthDbPayload(data, provider)` | Builds a new-user payload from a third-party OAuth profile                                                                                                            |
+| `getMinimalUser(user)`                 | Returns the sanitized client-facing user shape (`_id` as string; excludes `password`/`reason`/timestamps)                                                             |
+| `generateOtp()`                        | Returns a random 6-digit numeric OTP                                                                                                                                  |
+| `generateTempToken(bytes = 32)`        | Returns a hex token (default 32 bytes = 64 hex chars)                                                                                                                 |
+| `getSocialAuthRedirectURL(provider)`   | Builds the absolute OAuth callback URL: `envs.gateway_url` + `/api/v1/{SERVICE_NAMES_MAP.user}/auth/login` + that provider's `callback.path` from `METHODS_AND_PATHS` |
 
-`getSocialAuthRedirectURL` no longer reads a per-provider `*_REDIRECT_ENDPOINT` env var — it derives the callback path directly from this service's own `METHODS_AND_PATHS` route constants (`constants/index.ts`) and `SERVICE_NAMES_MAP['user-service']` (`@beautinique/shared-constants`), so the URL registered with each OAuth provider can never drift out of sync with the actual route. Each `socialAuth/*.ts` class now calls this once at construction and caches it in a `REDIRECT_URI` field, rather than recomputing it on every `url()`/`access_token()` call.
+`getSocialAuthRedirectURL` no longer reads a per-provider `*_REDIRECT_ENDPOINT` env var — it derives the callback path directly from this service's own `METHODS_AND_PATHS` route constants (`constants/index.ts`) and `SERVICE_NAMES_MAP.user` (`@beautinique/shared-constants`), so the URL registered with each OAuth provider can never drift out of sync with the actual route. Each `socialAuth/*.ts` class now calls this once at construction and caches it in a `REDIRECT_URI` field, rather than recomputing it on every `url()`/`access_token()` call.
 
 `getObjId`/`toObjectId` moved out of this service — `getObjId` is now imported directly from `@beautinique/backend-mongoose` where needed (`services/index.ts`, `password.controller.ts`).
 
@@ -743,5 +743,5 @@ Wishlist ──1→N─── Product     (many products per wishlist)
 - **`authorize` middleware is exported but unused.** No route currently requires role-based restriction beyond `authenticate`'s "is logged in" check.
 - **`RedisCacheUser.updateUser` is a plain alias for `setUser`.** Kept as a separate method for call-site clarity (an explicit "I'm updating an existing entry" vs "I'm setting one for the first time"), not because the implementation differs.
 - **`Seller`/`Wishlist` have no controllers yet.** The Mongoose models and indexes exist so other services (or a future admin surface) can query them directly, but nothing in this service writes to them.
-- **OAuth callback URLs are self-derived, not configured.** `getSocialAuthRedirectURL` builds each provider's callback URL from this service's own `METHODS_AND_PATHS` + `SERVICE_NAMES_MAP['user-service']` instead of a per-provider env var — the trade-off is that the URL registered with Google/LinkedIn/GitHub's OAuth console must match `{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback` exactly, and changing the route path in `constants/index.ts` now silently changes that URL too (previously it was two independent things that had to be kept in sync manually).
+- **OAuth callback URLs are self-derived, not configured.** `getSocialAuthRedirectURL` builds each provider's callback URL from this service's own `METHODS_AND_PATHS` + `SERVICE_NAMES_MAP.user` instead of a per-provider env var — the trade-off is that the URL registered with Google/LinkedIn/GitHub's OAuth console must match `{GATEWAY_URL}/api/v1/user-service/auth/login/oauth/{provider}/callback` exactly, and changing the route path in `constants/index.ts` now silently changes that URL too (previously it was two independent things that had to be kept in sync manually).
 - **`GET /` regenerates on `npm run build`, not `npm run dev`.** `public/index.html` is generated from `README.md` by the `postbuild` script. Editing this file while running `npm run dev` won't update `GET /` until a build actually runs.

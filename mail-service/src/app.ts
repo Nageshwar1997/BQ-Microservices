@@ -75,7 +75,7 @@ app[health.method](health.path, (_, res) => {
     data: {
       transporter: transporter.isConnected(),
       worker: workerManager.isRunning(),
-      service: SERVICE_NAMES_MAP['mail-service'],
+      service: SERVICE_NAMES_MAP.mail,
     },
   });
 });

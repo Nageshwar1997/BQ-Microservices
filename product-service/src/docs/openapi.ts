@@ -475,7 +475,7 @@ export const openApiSpec = {
                   type: 'object',
                   properties: {
                     database: { type: 'object' },
-                    service: { type: 'string', example: SERVICE_NAMES_MAP['product-service'] },
+                    service: { type: 'string', example: SERVICE_NAMES_MAP.product },
                   },
                 }),
               },
