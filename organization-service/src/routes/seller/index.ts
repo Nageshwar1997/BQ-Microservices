@@ -14,15 +14,21 @@ import { METHODS_AND_PATHS } from '../../constants/index.js';
 import {
   createSellerController,
   getDraftSellerController,
+  getSellerQueueController,
   saveDraftSellerController,
   updateSellerApprovalStatusController,
 } from '../../controllers/index.js';
-import { authenticate, authorize, createPendingSellerPayload } from '../../middlewares/index.js';
+import {
+  authenticate,
+  authorize,
+  authorizeSellerOwnership,
+  createPendingSellerPayload,
+} from '../../middlewares/index.js';
 
 export const sellerRouter = Router();
 const draftRouter = Router();
 
-const { draft, updateApprovalStatus } = METHODS_AND_PATHS.seller;
+const { draft, queue, updateApprovalStatus } = METHODS_AND_PATHS.seller;
 
 /* ================== DRAFT ROUTES (self-service onboarding wizard) ================== */
 
@@ -49,8 +55,15 @@ sellerRouter.use(draft.base, authenticate, draftRouter);
 
 sellerRouter[updateApprovalStatus.method](
   updateApprovalStatus.path,
-  authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER]),
+  authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.SUPER_ADMIN, USER_ROLE_MAP.MASTER]),
+  authorizeSellerOwnership,
   checkEmptyRequest({ body: true, params: true }),
   validateZod({ body: updateSellerApprovalStatusZodSchema }),
   tryCatchResponse(updateSellerApprovalStatusController),
+);
+
+sellerRouter[queue.method](
+  queue.path,
+  authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.SUPER_ADMIN, USER_ROLE_MAP.MASTER]),
+  tryCatchResponse(getSellerQueueController),
 );

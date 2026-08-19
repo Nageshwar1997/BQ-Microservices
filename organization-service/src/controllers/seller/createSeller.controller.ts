@@ -1,5 +1,8 @@
 import { ConflictError } from '@beautinique/backend-classes';
-import { SELLER_APPROVAL_STATUS_MAP } from '@beautinique/backend-constants';
+import {
+  SELLER_APPROVAL_STATUS_MAP,
+  TERRITORY_ASSIGNMENT_REASON_MAP,
+} from '@beautinique/backend-constants';
 import type { TDraftSellerDetailsZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { NextFunction, Request, Response } from 'express';
@@ -127,6 +130,8 @@ export const createSellerController = async (
       assignedAdminHistory: [
         { admin: resolvedAdmin.adminUserId, assignedAt: new Date(), reason: resolvedAdmin.reason },
       ],
+      assignedViaSuperAdminPool:
+        resolvedAdmin.reason === TERRITORY_ASSIGNMENT_REASON_MAP.SUPER_ADMIN_POOL,
     }),
   });
 

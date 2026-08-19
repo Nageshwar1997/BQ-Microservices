@@ -41,6 +41,9 @@ export const METHODS_AND_PATHS = {
   seller: {
     base: '/seller',
     updateApprovalStatus: { method: PATCH, path: '/approval-status/:sellerId' },
+    // "My Queue" - ?status=PENDING (default) & ?filter=mine|all|unassigned
+    // (default `mine`; `all`/`unassigned` are MASTER-only).
+    queue: { method: GET, path: '/queue' },
     draft: {
       base: '/draft',
       save: { method: POST, path: '/' }, // For saving a wizard step as draft

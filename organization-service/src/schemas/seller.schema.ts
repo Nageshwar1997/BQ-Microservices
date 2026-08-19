@@ -114,6 +114,13 @@ export const sellerSchema = new Schema(
     // check needed", it means "needs manual assignment".
     assignedAdmin: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     assignedAdminHistory: { type: [sellerAssignedAdminHistorySchema], default: [] },
+    // Denormalized from `assignedAdminHistory[last].reason === SUPER_ADMIN_POOL`
+    // - avoids inspecting array history at query/ownership-check time. `true`
+    // means ANY currently-`ACTIVE` SUPER_ADMIN can act on this seller, not
+    // just `assignedAdmin` specifically (see the ownership middleware and
+    // "My Queue" - SUPER_ADMINs form a shared covering pool, not individually
+    // owned territory).
+    assignedViaSuperAdminPool: { type: Boolean, default: false },
   },
   { versionKey: false, timestamps: true },
 );
@@ -127,3 +134,5 @@ sellerSchema.index({ status: 1, createdAt: -1 });
 /* ---------------- "MY QUEUE" (per-admin ownership) ---------------- */
 
 sellerSchema.index({ assignedAdmin: 1, approvalStatus: 1, createdAt: -1 });
+
+sellerSchema.index({ assignedViaSuperAdminPool: 1, approvalStatus: 1, createdAt: -1 });
