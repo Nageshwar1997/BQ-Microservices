@@ -4,8 +4,10 @@ import {
   TERRITORY_ASSIGNMENT_REASON_MAP,
   USER_ROLE_MAP,
 } from '@beautinique/backend-constants';
+import { getObjId } from '@beautinique/backend-mongoose';
 import type { TStateOrUT } from '@beautinique/backend-types';
 
+import { jobProducer, logger } from '../configs/index.js';
 import { AdminTerritory, Seller } from '../models/index.js';
 import type { IResolvedAdmin, TAdminTerritory, TId } from '../types/index.js';
 
@@ -135,4 +137,79 @@ export const resolveStateAdmin = async (state: TStateOrUT): Promise<IResolvedAdm
   /* ---------------- 4. NOBODY AVAILABLE ---------------- */
 
   return null;
+};
+
+/**
+ * Bulk-reassigns every `PENDING` seller currently owned by `adminUserId` to
+ * whoever `resolveStateAdmin` picks next for their state - called only on a
+ * `SUSPENDED` transition (assignment plan doc, section 7.2). `ON_LEAVE`
+ * deliberately does NOT call this - ownership stays put there (the
+ * "covering" model - see `authorizeSellerOwnership` / `getSellerQueueController`),
+ * only `SUSPENDED` triggers immediate reassignment.
+ *
+ * By the time this runs, `WorkerManager` has already upserted `adminUserId`'s
+ * `AdminTerritory` row to `SUSPENDED`, so `resolveStateAdmin`'s `ACTIVE`
+ * filter naturally excludes them - no special-casing needed here.
+ *
+ * Per-seller failures are logged and skipped rather than aborting the whole
+ * batch - one bad resolve/save shouldn't leave the rest of the admin's
+ * queue stuck with a suspended owner.
+ */
+export const reassignPendingSellersAwayFrom = async (adminUserId: string): Promise<number> => {
+  const affectedSellers = await Seller.find({
+    assignedAdmin: getObjId(adminUserId),
+    approvalStatus: SELLER_APPROVAL_STATUS_MAP.PENDING,
+  });
+
+  let reassignedCount = 0;
+
+  for (const seller of affectedSellers) {
+    try {
+      const resolved = await resolveStateAdmin(seller.address.state);
+
+      if (!resolved) {
+        logger.warn(
+          `⚠️ No admin available to reassign seller ${seller._id.toString()} away from suspended admin ${adminUserId} - needs manual assignment`,
+        );
+        continue;
+      }
+
+      seller.assignedAdmin = getObjId(resolved.adminUserId);
+      seller.assignedAdminHistory.push({
+        admin: getObjId(resolved.adminUserId),
+        assignedAt: new Date(),
+        reason: TERRITORY_ASSIGNMENT_REASON_MAP.ADMIN_SUSPENDED,
+      });
+      seller.assignedViaSuperAdminPool =
+        resolved.reason === TERRITORY_ASSIGNMENT_REASON_MAP.SUPER_ADMIN_POOL;
+
+      await seller.save();
+
+      reassignedCount += 1;
+
+      await jobProducer.addJob('product-service-queue', 'seller-admin-assigned', {
+        userId: seller.user.toString(),
+        sellerId: seller._id.toString(),
+        assignedAdminId: resolved.adminUserId,
+        state: seller.address.state,
+        reason: TERRITORY_ASSIGNMENT_REASON_MAP.ADMIN_SUSPENDED,
+      });
+
+      await jobProducer.addJob('mail-service-queue', 'send-seller-assigned-notification', {
+        to: resolved.adminEmail,
+        subject: `Seller reassigned to you - ${seller.businessDetails.name}`,
+        data: {
+          sellerBusinessName: seller.businessDetails.name,
+          state: seller.address.state,
+        },
+      });
+    } catch (error) {
+      logger.error(
+        error,
+        `❌ Failed to reassign seller ${seller._id.toString()} away from suspended admin ${adminUserId}`,
+      );
+    }
+  }
+
+  return reassignedCount;
 };

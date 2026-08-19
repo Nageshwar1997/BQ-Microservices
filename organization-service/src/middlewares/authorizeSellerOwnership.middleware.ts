@@ -1,10 +1,10 @@
 import { AuthorizationError, NotFoundError } from '@beautinique/backend-classes';
-import { USER_ROLE_MAP } from '@beautinique/backend-constants';
+import { ADMIN_STATUS_MAP, USER_ROLE_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import { getUser } from '@beautinique/backend-utils';
 import type { NextFunction, Request, Response } from 'express';
 
-import { Seller } from '../models/index.js';
+import { AdminTerritory, Seller } from '../models/index.js';
 
 /**
  * Runs after the route's role-level `authorize()` gate - that only checks
@@ -18,6 +18,9 @@ import { Seller } from '../models/index.js';
  *   `SUPER_ADMIN` pool (`assignedViaSuperAdminPool`) - the pool is a shared
  *   covering group, not individually-owned territory, so any currently
  *   `ACTIVE` `SUPER_ADMIN` can pick it up, not just whoever it first landed on.
+ * - The seller's assigned admin's configured backup also passes, but ONLY
+ *   while that admin is `ON_LEAVE` (the "covering" model, section 7.1) -
+ *   ownership itself never changes for a leave, this is action-access only.
  * - Everyone else (including a state `ADMIN` who isn't this seller's owner) - 403.
  */
 export const authorizeSellerOwnership = async (
@@ -47,7 +50,19 @@ export const authorizeSellerOwnership = async (
     const isPoolCoverage =
       requester.role === USER_ROLE_MAP.SUPER_ADMIN && seller.assignedViaSuperAdminPool;
 
-    if (!isOwner && !isPoolCoverage) {
+    let isBackupCoverage = false;
+
+    if (!isOwner && !isPoolCoverage && seller.assignedAdmin) {
+      const ownerTerritory = await AdminTerritory.findOne({ adminUserId: seller.assignedAdmin })
+        .select('status backupAdminUserId')
+        .lean();
+
+      isBackupCoverage =
+        ownerTerritory?.status === ADMIN_STATUS_MAP.ON_LEAVE &&
+        ownerTerritory.backupAdminUserId?.toString() === requester._id.toString();
+    }
+
+    if (!isOwner && !isPoolCoverage && !isBackupCoverage) {
       throw new AuthorizationError('You are not authorized to act on this seller');
     }
 
