@@ -2,6 +2,7 @@
 Microservices for Beautinique
 
 ## Update All Dependency Packages => (npx npm-check-updates -u)
+## Update PATCH/MINOR Dependency Packages => (npx npm-check-updates -u --target minor)
 
 
 ## Run all services from root
