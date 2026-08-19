@@ -87,6 +87,10 @@ export const METHODS_AND_PATHS = {
     base: '/admin',
     territory: {
       base: '/territory',
+      // Self - own Admin profile (states/status/load). No state param
+      // needed, unlike `stateAdmins` below - lets "My Status" show the
+      // current value before the admin changes it.
+      me: { method: GET, path: '/me' },
       // MASTER assigns/reassigns which state(s) an ADMIN owns.
       assign: { method: POST, path: '/:adminId/assign' },
       // Self (ACTIVE/ON_LEAVE) or MASTER (also SUSPENDED) toggles status.
