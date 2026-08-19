@@ -9,11 +9,10 @@ import type { TUpdateAdminStatusZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 
-import { jobProducer } from '../../configs/index.js';
 import { Admin } from '../../models/index.js';
+import { publishAdminTerritorySync } from '../../utils/index.js';
 
-// What `statusHistory[].reason` (and the `territory-status-changed` job's
-// `reason`) gets set to for each target status.
+// What `statusHistory[].reason` gets set to for each target status.
 const REASON_BY_STATUS = {
   [ADMIN_STATUS_MAP.ON_LEAVE]: TERRITORY_STATUS_CHANGE_REASON_MAP.LEAVE,
   [ADMIN_STATUS_MAP.SUSPENDED]: TERRITORY_STATUS_CHANGE_REASON_MAP.SUSPENDED,
@@ -23,10 +22,10 @@ const REASON_BY_STATUS = {
 /**
  * Self-service (ACTIVE/ON_LEAVE) or MASTER (also SUSPENDED - see the
  * Leave vs Suspension design in the assignment plan doc, section 7) status
- * toggle. Fans out one `territory-status-changed` job per state this admin
- * covers so organization-service/product-service refresh their local
- * state->admin Redis mirror - actually reassigning that state's in-flight
- * PENDING items is the consumer's job (Phase 4), not this controller's.
+ * toggle. `publishAdminTerritorySync` pushes the new snapshot to
+ * organization-service's local mirror - actually reassigning that state's
+ * in-flight PENDING items is the consumer's job (Phase 4), not this
+ * controller's.
  */
 export const updateAdminStatusController = async (req: Request, res: Response) => {
   const requester = getUser(req.user);
@@ -77,29 +76,7 @@ export const updateAdminStatusController = async (req: Request, res: Response) =
 
   const updatedAdmin = await admin.save();
 
-  let backupAdminUserId: string | undefined;
-
-  if (updatedAdmin.backupAdmin) {
-    const backup = await Admin.findById(updatedAdmin.backupAdmin).select('user').lean();
-    backupAdminUserId = backup?.user.toString();
-  }
-
-  // SUPER_ADMINs have no `assignedStates` (they're the global backup pool,
-  // not state-keyed) - nothing to invalidate downstream for them. Published
-  // on `organization-service-queue`, not `user-service-queue` - that's the
-  // sole consumer (see `QUEUE_SCHEMA` in `@beautinique/backend-bullmq`).
-  await Promise.all(
-    updatedAdmin.assignedStates.map((state) =>
-      jobProducer.addJob('organization-service-queue', 'territory-status-changed', {
-        state,
-        adminId,
-        previousStatus,
-        newStatus: updatedAdmin.status,
-        reason: REASON_BY_STATUS[body.status],
-        ...(backupAdminUserId && { backupAdminId: backupAdminUserId }),
-      }),
-    ),
-  );
+  await publishAdminTerritorySync(updatedAdmin);
 
   res.success({ message: 'Admin status updated successfully', data: updatedAdmin });
 };

@@ -6,6 +6,7 @@ import type { Request, Response } from 'express';
 
 import { Admin } from '../../models/index.js';
 import { getUserById } from '../../services/index.js';
+import { publishAdminTerritorySync } from '../../utils/index.js';
 
 /**
  * MASTER assigns/reassigns which state(s) an `ADMIN` owns (plus optional
@@ -57,13 +58,7 @@ export const assignAdminTerritoryController = async (req: Request, res: Response
     { upsert: true, new: true, setDefaultsOnInsert: true },
   );
 
-  // NOTE (Phase 2 / task 2.3): once organization-service's
-  // `territory-status-changed` consumer exists, decide the event shape for
-  // pure territory/coverage changes (as opposed to a `status` flip, which
-  // `updateAdminStatusController` already publishes) and fire it here too -
-  // so newly added/removed states get picked up without waiting on a status
-  // change. Not wired yet since there's no consumer to validate the shape
-  // against.
+  await publishAdminTerritorySync(admin);
 
   res.success({ message: 'Admin territory assigned successfully', data: admin });
 };

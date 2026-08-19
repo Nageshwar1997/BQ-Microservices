@@ -1,6 +1,12 @@
 import { connectDb, connectionState } from '@beautinique/backend-mongoose';
 
-import { databaseConfigs, logger, redisCacheManager, workerManager } from '../configs/index.js';
+import {
+  databaseConfigs,
+  jobProducer,
+  logger,
+  redisCacheManager,
+  workerManager,
+} from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
 import {
   isShuttingDown,
@@ -44,9 +50,14 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
 
 /**
  * Starts the background worker (see `WorkerManager` -
- * `organization-service-queue.territory-status-changed`) once MongoDB is
+ * `organization-service-queue.admin-territory-synced`) once MongoDB is
  * connected, polling in the background so it never has to touch a
- * not-yet-ready DB connection.
+ * not-yet-ready DB connection. Once running, requests a full resync of the
+ * `AdminTerritory` mirror from user-service - covers a fresh/wiped DB or a
+ * cold deploy, since BullMQ doesn't retain already-processed jobs to
+ * replay. Safe even if organization-service's own worker isn't fully ready
+ * the instant the response comes back - BullMQ jobs persist in Redis until
+ * consumed, nothing is lost either way.
  */
 const startWorkerWithRetry = async (): Promise<void> => {
   while (!isShuttingDown() && !connectionState.isConnected()) {
@@ -55,6 +66,8 @@ const startWorkerWithRetry = async (): Promise<void> => {
 
   if (!isShuttingDown()) {
     workerManager.start();
+
+    await jobProducer.addJob('user-service-queue', 'resync-admin-territories', {});
   }
 };
 

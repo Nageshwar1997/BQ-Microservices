@@ -5,7 +5,7 @@ import { getObjId } from '@beautinique/backend-mongoose';
 import { logger, redisCacheManager } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import { Admin, User } from '../models/index.js';
-import { getMinimalUser } from '../utils/index.js';
+import { getMinimalUser, publishAdminTerritorySync } from '../utils/index.js';
 
 const WORKER_CONCURRENCY = 5;
 
@@ -59,14 +59,39 @@ export class WorkerManager {
               role === USER_ROLE_MAP.SUPER_ADMIN ||
               role === USER_ROLE_MAP.MASTER
             ) {
-              await Admin.findOneAndUpdate(
+              const adminProfile = await Admin.findOneAndUpdate(
                 { user: updatedUser._id },
                 { $setOnInsert: { user: updatedUser._id } },
-                { upsert: true, setDefaultsOnInsert: true },
+                { upsert: true, new: true, setDefaultsOnInsert: true },
               );
+
+              // No-op for MASTER inside `publishAdminTerritorySync` itself -
+              // still worth calling uniformly rather than re-checking role here.
+              await publishAdminTerritorySync(adminProfile);
             }
           } catch (error) {
             logger.error({ Error: error, Data: data }, 'Failed to update user role.');
+
+            throw error;
+          }
+        },
+
+        /* ---------------- RESYNC ADMIN TERRITORIES ---------------- */
+
+        // Requested by organization-service (typically once, at startup) to
+        // rebuild its local `AdminTerritory` mirror from scratch - covers
+        // cold-start/a fresh or wiped mirror, since BullMQ doesn't retain
+        // already-processed jobs to replay. Re-publishes the full current
+        // snapshot for every admin-capable `Admin` document.
+        'resync-admin-territories': async () => {
+          try {
+            const admins = await Admin.find().lean();
+
+            await Promise.all(admins.map((admin) => publishAdminTerritorySync(admin)));
+
+            logger.info(`✅ Re-synced ${String(admins.length)} admin territor(y/ies)`);
+          } catch (error) {
+            logger.error(error, 'Failed to resync admin territories.');
 
             throw error;
           }

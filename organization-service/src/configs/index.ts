@@ -3,7 +3,7 @@ import { createLogger } from '@beautinique/backend-logger';
 import type { MongoConnectOptions } from '@beautinique/backend-mongoose';
 import { createClient, type RedisClientType } from 'redis';
 
-import { RedisCacheManager, UserServiceApi, WorkerManager } from '../classes/index.js';
+import { RedisCacheManager, WorkerManager } from '../classes/index.js';
 import { LOGGER_BASE_OPTIONS } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 
@@ -55,7 +55,5 @@ export const redisClient: RedisClientType = createClient({
 });
 
 export const redisCacheManager = new RedisCacheManager();
-
-export const userServiceApi = new UserServiceApi();
 
 export const workerManager = new WorkerManager();

@@ -3,8 +3,9 @@ import {
   TERRITORY_STATUS_CHANGE_REASON_MAP,
 } from '@beautinique/backend-constants';
 
-import { jobProducer, logger } from '../configs/index.js';
+import { logger } from '../configs/index.js';
 import { Admin } from '../models/index.js';
+import { publishAdminTerritorySync } from '../utils/index.js';
 
 const SWEEP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -66,7 +67,6 @@ export class AdminLeaveScheduler {
       });
 
       for (const admin of expiredAdmins) {
-        const previousStatus = admin.status;
         const changedAt = new Date();
 
         admin.status = ADMIN_STATUS_MAP.ACTIVE;
@@ -86,17 +86,7 @@ export class AdminLeaveScheduler {
 
         const updatedAdmin = await admin.save();
 
-        await Promise.all(
-          updatedAdmin.assignedStates.map((state) =>
-            jobProducer.addJob('organization-service-queue', 'territory-status-changed', {
-              state,
-              adminId: updatedAdmin.user.toString(),
-              previousStatus,
-              newStatus: updatedAdmin.status,
-              reason: TERRITORY_STATUS_CHANGE_REASON_MAP.REACTIVATED,
-            }),
-          ),
-        );
+        await publishAdminTerritorySync(updatedAdmin);
       }
 
       if (expiredAdmins.length > 0) {

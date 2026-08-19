@@ -1,7 +1,9 @@
 import { JobWorker } from '@beautinique/backend-bullmq';
+import { getObjId } from '@beautinique/backend-mongoose';
 
-import { logger, redisCacheManager } from '../configs/index.js';
+import { logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
+import { AdminTerritory } from '../models/index.js';
 
 const WORKER_CONCURRENCY = 5;
 
@@ -17,26 +19,40 @@ export class WorkerManager {
       concurrency: WORKER_CONCURRENCY,
       logger,
       handlers: {
-        /* ---------------- TERRITORY STATUS CHANGED ---------------- */
+        /* ---------------- ADMIN TERRITORY SYNCED ---------------- */
 
-        // Published by user-service's `updateAdminStatusController` /
-        // `AdminLeaveScheduler` whenever an `Admin`'s status changes.
-        // Just invalidates this state's cached pick - forces the next
-        // `resolveStateAdmin` call to re-resolve from user-service instead
-        // of serving a stale one. Reassigning that state's in-flight
-        // `PENDING` sellers away from a now-unavailable admin is Phase 4
-        // work, not this handler's.
-        'territory-status-changed': async (data) => {
+        // Published by user-service (a) whenever an `Admin`'s territory or
+        // status changes, and (b) once per admin in response to
+        // `resync-admin-territories` (see `startup.ts`). Always the FULL
+        // current snapshot for one admin - just upsert the local
+        // `AdminTerritory` mirror by `adminUserId`. No service-to-service
+        // HTTP call anywhere in this flow.
+        'admin-territory-synced': async (data) => {
           try {
-            const { state, adminId, newStatus, reason } = data;
+            const { adminUserId, adminName, adminEmail, role, assignedStates, status, priority } =
+              data;
 
-            await redisCacheManager.territory.invalidateStateAdmin(state);
-
-            logger.info(
-              `✅ Territory cache invalidated for ${state} (admin ${adminId} -> ${newStatus}, ${reason})`,
+            await AdminTerritory.findOneAndUpdate(
+              { adminUserId: getObjId(adminUserId) },
+              {
+                $set: {
+                  adminName,
+                  adminEmail,
+                  role,
+                  assignedStates,
+                  status,
+                  priority,
+                  backupAdminUserId: data.backupAdminUserId
+                    ? getObjId(data.backupAdminUserId)
+                    : null,
+                },
+              },
+              { upsert: true, setDefaultsOnInsert: true },
             );
+
+            logger.info(`✅ Admin territory mirror synced for ${adminUserId} (${status})`);
           } catch (error) {
-            logger.error({ Error: error, Data: data }, 'Failed to handle territory-status-changed.');
+            logger.error({ Error: error, Data: data }, 'Failed to handle admin-territory-synced.');
 
             throw error;
           }

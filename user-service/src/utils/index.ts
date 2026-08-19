@@ -4,16 +4,22 @@ import {
   SERVICE_NAMES_MAP,
   USER_ROLE_MAP,
 } from '@beautinique/backend-constants';
+import { getObjId } from '@beautinique/backend-mongoose';
 import type { TAuthProvider } from '@beautinique/backend-types';
 import { randomBytes } from 'crypto';
+import type { Types } from 'mongoose';
 
+import { jobProducer } from '../configs/index.js';
 import { METHODS_AND_PATHS } from '../constants/index.js';
 import { envs } from '../envs/index.js';
+import { Admin, User } from '../models/index.js';
 import type {
+  IAdmin,
   IGithubProfile,
   IGoogleProfile,
   ILinkedinProfile,
   IUser,
+  TId,
   TSocialAuthProvider,
 } from '../types/index.js';
 
@@ -108,4 +114,56 @@ export const getCloudinaryPublicIdFromUrl = (url: string): string => {
   } catch {
     throw new UnprocessableEntityError('Invalid URL.');
   }
+};
+
+/* ======================= Admin Territory Utils ======================= */
+
+/**
+ * Publishes the FULL current snapshot for one `Admin` to
+ * `organization-service-queue.admin-territory-synced` - not a delta. Called
+ * from every place an `Admin`'s territory/status changes
+ * (`assignAdminTerritoryController`, `updateAdminStatusController`,
+ * `AdminLeaveScheduler`) and once per admin by the `resync-admin-territories`
+ * handler (`WorkerManager`) - no service-to-service HTTP call anywhere in
+ * this flow, see the assignment plan doc.
+ *
+ * No-op for `MASTER` (and for a deleted `User`) - `MASTER` never
+ * participates in resolution, so there's nothing useful to sync for them.
+ */
+export const publishAdminTerritorySync = async (admin: {
+  user: Types.ObjectId | string;
+  assignedStates: IAdmin['assignedStates'];
+  status: IAdmin['status'];
+  priority: IAdmin['priority'];
+  backupAdmin?: TId | null;
+}) => {
+  const adminUser = await User.findById(getObjId(admin.user))
+    .select('firstName lastName email role')
+    .lean();
+
+  if (!adminUser) {
+    return;
+  }
+
+  if (adminUser.role !== USER_ROLE_MAP.ADMIN && adminUser.role !== USER_ROLE_MAP.SUPER_ADMIN) {
+    return;
+  }
+
+  let backupAdminUserId: string | undefined;
+
+  if (admin.backupAdmin) {
+    const backup = await Admin.findById(admin.backupAdmin).select('user').lean();
+    backupAdminUserId = backup?.user.toString();
+  }
+
+  await jobProducer.addJob('organization-service-queue', 'admin-territory-synced', {
+    adminUserId: admin.user.toString(),
+    adminName: `${adminUser.firstName} ${adminUser.lastName}`.trim(),
+    adminEmail: adminUser.email,
+    role: adminUser.role,
+    assignedStates: admin.assignedStates,
+    status: admin.status,
+    priority: admin.priority,
+    ...(backupAdminUserId && { backupAdminUserId }),
+  });
 };
