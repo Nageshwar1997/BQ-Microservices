@@ -1,6 +1,6 @@
-import { connectDb } from '@beautinique/backend-mongoose';
+import { connectDb, connectionState } from '@beautinique/backend-mongoose';
 
-import { databaseConfigs, logger, redisCacheManager } from '../configs/index.js';
+import { databaseConfigs, logger, redisCacheManager, workerManager } from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
 import {
   isShuttingDown,
@@ -11,6 +11,7 @@ import {
 } from './server.js';
 
 const DB_RETRY_DELAY_MS = 30_000;
+const WORKER_START_RETRY_DELAY_MS = 30_000;
 
 /* -------------------------------------------------------------------------- */
 /*                               MongoDB Connect                              */
@@ -38,6 +39,26 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
 };
 
 /* -------------------------------------------------------------------------- */
+/*                            BullMQ Worker Start                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Starts the background worker (see `WorkerManager` -
+ * `organization-service-queue.territory-status-changed`) once MongoDB is
+ * connected, polling in the background so it never has to touch a
+ * not-yet-ready DB connection.
+ */
+const startWorkerWithRetry = async (): Promise<void> => {
+  while (!isShuttingDown() && !connectionState.isConnected()) {
+    await new Promise((resolve) => setTimeout(resolve, WORKER_START_RETRY_DELAY_MS));
+  }
+
+  if (!isShuttingDown()) {
+    workerManager.start();
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 /*                              Startup Sequence                              */
 /* -------------------------------------------------------------------------- */
 
@@ -50,6 +71,8 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
  * 1. Register MongoDB event listeners.
  * 2. Start the HTTP server.
  * 3. Connect MongoDB and Redis (non-blocking, retried in the background).
+ * 4. Start the background worker once MongoDB is connected (non-blocking,
+ *    retried in the background).
  */
 export const startup = async (): Promise<void> => {
   if (!setStarted()) {
@@ -63,6 +86,7 @@ export const startup = async (): Promise<void> => {
 
     void redisCacheManager.connect();
     void connectDatabaseWithRetry();
+    void startWorkerWithRetry();
 
     logger.info('✅ Organization service initialized');
 

@@ -7,6 +7,7 @@ import {
   SELLER_STATUSES,
   SELLER_TYPES,
   STATES_AND_UTS,
+  TERRITORY_ASSIGNMENT_REASONS,
 } from '@beautinique/backend-constants';
 import { Schema } from 'mongoose';
 
@@ -73,6 +74,20 @@ const sellerHistorySchema = new Schema(
   { _id: false, versionKey: false },
 );
 
+// One entry per (re)assignment - audit trail for "who owned this seller,
+// when, and why" (assignment plan doc, section 6/7). Populated by
+// `createSellerController` (shadow mode: stamped but not yet enforced -
+// see task 2.5) and, later, by reassignment on admin `SUSPENDED`/leave
+// (Phase 4).
+const sellerAssignedAdminHistorySchema = new Schema(
+  {
+    admin: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    assignedAt: { type: Date, required: true },
+    reason: { type: String, enum: TERRITORY_ASSIGNMENT_REASONS, required: true },
+  },
+  { _id: false, versionKey: false },
+);
+
 export const sellerSchema = new Schema(
   {
     // `user-service` owns the actual `User` document (and its `role`) - this
@@ -92,6 +107,13 @@ export const sellerSchema = new Schema(
     },
     status: { type: String, enum: SELLER_STATUSES, default: SELLER_STATUS_MAP.ACTIVE },
     history: sellerHistorySchema,
+    // Resolved from `address.state` via `resolveStateAdmin` - the admin who
+    // handles this seller's approval, product reviews, suspension, etc.
+    // `null` when resolution failed/no admin was available yet (see
+    // `createSellerController`) - `null` is NOT the same as "no ownership
+    // check needed", it means "needs manual assignment".
+    assignedAdmin: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    assignedAdminHistory: { type: [sellerAssignedAdminHistorySchema], default: [] },
   },
   { versionKey: false, timestamps: true },
 );
@@ -101,3 +123,7 @@ export const sellerSchema = new Schema(
 sellerSchema.index({ approvalStatus: 1, createdAt: -1 });
 
 sellerSchema.index({ status: 1, createdAt: -1 });
+
+/* ---------------- "MY QUEUE" (per-admin ownership) ---------------- */
+
+sellerSchema.index({ assignedAdmin: 1, approvalStatus: 1, createdAt: -1 });

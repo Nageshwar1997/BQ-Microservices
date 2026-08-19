@@ -5,8 +5,9 @@ import { getUser } from '@beautinique/backend-utils';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
-import { redisCacheManager } from '../../configs/index.js';
+import { jobProducer, logger, redisCacheManager } from '../../configs/index.js';
 import { Seller } from '../../models/index.js';
+import { resolveStateAdmin } from '../../utils/index.js';
 
 // Avoids pulling in `mongodb` just for this - a duplicate-key write error
 // always carries a numeric `code: 11000`.
@@ -72,6 +73,21 @@ export const createSellerController = async (
     throw new ConflictError('One or more seller details are already in use', { fieldErrors });
   }
 
+  /* ---------------- STATE -> ADMIN RESOLUTION (shadow mode - see task 2.5) ---------------- */
+
+  // Best-effort: a resolution failure (user-service down, no admin
+  // configured for the state yet) must never block seller onboarding -
+  // `assignedAdmin` just stays `null` ("needs manual assignment") instead.
+  // Ownership isn't enforced anywhere yet (that's Phase 3), so this is
+  // purely additive right now.
+  let resolvedAdmin: Awaited<ReturnType<typeof resolveStateAdmin>> = null;
+
+  try {
+    resolvedAdmin = await resolveStateAdmin(draft.address.state);
+  } catch (error) {
+    logger.warn(error, `⚠️ Failed to resolve admin for state ${draft.address.state}`);
+  }
+
   /* ---------------- CREATE (PENDING - the user's role is NOT touched here) ---------------- */
   const seller = new Seller({
     user: user._id,
@@ -106,6 +122,12 @@ export const createSellerController = async (
       bank: draft.documents.bank,
     },
     approvalStatus: SELLER_APPROVAL_STATUS_MAP.PENDING,
+    ...(resolvedAdmin && {
+      assignedAdmin: resolvedAdmin.adminUserId,
+      assignedAdminHistory: [
+        { admin: resolvedAdmin.adminUserId, assignedAt: new Date(), reason: resolvedAdmin.reason },
+      ],
+    }),
   });
 
   try {
@@ -123,6 +145,25 @@ export const createSellerController = async (
   res.locals.afterCommit?.push(async () => {
     await redisCacheManager.seller.setSeller(seller._id.toString(), seller.toObject());
     await redisCacheManager.seller.deleteDraftSeller(user._id.toString());
+
+    if (resolvedAdmin) {
+      await jobProducer.addJob('product-service-queue', 'seller-admin-assigned', {
+        userId: user._id.toString(),
+        sellerId: seller._id.toString(),
+        assignedAdminId: resolvedAdmin.adminUserId,
+        state: draft.address.state,
+        reason: resolvedAdmin.reason,
+      });
+
+      await jobProducer.addJob('mail-service-queue', 'send-seller-assigned-notification', {
+        to: resolvedAdmin.adminEmail,
+        subject: `New seller application - ${draft.businessDetails.businessName}`,
+        data: {
+          sellerBusinessName: draft.businessDetails.businessName,
+          state: draft.address.state,
+        },
+      });
+    }
   });
 
   res.success({
