@@ -19,7 +19,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@beautinique/backend-types": "^1.0.28",
+    "@beautinique/backend-types": "^1.0.29",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/html-to-text": "^9.0.4",
@@ -36,11 +36,11 @@
     "typescript-eslint": "^8.67.0"
   },
   "dependencies": {
-    "@beautinique/backend-bullmq": "^1.0.6",
-    "@beautinique/backend-constants": "^1.0.5",
+    "@beautinique/backend-bullmq": "^1.0.7",
+    "@beautinique/backend-constants": "^1.0.6",
     "@beautinique/backend-logger": "^1.0.4",
     "@beautinique/backend-response": "^1.0.5",
-    "@beautinique/shared-constants": "^1.0.15",
+    "@beautinique/shared-constants": "^1.0.16",
     "@beautinique/shared-markdown-to-html": "^1.0.2",
     "@beautinique/shared-utils": "^1.0.6",
     "@getbrevo/brevo": "^6.0.3",

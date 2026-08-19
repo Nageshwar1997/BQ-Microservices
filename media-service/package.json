@@ -19,7 +19,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@beautinique/backend-types": "^1.0.28",
+    "@beautinique/backend-types": "^1.0.29",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/multer": "^2.2.0",
@@ -36,16 +36,16 @@
     "typescript-eslint": "^8.67.0"
   },
   "dependencies": {
-    "@beautinique/backend-bullmq": "^1.0.6",
+    "@beautinique/backend-bullmq": "^1.0.7",
     "@beautinique/backend-classes": "^1.0.5",
-    "@beautinique/backend-constants": "^1.0.5",
+    "@beautinique/backend-constants": "^1.0.6",
     "@beautinique/backend-logger": "^1.0.4",
     "@beautinique/backend-mongoose": "^1.0.9",
     "@beautinique/backend-multer": "^1.0.8",
     "@beautinique/backend-request": "^1.0.3",
     "@beautinique/backend-response": "^1.0.5",
     "@beautinique/backend-utils": "^1.0.7",
-    "@beautinique/backend-zod": "^1.0.32",
+    "@beautinique/backend-zod": "^1.0.33",
     "@beautinique/shared-markdown-to-html": "^1.0.2",
     "@beautinique/shared-utils": "^1.0.6",
     "cloudinary": "^2.10.0",
