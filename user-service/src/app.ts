@@ -7,7 +7,7 @@ import express from 'express';
 import path from 'path';
 import swaggerUi from 'swagger-ui-express';
 
-import { logger, workerManager } from './configs/index.js';
+import { adminLeaveScheduler, logger, workerManager } from './configs/index.js';
 import { LOGGER_BASE_OPTIONS, METHODS_AND_PATHS } from './constants/index.js';
 import { openApiSpec } from './docs/openapi.js';
 import { envs } from './envs/index.js';
@@ -79,6 +79,7 @@ app[health.method](health.path, (_, res) => {
       database: getConnectionHealth(),
       service: SERVICE_NAMES_MAP.user,
       worker: workerManager.isRunning(),
+      adminLeaveScheduler: adminLeaveScheduler.isRunning(),
     },
   });
 });

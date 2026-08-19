@@ -1,8 +1,8 @@
 import type { AUTH_PROVIDER_MAP } from '@beautinique/backend-constants';
-import type { TAuthProvider, TUserRole } from '@beautinique/backend-types';
+import type { TAuthProvider } from '@beautinique/backend-types';
 import type { InferSchemaType, Types } from 'mongoose';
 
-import type { sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
+import type { adminSchema, sellerSchema, userSchema, wishlistSchema } from '../schemas/index.js';
 
 export type TId = Types.ObjectId;
 export interface IId {
@@ -39,19 +39,12 @@ export type TSocialAuthProvider = Exclude<TAuthProvider, typeof AUTH_PROVIDER_MA
 
 export interface IUser extends InferSchemaType<typeof userSchema>, IId {}
 
-export interface IMinimalUser {
+export interface IMinimalUser extends Omit<IUser, '_id' | 'password' | 'status' | 'reason'> {
   _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  avatar: string;
-  role: TUserRole;
-  providers: TAuthProvider[];
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface ISeller extends InferSchemaType<typeof sellerSchema>, IId {}
+
+export interface IAdmin extends InferSchemaType<typeof adminSchema>, IId {}
 
 export interface IWishlist extends InferSchemaType<typeof wishlistSchema>, IId {}

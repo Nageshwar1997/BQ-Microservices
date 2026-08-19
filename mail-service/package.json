@@ -19,7 +19,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@beautinique/backend-types": "^1.0.29",
+    "@beautinique/backend-types": "^1.0.30",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/html-to-text": "^9.0.4",
@@ -36,7 +36,7 @@
     "typescript-eslint": "^8.67.0"
   },
   "dependencies": {
-    "@beautinique/backend-bullmq": "^1.0.7",
+    "@beautinique/backend-bullmq": "^1.0.8",
     "@beautinique/backend-constants": "^1.0.6",
     "@beautinique/backend-logger": "^1.0.4",
     "@beautinique/backend-response": "^1.0.5",

@@ -1,6 +1,12 @@
 import { connectDb, connectionState } from '@beautinique/backend-mongoose';
 
-import { databaseConfigs, logger, redisCacheManager, workerManager } from '../configs/index.js';
+import {
+  adminLeaveScheduler,
+  databaseConfigs,
+  logger,
+  redisCacheManager,
+  workerManager,
+} from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
 import {
   isShuttingDown,
@@ -43,9 +49,9 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
 /* -------------------------------------------------------------------------- */
 
 /**
- * Starts background workers once MongoDB is connected, polling in the
- * background so they never pick up a job (e.g. `update-role`) they can't
- * yet fulfil.
+ * Starts background workers (and the admin-leave sweep) once MongoDB is
+ * connected, polling in the background so they never pick up a job (e.g.
+ * `update-role`) - or sweep `Admin` - before the DB can serve it.
  */
 const startWorkerWithRetry = async (): Promise<void> => {
   while (!isShuttingDown() && !connectionState.isConnected()) {
@@ -54,6 +60,7 @@ const startWorkerWithRetry = async (): Promise<void> => {
 
   if (!isShuttingDown()) {
     workerManager.start();
+    adminLeaveScheduler.start();
   }
 };
 
