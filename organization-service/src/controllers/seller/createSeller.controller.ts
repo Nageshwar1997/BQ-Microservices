@@ -48,8 +48,8 @@ export const createSellerController = async (
 
   const duplicateSeller = await Seller.findOne({
     $or: [
-      { 'businessDetails.email': draft.businessDetails.businessEmail },
-      { 'businessDetails.phoneNumber': draft.businessDetails.businessPhoneNumber },
+      { 'businessDetails.email': draft.businessDetails.email },
+      { 'businessDetails.phoneNumber': draft.businessDetails.phoneNumber },
       { 'businessDetails.gstin': draft.businessDetails.gstin },
       { 'businessDetails.pan': draft.businessDetails.pan },
       { 'bankDetails.accountNumber': draft.bankDetails.accountNumber },
@@ -67,11 +67,11 @@ export const createSellerController = async (
   if (duplicateSeller) {
     const fieldErrors: Record<string, string[]> = {};
 
-    if (duplicateSeller.businessDetails.email === draft.businessDetails.businessEmail) {
-      fieldErrors.businessEmail = ['Business email is already in use'];
+    if (duplicateSeller.businessDetails.email === draft.businessDetails.email) {
+      fieldErrors.email = ['Business email is already in use'];
     }
-    if (duplicateSeller.businessDetails.phoneNumber === draft.businessDetails.businessPhoneNumber) {
-      fieldErrors.businessPhoneNumber = ['Business phone number is already in use'];
+    if (duplicateSeller.businessDetails.phoneNumber === draft.businessDetails.phoneNumber) {
+      fieldErrors.phoneNumber = ['Business phone number is already in use'];
     }
     if (duplicateSeller.businessDetails.gstin === draft.businessDetails.gstin) {
       fieldErrors.gstin = ['GSTIN is already in use'];
@@ -105,10 +105,10 @@ export const createSellerController = async (
   const seller = new Seller({
     user: user._id,
     businessDetails: {
-      name: draft.businessDetails.businessName,
-      type: draft.businessDetails.businessType,
-      email: draft.businessDetails.businessEmail,
-      phoneNumber: draft.businessDetails.businessPhoneNumber,
+      name: draft.businessDetails.name,
+      type: draft.businessDetails.type,
+      email: draft.businessDetails.email,
+      phoneNumber: draft.businessDetails.phoneNumber,
       gstin: draft.businessDetails.gstin,
       pan: draft.businessDetails.pan,
     },
@@ -172,9 +172,9 @@ export const createSellerController = async (
 
       await jobProducer.addJob('mail-service-queue', 'send-seller-assigned-notification', {
         to: resolvedAdmin.adminEmail,
-        subject: `New seller application - ${draft.businessDetails.businessName}`,
+        subject: `New seller application - ${draft.businessDetails.name}`,
         data: {
-          sellerBusinessName: draft.businessDetails.businessName,
+          sellerBusinessName: draft.businessDetails.name,
           state: draft.address.state,
         },
       });
