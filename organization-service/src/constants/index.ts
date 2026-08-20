@@ -44,6 +44,8 @@ export const METHODS_AND_PATHS = {
     // "My Queue" - ?status=PENDING (default) & ?filter=mine|all|unassigned
     // (default `mine`; `all`/`unassigned` are MASTER-only).
     queue: { method: GET, path: '/queue' },
+    // Self - the applicant's own submitted application (any USER, not just SELLER/ADMIN).
+    me: { method: GET, path: '/me' },
     draft: {
       base: '/draft',
       save: { method: POST, path: '/' }, // For saving a wizard step as draft

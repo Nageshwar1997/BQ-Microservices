@@ -14,6 +14,7 @@ import { METHODS_AND_PATHS } from '../../constants/index.js';
 import {
   createSellerController,
   getDraftSellerController,
+  getMySellerController,
   getSellerQueueController,
   saveDraftSellerController,
   updateSellerApprovalStatusController,
@@ -28,7 +29,7 @@ import {
 export const sellerRouter = Router();
 const draftRouter = Router();
 
-const { draft, queue, updateApprovalStatus } = METHODS_AND_PATHS.seller;
+const { draft, me, queue, updateApprovalStatus } = METHODS_AND_PATHS.seller;
 
 /* ================== DRAFT ROUTES (self-service onboarding wizard) ================== */
 
@@ -50,6 +51,10 @@ draftRouter[draft.submit.method](
 );
 
 sellerRouter.use(draft.base, authenticate, draftRouter);
+
+/* ================== SELF (any logged-in user - their own application) ================== */
+
+sellerRouter[me.method](me.path, authenticate, tryCatchResponse(getMySellerController));
 
 /* ================== ADMIN REVIEW ================== */
 

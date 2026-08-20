@@ -33,22 +33,32 @@ export const createSellerController = async (
 
   /* ---------------- DUPLICATE CHECKS (pre-check - the unique indexes on `seller.schema.ts` are the backstop) ---------------- */
 
-  const [existingSellerProfile, duplicateSeller] = await Promise.all([
-    Seller.findOne({ user: user._id }).select('_id').session(session).lean().exec(),
-    Seller.findOne({
-      $or: [
-        { 'businessDetails.email': draft.businessDetails.businessEmail },
-        { 'businessDetails.phoneNumber': draft.businessDetails.businessPhoneNumber },
-        { 'businessDetails.gstin': draft.businessDetails.gstin },
-        { 'businessDetails.pan': draft.businessDetails.pan },
-        { 'bankDetails.accountNumber': draft.bankDetails.accountNumber },
-      ],
-    })
-      .select('businessDetails bankDetails')
-      .session(session)
-      .lean()
-      .exec(),
-  ]);
+  // Sequential, not `Promise.all` - both queries share `session`, and a
+  // MongoDB session can only have one operation in flight at a time inside a
+  // transaction. Running them concurrently throws "Only servers in a sharded
+  // cluster can start a new transaction at the active transaction number"
+  // (discovered live-testing the real submit flow end-to-end for the first
+  // time - the duplicate-check path had never actually been exercised over
+  // HTTP before, only via direct-insert scratch scripts).
+  const existingSellerProfile = await Seller.findOne({ user: user._id })
+    .select('_id')
+    .session(session)
+    .lean()
+    .exec();
+
+  const duplicateSeller = await Seller.findOne({
+    $or: [
+      { 'businessDetails.email': draft.businessDetails.businessEmail },
+      { 'businessDetails.phoneNumber': draft.businessDetails.businessPhoneNumber },
+      { 'businessDetails.gstin': draft.businessDetails.gstin },
+      { 'businessDetails.pan': draft.businessDetails.pan },
+      { 'bankDetails.accountNumber': draft.bankDetails.accountNumber },
+    ],
+  })
+    .select('businessDetails bankDetails')
+    .session(session)
+    .lean()
+    .exec();
 
   if (existingSellerProfile) {
     throw new ConflictError('You already have a seller application');
