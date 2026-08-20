@@ -16,6 +16,10 @@ const {
   // E
   // F
   // G
+
+  GOOGLE_MAPS_API_KEY,
+  GOOGLE_MAPS_BASE_URL,
+
   // H
   // I
   // J
@@ -70,6 +74,13 @@ export const envs = {
   // E
   // F
   // G
+
+  // Optional - best-effort pincode/state cross-check on seller submit. `undefined`
+  // when not configured just means that check silently no-ops (graceful degrade,
+  // see assignment plan doc section 5.5 - core logic never depends on Maps).
+  google_maps_api_key: GOOGLE_MAPS_API_KEY ?? undefined,
+  google_maps_base_url: GOOGLE_MAPS_BASE_URL ?? 'https://maps.googleapis.com',
+
   // H
   // I
 

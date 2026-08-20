@@ -8,6 +8,7 @@ import { getObjId } from '@beautinique/backend-mongoose';
 import type { TStateOrUT } from '@beautinique/backend-types';
 
 import { jobProducer, logger } from '../configs/index.js';
+import { envs } from '../envs/index.js';
 import { AdminTerritory, Seller } from '../models/index.js';
 import type { IResolvedAdmin, TAdminTerritory, TId } from '../types/index.js';
 
@@ -212,4 +213,64 @@ export const reassignPendingSellersAwayFrom = async (adminUserId: string): Promi
   }
 
   return reassignedCount;
+};
+
+interface IGoogleGeocodeAddressComponent {
+  long_name: string;
+  short_name: string;
+  types: string[];
+}
+
+interface IGoogleGeocodeResponse {
+  status: string;
+  results: { address_components: IGoogleGeocodeAddressComponent[] }[];
+}
+
+// Same loose two-way substring match the frontend's Places Autocomplete uses
+// (`AddressStep.tsx`) - Google's `administrative_area_level_1.long_name`
+// doesn't always match `STATES_AND_UTS` verbatim (e.g. "Delhi" vs our "Delhi
+// (National Capital Territory of Delhi)").
+const matchesClaimedState = (googleStateName: string, claimedState: TStateOrUT): boolean => {
+  const needle = googleStateName.toLowerCase();
+  const haystack = claimedState.toLowerCase();
+  return haystack.includes(needle) || needle.includes(haystack);
+};
+
+/**
+ * Best-effort, non-blocking cross-check: does the submitted pincode actually
+ * fall in the submitted state? Server-side, so a client can't just POST a
+ * mismatched state directly (bypassing the frontend's Places-derived,
+ * read-only state field). Returns `true` when it can't tell either way (no
+ * API key configured, API down/quota-exceeded, unrecognized pincode) -
+ * "unable to verify" must never read as "confirmed mismatch" (assignment
+ * plan doc, section 5.5 - graceful degrade, this is a fraud-signal layer on
+ * top of `resolveStateAdmin`, never a gate on it).
+ */
+export const verifyStateFromPincode = async (
+  pincode: string,
+  claimedState: TStateOrUT,
+): Promise<boolean> => {
+  if (!envs.google_maps_api_key) return true;
+
+  try {
+    const url = new URL(`${envs.google_maps_base_url}/maps/api/geocode/json`);
+    url.searchParams.set('address', `${pincode}, India`);
+    url.searchParams.set('key', envs.google_maps_api_key);
+
+    const response = await fetch(url);
+    const data = (await response.json()) as IGoogleGeocodeResponse;
+
+    if (data.status !== 'OK' || !data.results[0]) return true;
+
+    const stateComponent = data.results[0].address_components.find((component) =>
+      component.types.includes('administrative_area_level_1'),
+    );
+
+    if (!stateComponent) return true;
+
+    return matchesClaimedState(stateComponent.long_name, claimedState);
+  } catch (error) {
+    logger.warn(error, `⚠️ Failed to verify pincode ${pincode} against state ${claimedState}`);
+    return true;
+  }
 };

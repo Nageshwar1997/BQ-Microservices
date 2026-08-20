@@ -10,7 +10,7 @@ import type { ClientSession } from 'mongoose';
 
 import { jobProducer, logger, redisCacheManager } from '../../configs/index.js';
 import { Seller } from '../../models/index.js';
-import { resolveStateAdmin } from '../../utils/index.js';
+import { resolveStateAdmin, verifyStateFromPincode } from '../../utils/index.js';
 
 // Avoids pulling in `mongodb` just for this - a duplicate-key write error
 // always carries a numeric `code: 11000`.
@@ -101,6 +101,22 @@ export const createSellerController = async (
     logger.warn(error, `⚠️ Failed to resolve admin for state ${draft.address.state}`);
   }
 
+  /* ---------------- PINCODE/STATE CROSS-CHECK (best-effort, never blocks - see util's doc comment) ---------------- */
+
+  // `false` = confirmed mismatch (a real signal); `true` = matched *or*
+  // "couldn't verify" (API down/no key/unrecognized pincode) - never treated
+  // as suspicious, only a genuine mismatch flips the assignment reason below.
+  const stateMatchesPincode = await verifyStateFromPincode(
+    draft.address.pincode,
+    draft.address.state,
+  );
+
+  if (!stateMatchesPincode) {
+    logger.warn(
+      `⚠️ Seller address state/pincode mismatch for ${draft.businessDetails.name} - state ${draft.address.state}, pincode ${draft.address.pincode}`,
+    );
+  }
+
   /* ---------------- CREATE (PENDING - the user's role is NOT touched here) ---------------- */
   const seller = new Seller({
     user: user._id,
@@ -138,7 +154,17 @@ export const createSellerController = async (
     ...(resolvedAdmin && {
       assignedAdmin: resolvedAdmin.adminUserId,
       assignedAdminHistory: [
-        { admin: resolvedAdmin.adminUserId, assignedAt: new Date(), reason: resolvedAdmin.reason },
+        {
+          admin: resolvedAdmin.adminUserId,
+          assignedAt: new Date(),
+          // A confirmed pincode/state mismatch overrides the normal resolution
+          // reason so it stands out in the audit trail as needing MASTER's
+          // attention - the assignment itself still goes through normally,
+          // this only flags it (assignment plan doc, section 5.5).
+          reason: stateMatchesPincode
+            ? resolvedAdmin.reason
+            : TERRITORY_ASSIGNMENT_REASON_MAP.MANUAL_REASSIGN,
+        },
       ],
       assignedViaSuperAdminPool:
         resolvedAdmin.reason === TERRITORY_ASSIGNMENT_REASON_MAP.SUPER_ADMIN_POOL,
