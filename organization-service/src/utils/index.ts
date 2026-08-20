@@ -215,25 +215,78 @@ export const reassignPendingSellersAwayFrom = async (adminUserId: string): Promi
   return reassignedCount;
 };
 
-interface IGoogleGeocodeAddressComponent {
+interface IOlaGeocodeAddressComponent {
   long_name: string;
   short_name: string;
   types: string[];
 }
 
-interface IGoogleGeocodeResponse {
+interface IOlaGeocodeResponse {
   status: string;
-  results: { address_components: IGoogleGeocodeAddressComponent[] }[];
+  geocodingResults: { address_components: IOlaGeocodeAddressComponent[] }[];
 }
 
+const OLA_MAPS_BASE_URL = 'https://api.olamaps.io';
+
 // Same loose two-way substring match the frontend's Places Autocomplete uses
-// (`AddressStep.tsx`) - Google's `administrative_area_level_1.long_name`
+// (`olaMaps.util.ts`'s `matchState`) - Ola's `administrative_area_level_1.long_name`
 // doesn't always match `STATES_AND_UTS` verbatim (e.g. "Delhi" vs our "Delhi
 // (National Capital Territory of Delhi)").
-const matchesClaimedState = (googleStateName: string, claimedState: TStateOrUT): boolean => {
-  const needle = googleStateName.toLowerCase();
+const matchesClaimedState = (olaStateName: string, claimedState: TStateOrUT): boolean => {
+  const needle = olaStateName.toLowerCase();
   const haystack = claimedState.toLowerCase();
   return haystack.includes(needle) || needle.includes(haystack);
+};
+
+let cachedOlaMapsToken: { accessToken: string; expiresAt: number } | null = null;
+
+/**
+ * Ola Maps' geocode REST API is domain-restricted when called with a plain
+ * `api_key` (that's meant for browser use, see `BQ-Client`'s
+ * `olaMaps.util.ts`, whose requests carry a real `Origin` header) - a
+ * server has no `Origin` at all, which Ola's API treats as just another
+ * (disallowed) domain. Confirmed live while migrating off Google Maps:
+ * `api_key` from here got `"Domain  is not allowed."`, the OAuth2
+ * client-credentials flow below didn't. Token is cached in-memory and
+ * refreshed a minute before its JWT `exp` - Ola's tokens were observed
+ * long-lived (~1 year) live, but that's never assumed here, only the real
+ * expiry is trusted.
+ */
+const getOlaMapsAccessToken = async (): Promise<string | null> => {
+  if (!envs.ola_maps_client_id || !envs.ola_maps_client_secret) return null;
+
+  if (cachedOlaMapsToken && cachedOlaMapsToken.expiresAt - 60_000 > Date.now()) {
+    return cachedOlaMapsToken.accessToken;
+  }
+
+  try {
+    const response = await fetch(`${OLA_MAPS_BASE_URL}/auth/v1/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        scope: 'openid olamaps',
+        client_id: envs.ola_maps_client_id,
+        client_secret: envs.ola_maps_client_secret,
+      }),
+    });
+
+    const data = (await response.json()) as { access_token?: string };
+    if (!data.access_token) return null;
+
+    // JWTs are `header.payload.signature`, base64url-encoded - decoding the
+    // payload locally to read `exp` avoids a second network round-trip.
+    const payload = JSON.parse(
+      Buffer.from(data.access_token.split('.')[1] ?? '', 'base64url').toString('utf-8'),
+    ) as { exp?: number };
+    const expiresAt = typeof payload.exp === 'number' ? payload.exp * 1000 : Date.now() + 5 * 60_000;
+
+    cachedOlaMapsToken = { accessToken: data.access_token, expiresAt };
+    return cachedOlaMapsToken.accessToken;
+  } catch (error) {
+    logger.warn(error, '⚠️ Failed to fetch an Ola Maps access token');
+    return null;
+  }
 };
 
 /**
@@ -241,7 +294,7 @@ const matchesClaimedState = (googleStateName: string, claimedState: TStateOrUT):
  * fall in the submitted state? Server-side, so a client can't just POST a
  * mismatched state directly (bypassing the frontend's Places-derived,
  * read-only state field). Returns `true` when it can't tell either way (no
- * API key configured, API down/quota-exceeded, unrecognized pincode) -
+ * credentials configured, API down/quota-exceeded, unrecognized pincode) -
  * "unable to verify" must never read as "confirmed mismatch" (assignment
  * plan doc, section 5.5 - graceful degrade, this is a fraud-signal layer on
  * top of `resolveStateAdmin`, never a gate on it).
@@ -250,19 +303,19 @@ export const verifyStateFromPincode = async (
   pincode: string,
   claimedState: TStateOrUT,
 ): Promise<boolean> => {
-  if (!envs.google_maps_api_key) return true;
-
   try {
-    const url = new URL(`${envs.google_maps_base_url}/maps/api/geocode/json`);
+    const accessToken = await getOlaMapsAccessToken();
+    if (!accessToken) return true;
+
+    const url = new URL(`${OLA_MAPS_BASE_URL}/places/v1/geocode`);
     url.searchParams.set('address', `${pincode}, India`);
-    url.searchParams.set('key', envs.google_maps_api_key);
 
-    const response = await fetch(url);
-    const data = (await response.json()) as IGoogleGeocodeResponse;
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    const data = (await response.json()) as IOlaGeocodeResponse;
 
-    if (data.status !== 'OK' || !data.results[0]) return true;
+    if (data.status !== 'ok' || !data.geocodingResults[0]) return true;
 
-    const stateComponent = data.results[0].address_components.find((component) =>
+    const stateComponent = data.geocodingResults[0].address_components.find((component) =>
       component.types.includes('administrative_area_level_1'),
     );
 

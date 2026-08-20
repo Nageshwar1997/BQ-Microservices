@@ -16,10 +16,6 @@ const {
   // E
   // F
   // G
-
-  GOOGLE_MAPS_API_KEY,
-  GOOGLE_MAPS_BASE_URL,
-
   // H
   // I
   // J
@@ -40,6 +36,10 @@ const {
   NODE_ENV,
 
   // O
+
+  OLA_MAPS_CLIENT_ID,
+  OLA_MAPS_CLIENT_SECRET,
+
   // P
 
   PORT,
@@ -74,13 +74,6 @@ export const envs = {
   // E
   // F
   // G
-
-  // Optional - best-effort pincode/state cross-check on seller submit. `undefined`
-  // when not configured just means that check silently no-ops (graceful degrade,
-  // see assignment plan doc section 5.5 - core logic never depends on Maps).
-  google_maps_api_key: GOOGLE_MAPS_API_KEY ?? undefined,
-  google_maps_base_url: GOOGLE_MAPS_BASE_URL ?? 'https://maps.googleapis.com',
-
   // H
   // I
 
@@ -95,6 +88,10 @@ export const envs = {
 
   // N
   // O
+
+  ola_maps_client_id: requireEnv(OLA_MAPS_CLIENT_ID, 'OLA_MAPS_CLIENT_ID'),
+  ola_maps_client_secret: requireEnv(OLA_MAPS_CLIENT_SECRET, 'OLA_MAPS_CLIENT_SECRET'),
+
   // P
 
   port: requirePort(PORT, 'PORT'),
