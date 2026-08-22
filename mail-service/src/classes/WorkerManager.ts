@@ -57,6 +57,17 @@ export class WorkerManager {
             throw error;
           }
         },
+
+        // eslint-disable-next-line @typescript-eslint/require-await
+        'send-admin-status-change-notification': async ({ to: _, subject: __, data }) => {
+          // eslint-disable-next-line no-console
+          console.log('send-admin-status-change-notification Data', data);
+        },
+        // eslint-disable-next-line @typescript-eslint/require-await
+        'send-seller-assigned-notification': async ({ to: _, subject: __, data }) => {
+          // eslint-disable-next-line no-console
+          console.log('send-seller-assigned-notification Data', data);
+        },
       },
     });
 
