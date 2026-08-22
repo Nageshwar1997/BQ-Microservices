@@ -26,6 +26,23 @@ export class RedisCacheHelper {
     }
   }
 
+  // No-TTL variant of `setData` - for caches that should live until the
+  // event that changes their source-of-truth republishes them, not until an
+  // arbitrary clock runs out (e.g. `RedisCacheAssignment`'s admin-assignment
+  // mirror, `RedisCacheCategory`'s categories via `setHashData` without a
+  // `ttl` arg).
+  protected async setPersistentData(key: string, data: unknown) {
+    const client = this.getClient();
+
+    if (!client) return;
+
+    try {
+      await client.set(key, typeof data === 'string' ? data : stringifyData(data));
+    } catch (error) {
+      logger.warn(error, '⚠️  Redis set failed:');
+    }
+  }
+
   protected async getData<T = unknown>(key: string): Promise<T | null> {
     const client = this.getClient();
 

@@ -1,6 +1,7 @@
 import { type RedisClientType } from 'redis';
 
 import { logger, redisClient } from '../../configs/index.js';
+import { RedisCacheAssignment } from './RedisCacheAssignment.js';
 import { RedisCacheCategory } from './RedisCacheCategory.js';
 import { RedisCacheDashboard } from './RedisCacheDashboard.js';
 
@@ -8,6 +9,8 @@ export class RedisCacheManager {
   private readonly client: RedisClientType;
 
   private isReady = false;
+
+  public readonly assignment: RedisCacheAssignment;
 
   public readonly category: RedisCacheCategory;
 
@@ -25,6 +28,8 @@ export class RedisCacheManager {
 
       return this.client;
     };
+
+    this.assignment = new RedisCacheAssignment(this.client, getClient);
 
     this.category = new RedisCacheCategory(this.client, getClient);
 

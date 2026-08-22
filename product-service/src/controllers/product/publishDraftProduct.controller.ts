@@ -1,11 +1,11 @@
-import { PRODUCT_STATUSES_MAP, USER_ROLE_MAP } from '@beautinique/backend-constants';
+import { PRODUCT_STATUSES_MAP } from '@beautinique/backend-constants';
 import { getObjId } from '@beautinique/backend-mongoose';
 import type { TDraftProductDetailsZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { NextFunction, Request, Response } from 'express';
 import type { ClientSession } from 'mongoose';
 
-import { jobProducer, redisCacheManager } from '../../configs/index.js';
+import { jobProducer, logger, redisCacheManager } from '../../configs/index.js';
 import { Product } from '../../models/index.js';
 import type { TCreateProductPayload } from '../../types/index.js';
 import {
@@ -24,7 +24,18 @@ export const publishDraftProductController = async (
   const user = getUser(req.user);
   const draft = req.body as TDraftProductDetailsZodSchema;
 
-  const isAdmin = [USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER].includes(user.role as never);
+  // Denormalized stamp for `getProductQueueController`'s "my queue" listing
+  // (see the note above `assignedAdminId` in `product.schema.ts`). A
+  // cache-miss here is unusual (by the time a USER can even reach this
+  // SELLER-only route, their seller application already went through
+  // `resolveStateAdmin` in organization-service, which is what populates
+  // this cache in the first place) but never blocks the actual product
+  // creation - it's a queue-visibility concern, not an approval gate.
+  const assignment = await redisCacheManager.assignment.getUserAdmin(user._id.toString());
+
+  if (!assignment) {
+    logger.warn(`⚠️ No cached admin assignment for seller-user ${user._id.toString()} while creating a product`);
+  }
 
   const productSku = generateSku({
     data: {
@@ -38,11 +49,13 @@ export const publishDraftProductController = async (
 
   const payload: TCreateProductPayload = {
     seller: user._id,
+    ...(assignment && { assignedAdminId: getObjId(assignment.assignedAdminId) }),
     sku: productSku,
 
-    status: isAdmin ? PRODUCT_STATUSES_MAP.PUBLISHED : PRODUCT_STATUSES_MAP.PENDING,
-
-    ...(isAdmin && { history: { approvedAt: new Date(), approvedBy: user._id } }),
+    // Every new product starts PENDING, no exceptions - a SELLER-only route
+    // (see `product.routes.ts`), so there's no admin/master shortcut to
+    // remove here anymore either.
+    status: PRODUCT_STATUSES_MAP.PENDING,
 
     // BASIC INFO
     title: draft.basicInfo.title,

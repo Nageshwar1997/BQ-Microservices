@@ -36,6 +36,13 @@ export const METHODS_AND_PATHS = {
       update: { method: PATCH, path: '/' }, // For already published product and seller again made some changes
     },
     publish: { method: PATCH, path: '/publish' }, // For publish existing Product
+    // Admin review of a PENDING product - approve (-> PUBLISHED) or reject
+    // (-> REJECTED, with a reason). Mirrors organization-service's
+    // `seller.updateApprovalStatus` path shape.
+    updateApprovalStatus: { method: PATCH, path: '/approval-status/:productId' },
+    // "My Queue" - ?status=PENDING (default) & ?filter=mine|all|unassigned
+    // (default `mine`; `all`/`unassigned` are MASTER-only).
+    queue: { method: GET, path: '/queue' },
     get: {
       dashboard: {
         base: '/dashboard',

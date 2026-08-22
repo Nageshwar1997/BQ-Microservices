@@ -143,6 +143,15 @@ export const productSchema = new Schema(
     video: { type: String },
     category: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true }, // Always deepest category (Level 3)
     seller: { type: Schema.Types.ObjectId, required: true, index: true },
+    // Denormalized from `RedisCacheAssignment` at creation time (Phase 5) -
+    // mirrors organization-service's `Seller.assignedAdmin` stamp. Needed
+    // for `getProductQueueController`'s "my queue" listing - the Redis cache
+    // only answers "who owns this ONE seller", not "list every product this
+    // admin owns", which needs a real indexed DB field to query on. Nullable
+    // (best-effort - see `publishDraftProductController`, a cache-miss at
+    // creation time just means this product never surfaces in anyone's
+    // queue until a future session denormalizes/backfills it).
+    assignedAdminId: { type: Schema.Types.ObjectId, index: true },
     soldCount: { type: Number, default: 0, min: 0 },
     returnCount: { type: Number, default: 0, min: 0 },
     reviews: { type: [{ type: Schema.Types.ObjectId, ref: 'Review' }], default: [] },

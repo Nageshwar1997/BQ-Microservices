@@ -19,7 +19,7 @@
   "license": "ISC",
   "type": "module",
   "devDependencies": {
-    "@beautinique/backend-types": "^1.0.31",
+    "@beautinique/backend-types": "^1.0.32",
     "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/html-to-text": "^9.0.4",
