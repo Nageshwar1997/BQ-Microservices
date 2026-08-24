@@ -35,12 +35,15 @@ export const getSellerQueueController = async (req: Request, res: Response) => {
     : 'mine';
 
   if (requestedFilter !== 'mine' && requester.role !== USER_ROLE_MAP.MASTER) {
-    throw new AuthorizationError(
-      `Only ${USER_ROLE_MAP.MASTER} can use filter=${requestedFilter}`,
-    );
+    throw new AuthorizationError(`Only ${USER_ROLE_MAP.MASTER} can use filter=${requestedFilter}`);
   }
 
   const query: Record<string, unknown> = { approvalStatus };
+
+  // adminUserId (string) -> that on-leave admin's name, only populated for
+  // `filter=mine` - lets the response tag which items are the requester's
+  // own vs. ones they're covering (see the mapping below).
+  const coveringAdminNames = new Map<string, string>();
 
   if (requestedFilter === 'unassigned') {
     query.assignedAdmin = null;
@@ -55,8 +58,12 @@ export const getSellerQueueController = async (req: Request, res: Response) => {
       backupAdminUserId: requester._id,
       status: ADMIN_STATUS_MAP.ON_LEAVE,
     })
-      .select('adminUserId')
+      .select('adminUserId adminName')
       .lean();
+
+    for (const admin of coveringFor) {
+      coveringAdminNames.set(admin.adminUserId.toString(), admin.adminName);
+    }
 
     if (coveringFor.length > 0) {
       orConditions.push({
@@ -70,5 +77,23 @@ export const getSellerQueueController = async (req: Request, res: Response) => {
 
   const sellers = await Seller.find(query).sort({ createdAt: -1 }).lean();
 
-  res.success({ message: 'Seller queue fetched successfully', data: sellers });
+  // `coveringFor: null` means it's genuinely the requester's own item (direct
+  // assignment, or a SUPER_ADMIN pool item) - UI shows those plain. A
+  // non-null value means this item belongs to an on-leave admin the
+  // requester is covering for, so the UI can badge it instead of silently
+  // mixing it into "my own" items (assignment plan doc, section 7.1).
+  const data = sellers.map((seller) => {
+    const coveringAdminName = seller.assignedAdmin
+      ? coveringAdminNames.get(seller.assignedAdmin.toString())
+      : undefined;
+
+    return {
+      ...seller,
+      coveringFor: coveringAdminName
+        ? { adminId: seller.assignedAdmin, adminName: coveringAdminName }
+        : null,
+    };
+  });
+
+  res.success({ message: 'Seller queue fetched successfully', data });
 };
