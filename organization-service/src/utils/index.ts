@@ -215,6 +215,104 @@ export const reassignPendingSellersAwayFrom = async (adminUserId: string): Promi
   return reassignedCount;
 };
 
+// How long a `PENDING` item may sit under an `ON_LEAVE` admin before the SLA
+// sweep escalates it away - assignment plan doc, section 7.1's "safety net"
+// (task 4.3). A plain constant, not an env var - "configurable" there just
+// means "a one-line edit", same weight as `SWEEP_INTERVAL_MS` below.
+const SLA_ESCALATION_DAYS = 3;
+
+/**
+ * Auto-escalates any `PENDING` seller that's been sitting under an
+ * `ON_LEAVE` admin for more than `SLA_ESCALATION_DAYS` - the "covering"
+ * model (section 7.1) leaves ownership in place indefinitely by design, but
+ * without this, a backlog could sit stuck forever if nobody covering it
+ * ever acts. Called by `SlaEscalationScheduler`'s periodic sweep, not a
+ * delayed job - same reasoning as `AdminLeaveScheduler` in user-service
+ * (idempotent/self-healing, no per-item timer to track or cancel).
+ *
+ * The clock is measured from `assignedAdminHistory[last].assignedAt` (how
+ * long the *current* admin has had it), not the seller's original
+ * `createdAt` - a seller that was just reassigned to someone who
+ * immediately went on leave shouldn't instantly qualify just because the
+ * application itself is old.
+ *
+ * `resolveStateAdmin` already excludes `ON_LEAVE` admins from the
+ * state-match step, so re-resolving naturally routes to the same backup
+ * (or pool) already "covering" this item - no special-casing needed here,
+ * same as `reassignPendingSellersAwayFrom` relies on for `SUSPENDED`.
+ */
+export const reassignSlaExpiredSellers = async (): Promise<number> => {
+  const onLeaveAdmins = await AdminTerritory.find({ status: ADMIN_STATUS_MAP.ON_LEAVE })
+    .select('adminUserId')
+    .lean();
+
+  if (onLeaveAdmins.length === 0) {
+    return 0;
+  }
+
+  const cutoff = new Date(Date.now() - SLA_ESCALATION_DAYS * 24 * 60 * 60 * 1000);
+
+  const candidates = await Seller.find({
+    assignedAdmin: { $in: onLeaveAdmins.map((admin) => admin.adminUserId) },
+    approvalStatus: SELLER_APPROVAL_STATUS_MAP.PENDING,
+  });
+
+  let reassignedCount = 0;
+
+  for (const seller of candidates) {
+    const lastAssignedAt = seller.assignedAdminHistory.at(-1)?.assignedAt ?? seller.createdAt;
+
+    if (lastAssignedAt > cutoff) {
+      continue; // hasn't been sitting long enough yet
+    }
+
+    try {
+      const resolved = await resolveStateAdmin(seller.address.state);
+
+      if (!resolved) {
+        logger.warn(
+          `⚠️ No admin available to SLA-escalate seller ${seller._id.toString()} away from on-leave admin - needs manual assignment`,
+        );
+        continue;
+      }
+
+      seller.assignedAdmin = getObjId(resolved.adminUserId);
+      seller.assignedAdminHistory.push({
+        admin: getObjId(resolved.adminUserId),
+        assignedAt: new Date(),
+        reason: TERRITORY_ASSIGNMENT_REASON_MAP.SLA_TIMEOUT,
+      });
+      seller.assignedViaSuperAdminPool =
+        resolved.reason === TERRITORY_ASSIGNMENT_REASON_MAP.SUPER_ADMIN_POOL;
+
+      await seller.save();
+
+      reassignedCount += 1;
+
+      await jobProducer.addJob('product-service-queue', 'seller-admin-assigned', {
+        userId: seller.user.toString(),
+        sellerId: seller._id.toString(),
+        assignedAdminId: resolved.adminUserId,
+        state: seller.address.state,
+        reason: TERRITORY_ASSIGNMENT_REASON_MAP.SLA_TIMEOUT,
+      });
+
+      await jobProducer.addJob('mail-service-queue', 'send-seller-assigned-notification', {
+        to: resolved.adminEmail,
+        subject: `Seller reassigned to you - ${seller.businessDetails.name}`,
+        data: {
+          sellerBusinessName: seller.businessDetails.name,
+          state: seller.address.state,
+        },
+      });
+    } catch (error) {
+      logger.error(error, `❌ Failed to SLA-escalate seller ${seller._id.toString()}`);
+    }
+  }
+
+  return reassignedCount;
+};
+
 interface IOlaGeocodeAddressComponent {
   long_name: string;
   short_name: string;
@@ -279,7 +377,8 @@ const getOlaMapsAccessToken = async (): Promise<string | null> => {
     const payload = JSON.parse(
       Buffer.from(data.access_token.split('.')[1] ?? '', 'base64url').toString('utf-8'),
     ) as { exp?: number };
-    const expiresAt = typeof payload.exp === 'number' ? payload.exp * 1000 : Date.now() + 5 * 60_000;
+    const expiresAt =
+      typeof payload.exp === 'number' ? payload.exp * 1000 : Date.now() + 5 * 60_000;
 
     cachedOlaMapsToken = { accessToken: data.access_token, expiresAt };
     return cachedOlaMapsToken.accessToken;

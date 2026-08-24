@@ -5,6 +5,7 @@ import {
   jobProducer,
   logger,
   redisCacheManager,
+  slaEscalationScheduler,
   workerManager,
 } from '../configs/index.js';
 import { registerDatabaseEvents } from './database-events.js';
@@ -50,8 +51,9 @@ const connectDatabaseWithRetry = async (): Promise<void> => {
 
 /**
  * Starts the background worker (see `WorkerManager` -
- * `organization-service-queue.admin-territory-synced`) once MongoDB is
- * connected, polling in the background so it never has to touch a
+ * `organization-service-queue.admin-territory-synced`) and the SLA
+ * escalation scheduler (`SlaEscalationScheduler` - task 4.3) once MongoDB
+ * is connected, polling in the background so neither has to touch a
  * not-yet-ready DB connection. Once running, requests a full resync of the
  * `AdminTerritory` mirror from user-service - covers a fresh/wiped DB or a
  * cold deploy, since BullMQ doesn't retain already-processed jobs to
@@ -66,6 +68,8 @@ const startWorkerWithRetry = async (): Promise<void> => {
 
   if (!isShuttingDown()) {
     workerManager.start();
+
+    slaEscalationScheduler.start();
 
     await jobProducer.addJob('user-service-queue', 'resync-admin-territories', {});
   }

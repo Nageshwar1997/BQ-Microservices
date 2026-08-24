@@ -3,7 +3,7 @@ import { createLogger } from '@beautinique/backend-logger';
 import type { MongoConnectOptions } from '@beautinique/backend-mongoose';
 import { createClient, type RedisClientType } from 'redis';
 
-import { RedisCacheManager, WorkerManager } from '../classes/index.js';
+import { RedisCacheManager, SlaEscalationScheduler, WorkerManager } from '../classes/index.js';
 import { LOGGER_BASE_OPTIONS } from '../constants/index.js';
 import { envs } from '../envs/index.js';
 
@@ -57,3 +57,5 @@ export const redisClient: RedisClientType = createClient({
 export const redisCacheManager = new RedisCacheManager();
 
 export const workerManager = new WorkerManager();
+
+export const slaEscalationScheduler = new SlaEscalationScheduler();
