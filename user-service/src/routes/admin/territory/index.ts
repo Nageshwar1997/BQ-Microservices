@@ -11,6 +11,7 @@ import { Router } from 'express';
 import { METHODS_AND_PATHS } from '../../../constants/index.js';
 import {
   assignAdminTerritoryController,
+  demoteAdminController,
   getMyAdminController,
   getStateAdminsController,
   getTerritoryMapController,
@@ -20,7 +21,7 @@ import { authorize } from '../../../middlewares/index.js';
 
 export const territoryRouter = Router();
 
-const { assign, map, me, stateAdmins, status } = METHODS_AND_PATHS.admin.territory;
+const { assign, demote, map, me, stateAdmins, status } = METHODS_AND_PATHS.admin.territory;
 
 /* ================== SELF (ADMIN/SUPER_ADMIN/MASTER) ================== */
 
@@ -44,6 +45,13 @@ territoryRouter[map.method](
   map.path,
   authorize([USER_ROLE_MAP.MASTER]),
   tryCatchResponse(getTerritoryMapController),
+);
+
+territoryRouter[demote.method](
+  demote.path,
+  authorize([USER_ROLE_MAP.MASTER]),
+  checkEmptyRequest({ params: true }),
+  tryCatchResponse(demoteAdminController),
 );
 
 /* ================== ADMIN STATUS (self or MASTER - see controller) ================== */

@@ -1,4 +1,5 @@
 export * from './assignAdminTerritory.controller.js';
+export * from './demoteAdmin.controller.js';
 export * from './getMyAdmin.controller.js';
 export * from './getStateAdmins.controller.js';
 export * from './getTerritoryMap.controller.js';
