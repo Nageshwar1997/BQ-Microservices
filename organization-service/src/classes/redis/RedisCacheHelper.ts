@@ -34,7 +34,21 @@ export class RedisCacheHelper {
     try {
       const data = await client.get(key);
 
-      return data ? parseData<T>(data) : null;
+      if (!data) return null;
+
+      try {
+        return parseData<T>(data);
+      } catch {
+        // `setData` stores a plain string as-is, not JSON-stringified (see
+        // above) - a bare word like `Kerala` isn't valid JSON on its own,
+        // so `JSON.parse` throws for exactly the values `setData`'s string
+        // branch wrote. Discovered by task 6.4's pincode->state cache (the
+        // first caller here to ever cache a raw string) - every existing
+        // cache in this service stores objects, which round-trip through
+        // `parseData` fine, so this never surfaced before. Mirror
+        // `setData`'s own special-case instead of assuming everything is JSON.
+        return data as T;
+      }
     } catch (error) {
       logger.warn(error, '⚠️ Redis get failed:');
 

@@ -7,7 +7,7 @@ import {
 import { getObjId } from '@beautinique/backend-mongoose';
 import type { TStateOrUT } from '@beautinique/backend-types';
 
-import { jobProducer, logger } from '../configs/index.js';
+import { jobProducer, logger, redisCacheManager } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import { AdminTerritory, Seller } from '../models/index.js';
 import type { IResolvedAdmin, TAdminTerritory, TId } from '../types/index.js';
@@ -389,6 +389,52 @@ const getOlaMapsAccessToken = async (): Promise<string | null> => {
 };
 
 /**
+ * The actual Ola Maps geocode round-trip, isolated from the caching wrapper
+ * below - returns Ola's raw `administrative_area_level_1.long_name` (or
+ * `null` if it can't be determined), never the boolean match result, since
+ * a pincode's resolved state doesn't depend on what any particular caller
+ * *claims* - that's the part that's safe to cache and reuse across sellers.
+ */
+const fetchStateNameForPincode = async (pincode: string): Promise<string | null> => {
+  const accessToken = await getOlaMapsAccessToken();
+  if (!accessToken) return null;
+
+  const url = new URL(`${OLA_MAPS_BASE_URL}/places/v1/geocode`);
+  url.searchParams.set('address', `${pincode}, India`);
+
+  const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  const data = (await response.json()) as IOlaGeocodeResponse;
+
+  if (data.status !== 'ok' || !data.geocodingResults[0]) return null;
+
+  const stateComponent = data.geocodingResults[0].address_components.find((component) =>
+    component.types.includes('administrative_area_level_1'),
+  );
+
+  return stateComponent?.long_name ?? null;
+};
+
+/**
+ * Cache-aside in front of `fetchStateNameForPincode` (task 6.4) - a
+ * pincode's state never changes, so once resolved it's reused for every
+ * future seller with that pincode instead of re-hitting Ola Maps. Cuts API
+ * calls (and matters for the free-tier quota, assignment plan doc section
+ * 5.4) without changing behavior - a cache miss/Redis outage just falls
+ * through to the same live geocode call as before.
+ */
+const resolveStateNameForPincode = async (pincode: string): Promise<string | null> => {
+  const cached = await redisCacheManager.geocode.getStateForPincode(pincode);
+  if (cached) return cached;
+
+  const stateName = await fetchStateNameForPincode(pincode);
+  if (stateName) {
+    await redisCacheManager.geocode.setStateForPincode(pincode, stateName);
+  }
+
+  return stateName;
+};
+
+/**
  * Best-effort, non-blocking cross-check: does the submitted pincode actually
  * fall in the submitted state? Server-side, so a client can't just POST a
  * mismatched state directly (bypassing the frontend's Places-derived,
@@ -403,24 +449,10 @@ export const verifyStateFromPincode = async (
   claimedState: TStateOrUT,
 ): Promise<boolean> => {
   try {
-    const accessToken = await getOlaMapsAccessToken();
-    if (!accessToken) return true;
+    const stateName = await resolveStateNameForPincode(pincode);
+    if (!stateName) return true;
 
-    const url = new URL(`${OLA_MAPS_BASE_URL}/places/v1/geocode`);
-    url.searchParams.set('address', `${pincode}, India`);
-
-    const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
-    const data = (await response.json()) as IOlaGeocodeResponse;
-
-    if (data.status !== 'ok' || !data.geocodingResults[0]) return true;
-
-    const stateComponent = data.geocodingResults[0].address_components.find((component) =>
-      component.types.includes('administrative_area_level_1'),
-    );
-
-    if (!stateComponent) return true;
-
-    return matchesClaimedState(stateComponent.long_name, claimedState);
+    return matchesClaimedState(stateName, claimedState);
   } catch (error) {
     logger.warn(error, `⚠️ Failed to verify pincode ${pincode} against state ${claimedState}`);
     return true;

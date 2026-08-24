@@ -1,6 +1,7 @@
 import { type RedisClientType } from 'redis';
 
 import { logger, redisClient } from '../../configs/index.js';
+import { RedisCacheGeocode } from './RedisCacheGeocode.js';
 import { RedisCacheSeller } from './RedisCacheSeller.js';
 
 export class RedisCacheManager {
@@ -9,6 +10,7 @@ export class RedisCacheManager {
   private isReady = false;
 
   public readonly seller: RedisCacheSeller;
+  public readonly geocode: RedisCacheGeocode;
   // public readonly team: RedisCacheTeam;
 
   constructor() {
@@ -25,6 +27,7 @@ export class RedisCacheManager {
     };
 
     this.seller = new RedisCacheSeller(this.client, getClient);
+    this.geocode = new RedisCacheGeocode(this.client, getClient);
     // this.team = new RedisCacheTeam(this.client, getClient);
 
     this.registerEvents();
