@@ -9,7 +9,9 @@ import type { TUpdateAdminStatusZodSchema } from '@beautinique/backend-types';
 import { getUser } from '@beautinique/backend-utils';
 import type { Request, Response } from 'express';
 
+import { jobProducer, logger } from '../../configs/index.js';
 import { Admin } from '../../models/index.js';
+import { getUserById } from '../../services/index.js';
 import { publishAdminTerritorySync } from '../../utils/index.js';
 
 // What `statusHistory[].reason` gets set to for each target status.
@@ -77,6 +79,28 @@ export const updateAdminStatusController = async (req: Request, res: Response) =
   const updatedAdmin = await admin.save();
 
   await publishAdminTerritorySync(updatedAdmin);
+
+  // Best-effort - the admin's own status genuinely did change either way,
+  // so a notification-send failure shouldn't fail (or roll back) a request
+  // that's otherwise already succeeded.
+  try {
+    const targetUser = await getUserById({ id: adminId });
+
+    await jobProducer.addJob('mail-service-queue', 'send-admin-status-change-notification', {
+      to: targetUser.email,
+      subject: `Your admin status is now ${body.status.replaceAll('_', ' ').toLowerCase()}`,
+      data: {
+        adminName: `${targetUser.firstName} ${targetUser.lastName}`,
+        newStatus: updatedAdmin.status,
+        states: updatedAdmin.assignedStates,
+      },
+    });
+  } catch (error) {
+    logger.error(
+      { Error: error, AdminId: adminId },
+      'Failed to publish admin status-change notification.',
+    );
+  }
 
   res.success({ message: 'Admin status updated successfully', data: updatedAdmin });
 };

@@ -58,15 +58,43 @@ export class WorkerManager {
           }
         },
 
-        // eslint-disable-next-line @typescript-eslint/require-await
-        'send-admin-status-change-notification': async ({ to: _, subject: __, data }) => {
-          // eslint-disable-next-line no-console
-          console.log('send-admin-status-change-notification Data', data);
+        /* ---------------- SEND ADMIN STATUS-CHANGE NOTIFICATION ---------------- */
+
+        // Published whenever an admin's territory status changes -
+        // `user-service`'s `updateAdminStatusController` (self/MASTER
+        // toggle) and `AdminLeaveScheduler`'s auto-reactivation sweep both
+        // publish this (mirrors `admin-territory-synced`'s sync target).
+        'send-admin-status-change-notification': async (data) => {
+          try {
+            await transporter.sendAdminStatusChangeNotification(data);
+          } catch (error) {
+            logger.error(
+              { Data: data, Error: error },
+              'Failed to send admin status-change notification.',
+            );
+
+            throw error;
+          }
         },
-        // eslint-disable-next-line @typescript-eslint/require-await
-        'send-seller-assigned-notification': async ({ to: _, subject: __, data }) => {
-          // eslint-disable-next-line no-console
-          console.log('send-seller-assigned-notification Data', data);
+
+        /* ---------------- SEND SELLER-ASSIGNED NOTIFICATION ---------------- */
+
+        // Published whenever a seller lands in an admin's queue -
+        // `organization-service`'s `createSellerController` (initial
+        // assignment), `reassignPendingSellersAwayFrom` (4.2, suspension),
+        // and `reassignSlaExpiredSellers` (4.3, SLA escalation) all publish
+        // this.
+        'send-seller-assigned-notification': async (data) => {
+          try {
+            await transporter.sendSellerAssignedNotification(data);
+          } catch (error) {
+            logger.error(
+              { Data: data, Error: error },
+              'Failed to send seller-assigned notification.',
+            );
+
+            throw error;
+          }
         },
       },
     });

@@ -1,5 +1,7 @@
 import type {
+  IAdminStatusChangeNotification,
   IContactAdminNotificationData,
+  ISellerAssignedNotification,
   TContactAcknowledgementData,
 } from '@beautinique/backend-bullmq';
 
@@ -345,5 +347,137 @@ export const getContactAdminNotificationHtmlMessage = ({
     <p style="margin: 0; font-size: 15px; line-height: 1.7; color: #2d1b2e; white-space: pre-wrap">${message}</p>
     </div>`,
     'This is an automated internal notification from the Beautinique contact form.',
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*                    Admin Territory - Seller Assigned                       */
+/* -------------------------------------------------------------------------- */
+
+// Sent to an admin (`to`/`subject` set by the producer - see
+// `organization-service`'s `createSellerController`, `reassignPendingSellersAwayFrom`
+// (4.2), and `reassignSlaExpiredSellers` (4.3)) whenever a seller lands in
+// their queue - a brand-new application, or a reassignment away from a
+// suspended/on-leave/SLA-expired admin. All 3 call sites use the same
+// subject-agnostic template - the subject line itself already says which
+// case this is.
+export const getSellerAssignedNotificationHtmlMessage = ({
+  sellerBusinessName,
+  state,
+}: ISellerAssignedNotification['data']) => {
+  return baseHtmlLayout(
+    'New Seller in Your Queue',
+    'A seller application now needs your review.',
+    `<p style="margin: 0 0 16px; font-size: 16px; line-height: 1.7">Hello,</p>
+    <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #5b4158">
+    The seller application below has been assigned to you and is now waiting
+    in your queue for review.
+    </p>
+
+    <table
+    role="presentation"
+    cellpadding="0"
+    cellspacing="0"
+    width="100%"
+    style="margin: 0 0 24px; border-collapse: collapse"
+    >
+    ${detailRow('Business', sellerBusinessName)}
+    ${detailRow('State', state)}
+    </table>
+    <p style="margin: 0 0 14px; font-size: 15px; line-height: 1.7; color: #5b4158">
+    Head to your "My Queue" dashboard to review and approve or reject this
+    application.
+    </p>`,
+    'This is an automated notification - no reply is needed for this email.',
+  );
+};
+
+/* -------------------------------------------------------------------------- */
+/*                    Admin Territory - Status Change                        */
+/* -------------------------------------------------------------------------- */
+
+const STATUS_BADGE_STYLE: Record<IAdminStatusChangeNotification['data']['newStatus'], string> = {
+  ACTIVE: 'background:#dcfce7;color:#166534;border:1px solid #86efac;',
+  ON_LEAVE: 'background:#fef9c3;color:#854d0e;border:1px solid #fde047;',
+  SUSPENDED: 'background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;',
+  INACTIVE: 'background:#f3f4f6;color:#4b5563;border:1px solid #d1d5db;',
+};
+
+// One line of context per status - shown under the badge so the admin
+// immediately understands what changed for their pending work, not just
+// that a status flipped.
+const STATUS_CHANGE_NOTE: Record<IAdminStatusChangeNotification['data']['newStatus'], string> = {
+  ACTIVE: "You're active again and eligible for new seller assignments.",
+  ON_LEAVE:
+    "Your pending items stay assigned to you, but your backup admin (if any) can act on them while you're away.",
+  SUSPENDED: 'Your pending items have been automatically reassigned to another admin.',
+  INACTIVE: 'Your admin territory access has been removed.',
+};
+
+// Sent to the admin themselves - `updateAdminStatusController` (self/MASTER
+// toggle) and `AdminLeaveScheduler`'s auto-reactivation sweep (leave period
+// ended) both publish this, same as `admin-territory-synced`'s sync target.
+export const getAdminStatusChangeNotificationHtmlMessage = ({
+  adminName,
+  newStatus,
+  states,
+}: IAdminStatusChangeNotification['data']) => {
+  const statusLabel = newStatus.replaceAll('_', ' ');
+
+  return baseHtmlLayout(
+    'Your Status Has Changed',
+    `Hi ${adminName}, here's what changed on your admin account.`,
+    `<p style="margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #5b4158">
+    Your admin status was just updated.
+    </p>
+
+    <div
+    style="
+        margin: 0 auto 24px;
+        max-width: 380px;
+        padding: 20px 24px;
+        border-radius: 18px;
+        background: #fff1f2;
+        border: 1px dashed #f9a8d4;
+        text-align: center;
+    "
+    >
+    <p
+        style="
+        margin: 0 0 12px;
+        font-size: 12px;
+        color: #9d174d;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        "
+    >
+        New Status
+    </p>
+    <span
+        style="
+        display: inline-block;
+        padding: 6px 18px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: capitalize;
+        ${STATUS_BADGE_STYLE[newStatus]}
+        "
+    >
+        ${statusLabel.toLowerCase()}
+    </span>
+    </div>
+
+    <p style="margin: 0 0 20px; font-size: 15px; line-height: 1.7; color: #5b4158">
+    ${STATUS_CHANGE_NOTE[newStatus]}
+    </p>
+
+    ${
+      states.length > 0
+        ? `<p style="margin: 0 0 6px; font-size: 13px; color: #9a7a8d; text-transform: uppercase; letter-spacing: 1px;">Your states</p>
+    <p style="margin: 0 0 14px; font-size: 15px; line-height: 1.7; color: #2d1b2e; font-weight: 600;">${states.join(', ')}</p>`
+        : ''
+    }`,
+    'This is an automated notification - no reply is needed for this email.',
   );
 };

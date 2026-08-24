@@ -3,8 +3,9 @@ import {
   TERRITORY_STATUS_CHANGE_REASON_MAP,
 } from '@beautinique/backend-constants';
 
-import { logger } from '../configs/index.js';
+import { jobProducer, logger } from '../configs/index.js';
 import { Admin } from '../models/index.js';
+import { getUserById } from '../services/index.js';
 import { publishAdminTerritorySync } from '../utils/index.js';
 
 const SWEEP_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
@@ -87,6 +88,27 @@ export class AdminLeaveScheduler {
         const updatedAdmin = await admin.save();
 
         await publishAdminTerritorySync(updatedAdmin);
+
+        // Best-effort, per-admin - one failed lookup/send shouldn't stop the
+        // rest of the sweep (each admin here already reactivated regardless).
+        try {
+          const targetUser = await getUserById({ id: updatedAdmin.user.toString() });
+
+          await jobProducer.addJob('mail-service-queue', 'send-admin-status-change-notification', {
+            to: targetUser.email,
+            subject: 'Your leave period ended - you are active again',
+            data: {
+              adminName: `${targetUser.firstName} ${targetUser.lastName}`,
+              newStatus: updatedAdmin.status,
+              states: updatedAdmin.assignedStates,
+            },
+          });
+        } catch (error) {
+          logger.error(
+            { Error: error, AdminUserId: updatedAdmin.user.toString() },
+            'Failed to publish admin status-change notification (leave-ended sweep).',
+          );
+        }
       }
 
       if (expiredAdmins.length > 0) {

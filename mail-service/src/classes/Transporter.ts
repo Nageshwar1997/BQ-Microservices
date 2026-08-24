@@ -1,6 +1,8 @@
 import type {
+  IAdminStatusChangeNotification,
   IContactAcknowledgement,
   IContactAdminNotification,
+  ISellerAssignedNotification,
 } from '@beautinique/backend-bullmq';
 import { BrevoClient } from '@getbrevo/brevo';
 import { convert } from 'html-to-text';
@@ -8,9 +10,11 @@ import { convert } from 'html-to-text';
 import { logger } from '../configs/index.js';
 import { envs } from '../envs/index.js';
 import {
+  getAdminStatusChangeNotificationHtmlMessage,
   getContactAcknowledgementHtmlMessage,
   getContactAdminNotificationHtmlMessage,
   getOtpHtmlMessage,
+  getSellerAssignedNotificationHtmlMessage,
 } from '../utils/index.js';
 
 /**
@@ -113,5 +117,21 @@ export class MailTransporter {
       htmlOrText: html,
       replyTo: { email: data.email, name: data.name },
     });
+  }
+
+  /* ---------------- Send seller-assigned notification email ---------------- */
+  public async sendSellerAssignedNotification({ to, subject, data }: ISellerAssignedNotification) {
+    const html = getSellerAssignedNotificationHtmlMessage(data);
+    await this.sendMail({ to, subject, htmlOrText: html });
+  }
+
+  /* ---------------- Send admin status-change notification email ---------------- */
+  public async sendAdminStatusChangeNotification({
+    to,
+    subject,
+    data,
+  }: IAdminStatusChangeNotification) {
+    const html = getAdminStatusChangeNotificationHtmlMessage(data);
+    await this.sendMail({ to, subject, htmlOrText: html });
   }
 }
