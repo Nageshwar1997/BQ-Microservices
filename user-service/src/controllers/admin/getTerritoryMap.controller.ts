@@ -36,5 +36,18 @@ export const getTerritoryMapController = async (req: Request, res: Response) => 
     .sort({ priority: 1 })
     .lean();
 
-  res.success({ message: 'Territory map fetched successfully', data: admins });
+  // A dangling `user` ref (the `User` doc it pointed at got deleted, e.g. by
+  // hand while cleaning up test data, while this `Admin` doc survived) isn't
+  // a real admin to show - and every consumer (this service's own table,
+  // BQ-Master's Territory Management table/map) reads `.user.firstName`
+  // etc. unconditionally, so one dangling row would otherwise crash the
+  // whole page rather than just being an odd blank entry. `demoteAdminController`
+  // (task 7.1) never deletes `User` docs, so this shouldn't occur through
+  // normal app flow - filtered here defensively either way. Mongoose's
+  // `.populate()` types claim `user` is never null post-populate, which
+  // isn't true for a dangling ref at runtime - hence the lint disable.
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+  const validAdmins = admins.filter((admin) => admin.user);
+
+  res.success({ message: 'Territory map fetched successfully', data: validAdmins });
 };
