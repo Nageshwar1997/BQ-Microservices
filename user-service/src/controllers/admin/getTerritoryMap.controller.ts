@@ -10,12 +10,13 @@ import { Admin } from '../../models/index.js';
  * this client-side, since an admin can cover multiple states and a state
  * can have multiple admins.
  *
- * Excludes `INACTIVE` - that's a demoted admin (task 7.1's
+ * Excludes `INACTIVE` by default - that's a demoted admin (task 7.1's
  * `demoteAdminController`), kept in the DB for its `statusHistory` audit
  * trail rather than deleted, but it has no territory/role left and would
- * just be a ghost row here forever. Their history stays queryable directly
- * (or from a future Phase 7.3 audit-log view) even though this listing
- * hides them.
+ * just be a ghost row here forever in the day-to-day Territory Management
+ * view. `?includeInactive=true` (task 7.3's Audit Log) opts back in - a
+ * full history review needs demoted admins' `statusHistory` too, not just
+ * currently-relevant ones.
  *
  * `Admin.currentPendingLoad` still comes back on every row (it's part of
  * the document), but don't trust it (task 7.2) - nothing in this service
@@ -25,8 +26,12 @@ import { Admin } from '../../models/index.js';
  * `organization-service`'s `?filter=all` seller queue instead, not this
  * field.
  */
-export const getTerritoryMapController = async (_req: Request, res: Response) => {
-  const admins = await Admin.find({ status: { $ne: ADMIN_STATUS_MAP.INACTIVE } })
+export const getTerritoryMapController = async (req: Request, res: Response) => {
+  const { includeInactive } = req.query as { includeInactive?: string };
+
+  const query = includeInactive === 'true' ? {} : { status: { $ne: ADMIN_STATUS_MAP.INACTIVE } };
+
+  const admins = await Admin.find(query)
     .populate('user', 'firstName lastName email role')
     .sort({ priority: 1 })
     .lean();

@@ -11,6 +11,10 @@ import { AdminTerritory, Seller } from '../../models/index.js';
 
 const VALID_STATUSES = ['PENDING', 'APPROVED', 'REJECTED'] as const;
 const VALID_FILTERS = ['mine', 'all', 'unassigned'] as const;
+// Not a real `approvalStatus` value - means "don't filter by status at all".
+// Added for task 7.3 (Audit Log) - reviewing assignment history needs to
+// see a seller regardless of where it currently stands, not just PENDING.
+const ALL_STATUSES = 'ALL';
 
 /**
  * Replaces the old "every ADMIN/MASTER sees every PENDING seller" listing
@@ -21,14 +25,22 @@ const VALID_FILTERS = ['mine', 'all', 'unassigned'] as const;
  * rule as `authorizeSellerOwnership`). `?filter=all` / `?filter=unassigned`
  * are MASTER-only - a state `ADMIN`/`SUPER_ADMIN` has no legitimate reason
  * to see other admins' or orphaned queues.
+ *
+ * `?status=ALL` (task 7.3) skips the `approvalStatus` filter entirely -
+ * not role-gated on its own, since it's just a value within whatever
+ * `filter` already allows (a plain `ADMIN`'s "mine" queue seeing their own
+ * full history, PENDING+APPROVED+REJECTED together, isn't a new exposure).
  */
 export const getSellerQueueController = async (req: Request, res: Response) => {
   const requester = getUser(req.user);
   const { status, filter } = req.query as { status?: string; filter?: string };
 
-  const approvalStatus = VALID_STATUSES.includes(status as never)
-    ? (status as (typeof VALID_STATUSES)[number])
-    : SELLER_APPROVAL_STATUS_MAP.PENDING;
+  const approvalStatus =
+    status === ALL_STATUSES
+      ? undefined
+      : VALID_STATUSES.includes(status as never)
+        ? (status as (typeof VALID_STATUSES)[number])
+        : SELLER_APPROVAL_STATUS_MAP.PENDING;
 
   const requestedFilter = VALID_FILTERS.includes(filter as never)
     ? (filter as (typeof VALID_FILTERS)[number])
@@ -38,7 +50,11 @@ export const getSellerQueueController = async (req: Request, res: Response) => {
     throw new AuthorizationError(`Only ${USER_ROLE_MAP.MASTER} can use filter=${requestedFilter}`);
   }
 
-  const query: Record<string, unknown> = { approvalStatus };
+  const query: Record<string, unknown> = {};
+
+  if (approvalStatus) {
+    query.approvalStatus = approvalStatus;
+  }
 
   // adminUserId (string) -> that on-leave admin's name, only populated for
   // `filter=mine` - lets the response tag which items are the requester's
