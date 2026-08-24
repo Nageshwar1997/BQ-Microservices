@@ -6,12 +6,24 @@ import type { Request, Response } from 'express';
 import { Admin } from '../../models/index.js';
 
 /**
- * Every admin assigned to `:state`, `ACTIVE`-first, then by
- * `currentPendingLoad`/`priority` - the same ordering the state->admin
- * resolution algorithm (assignment plan doc, section 6) picks from. Serves
- * both the internal resolver (Phase 2) and the Territory Management UI
- * (Phase 6), which is why non-`ACTIVE` admins are still included rather
- * than filtered out - a human needs to see who's on leave/suspended too.
+ * Every admin assigned to `:state`, `ACTIVE`-first, then by `priority`.
+ * Serves the Territory Management UI (Phase 6) - non-`ACTIVE` admins are
+ * still included rather than filtered out, a human needs to see who's on
+ * leave/suspended too.
+ *
+ * Does NOT drive the actual resolution algorithm (assignment plan doc,
+ * section 6) - `organization-service`'s `resolveStateAdmin` resolves
+ * entirely locally, never calling this endpoint (task 7.2 discovery:
+ * an older docstring here claimed otherwise, that was stale).
+ *
+ * Not sorted by `currentPendingLoad` (task 7.2) - that field is never
+ * actually populated anywhere in this service (defined + indexed, but
+ * nothing ever increments/decrements it), by design: real PENDING-count
+ * load lives in `organization-service`'s own `Seller` collection, computed
+ * live there (see the assignment plan doc's "Bade design decisions", point
+ * 4). Sorting by an always-`0` field here would've been a silent no-op,
+ * not actual load-balancing - `priority` alone is the real, working signal
+ * this service has.
  */
 export const getStateAdminsController = async (req: Request, res: Response) => {
   const { state } = req.params as { state: string };
@@ -22,7 +34,7 @@ export const getStateAdminsController = async (req: Request, res: Response) => {
 
   const admins = await Admin.find({ assignedStates: state as TStateOrUT })
     .populate('user', 'firstName lastName email role')
-    .sort({ currentPendingLoad: 1, priority: 1 })
+    .sort({ priority: 1 })
     .lean();
 
   const sortedAdmins = [
