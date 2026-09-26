@@ -242,7 +242,7 @@ Also has `timestamps: true`, `versionKey: false`.
 | ------------- | ------------- | --------------------------------------------- | ---------------------------------------------------------------------------------------------- |
 | `configured`  | Boolean       | Yes, `default: false`                         | Whether the seller has walked through try-on setup at all                                      |
 | `enabled`     | Boolean       | No, `default: false`                          | Whether try-on is actually turned on for this product                                          |
-| `category`    | String (enum) | Only when `configured`                        | One of `TRY_ON_CATEGORIES`: `LIP`, `EYE`, `HAIR`, `FACE`, `NAIL`, `SKIN`                       |
+| `category`    | String (enum) | Only when `configured`                        | One of `TRY_ON_CATEGORIES`: `LIP`, `EYE`, `HAIR`, `FACE`, `NAIL`                               |
 | `subCategory` | String (enum) | Only when `configured` **and** `category` set | One of `TRY_ON_ALL_SUB_CATEGORIES`, validated against `TRY_ON_MAP[category]` (see table below) |
 
 `TRY_ON_MAP` (from `@beautinique/shared-constants`) — the category → allowed-sub-category relationship enforced by both the path-level `validate` function and the schema's own `pre('validate')` hook:
@@ -254,7 +254,6 @@ Also has `timestamps: true`, `versionKey: false`.
 | `HAIR`   | `COLOR`                                           |
 | `FACE`   | `CONCEALER`, `FOUNDATION`, `HIGHLIGHTER`, `BLUSH` |
 | `NAIL`   | `GEL`, `LIQUID`                                   |
-| `SKIN`   | `MOISTURIZER`, `SERUM`, `TONER`, `CLEANSER`       |
 
 `tryOnSchema.pre('validate')` is the **only** place this relationship is actually checked at save time: if `configured`, it requires both `category` and `subCategory` to be present and requires `subCategory` to be a member of `TRY_ON_MAP[category]`, throwing `UnprocessableEntityError` otherwise. (`productSchema`'s own `pre('validate')` hook does **not** duplicate this check — Mongoose runs a single-nested subdocument's own validators automatically as part of validating the parent, so a second check there would be redundant. An earlier version of this file *did* duplicate it, keyed off `enabled` instead of `configured`, and could throw an unhandled `TypeError` instead of a clean `UnprocessableEntityError` if `enabled: true` was ever reachable without `configured: true` — see [§25](#25-design-notes--known-trade-offs) for why that combination is more reachable than it looks.)
 
