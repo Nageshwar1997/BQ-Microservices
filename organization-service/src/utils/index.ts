@@ -340,7 +340,7 @@ let cachedOlaMapsToken: { accessToken: string; expiresAt: number } | null = null
 
 /**
  * Ola Maps' geocode REST API is domain-restricted when called with a plain
- * `api_key` (that's meant for browser use, see `BQ-Client`'s
+ * `api_key` (that's meant for browser use, see `BQ-Client/Admin/Seller`'s
  * `olaMaps.util.ts`, whose requests carry a real `Origin` header) - a
  * server has no `Origin` at all, which Ola's API treats as just another
  * (disallowed) domain. Confirmed live while migrating off Google Maps:
