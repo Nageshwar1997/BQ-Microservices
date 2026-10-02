@@ -72,7 +72,14 @@ app.use('/docs', serve, setup(openApiSpec));
  * frontend's boot-time wake-up ping read the response. Origins are the frontend `*_BASE_URL` envs.
  */
 const publicRouteCors = checkCors({
-  origin: Object.values(envs.frontend_urls),
+  origin: [
+    ...Object.values(envs.frontend_urls),
+    'http://localhost:4173',
+    'http://localhost:3001',
+    'http://localhost:3002',
+    'http://localhost:3003',
+    'http://localhost:3004',
+  ],
   methods: ['GET'],
   optionsSuccessStatus: 204,
 });
