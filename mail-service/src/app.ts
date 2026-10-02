@@ -1,4 +1,5 @@
 import { SERVICE_NAMES_MAP } from '@beautinique/backend-constants';
+import { checkCors } from '@beautinique/backend-cors';
 import { createHttpLogger } from '@beautinique/backend-logger';
 import { errorResponse, notFoundResponse, successResponse } from '@beautinique/backend-response';
 import express from 'express';
@@ -67,9 +68,19 @@ app[home.method](home.path, (_, res) => {
 app.use('/docs', serve, setup(openApiSpec));
 
 /**
+ * CORS for ONLY the public `/health` + `/wake-up` routes (not the API router below) - lets the
+ * frontend's boot-time wake-up ping read the response. Origins are the frontend `*_BASE_URL` envs.
+ */
+const publicRouteCors = checkCors({
+  origin: Object.values(envs.frontend_urls),
+  methods: ['GET'],
+  optionsSuccessStatus: 204,
+});
+
+/**
  * Health endpoint.
  */
-app[health.method](health.path, (_, res) => {
+app[health.method](health.path, publicRouteCors, (_, res) => {
   res.success({
     message: 'Mail Service is healthy',
     data: {
@@ -83,7 +94,7 @@ app[health.method](health.path, (_, res) => {
 /**
  * Service wake-up endpoint.
  */
-app[wakeUp.method](wakeUp.path, (_, res) => {
+app[wakeUp.method](wakeUp.path, publicRouteCors, (_, res) => {
   res.success({ message: 'Mail Service is awaked.' });
 });
 

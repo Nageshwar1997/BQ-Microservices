@@ -38,6 +38,7 @@
     "@beautinique/backend-bullmq": "^1.0.11",
     "@beautinique/backend-classes": "^1.0.7",
     "@beautinique/backend-constants": "^1.0.8",
+    "@beautinique/backend-cors": "^1.0.7",
     "@beautinique/backend-logger": "^1.0.6",
     "@beautinique/backend-mongoose": "^1.0.11",
     "@beautinique/backend-request": "^1.0.5",

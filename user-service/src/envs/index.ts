@@ -1,8 +1,14 @@
 import { requireEnv, requirePort } from '@beautinique/shared-utils';
+
 const {
   // A
+
+  ADMIN_BASE_URL,
+
   // B
   // C
+
+  CLIENT_BASE_URL,
 
   CACHE_HOST,
   CACHE_PORT,
@@ -42,6 +48,8 @@ const {
 
   // M
 
+  MASTER_BASE_URL,
+
   MONGODB_URI,
 
   // N
@@ -56,6 +64,8 @@ const {
   // Q
   // R
   // S
+
+  SELLER_BASE_URL,
 
   SERVICE_NAME,
   SERVICE_SECRET,
@@ -73,6 +83,7 @@ const is_dev = NODE_ENV === 'development';
 
 export const envs = {
   // A
+
   // B
   // C
   // D
@@ -81,6 +92,16 @@ export const envs = {
 
   // E
   // F
+
+  // Frontend origins allowed to read the public `/health` + `/wake-up` routes from a browser
+  // (the frontends' boot-time wake-up ping) - see `publicRouteCors` in `app.ts`.
+  frontend_urls: {
+    admin: requireEnv(ADMIN_BASE_URL, 'ADMIN_BASE_URL'),
+    client: requireEnv(CLIENT_BASE_URL, 'CLIENT_BASE_URL'),
+    master: requireEnv(MASTER_BASE_URL, 'MASTER_BASE_URL'),
+    seller: requireEnv(SELLER_BASE_URL, 'SELLER_BASE_URL'),
+  },
+
   // G
   // H
   // I
