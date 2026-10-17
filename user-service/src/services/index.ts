@@ -45,7 +45,7 @@ export const getUserByPhoneNumber = async (data: TByPhone) => {
 };
 
 export const getUserByEmailOrPhone = async ({ lean = true, ...data }: TByEmailOrPhone) => {
-  const conditions: Record<keyof typeof data, string>[] = [];
+  const conditions: Partial<Record<'email' | 'phoneNumber', string>>[] = [];
 
   if ('email' in data && data.email) conditions.push({ email: data.email });
   if ('phoneNumber' in data && data.phoneNumber) conditions.push({ phoneNumber: data.phoneNumber });
