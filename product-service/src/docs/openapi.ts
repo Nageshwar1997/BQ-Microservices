@@ -215,6 +215,73 @@ const statusCountsSchema = {
   },
 };
 
+const storefrontVariantSchema = {
+  type: 'object',
+  properties: {
+    sku: { type: 'string', description: 'The id of the variant in the address of the page (?v=).' },
+    type: { type: 'string', enum: ['Color', 'Text'] },
+    label: { type: 'string' },
+    value: {
+      type: 'string',
+      description: 'The colour (a CSS colour) for a Color variant, the text for a Text one.',
+    },
+    originalPrice: { type: 'number' },
+    sellingPrice: { type: 'number' },
+    discount: { type: 'integer' },
+    inStock: { type: 'boolean' },
+    lowStock: { type: 'boolean', description: 'In stock, but only a few are left.' },
+    images: { type: 'array', items: { type: 'string', format: 'uri' } },
+    thumbnail: { type: 'string', format: 'uri' },
+  },
+};
+
+const storefrontProductDetailsSchema = {
+  type: 'object',
+  description:
+    'A product as its own page shows it. The seller, the history of the review, the status, the product sku and the stock count are not in it: the stock is only inStock / lowStock.',
+  properties: {
+    _id: { type: 'string' },
+    title: { type: 'string' },
+    slug: { type: 'string' },
+    brand: { type: 'string' },
+    shortDescription: { type: 'string' },
+    description: { type: 'string', description: 'HTML.' },
+    instructions: { type: 'string', description: 'HTML.' },
+    ingredients: { type: 'string', description: 'HTML.' },
+    additional: { type: 'string', description: 'HTML.' },
+    thumbnail: { type: 'string', format: 'uri' },
+    images: { type: 'array', items: { type: 'string', format: 'uri' } },
+    video: { type: 'string', format: 'uri' },
+    category: {
+      type: 'object',
+      properties: { _id: { type: 'string' }, name: { type: 'string' } },
+    },
+    originalPrice: { type: 'number' },
+    sellingPrice: { type: 'number' },
+    discount: { type: 'integer', description: 'Percent off, 0 when not on sale.' },
+    averageRating: { type: 'number' },
+    totalReviews: { type: 'integer' },
+    soldCount: { type: 'integer' },
+    inStock: { type: 'boolean' },
+    lowStock: {
+      type: 'boolean',
+      description: 'In stock, but only a few are left (of a product without variants).',
+    },
+    hasVariants: { type: 'boolean' },
+    tryOn: {
+      type: 'object',
+      properties: {
+        configured: { type: 'boolean' },
+        enabled: { type: 'boolean' },
+        category: { type: 'string' },
+        subCategory: { type: 'string' },
+      },
+    },
+    variants: { type: 'array', items: storefrontVariantSchema },
+    createdAt: { type: 'string', format: 'date-time' },
+  },
+};
+
 const storefrontProductSchema = {
   type: 'object',
   description: 'A product as its storefront card shows it (no seller, no stock count).',
@@ -798,16 +865,21 @@ export const openApiSpec = {
     [`${base}${product.base}${product.get.bySlug.path.replace(':', '{')}}`]: {
       [product.get.bySlug.method]: {
         tags: ['Public Product'],
-        summary: 'Public storefront product lookup',
+        summary: 'Public storefront product page',
         description:
-          'Only ever returns PUBLISHED products. No authentication headers required beyond the service secret.',
+          'Only ever returns PUBLISHED products (a draft, a product waiting for review or a blocked one is a 404). ' +
+          'The product is the storefront shape - no seller, history, status, product sku or stock count - with its category ' +
+          'name. No authentication headers required beyond the service secret.',
         security: [{ serviceSecret: [] }],
         parameters: [slugParam],
         responses: {
           '200': {
-            description: 'The published product, with its category name populated.',
-            content: { 'application/json': { schema: successEnvelope(productSchema) } },
+            description: 'The published product as its own page shows it.',
+            content: {
+              'application/json': { schema: successEnvelope(storefrontProductDetailsSchema) },
+            },
           },
+          '404': errorResponse('No published product has this slug.'),
         },
       },
     },

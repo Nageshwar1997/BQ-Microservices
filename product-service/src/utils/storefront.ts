@@ -17,7 +17,9 @@ import type {
   IProductsListingFacets,
   IStorefrontFilters,
   IStorefrontProduct,
+  IStorefrontProductDetails,
   TCacheCategory,
+  TStorefrontDetailProduct,
   TStorefrontListProduct,
   TStorefrontProductSort,
 } from '../types/index.js';
@@ -246,6 +248,16 @@ export const toStorefrontFilters = ({
   };
 };
 
+/** The stock of a product (or of one of its variants) in words: it has some, and only a few of them. */
+const getStockState = (stock: number | null | undefined, threshold: number | null | undefined) => {
+  const inStock = (stock ?? 0) > 0;
+
+  return {
+    inStock,
+    lowStock: inStock && typeof threshold === 'number' && (stock ?? 0) <= threshold,
+  };
+};
+
 /** A product as its card shows it: the stock turned into "in stock" / "few left", the seller left out. */
 export const toStorefrontProduct = (product: TStorefrontListProduct & IId): IStorefrontProduct => {
   const { hasVariants, stock, stockThreshold, variants, thumbnail } = product;
@@ -259,7 +271,9 @@ export const toStorefrontProduct = (product: TStorefrontListProduct & IId): ISto
       inStock: left > 0,
     }));
 
-  const inStock = hasVariants ? variants.some((variant) => variant.stock > 0) : (stock ?? 0) > 0;
+  const inStock = hasVariants
+    ? variants.some((variant) => variant.stock > 0)
+    : getStockState(stock, stockThreshold).inStock;
   const hoverImage = product.images.find((image) => image !== thumbnail);
 
   return {
@@ -277,15 +291,67 @@ export const toStorefrontProduct = (product: TStorefrontListProduct & IId): ISto
     totalReviews: product.totalReviews,
     soldCount: product.soldCount,
     inStock,
-    lowStock:
-      inStock &&
-      !hasVariants &&
-      typeof stockThreshold === 'number' &&
-      (stock ?? 0) <= stockThreshold,
+    lowStock: inStock && !hasVariants && getStockState(stock, stockThreshold).lowStock,
     hasTryOn: product.tryOn?.enabled === true,
     hasVariants,
     colors: colors.slice(0, STOREFRONT_MAX_COLORS),
     colorCount: colors.length,
+    createdAt: product.createdAt,
+  };
+};
+
+/**
+ * A product as its own page shows it: what a customer is shown, and the stock as "in stock" / "few left" (of the
+ * product, or of each variant). The seller, the history of the review, the status and the product's own sku are not
+ * in it.
+ */
+export const toStorefrontProductDetails = (
+  product: TStorefrontDetailProduct & IId,
+): IStorefrontProductDetails => {
+  const { hasVariants, stock, stockThreshold } = product;
+
+  const variants = product.variants.map((variant) => ({
+    sku: variant.sku,
+    type: variant.type,
+    label: variant.label,
+    value: variant.value,
+    originalPrice: variant.originalPrice,
+    sellingPrice: variant.sellingPrice,
+    discount: variant.discount,
+    ...getStockState(variant.stock, variant.stockThreshold),
+    images: variant.images,
+    ...(variant.thumbnail && { thumbnail: variant.thumbnail }),
+  }));
+
+  const inStock = hasVariants
+    ? variants.some((variant) => variant.inStock)
+    : getStockState(stock, stockThreshold).inStock;
+
+  return {
+    _id: product._id.toString(),
+    title: product.title,
+    slug: product.slug,
+    brand: product.brand,
+    shortDescription: product.shortDescription,
+    description: product.description,
+    ...(product.instructions && { instructions: product.instructions }),
+    ...(product.ingredients && { ingredients: product.ingredients }),
+    ...(product.additional && { additional: product.additional }),
+    thumbnail: product.thumbnail,
+    images: product.images,
+    ...(product.video && { video: product.video }),
+    category: { _id: product.category._id.toString(), name: product.category.name },
+    originalPrice: product.originalPrice,
+    sellingPrice: product.sellingPrice,
+    discount: product.discount,
+    averageRating: product.averageRating,
+    totalReviews: product.totalReviews,
+    soldCount: product.soldCount,
+    inStock,
+    lowStock: inStock && !hasVariants && getStockState(stock, stockThreshold).lowStock,
+    hasVariants,
+    tryOn: product.tryOn,
+    variants,
     createdAt: product.createdAt,
   };
 };

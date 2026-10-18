@@ -1,6 +1,10 @@
 import type {
   TCategoryZodSchema,
+  TProductBasicInfoZodSchema,
+  TProductDescriptionAndContentZodSchema,
+  TProductMediaAndGalleryZodSchema,
   TProductStatus,
+  TProductVariantZodSchema,
   TSort,
   TTryOnSelection,
   TUserRole,
@@ -135,64 +139,104 @@ export interface IProductsListing {
   sort: TStorefrontProductSort;
 }
 
-/** What the listing reads from a product (the fields of its card). */
-export type TStorefrontListProduct = Pick<
-  TProduct,
-  | 'title'
-  | 'slug'
-  | 'brand'
-  | 'shortDescription'
-  | 'thumbnail'
-  | 'images'
-  | 'originalPrice'
-  | 'sellingPrice'
-  | 'discount'
-  | 'averageRating'
-  | 'totalReviews'
-  | 'soldCount'
-  | 'stock'
-  | 'stockThreshold'
-  | 'hasVariants'
-  | 'tryOn'
-  | 'createdAt'
-> & {
-  variants: Pick<TVariant, 'type' | 'label' | 'value' | 'thumbnail' | 'stock'>[];
-};
+/**
+ * What the listing reads from a product: the fields of its card (what the card shows as it is), and what the card
+ * is made from (the images, the stock, the try-on and the variants it turns into "in stock", "few left", a colour).
+ */
+export type TStorefrontListProduct = Omit<
+  IStorefrontProduct,
+  '_id' | 'hoverImage' | 'inStock' | 'lowStock' | 'hasTryOn' | 'colors' | 'colorCount'
+> &
+  Pick<TProduct, 'images' | 'stock' | 'stockThreshold' | 'tryOn'> & {
+    variants: Pick<TVariant, 'type' | 'label' | 'value' | 'thumbnail' | 'stock'>[];
+  };
 
-export interface IStorefrontColor {
-  label: string;
-  /** The colour itself (a CSS colour). */
-  value: string;
-  thumbnail?: string;
-  inStock: boolean;
-}
-
-/** A product as the card of the storefront shows it. Nothing here is about the seller or the stock count. */
-export interface IStorefrontProduct {
-  _id: string;
-  title: string;
-  slug: string;
-  brand: string;
-  shortDescription: string;
-  thumbnail: string;
+/**
+ * A product as the card of the storefront shows it. The title, brand, prices, short description and thumbnail are the
+ * package's types of the same fields (the types of the seller's form), the id and what the product itself has (its
+ * slug, discount, rating, reviews, sales, variants flag and date) are those of `TProduct`; what is declared here is what
+ * the storefront adds. Nothing here is about the seller or the stock count.
+ */
+export interface IStorefrontProduct
+  extends
+    IIdStr,
+    Pick<TProductBasicInfoZodSchema, 'title' | 'brand' | 'originalPrice' | 'sellingPrice'>,
+    Pick<TProductDescriptionAndContentZodSchema, 'shortDescription'>,
+    Pick<TProductMediaAndGalleryZodSchema, 'thumbnail'>,
+    Pick<
+      TProduct,
+      | 'slug'
+      | 'discount'
+      | 'averageRating'
+      | 'totalReviews'
+      | 'soldCount'
+      | 'hasVariants'
+      | 'createdAt'
+    > {
   /** The image the card shows when it is hovered, when the product has a second one. */
   hoverImage?: string;
-  originalPrice: number;
-  sellingPrice: number;
-  /** Percent off, 0 when it is not on sale. */
-  discount: number;
-  averageRating: number;
-  totalReviews: number;
-  soldCount: number;
   inStock: boolean;
   /** In stock, but only a few are left. */
   lowStock: boolean;
   hasTryOn: boolean;
-  hasVariants: boolean;
   /** The colours of the product (at most {@link STOREFRONT_MAX_COLORS}); `colorCount` is how many there are. */
-  colors: IStorefrontColor[];
+  colors: TStorefrontColor[];
   colorCount: number;
-  createdAt: Date;
+}
+
+/**
+ * What the page of one product reads from it: the fields it is shown with, and what they are made from (the stock of
+ * the product and of each variant, which turns into "in stock" / "few left"; the category, with its name).
+ */
+export type TStorefrontDetailProduct = Omit<
+  IStorefrontProductDetails,
+  '_id' | 'inStock' | 'lowStock' | 'category' | 'variants'
+> &
+  Pick<TProduct, 'stock' | 'stockThreshold'> & {
+    category: IId & Pick<ICategory, 'name'>;
+    variants: (Omit<IStorefrontVariant, 'inStock' | 'lowStock'> &
+      Pick<TVariant, 'stock' | 'stockThreshold'>)[];
+  };
+
+/**
+ * One variant of a product, on the page of the product. What the package already says of a variant (its type, label,
+ * value, prices and pictures) is taken from it; the rest is what the storefront adds. (The schemas of this side hold
+ * links only, so there is no file to leave out as in the frontend's `OmitFile`.)
+ */
+export interface IStorefrontVariant
+  extends
+    Pick<
+      TProductVariantZodSchema,
+      'type' | 'label' | 'value' | 'originalPrice' | 'sellingPrice' | 'thumbnail' | 'images'
+    >,
+    Pick<TVariant, 'sku' | 'discount'> {
+  inStock: boolean;
+  /** In stock, but only a few are left. */
+  lowStock: boolean;
+}
+
+/** A colour of a product, as its card shows it: a Color variant (`value` is the colour itself, a CSS colour). */
+export type TStorefrontColor = Pick<
+  IStorefrontVariant,
+  'label' | 'value' | 'thumbnail' | 'inStock'
+>;
+
+/**
+ * A product as its own page shows it: the card's fields, the texts of the package (the description and the rest, HTML of
+ * the editor), and what only the page has. Nothing here is about the seller, the review of the product (its history,
+ * its status) or the stock count: the stock is only "in stock", "few left" or neither.
+ */
+export interface IStorefrontProductDetails
+  extends
+    Omit<IStorefrontProduct, 'hoverImage' | 'hasTryOn' | 'colors' | 'colorCount'>,
+    Pick<
+      TProductDescriptionAndContentZodSchema,
+      'description' | 'instructions' | 'ingredients' | 'additional'
+    >,
+    Pick<TProductMediaAndGalleryZodSchema, 'images' | 'video'> {
+  category: IIdStr & Pick<ICategory, 'name'>;
+  tryOn: TProduct['tryOn'];
+  variants: IStorefrontVariant[];
 }
 
 export interface IStorefrontBrandFacet {
@@ -211,6 +255,6 @@ export interface IStorefrontFilters {
 export interface IProductsListingFacets {
   products: (TStorefrontListProduct & IId)[];
   total: { count: number }[];
-  brands: { _id: string; count: number }[];
+  brands: (IIdStr & { count: number })[];
   price: { min: number; max: number }[];
 }

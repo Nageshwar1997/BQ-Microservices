@@ -351,7 +351,7 @@ All `/api/v1/*` routes require the `X-Service-Secret` header and a ready MongoDB
 | GET    | `/product/dashboard/products` | ADMIN, SELLER, MASTER | Paginated/sortable/Atlas-Search listing, scoped to own products for sellers                                       |
 | GET    | `/product/dashboard/:slug`    | ADMIN, SELLER, MASTER | Single product lookup for the dashboard (cache-aside, 1-day TTL)                                                  |
 | GET    | `/product/products`           | None                  | Public storefront **listing** — only `PUBLISHED` products, filtered / sorted / paginated (see [§7.3.1](#731-public-listing--get-productproducts)) |
-| GET    | `/product/:slug`              | None                  | Public storefront lookup — only `PUBLISHED` products                                                              |
+| GET    | `/product/:slug`              | None                  | Public storefront product page — only `PUBLISHED` products (anything else is a 404), in the storefront shape: no seller, history, status, product `sku` or stock count (the stock is `inStock` / `lowStock`, also per variant) |
 | GET    | `/product/suggestions`        | None                  | Atlas Search autocomplete (title/brand/slug/shortDescription)                                                     |
 
 **Declared but not currently wired to a route** (present in `METHODS_AND_PATHS`, `src/constants/index.ts`, but with no matching route registration in `product.routes.ts`) — see [§25](#25-design-notes--known-trade-offs):

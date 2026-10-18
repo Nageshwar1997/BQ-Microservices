@@ -113,4 +113,4 @@ productRouter.use(
   dashboardRouter,
 );
 
-productRouter[get.bySlug.method](get.bySlug.path, getProductBySlugController);
+productRouter[get.bySlug.method](get.bySlug.path, tryCatchResponse(getProductBySlugController));

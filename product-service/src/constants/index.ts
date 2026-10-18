@@ -113,6 +113,47 @@ export const STOREFRONT_PRODUCT_SORT_STAGES: Record<
   discount: { discount: -1, _id: -1 },
 };
 
+/**
+ * The fields of a product its own page reads (everything else - the seller, the history of the review, the status,
+ * the product's own sku - stays in the service). The stock is read to be turned into words, and goes no further.
+ */
+export const PRODUCT_DETAILS_SELECT = [
+  'title',
+  'slug',
+  'brand',
+  'shortDescription',
+  'description',
+  'instructions',
+  'ingredients',
+  'additional',
+  'originalPrice',
+  'sellingPrice',
+  'discount',
+  'images',
+  'thumbnail',
+  'video',
+  'category',
+  'averageRating',
+  'totalReviews',
+  'soldCount',
+  'stock',
+  'stockThreshold',
+  'hasVariants',
+  'tryOn',
+  'createdAt',
+  'variants.sku',
+  'variants.type',
+  'variants.label',
+  'variants.value',
+  'variants.originalPrice',
+  'variants.sellingPrice',
+  'variants.discount',
+  'variants.stock',
+  'variants.stockThreshold',
+  'variants.images',
+  'variants.thumbnail',
+].join(' ');
+
 /** The fields of a product the cards of the storefront read; `images` is cut to the two the card can show. */
 export const PRODUCT_STOREFRONT_PROJECTION = {
   title: 1,
