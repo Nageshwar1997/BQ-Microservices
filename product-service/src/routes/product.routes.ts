@@ -17,6 +17,7 @@ import {
   getDraftProductController,
   getProductBySlugController,
   getProductQueueController,
+  getProductsController,
   getProductsSuggestionsController,
   publishDraftProductController,
   saveDraftProductController,
@@ -94,6 +95,18 @@ productRouter[queue.method](
   tryCatchResponse(getProductQueueController),
 );
 
+/* ================== PUBLIC STOREFRONT ================== */
+
+// The public routes are registered before `get.bySlug` (`/:slug`): both are GET, and an Express
+// wildcard param route matches on registration order, so `/products` and `/suggestions` would otherwise
+// be swallowed as a slug value (`/suggestions` was - it answered `null` as the product).
+productRouter[get.products.method](get.products.path, tryCatchResponse(getProductsController));
+
+productRouter[get.suggestions.method](
+  get.suggestions.path,
+  tryCatchResponse(getProductsSuggestionsController),
+);
+
 productRouter.use(
   get.dashboard.base,
   authorize([USER_ROLE_MAP.ADMIN, USER_ROLE_MAP.MASTER, USER_ROLE_MAP.SELLER]),
@@ -101,8 +114,3 @@ productRouter.use(
 );
 
 productRouter[get.bySlug.method](get.bySlug.path, getProductBySlugController);
-
-productRouter[get.suggestions.method](
-  get.suggestions.path,
-  tryCatchResponse(getProductsSuggestionsController),
-);

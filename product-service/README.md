@@ -74,6 +74,7 @@ product-service/
 │   │       ├── getDashboardProducts.controller.ts     #   Paginated/sortable/searchable seller+admin listing
 │   │       ├── getDashboardProductBySlug.controller.ts #  Single product lookup for the dashboard (cache-aside)
 │   │       ├── getProductBySlug.controller.ts          #  Public storefront product lookup
+│   │       ├── getProducts.controller.ts               #  Public storefront listing (filters, sort, search, facets)
 │   │       └── getProductsSuggestions.controller.ts   #   Atlas Search autocomplete suggestions
 │   ├── docs/
 │   │   └── openapi.ts                 #   Hand-written OpenAPI 3.0 spec, served at /docs
@@ -98,7 +99,8 @@ product-service/
 │   │   ├── index.ts                   #   Core interfaces (ICategory, TProduct, TDashboardListProduct, etc.)
 │   │   └── express.d.ts               #   Request.user augmentation
 │   └── utils/
-│       └── index.ts                   #   Slug/SKU generation, minimal-category projector, Atlas Search pipelines
+│       ├── index.ts                   #   Slug/SKU generation, minimal-category projector, Atlas Search pipelines
+│       └── storefront.ts              #   Public listing: query parsing, category branch, `$facet` pipeline, card shape
 ├── scripts/
 │   └── generate-html.mjs              # Renders README.md → public/index.html, runs via "postbuild"
 ├── public/
@@ -348,6 +350,7 @@ All `/api/v1/*` routes require the `X-Service-Secret` header and a ready MongoDB
 | PATCH  | `/product/draft/publish`      | ADMIN, SELLER, MASTER | Turn a **complete** draft into a real `Product` document (`PENDING` for sellers, `PUBLISHED` directly for admins) |
 | GET    | `/product/dashboard/products` | ADMIN, SELLER, MASTER | Paginated/sortable/Atlas-Search listing, scoped to own products for sellers                                       |
 | GET    | `/product/dashboard/:slug`    | ADMIN, SELLER, MASTER | Single product lookup for the dashboard (cache-aside, 1-day TTL)                                                  |
+| GET    | `/product/products`           | None                  | Public storefront **listing** — only `PUBLISHED` products, filtered / sorted / paginated (see [§7.3.1](#731-public-listing--get-productproducts)) |
 | GET    | `/product/:slug`              | None                  | Public storefront lookup — only `PUBLISHED` products                                                              |
 | GET    | `/product/suggestions`        | None                  | Atlas Search autocomplete (title/brand/slug/shortDescription)                                                     |
 
@@ -358,7 +361,30 @@ All `/api/v1/*` routes require the `X-Service-Secret` header and a ready MongoDB
 | DELETE | `/product/draft`    | Discard the caller's in-progress draft                                                                            |
 | PATCH  | `/product/draft`    | Edit an already-published product's draft-style fields                                                            |
 | PATCH  | `/product/publish`  | Approve a `PENDING` product → `PUBLISHED` (controller exists: `publishPendingProductController`, just not routed) |
-| GET    | `/product/products` | A public product listing, distinct from the dashboard one                                                         |
+
+#### 7.3.1 Public listing — `GET /product/products`
+
+The listing behind the storefront's product pages. No authentication (the service secret only). It returns **only `PUBLISHED` products**, one page at a time, plus what the filters can offer. A query value that is not usable is left out, never an error (a link with a stale filter must still open), and a `category` that does not exist has no products - it does **not** turn into "all of them".
+
+| Query         | Meaning                                                                                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `page`        | 1-based, default `1` (at most 1000)                                                                                                                      |
+| `limit`       | default `12`, at most `48`                                                                                                                                |
+| `search`      | Atlas Search (index `product-search`) over title (fuzzy, boosted), brand and short description; at most 100 characters                                   |
+| `category`    | A category **id** of any level. Products hold their deepest (L3) category, so a main or a sub category lists every final category under it                 |
+| `brand`       | Repeat the key for several (`brand=A&brand=B`, at most 20)                                                                                                 |
+| `minPrice` / `maxPrice` | Selling price range (a range given the wrong way round is swapped)                                                                           |
+| `minRating`   | 1–5                                                                                                                                                      |
+| `minDiscount` | Percent off, at least (1–100)                                                                                                                            |
+| `inStock`     | `true`: a product without variants with `stock > 0`, or one with at least one variant in stock                                                          |
+| `tryOn`       | `true`: only products with the virtual try-on enabled                                                                                                    |
+| `sort`        | `relevance` (a search's own order; without a search it is `newest`), `newest`, `price-asc`, `price-desc`, `popular`, `rating`, `discount`. Default: `relevance` with a search, `newest` without |
+
+The response `data` is `{ products, pagination: { page, limit, total, totalPages }, filters: { brands: [{ name, count }], price: { min, max } | null } }`.
+
+- A product is the **card** shape (`IStorefrontProduct`): title, slug, brand, short description, thumbnail, an optional `hoverImage`, prices, `discount`, rating, `inStock` / `lowStock`, `hasTryOn`, up to 6 `colors` (+ `colorCount`). The seller, the stock counts and the review/history fields never leave the service.
+- `filters.brands` and `filters.price` are counted with **every filter except their own**, in the same `$facet` as the page: choosing a brand must not make the other brands disappear from the list, nor a price range its own limits.
+- Route order matters: this route and `/suggestions` are registered **before** `/:slug` (an Express wildcard matches in registration order - `/suggestions` used to be swallowed as a slug and answered `null`).
 
 ---
 
@@ -860,7 +886,7 @@ Product  ──N→N─── Review       (external references only, no local R
 
 ## 25. Design Notes / Known Trade-offs
 
-- **Four routes are declared in `METHODS_AND_PATHS` but not wired up in `product.routes.ts`:** `DELETE /product/draft`, `PATCH /product/draft` (edit an already-published product), `PATCH /product/publish` (approve a `PENDING` product — the controller, `publishPendingProductController`, already exists and is fixed/`save()`-complete, it's just not routed), and `GET /product/products` (a public listing distinct from the dashboard one). These read as intentionally-planned, not-yet-shipped endpoints rather than accidental gaps — wire them up (with the appropriate Zod schema + session/transaction + Redis invalidation, matching the conventions used everywhere else in this service) once the corresponding feature is ready.
+- **Three routes are declared in `METHODS_AND_PATHS` but not wired up in `product.routes.ts`:** `DELETE /product/draft`, `PATCH /product/draft` (edit an already-published product) and `PATCH /product/publish` (approve a `PENDING` product — the controller, `publishPendingProductController`, already exists and is fixed/`save()`-complete, it's just not routed). These read as intentionally-planned, not-yet-shipped endpoints rather than accidental gaps — wire them up (with the appropriate Zod schema + session/transaction + Redis invalidation, matching the conventions used everywhere else in this service) once the corresponding feature is ready.
 - **A possible bug in the external `@beautinique/backend-zod` package's `tryOnConfiguration` schema.** Both `draftProductStepBodyZodSchema` and `draftProductDetailsZodSchema` define `tryOnConfiguration` as a discriminated union keyed on `enabled`, but per the package's own published type declarations, **both union branches currently declare `enabled: ZodLiteral<false>`** (the branch that requires a full, non-optional `tryOn` selection almost certainly should be `ZodLiteral<true>`). This lives in a separate repo/package (`BQ-Packages`), not this one, so it isn't something to fix here — but it's worth knowing about if try-on validation ever behaves unexpectedly at the API boundary, since it means Zod may not actually be able to distinguish the two `tryOnConfiguration` variants as designed. This is also part of why the Mongoose-level `tryOnSchema` validation (§5.2.2, §11.4) matters as a real second line of defense rather than a redundant belt-and-braces check — it's the layer that still enforces the category/sub-category relationship correctly regardless of what happens upstream in Zod.
 - **Public vs. dashboard product lookup caching is asymmetric.** `GET /product/dashboard/:slug` is cache-aside over Redis; `GET /product/:slug` (the public storefront lookup, almost certainly the higher-traffic of the two) hits MongoDB directly on every request. Worth revisiting if storefront traffic grows.
 - **A Mongo `E11000` duplicate-key error on `Product.slug`/`Product.sku`** (from `publishDraftProductController`'s `product.save({ session })`) is not currently caught and translated into a friendly `ConflictError` the way the category controllers do for their own duplicate-key races — a collision here (astronomically unlikely given both are timestamp/random-suffixed, but not impossible under concurrent publishes) would surface as a generic `InternalServerError` instead.

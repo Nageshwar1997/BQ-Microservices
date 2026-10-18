@@ -3,6 +3,7 @@ export * from './getDashboardProducts.controller.js';
 export * from './getDraftProduct.controller.js';
 export * from './getProductBySlug.controller.js';
 export * from './getProductQueue.controller.js';
+export * from './getProducts.controller.js';
 export * from './getProductsSuggestions.controller.js';
 export * from './publishDraftProduct.controller.js';
 export * from './saveDraftProduct.controller.js';

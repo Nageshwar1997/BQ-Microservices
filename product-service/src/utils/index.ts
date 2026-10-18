@@ -145,3 +145,5 @@ export const populateProductCountsByStatus = (
 
   return counts;
 };
+
+export * from './storefront.js';

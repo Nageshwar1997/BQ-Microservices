@@ -114,3 +114,103 @@ export type DashboardCacheProduct = Omit<TProduct, 'category' | 'variants'> & {
 };
 
 export type TProductFilter = Pick<TProduct, 'seller' | 'status' | 'category'>;
+
+export type TStorefrontProductSort =
+  'relevance' | 'newest' | 'price-asc' | 'price-desc' | 'popular' | 'rating' | 'discount';
+
+/** The query of the public product listing, checked and with the defaults in. */
+export interface IProductsListing {
+  page: number;
+  limit: number;
+  search?: string;
+  category?: string;
+  brands: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  minRating?: number;
+  inStock: boolean;
+  /** Percent off, at least. */
+  minDiscount?: number;
+  tryOn: boolean;
+  sort: TStorefrontProductSort;
+}
+
+/** What the listing reads from a product (the fields of its card). */
+export type TStorefrontListProduct = Pick<
+  TProduct,
+  | 'title'
+  | 'slug'
+  | 'brand'
+  | 'shortDescription'
+  | 'thumbnail'
+  | 'images'
+  | 'originalPrice'
+  | 'sellingPrice'
+  | 'discount'
+  | 'averageRating'
+  | 'totalReviews'
+  | 'soldCount'
+  | 'stock'
+  | 'stockThreshold'
+  | 'hasVariants'
+  | 'tryOn'
+  | 'createdAt'
+> & {
+  variants: Pick<TVariant, 'type' | 'label' | 'value' | 'thumbnail' | 'stock'>[];
+};
+
+export interface IStorefrontColor {
+  label: string;
+  /** The colour itself (a CSS colour). */
+  value: string;
+  thumbnail?: string;
+  inStock: boolean;
+}
+
+/** A product as the card of the storefront shows it. Nothing here is about the seller or the stock count. */
+export interface IStorefrontProduct {
+  _id: string;
+  title: string;
+  slug: string;
+  brand: string;
+  shortDescription: string;
+  thumbnail: string;
+  /** The image the card shows when it is hovered, when the product has a second one. */
+  hoverImage?: string;
+  originalPrice: number;
+  sellingPrice: number;
+  /** Percent off, 0 when it is not on sale. */
+  discount: number;
+  averageRating: number;
+  totalReviews: number;
+  soldCount: number;
+  inStock: boolean;
+  /** In stock, but only a few are left. */
+  lowStock: boolean;
+  hasTryOn: boolean;
+  hasVariants: boolean;
+  /** The colours of the product (at most {@link STOREFRONT_MAX_COLORS}); `colorCount` is how many there are. */
+  colors: IStorefrontColor[];
+  colorCount: number;
+  createdAt: Date;
+}
+
+export interface IStorefrontBrandFacet {
+  name: string;
+  count: number;
+}
+
+export interface IStorefrontFilters {
+  /** The brands of the matching products, with how many each has (the brand filter itself left out). */
+  brands: IStorefrontBrandFacet[];
+  /** The cheapest and the dearest of the matching products (the price filter itself left out). */
+  price: { min: number; max: number } | null;
+}
+
+/** What the `$facet` of the public listing gives back: the page, the total and what the filters can offer. */
+export interface IProductsListingFacets {
+  products: (TStorefrontListProduct & IId)[];
+  total: { count: number }[];
+  brands: { _id: string; count: number }[];
+  price: { min: number; max: number }[];
+}

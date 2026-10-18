@@ -1,7 +1,7 @@
 import { API_METHODS_MAP } from '@beautinique/backend-constants';
 
 import { envs } from '../envs/index.js';
-import type { TDashboardListProduct } from '../types/index.js';
+import type { TDashboardListProduct, TStorefrontProductSort } from '../types/index.js';
 
 const { DELETE, GET, PATCH, POST } = API_METHODS_MAP;
 
@@ -79,3 +79,62 @@ export const PRODUCT_DASHBOARD_PROJECTION: Record<
   updatedAt: 1,
   'variants.stock': 1,
 };
+
+/* ================== STOREFRONT PRODUCT LISTING ================== */
+
+export const STOREFRONT_PRODUCTS_LIMIT = { default: 12, max: 48 } as const;
+
+export const STOREFRONT_MAX_BRANDS = 20;
+
+export const STOREFRONT_MAX_COLORS = 6;
+
+export const STOREFRONT_SEARCH_MAX_LENGTH = 100;
+
+export const STOREFRONT_PRODUCT_SORTS = [
+  'relevance',
+  'newest',
+  'price-asc',
+  'price-desc',
+  'popular',
+  'rating',
+  'discount',
+] as const satisfies readonly TStorefrontProductSort[];
+
+/** How each sort orders the listing. `relevance` only means something after a search (it falls back to `newest`). */
+export const STOREFRONT_PRODUCT_SORT_STAGES: Record<
+  Exclude<TStorefrontProductSort, 'relevance'>,
+  Record<string, 1 | -1>
+> = {
+  newest: { createdAt: -1, _id: -1 },
+  'price-asc': { sellingPrice: 1, _id: 1 },
+  'price-desc': { sellingPrice: -1, _id: -1 },
+  popular: { soldCount: -1, _id: -1 },
+  rating: { averageRating: -1, totalReviews: -1, _id: -1 },
+  discount: { discount: -1, _id: -1 },
+};
+
+/** The fields of a product the cards of the storefront read; `images` is cut to the two the card can show. */
+export const PRODUCT_STOREFRONT_PROJECTION = {
+  title: 1,
+  slug: 1,
+  brand: 1,
+  shortDescription: 1,
+  thumbnail: 1,
+  images: { $slice: ['$images', 2] },
+  originalPrice: 1,
+  sellingPrice: 1,
+  discount: 1,
+  averageRating: 1,
+  totalReviews: 1,
+  soldCount: 1,
+  stock: 1,
+  stockThreshold: 1,
+  hasVariants: 1,
+  tryOn: 1,
+  createdAt: 1,
+  'variants.type': 1,
+  'variants.label': 1,
+  'variants.value': 1,
+  'variants.thumbnail': 1,
+  'variants.stock': 1,
+} as const;
